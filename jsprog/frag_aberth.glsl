@@ -118,17 +118,21 @@ DualComplex DualComplexMul(DualComplex a,DualComplex b){
 DualComplex DualComplexSqare(DualComplex a){
     return DualComplex(ComplexSquare(a.xy),2.0*ComplexMul(a.xy,a.zw));
 }
+DualComplex DualComplexAdd(DualComplex a,float b){
+    return DualComplex(a.x+b, a.yzw);
+}
 
 
-//
+
+
 
 
 
 
 DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){
     DualComplex x=DualComplex(ComplexMul(Complex(rayDir.x,0.),a)+Complex(rayOrigin.x,0.),rayDir.x,0.);
-    DualComplex y=DualComplex(ComplexMul(Complex(rayDir.y,0.),a)+Complex(rayOrigin.y,0.),rayDir.y,0.);;
-    DualComplex z=DualComplex(ComplexMul(Complex(rayDir.z,0.),a)+Complex(rayOrigin.z,0.),rayDir.z,0.);;
+    DualComplex y=DualComplex(ComplexMul(Complex(rayDir.y,0.),a)+Complex(rayOrigin.y,0.),rayDir.y,0.);
+    DualComplex z=DualComplex(ComplexMul(Complex(rayDir.z,0.),a)+Complex(rayOrigin.z,0.),rayDir.z,0.);
     
     DualComplex xx=DualComplexSqare(x);
     DualComplex yy=DualComplexSqare(y);

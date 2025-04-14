@@ -1,18 +1,12 @@
 #version 300 es
 precision mediump float;
-const int polybasislength=15;
-const int numpolys=1;
 
 
 
-//const int polybasislength=...;
-//const ivec3[polybasislength] polybasis=...;
-//const int numpolys=...;
-//const int MAXPOLYDEGREE=...;#line 11 1 //code before this is defined in other file
-uniform float[numpolys*polybasislength] coefficientsxyz;
-/*layout(std140) uniform MyUBO {
-    float[numpolys*polybasislength] coefficientsxyz;
-};*/
+
+
+uniform float[?] args;//gets replaced
+
 
 //step divided by length of deriv in xyz
 
@@ -35,7 +29,7 @@ const float EPSILON_ROOTS=0.001;
 //const int MAX_RAY_ITER=128;
 
 const float nan=sqrt(-1.);
-const float inf=pow(9.,999.);
+const float inf=pow(999.,999.);
 const float pi=3.14159265359;
 const float goldenangle = (3.0 - sqrt(5.0)) * pi;
 #define dcomplex vec2
@@ -129,69 +123,8 @@ DualComplex DualComplexAdd(DualComplex a,float b){
 
 
 
-DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){
-    DualComplex x=DualComplex(ComplexMul(Complex(rayDir.x,0.),a)+Complex(rayOrigin.x,0.),rayDir.x,0.);
-    DualComplex y=DualComplex(ComplexMul(Complex(rayDir.y,0.),a)+Complex(rayOrigin.y,0.),rayDir.y,0.);
-    DualComplex z=DualComplex(ComplexMul(Complex(rayDir.z,0.),a)+Complex(rayOrigin.z,0.),rayDir.z,0.);
-    
-    DualComplex xx=DualComplexSqare(x);
-    DualComplex yy=DualComplexSqare(y);
-    DualComplex zz=DualComplexSqare(z);
-
-    DualComplex r=xx+yy+zz;
-    DualComplex rp=(r+DualComplex(1.,0.,0.,0.))*0.5;
-    DualComplex rm=(r-DualComplex(1.,0.,0.,0.))*0.5;
-
-    
-    if(numpolys==1){
-
-        return DualComplexSqare(
-            DualComplexMul(x,x*coefficientsxyz[0]+y*coefficientsxyz[1]+z*coefficientsxyz[2]+rm*coefficientsxyz[3]+rp*coefficientsxyz[4])+
-            DualComplexMul(y,y*coefficientsxyz[5]+z*coefficientsxyz[6]+rm*coefficientsxyz[7]+rp*coefficientsxyz[8])+
-            DualComplexMul(z,z*coefficientsxyz[9]+rm*coefficientsxyz[10]+rp*coefficientsxyz[11])+
-            DualComplexMul(rm,rm*coefficientsxyz[12]+rp*coefficientsxyz[13])+
-            DualComplexSqare(rp)*coefficientsxyz[14]
-        );
-    }
-
-    DualComplex basis[15];
-    basis[0] = xx;
-    basis[1] = DualComplexMul(x,y);
-    basis[2] = DualComplexMul(x,z);
-    basis[3] = DualComplexMul(x,rm);
-    basis[4] = DualComplexMul(x,rp);
-    basis[5] = yy;
-    basis[6] = DualComplexMul(y,z);
-    basis[7] = DualComplexMul(y,rm);
-    basis[8] = DualComplexMul(y,rp);
-    basis[9] = zz;
-    basis[10] = DualComplexMul(z,rm);
-    basis[11] = DualComplexMul(z,rp);
-    basis[12] = DualComplexSqare(rm);
-    basis[13] = DualComplexMul(rp,rm);
-    basis[14] = DualComplexSqare(rp);
-
-    DualComplex sum=DualComplex(0.);
-    for(int i=0;i<numpolys;i++){
-        int index=polybasislength*i;
-        DualComplex term = vec4(0.0);
-        
-        // Accumulate the weighted sum
-        for (int j = 0; j < 15; j++) {
-            term += coefficientsxyz[index + j] * basis[j];
-        }
-        
-        // Square and add to sum
-        sum += DualComplexSqare(term);
-    }
-    return (sum);
-
-
-    //[x**2, x*y, x*z, rm*x, rp*x, y**2, y*z, rm*y, rp*y, z**2, rm*z, rp*z, rm**2, rm*rp, rp**2]
-
-    
-
-}
+DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){?} //gets replaced
+  
 void aberth_method(inout Complex[4] roots, vec3 rayDir, vec3 rayOrigin,int pdegree) {
     const float threshold = 1e-4; // Convergence threshold
     const int max_iterations = 40; // Maximum iterations to avoid infinite loop
@@ -263,7 +196,11 @@ float DualComplexRaymarch(vec3 rayDir, inout vec3 rayOrigin) {
     for(int i = 0; i < 4; ++i){
         Complex r=roots[i];
         r.y=abs(r.y);
-        if(r.x>=0. && r.y<beste){
+        /*if(r.x>=0. && r.y<beste){
+            beste=r.y;
+            bestx=r.x;
+        }*/
+        if(r.x>=0. && r.x<bestx && r.y<1e-5){
             beste=r.y;
             bestx=r.x;
         }
@@ -285,6 +222,7 @@ float DualComplexRaymarch(vec3 rayDir, inout vec3 rayOrigin) {
 
 
     rayOrigin += rayDir * bestx;
+    gl_FragDepth = bestx/1000.;
     return beste;
 }
 

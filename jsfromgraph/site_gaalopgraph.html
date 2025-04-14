@@ -181,7 +181,80 @@ async function load(url) {
 //console.log(fragmentShaderSource);
 
 
+class multirenderingpipeline{
+  constructor(cameracontroll,gl,shaders){
+    this.camera=cameracontroll;
+    this.gl=gl;
+    this.shaders=shaders;
+    this.verticesbuffer=this.makeVerticesbuffer();
 
+    
+    
+    
+    this.resizeCanvas=this.resizeCanvas.bind(this)
+    this.resizeCanvas();
+    window.addEventListener("resize", this.resizeCanvas);
+
+  }
+  render(){
+    //this.gl.clearDepth(1000.);    
+    //this.gl.depthRange(0., 1000.);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+    this.gl.depthFunc(gl.LESS);
+    this.gl.enable(this.gl.DEPTH_TEST);
+
+    for(const shader of this.shaders){
+      shader.use();
+      this.updateuniforms(shader)
+      //gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      //gl.clear(gl.COLOR_BUFFER_BIT);
+      this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+    }
+    this.camera.changed=false;
+  }
+
+  updateuniforms(shader){
+    const windowsizeLocation = shader.getUniformLocation('windowsize');
+    shader.gl.uniform2fv(windowsizeLocation, this.windowsize);
+    this.camera.upadeuniforms(shader);
+  }
+  resizeCanvas() {
+    const canvas=this.camera.canvas;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = canvas.clientWidth * dpr;
+    canvas.height = canvas.clientHeight * dpr;
+    this.gl.viewport(0, 0, canvas.width, canvas.height);
+    this.windowsize = [canvas.width, canvas.height];
+    
+    this.camera.changed=true;
+  }
+  
+  makeVerticesbuffer(){
+    let gl=this.gl;
+    const vertices = new Float32Array([
+      -1, 1,
+      -1,-1,
+      1, 1,
+      1,-1
+    ]);
+    
+
+    const verticesbuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, verticesbuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+
+    for(const shader of this.shaders){
+      const positionAttribLocation =shader.getAttribLocation("a_position");
+      gl.vertexAttribPointer(positionAttribLocation, 2, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(positionAttribLocation);
+    }
+    return verticesbuffer;
+  }
+
+
+
+}
 
 
 
@@ -192,20 +265,52 @@ function sleep(ms) {
 
 
 
+import {GaalopGraph} from "./graph2.js"
+
 
 async function main(){
+
+    let gajson=await load("./jsonexport.json");
+    const graph=new GaalopGraph();
+    graph.fromjson(gajson);
+    //console.log(graph);
+
+
+
   //const fragmentShaderSource =await load("./frag3.glsl"); 
   const fragmentShaderSource =await load("./frag_aberth.glsl"); 
+  const fragmentShaderSourceTemplate =await load("./frag_aberth_generated.glsl"); 
   //console.log(fragmentShaderSource);
 
-  const shader =new Shader(gl, vertexShaderSource,fragmentShaderSource );
-  shader.use();
+  //const shader =new Shader(gl, vertexShaderSource,fragmentShaderSource );
+  //shader.use();
   const camera=new Cameracontroll(mainCanvas);
   
-  let funmat=new Matrix([[-3.2,0., 0., 0., 0.,-3.2,0., 0., 0., 0., 0., 0., 1.5125, -5.225,   4.5125]]);
+  //let funmat=new Matrix([[-3.2,0., 0., 0., 0.,-3.2,0., 0., 0., 0., 0., 0., 1.5125, -5.225,   4.5125]]);
   /**/
-  let renderer=new renderingpipeline_coeffxyz(camera,shader);
-  renderer.coefficientsxyz(funmat);
+  //let renderer=new renderingpipeline_coeffxyz(camera,shader);
+  //renderer.coefficientsxyz(funmat);
+
+
+  let shaders=[];
+
+  const values = new Map([
+  ["a1", 0], ["a2", 0], ["a3", 0],
+  ["b1", 0], ["b2", 0.4], ["b3", 0],
+  ["c1", 0], ["c2", 0.45], ["c3", 0.2],
+  ["d14", 0.5], ["d24", 0.4], ["d34", 0.3],
+]);
+  for(const visgraph of graph.createVisualisationgraphs2()){
+    const frag=visgraph.gencodeaberth(fragmentShaderSourceTemplate);
+    const shader=new Shader(gl, vertexShaderSource,frag );
+    console.log(frag);
+    shader.use();
+    visgraph.setuniforms(values,shader);
+    shaders.push(shader);
+
+  }
+  console.log(gl);
+  let renderer=new multirenderingpipeline(camera,gl,shaders);
 
 
   
@@ -232,7 +337,7 @@ async function main(){
 
     camera.update(deltatime);
     if(camera.changed){
-      drawplot(camera,funmat.array);
+      //drawplot(camera,funmat.array);
 
       deltatimeavg=deltatimeavg*0.95+deltatime*0.05;
       fpscounter.innerText = `FPS: ${Math.ceil(1/deltatimeavg)}`;

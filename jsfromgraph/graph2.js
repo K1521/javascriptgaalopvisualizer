@@ -151,10 +151,12 @@ function evaluatenode(node,evaluationcash=new Map()) {
 }
 
 //alternative implementation of evaluatenode that uses visitnodes to evaluate the graph in topological order
-//i think this has more overhead but is more readable
+//i think this has more overhead but is more consistent with other code
 function evaluatenodes(nodes, evaluationcash = new Map()) {
     visitnodes(nodes, (node, parentresults) => {
         if (node.operand instanceof VarOperand) {
+            const varname=node.operand.name;
+            if(evaluationcash.has(varname))return evaluationcash.get(varname);
             throw new Error(`Variable ${node.name} not found in evaluation cache`);
         }
         return node.operand.eval(parentresults);
@@ -262,142 +264,196 @@ class Color {
     }
 }
 
-class GaalopGraph {
+export class GaalopGraph {
     constructor() {
         this.name = undefined;
         this.inputScalars = new Map(); // variablename->variable
         this.outputMultivectors = new Map(); // name -> Multivector of nodes
 
         this.vissualization = new Map(); //name (of output node) -> color
-        this.renderingExpression = new Map(); //name (of inner product result) -> expression
 
+        /** 
+         * maps the name of the innerProductResult to the output Multivector Name
+         * for example 
+         * _V_PRODUCT0 => S1
+         * _V_PRODUCT1 => S2
+         * _V_PRODUCT2 => S3
+         * @type {Map<string,string>} 
+         * 
+        */
+        this.renderingExpression = new Map(); //name (of inner product result) -> expression
     }
+
+    fromjson(jsonstring){
+        const json=JSON.parse(jsonstring);
+        this.name=json.name;
+    
+        const Multivectors=new Map(); // name -> Multivector of nodes
+        const scalars=new Map(); // name -> node
+    
+        for(const [index, inputScalar] of json.inputScalars.entries()){
+            const node=new GraphNode(new VarOperand(inputScalar));
+            this.inputScalars.set(inputScalar, node);
+            scalars.set(inputScalar, node);
+            scalars.set("inputsVector["+index+"]", node);//gapp behaves weirdly and uses inputsVector[index] instead of name
+        }
+    
+        for (const renderingExpression of json.renderingExpressions) {
+            const name = renderingExpression.name;
+            const expression = renderingExpression.expression;
+            this.renderingExpression.set(name, expression);
+        }
+        //const inputsVector = json.inputScalars;
+    
+    
+        function parseExpression(node) {
+            if (node.type === "Mul") {
+                const left = parseExpression(node.left);
+                const right = parseExpression(node.right);
+                return new GraphNode( MulOperand.instance,[left, right]);
+            } else if (node.type === "Add") {
+                const left = parseExpression(node.left);
+                const right = parseExpression(node.right);
+                return new GraphNode( AddOperand.instance,[left, right]);
+            } else if (node.type === "Sub") {
+                const left = parseExpression(node.left);
+                const right = parseExpression(node.right);
+                return new GraphNode( SubOperand.instance,[left, right]);
+            } else if (node.type === "Div") {
+                const left = parseExpression(node.left);
+                const right = parseExpression(node.right);
+                return new GraphNode( DivOperand.instance,[left, right]);
+            } else if (node.type === "Const") {
+                return new GraphNode(new ConstOperand(node.value));
+            } else if (node.type === "Negation") {
+                return  new GraphNode(NegOperand.instance,[parseExpression(node.operand)]);
+            } else if (node.type === "MathFunctionCall") {
+                const func = node.function;
+                const operand = parseExpression(node.operand);
+                if (func === "abs") {
+                    return new GraphNode(AbsOperand.instance,[operand]);
+                } else if (func === "sqrt") {
+                    return new GraphNode(SqrtOperand.instance,[operand]);
+                } else {
+                    throw new Error(`Unknown function: ${func}`);
+                }
+            }
+            
+            else if (node.type === "MultivectorVariable") {
+                //TODO bladindex should be integer. how do i cast it to int?
+                if (node.name.startsWith("inputsVector[") && node.name.endsWith("]")) {
+                   return scalars.get(node.name);// Return the corresponding input vector
+                }
+    
+                return Multivectors.get(node.name).get(node.bladeIndex);
+            } else if (node.type === "Variable") {
+                return scalars.get(node.name);
+            } else {
+                throw new Error(`Unknown node type: ${node.type}`);
+            }
+        }
+    
+        var activeColor=new Color(0,0,0,1);
+        for (const node of json.nodes){
+            if(node.type==="AssignmentNode"){
+                const expression=parseExpression(node.expression);
+                const variablejson=node.variable;
+                if(variablejson.type==="Variable"){
+                    scalars.set(variablejson.name,expression);
+                } else if(variablejson.type==="MultivectorVariable"){
+                    const name=variablejson.name;
+                    const bladeIndex=variablejson.bladeIndex;
+                    if(!Multivectors.has(name)){
+                        Multivectors.set(name,new Multivector());
+                    }
+                    //TODO handle reasigning of multivector variables
+                    Multivectors.get(name).set(bladeIndex,expression);
+                } else{
+                    throw new Error(`Unknown variable type: ${variablejson.type}`);
+                }
+            } else if(node.type==="ColorNode"){
+                activeColor=new Color(node.r,node.g,node.b,node.alpha);
+            } else if (node.type==="StoreResultNode"){
+    
+            } else if(node.type==="ExpressionStatement"){
+                if(node.expression.type!=="Variable"){
+                    throw new Error("ExpressionStatement must be a variable");
+                }
+                this.vissualization.set(node.expression.name,activeColor);
+            } else {
+                throw new Error(`Unknown node type: ${node.type}`);
+            }
+            
+        }
+    
+        for (const name of json.outputMultivectors) {
+            this.outputMultivectors.set(name, Multivectors.get(name));
+        }
+    
+    }
+
+    
+    /**
+     * 
+     * @returns {VisualisationGraph[]} list of visualisation graphs
+     */
+    createVisualisationgraphs1() {
+
+        const VisualisationGraphs=[];
+        const xyz=[..."XYZ"].map((cord)=>this.inputScalars.get("_V_"+cord));
+        const inputnodes=new Map(xyz.map((node)=>[node,node]));
+        for (const [innerProductResultName,outputMultivectorName] of this.renderingExpression.entries()) {
+        const innerProductResult=this.outputMultivectors.get(innerProductResultName);
+        const innerProductInput=this.outputMultivectors.get(outputMultivectorName);
+        const newinnerProductInput=new Multivector();
+
+
+        let args=0;
+        for (const [index, value] of innerProductInput.entries()) {
+            const node = new GraphNode(new VarOperand("args["+(args++)+"]"));
+            newinnerProductInput.set(index, node);
+            inputnodes.set(value, node);
+        }
+        const outputnodes=subgraph(inputnodes,innerProductResult.values());
+
+
+        const newinnerProductResult=innerProductResult.map((value) => outputnodes.get(value));
+        /*for (const [index, value] of innerProductResult.values.entries()) {
+            newinnerProductResult.set(index, outputnodes.get(value));
+        }*/
+        //this code creates a input variable for each blade of the multivector to visualize (newinnerProductInput)
+        //and a new multivector for each output node (newinnerProductResult)
+        VisualisationGraphs.push(new VisualisationGraph(newinnerProductInput, newinnerProductResult,innerProductInput,outputMultivectorName));
+        }
+        return VisualisationGraphs;
+    }
+
+    createVisualisationgraphs2(){
+        const VisualisationGraphs=[];
+        for (const [innerProductResultName,outputMultivectorName] of this.renderingExpression.entries()) {
+            const innerProductResultNodes=this.outputMultivectors.get(innerProductResultName).values();
+
+            VisualisationGraphs.push(new VisualisationGraph2(innerProductResultNodes,outputMultivectorName));
+        }
+        return VisualisationGraphs;
+    }
+
+    
 }
     
-function loadGaalopjson(jsonstring){
-    const json=JSON.parse(jsonstring);
-    const graph=new GaalopGraph();
-    graph.name=json.name;
-
-    const Multivectors=new Map(); // name -> Multivector of nodes
-    const scalars=new Map(); // name -> node
-
-    for(const [index, inputScalar] of json.inputScalars.entries()){
-        const node=new GraphNode(new VarOperand(inputScalar));
-        graph.inputScalars.set(inputScalar, node);
-        scalars.set(inputScalar, node);
-        scalars.set("inputsVector["+index+"]", node);//gapp behaves weirdly and uses inputsVector[index] instead of name
-    }
-
-    for (const renderingExpression of json.renderingExpressions) {
-        const name = renderingExpression.name;
-        const expression = renderingExpression.expression;
-        graph.renderingExpression.set(name, expression);
-    }
-    //const inputsVector = json.inputScalars;
-
-
-    function parseExpression(node) {
-        if (node.type === "Mul") {
-            const left = parseExpression(node.left);
-            const right = parseExpression(node.right);
-            return new GraphNode( MulOperand.instance,[left, right]);
-        } else if (node.type === "Add") {
-            const left = parseExpression(node.left);
-            const right = parseExpression(node.right);
-            return new GraphNode( AddOperand.instance,[left, right]);
-        } else if (node.type === "Sub") {
-            const left = parseExpression(node.left);
-            const right = parseExpression(node.right);
-            return new GraphNode( SubOperand.instance,[left, right]);
-        } else if (node.type === "Div") {
-            const left = parseExpression(node.left);
-            const right = parseExpression(node.right);
-            return new GraphNode( DivOperand.instance,[left, right]);
-        } else if (node.type === "Const") {
-            return new GraphNode(new ConstOperand(node.value));
-        } else if (node.type === "Negation") {
-            return  new GraphNode(NegOperand.instance,[parseExpression(node.operand)]);
-        } else if (node.type === "MathFunctionCall") {
-            const func = node.function;
-            const operand = parseExpression(node.operand);
-            if (func === "abs") {
-                return new GraphNode(AbsOperand.instance,[operand]);
-            } else if (func === "sqrt") {
-                return new GraphNode(SqrtOperand.instance,[operand]);
-            } else {
-                throw new Error(`Unknown function: ${func}`);
-            }
-        }
-        
-        else if (node.type === "MultivectorVariable") {
-            //TODO bladindex should be integer. how do i cast it to int?
-            if (node.name.startsWith("inputsVector[") && node.name.endsWith("]")) {
-               return scalars.get(node.name);// Return the corresponding input vector
-            }
-
-            return Multivectors.get(node.name).get(node.bladeIndex);
-        } else if (node.type === "Variable") {
-            return scalars.get(node.name);
-        } else {
-            throw new Error(`Unknown node type: ${node.type}`);
-        }
-    }
-
-    var activeColor=new Color(0,0,0,1);
-    for (const node of json.nodes){
-        if(node.type==="AssignmentNode"){
-            const expression=parseExpression(node.expression);
-            const variablejson=node.variable;
-            if(variablejson.type==="Variable"){
-                scalars.set(variablejson.name,expression);
-            } else if(variablejson.type==="MultivectorVariable"){
-                const name=variablejson.name;
-                const bladeIndex=variablejson.bladeIndex;
-                if(!Multivectors.has(name)){
-                    Multivectors.set(name,new Multivector());
-                }
-                //TODO handle reasigning of multivector variables
-                Multivectors.get(name).set(bladeIndex,expression);
-            } else{
-                throw new Error(`Unknown variable type: ${variablejson.type}`);
-            }
-        } else if(node.type==="ColorNode"){
-            activeColor=new Color(node.r,node.g,node.b,node.alpha);
-        } else if (node.type==="StoreResultNode"){
-
-        } else if(node.type==="ExpressionStatement"){
-            if(node.expression.type!=="Variable"){
-                throw new Error("ExpressionStatement must be a variable");
-            }
-            graph.vissualization.set(node.expression.name,activeColor);
-        } else {
-            throw new Error(`Unknown node type: ${node.type}`);
-        }
-        
-    }
-
-    for (const name of json.outputMultivectors) {
-        graph.outputMultivectors.set(name, Multivectors.get(name));
-    }
-
-
-
-
-    return graph;
-
-}
 
 
 var path="G:\\Users\\konst\\data\\gaalop\\input\\jsonexport.json";
 
-var fs = require('fs');
+/*var fs = require('fs');
 fs.readFile(path, 'utf8', (err, data) => {
     if (err) {
         console.error(err);
         return;
     }
-    const graph=loadGaalopjson(data);
+
+    const graph=new GaalopGraph();
+    graph.fromjson(data);
     console.log(graph);
 
 
@@ -407,11 +463,30 @@ fs.readFile(path, 'utf8', (err, data) => {
     outputnodes=[...commonsubexpressionelimination(graphoutputnodes).values()];
     //graphtocode(outputnodes);
 
-    const visualisationgraphs=createVisualisationgraphs1(graph);
+    const visualisationgraphs=graph.createVisualisationgraphs2(graph);
     //graphtocode(Array.from(visualisationgraphs[0].GPUresult.values()));
-    console.log(new GraphToCodeGLSLVis().generate([visualisationgraphs[0].sumofSquares]));
-    console.log(visualisationgraphs);
-});
+
+    fs.readFile("./jsfromgraph/frag_aberth_generated.glsl", 'utf8', (err, data) => {
+        if (err) {
+            console.error(err);
+            return;
+        }
+        console.log(visualisationgraphs[0].gencodeaberth(data));
+    });
+    //console.log(visualisationgraphs);
+});*/
+
+
+
+async function load(url) {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("couldnt load "+url);
+    }
+    return await response.text();
+  }
+
+
 
 function topologicalsort(outputnodes){
     //todo check for cycles
@@ -567,8 +642,9 @@ class GraphToCode{
 
 
 class GraphToCodeGLSLVis extends GraphToCode {
-    constructor() {
+    constructor(template) {
         super(false);
+        this.template=template;
     }
 
     emitheader() {
@@ -580,7 +656,7 @@ class GraphToCodeGLSLVis extends GraphToCode {
     DualComplex y=DualComplex(ComplexMul(Complex(rayDir.y,0.),a)+Complex(rayOrigin.y,0.),rayDir.y,0.);
     DualComplex z=DualComplex(ComplexMul(Complex(rayDir.z,0.),a)+Complex(rayOrigin.z,0.),rayDir.z,0.);
     */
-        this.code+=`DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a) {\n`;
+        this.code+=`DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a) {\n`;
         this.code+=`    DualComplex _V_X=DualComplex(ComplexMul(Complex(rayDir.x,0.),a)+Complex(rayOrigin.x,0.),rayDir.x,0.);\n`;
         this.code+=`    DualComplex _V_Y=DualComplex(ComplexMul(Complex(rayDir.y,0.),a)+Complex(rayOrigin.y,0.),rayDir.y,0.);\n`;
         this.code+=`    DualComplex _V_Z=DualComplex(ComplexMul(Complex(rayDir.z,0.),a)+Complex(rayOrigin.z,0.),rayDir.z,0.);\n`;
@@ -588,10 +664,10 @@ class GraphToCodeGLSLVis extends GraphToCode {
 
     }
 
-    generate(outputnodes) {
-        this.outputnodes=arrayify(outputnodes);
+    generate(outputnode,argslength) {
+        
         this.typemap=new Map(); //node->type
-        visitnodes(this.outputnodes, (node, parentresults) => {
+        visitnodes(outputnode, (node, parentresults) => {
             if(node.operand instanceof VarOperand) {
                 if(node.operand.name.startsWith("args")) {
                     return "float";
@@ -615,7 +691,17 @@ class GraphToCodeGLSLVis extends GraphToCode {
         },this.typemap);
 
 
-        return this.generatecodeinternal(outputnodes);
+
+
+        let glslfunction= this.generatecodeinternal([outputnode]);
+
+        const codetoreplaceargs="uniform float[?] args;";
+        const codetoreplacefunction="DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){?}";
+
+        //const sumofSquarescode=new GraphToCodeGLSLVis().generate([this.sumofSquares]);
+        const argscode=`uniform float[${argslength}] args;`;
+
+        return this.template.replace(codetoreplaceargs,argscode).replace(codetoreplacefunction,glslfunction);
     }
 
     emitfooter(returnvalues) {
@@ -825,41 +911,7 @@ function subgraph(inputnodes, outputnodes) {
     return new Map(outputnodes.map((node) => [node, nodereplacements.get(node)]));
 }
 
-/**
- * 
- * @param {GaalopGraph} gaalopgraph 
- * @returns {VisualisationGraph[]} list of visualisation graphs
- */
-function createVisualisationgraphs1(gaalopgraph) {
 
-    const VisualisationGraphs=[];
-    xyz=[..."XYZ"].map((cord)=>gaalopgraph.inputScalars.get("_V_"+cord));
-    const inputnodes=new Map(xyz.map((node)=>[node,node]));
-    for (const [innerProductResultName,outputMultivectorName] of gaalopgraph.renderingExpression.entries()) {
-       const innerProductResult=gaalopgraph.outputMultivectors.get(innerProductResultName);
-       const innerProductInput=gaalopgraph.outputMultivectors.get(outputMultivectorName);
-       const newinnerProductInput=new Multivector();
-
-
-       let args=0;
-       for (const [index, value] of innerProductInput.entries()) {
-           const node = new GraphNode(new VarOperand("args["+(args++)+"]"));
-           newinnerProductInput.set(index, node);
-           inputnodes.set(value, node);
-       }
-       const outputnodes=subgraph(inputnodes,innerProductResult.values());
-
-
-       const newinnerProductResult=innerProductResult.map((value) => outputnodes.get(value));
-       /*for (const [index, value] of innerProductResult.values.entries()) {
-        newinnerProductResult.set(index, outputnodes.get(value));
-       }*/
-       //this code creates a input variable for each blade of the multivector to visualize (newinnerProductInput)
-       //and a new multivector for each output node (newinnerProductResult)
-       VisualisationGraphs.push(new VisualisationGraph(newinnerProductInput, newinnerProductResult,innerProductInput,outputMultivectorName));
-    }
-    return VisualisationGraphs;
-}
 
 
 
@@ -940,6 +992,28 @@ class VisualisationGraph {
         } 
     }
 
+    /**
+     * 
+     * @param {String} glslcode - the code in which this visualisation node is inlined
+     * @returns 
+     */
+
+    codegen(glslcode){
+
+        const codetoreplaceargs="uniform float[?] args;";
+        const codetoreplacefunction="DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){?}";
+
+        const sumofSquarescode=new GraphToCodeGLSLVis().generate([this.sumofSquares]);
+        const argscode=`uniform float[${argslength}] args;`;
+
+        return glslcode.replace(codetoreplaceargs,argscode).replace(codetoreplacefunction,sumofSquarescode);
+
+
+
+
+
+    }
+
 
 }
 
@@ -948,6 +1022,121 @@ class VisualisationGraph {
 
 
 
+
+class VisualisationGraph2 {
+    constructor(outputnodes,originalMultivectorName) {
+        this.name=originalMultivectorName;
+        const sumofsquares=this.singularoutput(outputnodes);
+        const splitgraphout=this.splitgraph(sumofsquares);
+
+
+        /**@type {Map<GraphNode,GraphNode>} */
+        this.cpu_out_to_gpu_in=splitgraphout.cpu_out_to_gpu_in;
+
+        /**@type {GraphNode} */
+        this.GPUgraph =splitgraphout.gpu_out;
+
+        /**@type {GraphNode} */
+        this.completegraph=sumofsquares;
+
+        //todo
+
+        
+
+    }
+
+    evaluateCPUgraph(inputvaluescache) {
+        return evaluatenodes(arrayify(this.cpu_out_to_gpu_in.keys()), inputvaluescache);
+    }
+
+    setuniforms(inputvaluescache,shader) {
+        this.evaluateCPUgraph(inputvaluescache);
+        //console.log(inputvaluescache);
+        for(const [cpunode,gpunode]of this.cpu_out_to_gpu_in.entries()){
+            const value=inputvaluescache.get(cpunode);
+
+            const gpuname=gpunode.operand.name;
+            if(value===undefined)throw new Error("maybe try to set all input values");
+            shader.gl.uniform1f(shader.getUniformLocation(gpuname), value);
+        }
+    }
+
+    gencodeaberth(template){
+        //todo countroots
+        const argslength=this.cpu_out_to_gpu_in.size;
+        return new GraphToCodeGLSLVis(template).generate(this.GPUgraph,argslength);
+    }
+
+    
+    splitgraph(outputnode){
+        //compute nodes dependont on _V_X or _V_Y or _V_Z
+        const splitnodes=new Set();//these nodes are the gpu inputs which are precomputed on cpu
+        visitnodes(outputnode, (node, parentresults) => {
+            if (node.operand instanceof VarOperand) {
+                if(node.operand.name.startsWith("_V_")){
+                    return {dependsonxyz:true,dependsonvariables:false}
+                }else{
+                    return {dependsonxyz:false,dependsonvariables:true}
+                }
+            } else{
+                const dependsonxyz=parentresults.reduce((a,b)=> a||b.dependsonxyz,false);
+                const dependsonvariables=parentresults.reduce((a,b)=> a||b.dependsonvariables,false);
+
+                if(dependsonxyz && dependsonvariables){
+                    for (let i = 0; i < parentresults.length; i++) {
+                        const parentres = parentresults[i];
+                        if (parentres.dependsonvariables && !parentres.dependsonxyz) {
+                            splitnodes.add(node.parents[i]);  //if node depends on xyz but parent doesnt
+                        }
+                    }
+                }
+                return { dependsonxyz, dependsonvariables };
+            }
+        });
+
+
+        let nodecounter=0;
+        const nodemap=new Map();//maps CPU splitnodes to GPU inputnodes
+        const GPUgraph=visitnodes(outputnode, (node, parentresults) => {
+            if(splitnodes.has(node)){
+                const variable=new GraphNode(new VarOperand(`args[${nodecounter++}]`));
+                nodemap.set(node,variable);
+                return variable;
+            } else{
+                return new GraphNode(node.operand,parentresults);//copy
+            }
+        }).get(outputnode);
+
+        return {cpu_out_to_gpu_in:nodemap,gpu_out:GPUgraph };
+
+    }
+
+    singularoutput(outputnodes){
+        
+        if (outputnodes.length === 0) {
+            throw new Error("outputnodes is empty");
+        } else if (outputnodes.lengt === 1) {
+            return outputnodes[0];
+        } else {
+            let result=undefined;
+            for (const value of outputnodes) {
+               const square = new GraphNode(MulOperand.instance, [value, value]);
+                if (result === undefined) {
+                    result = square;
+                } else {
+                    result = new GraphNode(AddOperand.instance, [result, square]);
+                }
+            }
+            return result;
+        }
+    }
+
+    
+
+    
+
+
+}
 
 
 
