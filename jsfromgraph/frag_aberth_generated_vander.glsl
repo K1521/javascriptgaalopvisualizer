@@ -249,6 +249,7 @@ void aberth_method(inout Complex[POLYDEGREE] roots, vec3 rayDir, vec3 rayOrigin,
 #endif
 
 #if USE_DUALCOMPLEX
+/*
 void aberth_method(inout Complex[POLYDEGREE] roots, vec3 rayDir, vec3 rayOrigin) {
     bool[POLYDEGREE] done;
     for (int k = 0; k < POLYDEGREE; k++) done[k]=false;
@@ -291,6 +292,71 @@ void aberth_method(inout Complex[POLYDEGREE] roots, vec3 rayDir, vec3 rayOrigin)
             if(any(isnan(w))||any(isinf(w))){
                 //debugcolor(vec3(1.,1.,0.));
                 done[k]=true;
+                continue;
+            }
+            roots[k] -= w; // Update the root
+
+            // Track the maximum change in root
+            max_change = float(max(max_change, dot(w,w)));//dot(w,w) instead of length(w)
+        }
+        
+
+        // If the maximum change is smaller than the threshold, stop early
+        if (max_change < ABERTH_THRESHOLD*ABERTH_THRESHOLD) {
+            //debugcolor(vec3(float(iter+1)/float(ABERTH_MAXITER)));
+            break; // Converged, exit the loop
+        }
+    }
+}*/
+
+void aberth_method(inout Complex[POLYDEGREE] roots, vec3 rayDir, vec3 rayOrigin) {
+    int done=0;
+
+    for (int iter = 0; iter < ABERTH_MAXITER; iter++) {
+        float max_change = 0.0; // Track the largest change in roots
+
+        for (int k = done; k < POLYDEGREE; k++) {
+            
+            
+
+            // Evaluate the polynomial and its derivative at the current root
+            DualComplex res=DualComplexSummofsquares(rayDir,rayOrigin,roots[k]);
+            Complex a = ComplexDiv(
+                res.xy,
+                res.zw
+            );
+
+
+        #if USE_DOUBLEROOTS
+            Complex rk=roots[k];
+            Complex s = ComplexInv(rk-ComplexConjugate(rk)); // Summation term
+            for (int j = 0; j < POLYDEGREE; j++) {
+                if (j != k) { // Avoid self-interaction
+                    s += ComplexInv(rk - roots[j])+ComplexInv(rk - ComplexConjugate(roots[j]));
+                }
+            }
+        #else
+            Complex s = Complex(0.0); // Summation term
+            for (int j = 0; j < POLYDEGREE; j++) {
+                if (j != k) {
+                    Complex diff = roots[k] - roots[j];
+                    s += ComplexInv(diff);
+                }
+            }
+        #endif
+
+            // Compute the correction term
+            Complex w = ComplexDiv(a, Complex(1.0, 0.0) - ComplexMul(a, s));
+            if(any(isnan(w))||any(isinf(w))){
+                //debugcolor(vec3(1.,1.,0.));
+                
+
+                //swap roots[k],roots[done]
+                Complex temp=roots[done];
+                roots[done]=roots[k];
+                roots[k]=temp;
+                
+                done++;
                 continue;
             }
             roots[k] -= w; // Update the root
