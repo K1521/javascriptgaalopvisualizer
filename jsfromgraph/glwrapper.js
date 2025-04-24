@@ -5,12 +5,13 @@ function radians(degrees){return degrees*Math.PI/180;}
 
 
 export class Cameracontroll{
-    constructor(canvas){
+    constructor(canvas,gl){
         //todo replace gl with this.gl
       this.canvas=canvas;
       this.colorpicker=true;
       this.c2w=Matrix.eye(3);
       this.cameraPos = new Vector([0,0,0]);
+      this.gl=gl;
       this.mouse = {
         x: undefined,
         y: undefined,
@@ -80,7 +81,7 @@ export class Cameracontroll{
         const x = event.clientX;
         const y = this.canvas.height - event.clientY; // Flip Y since WebGL has (0,0) at bottom-left
         const pixels = new Uint8Array(4); // RGBA
-        gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        this.gl.readPixels(x, y, 1, 1, this.gl.RGBA, this.gl.UNSIGNED_BYTE, pixels);
         const color = `rgb(${(pixels[0]/255).toFixed(3)}, ${(pixels[1]/255).toFixed(3)}, ${(pixels[2]/255).toFixed(3)}, ${(pixels[3]/255).toFixed(3)})    rgb(${pixels[0]}, ${pixels[1]}, ${pixels[2]}, ${pixels[3]})    (${pixels[0]-128}, ${pixels[1]-128}, ${pixels[2]-128}, ${pixels[3]-128})`;
         console.log(color); // Display the color in console or UI
       }

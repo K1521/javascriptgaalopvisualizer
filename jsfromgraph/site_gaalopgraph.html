@@ -199,6 +199,7 @@ class multirenderingpipeline{
   render(){
     //this.gl.clearDepth(1000.);    
     //this.gl.depthRange(0., 1000.);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     this.gl.depthFunc(gl.LESS);
     this.gl.enable(this.gl.DEPTH_TEST);
@@ -210,6 +211,7 @@ class multirenderingpipeline{
       //gl.clear(gl.COLOR_BUFFER_BIT);
       this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
     }
+    gl.finish();
     this.camera.changed=false;
   }
 
@@ -270,7 +272,9 @@ import {GaalopGraph} from "./graph2.js"
 
 async function main(){
 
-    let gajson=await load("./jsonexport.json");
+    //let gajson=await load("./jsonexport.json");
+    //let gajson=await load("./torus.json");
+    let gajson=await load("./torus_intersect.json");
     const graph=new GaalopGraph();
     graph.fromjson(gajson);
     //console.log(graph);
@@ -279,12 +283,14 @@ async function main(){
 
   //const fragmentShaderSource =await load("./frag3.glsl"); 
   const fragmentShaderSource =await load("./frag_aberth.glsl"); 
-  const fragmentShaderSourceTemplate =await load("./frag_aberth_generated.glsl"); 
+  //const fragmentShaderSourceTemplate =await load("./frag_aberth_generated.glsl"); 
+  const fragmentShaderSourceTemplate =await load("./frag_aberth_generated_vander.glsl"); 
+  //const fragmentShaderSourceTemplate =await load("./frag_generated_xyzDual.glsl"); 
   //console.log(fragmentShaderSource);
 
   //const shader =new Shader(gl, vertexShaderSource,fragmentShaderSource );
   //shader.use();
-  const camera=new Cameracontroll(mainCanvas);
+  const camera=new Cameracontroll(mainCanvas,gl);
   
   //let funmat=new Matrix([[-3.2,0., 0., 0., 0.,-3.2,0., 0., 0., 0., 0., 0., 1.5125, -5.225,   4.5125]]);
   /**/
@@ -301,12 +307,20 @@ async function main(){
   ["d14", 0.5], ["d24", 0.4], ["d34", 0.3],
 ]);
   for(const visgraph of graph.createVisualisationgraphs2()){
-    const frag=visgraph.gencodeaberth(fragmentShaderSourceTemplate);
+    visgraph.simplify();
+    const frag=visgraph.gencodeAberthHybrid(fragmentShaderSourceTemplate);
+    //const frag=visgraph.gencodexyzDual(fragmentShaderSourceTemplate);
     const shader=new Shader(gl, vertexShaderSource,frag );
+    console.log(visgraph.name+ " degree:"+ visgraph.calcpolydegree_gpu()+" issquared:"+visgraph.issquared);
     console.log(frag);
     shader.use();
     visgraph.setuniforms(values,shader);
-    shaders.push(shader);
+    const color=graph.objectcolormap.get(visgraph.name); 
+
+
+    shader.gl.uniform4fv(shader.getUniformLocation('incolor'), [color.r,color.g,color.b,1.0]);
+    //if(visgraph.name==="intersect")
+      shaders.push(shader);
 
   }
   console.log(gl);
@@ -339,7 +353,7 @@ async function main(){
     if(camera.changed){
       //drawplot(camera,funmat.array);
 
-      deltatimeavg=deltatimeavg*0.95+deltatime*0.05;
+      deltatimeavg=deltatimeavg*0.90+deltatime*0.10;
       fpscounter.innerText = `FPS: ${Math.ceil(1/deltatimeavg)}`;
 
       renderer.render();

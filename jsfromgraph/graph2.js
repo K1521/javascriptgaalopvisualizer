@@ -1,4 +1,4 @@
-class GraphNode {
+export class GraphNode {
     constructor(operand,parents=[]) {
         if(operand === undefined)
             throw new Error("operand is undefined");
@@ -84,7 +84,7 @@ class ConstOperand extends Operand {
 
 }
 
-class VarOperand extends Operand {
+export class VarOperand extends Operand {
     constructor(name) {
         super();
         this.name = name;
@@ -269,8 +269,8 @@ export class GaalopGraph {
         this.name = undefined;
         this.inputScalars = new Map(); // variablename->variable
         this.outputMultivectors = new Map(); // name -> Multivector of nodes
-
-        this.vissualization = new Map(); //name (of output node) -> color
+        this.allMultivectors=undefined;
+        this.objectcolormap = new Map(); //name (of output node) -> color
 
         /** 
          * maps the name of the innerProductResult to the output Multivector Name
@@ -281,8 +281,10 @@ export class GaalopGraph {
          * @type {Map<string,string>} 
          * 
         */
-        this.renderingExpression = new Map(); //name (of inner product result) -> expression
+        this.renderingExpression = new Map(); //name (of inner product result) -> expression (name of multivector)
     }
+
+
 
     fromjson(jsonstring){
         const json=JSON.parse(jsonstring);
@@ -379,7 +381,7 @@ export class GaalopGraph {
                 if(node.expression.type!=="Variable"){
                     throw new Error("ExpressionStatement must be a variable");
                 }
-                this.vissualization.set(node.expression.name,activeColor);
+                this.objectcolormap.set(node.expression.name,activeColor);
             } else {
                 throw new Error(`Unknown node type: ${node.type}`);
             }
@@ -389,6 +391,8 @@ export class GaalopGraph {
         for (const name of json.outputMultivectors) {
             this.outputMultivectors.set(name, Multivectors.get(name));
         }
+
+        this.allMultivectors=Multivectors;
     
     }
 
@@ -443,7 +447,7 @@ export class GaalopGraph {
     
 
 
-var path="G:\\Users\\konst\\data\\gaalop\\input\\jsonexport.json";
+//var path="G:\\Users\\konst\\data\\gaalop\\input\\jsonexport.json";
 
 /*var fs = require('fs');
 fs.readFile(path, 'utf8', (err, data) => {
@@ -478,17 +482,17 @@ fs.readFile(path, 'utf8', (err, data) => {
 
 
 
-async function load(url) {
+/*async function load(url) {
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error("couldnt load "+url);
     }
     return await response.text();
-  }
+  }*/
 
 
 
-function topologicalsort(outputnodes){
+export function topologicalsort(outputnodes){
     //todo check for cycles
     const visited = new Set();
     const stack = [];
@@ -516,7 +520,7 @@ function topologicalsort(outputnodes){
 }
 
 
-class GraphToCode{
+export class GraphToCode{
 
 
     computeassignmentnodes(outputnodes) {
@@ -591,6 +595,7 @@ class GraphToCode{
     generatecodeinternal(outputnodes){
         //this sets up some internal state for the code generation
         this.outputnodes=arrayify(outputnodes);
+        console.log(this.outputnodes.length);
         this.code = "";
         this.noderepresentationcashe=new Map(); //node->string
         this.assignmentnodes=this.computeassignmentnodes(this.outputnodes); //node->string
@@ -598,8 +603,9 @@ class GraphToCode{
         //this generates the code for the function
         this.emitheader();
         this.emitbody();
-        const returnvalues=new Map(this.outputnodes.map((node) => [node,this.noderepresentationcashe.get(node)]));
-        this.emitfooter(returnvalues);
+        //const returnvalues=new Map(this.outputnodes.map((node) => [node,this.noderepresentationcashe.get(node)]));
+        //console.log(returnvalues.size());
+        this.emitfooter(this.outputnodes,this.outputnodes.map((node) => this.noderepresentationcashe.get(node)));
         return this.code;
     }
 
@@ -626,11 +632,14 @@ class GraphToCode{
 
     /**
      * 
-     * @param {Map<GraphNode,String>} returnvalues - A map of output nodes to their string representations. 
+     * param {Map<GraphNode,String>} returnvalues - A map of output nodes to their string representations. 
+     * @param {GraphNode[]} nodes -this are the outputnodes generateinternal is called with
+     * @param {String[]} nodenstrings -string for the nodes
+     * 
      */
 
-    emitfooter(returnvalues) {
-        this.code+= `return [${[...returnvalues.values()].join(",")}];\n}\n`;
+    emitfooter(nodes,nodenstrings) {
+        this.code+= `return [${nodenstrings.join(",")}];\n}\n`;
     }
 
     generate(outputnodes,functionname) {
@@ -639,12 +648,77 @@ class GraphToCode{
     }
 }
 
-
-
-class GraphToCodeGLSLVis extends GraphToCode {
-    constructor(template) {
+class GraphToCodeGLSLVis_simple extends GraphToCode {
+    constructor() {
         super(false);
-        this.template=template;
+    }
+
+    emitheader() {
+       
+
+        /*
+        DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){
+    DualComplex x=DualComplex(ComplexMul(Complex(rayDir.x,0.),a)+Complex(rayOrigin.x,0.),rayDir.x,0.);
+    DualComplex y=DualComplex(ComplexMul(Complex(rayDir.y,0.),a)+Complex(rayOrigin.y,0.),rayDir.y,0.);
+    DualComplex z=DualComplex(ComplexMul(Complex(rayDir.z,0.),a)+Complex(rayOrigin.z,0.),rayDir.z,0.);
+    */
+        this.code+=`float Summofsquares(vec3 rayDir, vec3 rayOrigin,float a) {\n`;
+        this.code+=`    float _V_X=rayDir.x*a+rayOrigin.x;\n`;
+        this.code+=`    float _V_Y=rayDir.y*a+rayOrigin.y;\n`;
+        this.code+=`    float _V_Z=rayDir.z*a+rayOrigin.z;\n`;
+        
+
+    }
+
+    generate(outputnode) {
+        
+       
+        let glslfunction= this.generatecodeinternal([outputnode]);
+        return glslfunction;
+        
+
+       
+    }
+
+    emitfooter(nodes,nodenstrings) {
+        this.code+= `    return ${nodenstrings[0]};\n}\n`;
+    }
+
+    stringifyassignment(name,nodestring,node) {
+
+        return `    float ${name} = ${nodestring};\n`;    
+    }
+
+    stringifnode(node,parentresults) {
+        if(node.operand instanceof MulOperand) {
+            if(node.parents.length!==2) throw new Error("MulOperand must have 2 parents");
+            let [leftparent,rightparent]=parentresults;
+            return `(${leftparent}*${rightparent})`
+        }
+        if(node.operand instanceof DivOperand) {
+            if(node.parents.length!==2) throw new Error("DivOperand must have 2 parents");
+            let [leftparent,rightparent]=parentresults;
+            return `(${leftparent}/${rightparent})`
+        }
+        if(node.operand instanceof AddOperand) {
+            if(node.parents.length!==2) throw new Error("AddOperand must have 2 parents");
+            let [leftparent,rightparent]=parentresults;
+           return `(${leftparent}+${rightparent})`;
+        }
+        if(node.operand instanceof ConstOperand){
+            const s = node.operand.value.toString();
+            if (s.includes('.') || s.includes('e') || s.includes('E')) return s;
+            return s + '.0'; 
+        }
+        return node.operand.stringify(parentresults);
+    }
+}
+
+
+class GraphToCodeGLSLVis_aberth_ComplexDual_old extends GraphToCode {
+    constructor() {
+        super(false);
+        //this.template=template;
     }
 
     emitheader() {
@@ -664,7 +738,7 @@ class GraphToCodeGLSLVis extends GraphToCode {
 
     }
 
-    generate(outputnode,argslength) {
+    generate(outputnode) {
         
         this.typemap=new Map(); //node->type
         visitnodes(outputnode, (node, parentresults) => {
@@ -694,18 +768,11 @@ class GraphToCodeGLSLVis extends GraphToCode {
 
 
         let glslfunction= this.generatecodeinternal([outputnode]);
-
-        const codetoreplaceargs="uniform float[?] args;";
-        const codetoreplacefunction="DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){?}";
-
-        //const sumofSquarescode=new GraphToCodeGLSLVis().generate([this.sumofSquares]);
-        const argscode=`uniform float[${argslength}] args;`;
-
-        return this.template.replace(codetoreplaceargs,argscode).replace(codetoreplacefunction,glslfunction);
+        return glslfunction;
     }
 
-    emitfooter(returnvalues) {
-        this.code+= `    return ${returnvalues.values().next().value};\n}\n`;
+    emitfooter(nodes,nodenstrings) {
+        this.code+= `    return ${nodenstrings[0]};\n}\n`;
     }
 
     stringifyassignment(name,nodestring,node) {
@@ -750,6 +817,207 @@ class GraphToCodeGLSLVis extends GraphToCode {
     }
 }
 
+
+class GraphToCodeGLSLVis_abstract_Dual extends GraphToCode {
+    constructor(dualtype) {
+        super(false);
+        //this.template=template;
+        this.dualtype=dualtype;
+    }
+
+    emitheader() {
+       
+
+        /*
+        DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){
+    DualComplex x=DualComplex(ComplexMul(Complex(rayDir.x,0.),a)+Complex(rayOrigin.x,0.),rayDir.x,0.);
+    DualComplex y=DualComplex(ComplexMul(Complex(rayDir.y,0.),a)+Complex(rayOrigin.y,0.),rayDir.y,0.);
+    DualComplex z=DualComplex(ComplexMul(Complex(rayDir.z,0.),a)+Complex(rayOrigin.z,0.),rayDir.z,0.);
+    */
+    throw Error("this method is abstract");
+        
+
+    }
+
+    generate(outputnode) {
+        
+        this.typemap=new Map(); //node->type
+        visitnodes(outputnode, (node, parentresults) => {
+            if(node.operand instanceof VarOperand) {
+                if(node.operand.name.startsWith("args")) {
+                    return "float";
+                }else if(node.operand.name.startsWith("_V_")) {
+                    return this.dualtype;
+                } else {
+                    throw new Error("unknown variable");
+                }
+            } 
+            if(node.operand instanceof ConstOperand)return "float";
+            if(node.operand instanceof NegOperand)return parentresults[0];
+            if(node.operand instanceof MulOperand || node.operand instanceof DivOperand || node.operand instanceof AddOperand) { 
+                if(node.parents.length!==2) throw new Error(`${node.operand.constructor.name} must have 2 parents`);
+                const left=parentresults[0];
+                const right=parentresults[1];
+                if(left === "float" && right === "float") return "float";
+                return this.dualtype;
+            }
+            throw new Error();
+            
+
+
+        },this.typemap);
+
+
+
+
+        let glslfunction= this.generatecodeinternal([outputnode]);
+        return glslfunction;
+    }
+
+    emitfooter(nodes,nodenstrings) {
+        this.code+= `    return ${nodenstrings[0]};\n}\n`;
+    }
+
+    stringifyassignment(name,nodestring,node) {
+
+        return `    ${this.typemap.get(node)} ${name} = ${nodestring};\n`;    
+    }
+
+    dualmul(left,right){
+        throw Error("this method is abstract");
+    }
+
+    dualdiv(left,right){
+        throw Error("this method is abstract");
+    }
+
+
+    dualCast(parentstring){
+        throw Error("this method is abstract");
+    }
+
+
+
+
+
+    stringifnode(node,parentresults) {
+        if(node.operand instanceof MulOperand) {
+            if(node.parents.length!==2) throw new Error("MulOperand must have 2 parents");
+            const [left,right]=node.parents;
+            let [leftparent,rightparent]=parentresults;
+            if(this.typemap.get(left)==="float" || this.typemap.get(right)==="float") return `(${leftparent}*${rightparent})`
+
+           return this.dualmul(leftparent,rightparent);
+        }
+        if(node.operand instanceof DivOperand) {
+            if(node.parents.length!==2) throw new Error("DivOperand must have 2 parents");
+            const [left,right]=node.parents;
+            let [leftparent,rightparent]=parentresults;
+            if(this.typemap.get(right)==="float") return `(${leftparent}/${rightparent})`
+            if(this.typemap.get(left)==="float") leftparent=this.dualCast(leftparent);
+            return this.dualdiv(leftparent,rightparent);
+        }
+        if(node.operand instanceof AddOperand) {
+            if(node.parents.length!==2) throw new Error("AddOperand must have 2 parents");
+            const [left,right]=node.parents;
+            let [leftparent,rightparent]=parentresults;
+            if(this.typemap.get(left)==="float" && this.typemap.get(right)==="float") return `(${leftparent}+${rightparent})`;
+            if(this.typemap.get(left)==="float") leftparent=this.dualCast(leftparent);
+            if(this.typemap.get(right)==="float") rightparent=this.dualCast(rightparent);
+            return `(${leftparent}+${rightparent})`;
+        }
+        if(node.operand instanceof ConstOperand){
+            const s = node.operand.value.toString();
+            if (s.includes('.') || s.includes('e') || s.includes('E')) return s;
+            return s + '.0'; 
+        }
+        return node.operand.stringify(parentresults);
+    }
+}
+
+
+class GraphToCodeGLSLVis_aberth_ComplexDual extends GraphToCodeGLSLVis_abstract_Dual{
+    constructor(){
+        super("DualComplex");
+    }
+
+    emitheader() {
+       
+
+        /*
+        DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){
+    DualComplex x=DualComplex(ComplexMul(Complex(rayDir.x,0.),a)+Complex(rayOrigin.x,0.),rayDir.x,0.);
+    DualComplex y=DualComplex(ComplexMul(Complex(rayDir.y,0.),a)+Complex(rayOrigin.y,0.),rayDir.y,0.);
+    DualComplex z=DualComplex(ComplexMul(Complex(rayDir.z,0.),a)+Complex(rayOrigin.z,0.),rayDir.z,0.);
+    */
+        this.code+=`DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a) {\n`;
+        this.code+=`    DualComplex _V_X=DualComplex(ComplexMul(Complex(rayDir.x,0.),a)+Complex(rayOrigin.x,0.),rayDir.x,0.);\n`;
+        this.code+=`    DualComplex _V_Y=DualComplex(ComplexMul(Complex(rayDir.y,0.),a)+Complex(rayOrigin.y,0.),rayDir.y,0.);\n`;
+        this.code+=`    DualComplex _V_Z=DualComplex(ComplexMul(Complex(rayDir.z,0.),a)+Complex(rayOrigin.z,0.),rayDir.z,0.);\n`;
+        
+
+    }
+
+
+    dualmul(left,right){
+        if(left === right)
+            return `DualComplexSqare(${left})`;
+        return `DualComplexMul(${left},${right})`;
+    }
+
+    dualdiv(left,right){
+        return `DualComplexDiv(${left},${right})`;
+    }
+
+
+    dualCast(parentstring){
+        return `DualComplex(${parentstring},0.,0.,0.)`;
+    }
+
+
+}
+
+class GraphToCodeGLSLVis_xyzDual extends GraphToCodeGLSLVis_abstract_Dual{
+    constructor(){
+        super("xyzDual");
+    }
+
+    emitheader() {
+       
+
+        /*
+        DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){
+    DualComplex x=DualComplex(ComplexMul(Complex(rayDir.x,0.),a)+Complex(rayOrigin.x,0.),rayDir.x,0.);
+    DualComplex y=DualComplex(ComplexMul(Complex(rayDir.y,0.),a)+Complex(rayOrigin.y,0.),rayDir.y,0.);
+    DualComplex z=DualComplex(ComplexMul(Complex(rayDir.z,0.),a)+Complex(rayOrigin.z,0.),rayDir.z,0.);
+    */
+        this.code+=`xyzDual xyzDualSummofsquares(vec3 pos) {\n`;
+        this.code+=`    xyzDual _V_X=xyzDual(1.,0.,0.,pos.x);\n`;
+        this.code+=`    xyzDual _V_Y=xyzDual(0.,1.,0.,pos.y);\n`;
+        this.code+=`    xyzDual _V_Z=xyzDual(0.,0.,1.,pos.z);\n`;
+        
+
+    }
+
+
+    dualmul(left,right){
+        if(left === right)
+            return `xyzDualSqare(${left})`;
+        return `xyzDualMul(${left},${right})`;
+    }
+
+    dualdiv(left,right){
+        return `xyzDualDiv(${left},${right})`;
+    }
+
+
+    dualCast(parentstring){
+        return `xyzDual(0.,0.,0.,${parentstring})`;
+    }
+
+
+}
+
 /**
  * 
  * @param {GraphNode[]} nodes 
@@ -767,7 +1035,8 @@ function copygraph(nodes) {
 
 
 
-function commonsubexpressionelimination(nodes) {
+export function commonsubexpressionelimination(nodes) {
+    nodes=arrayify(nodes);
     const nodescopy=copygraph(nodes); //copy the graph to avoid modifying the original graph
     const nodereplacements=commonsubexpressionelimination_inplace(nodescopy.values());
     //nodes->copy
@@ -859,7 +1128,7 @@ function countnodes(nodes) {
     }
     return resultcash;
 }*/
-function visitnodes(nodes,visitfunc,resultcache=new Map()) {
+export function visitnodes(nodes,visitfunc,resultcache=new Map()) {
 
     function visit(node) {
         if (resultcache.has(node)) return resultcache.get(node);
@@ -1003,7 +1272,7 @@ class VisualisationGraph {
         const codetoreplaceargs="uniform float[?] args;";
         const codetoreplacefunction="DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){?}";
 
-        const sumofSquarescode=new GraphToCodeGLSLVis().generate([this.sumofSquares]);
+        const sumofSquarescode=new GraphToCodeGLSLVis_aberth_ComplexDual().generate([this.sumofSquares]);
         const argscode=`uniform float[${argslength}] args;`;
 
         return glslcode.replace(codetoreplaceargs,argscode).replace(codetoreplacefunction,sumofSquarescode);
@@ -1026,15 +1295,26 @@ class VisualisationGraph {
 class VisualisationGraph2 {
     constructor(outputnodes,originalMultivectorName) {
         this.name=originalMultivectorName;
-        const sumofsquares=this.singularoutput(outputnodes);
-        const splitgraphout=this.splitgraph(sumofsquares);
 
+        
+        let sumofsquares=undefined;
+        if (outputnodes.lengt === 1) {
+            sumofsquares=outputnodes[0];
+            this.issquared=false;
+        }else{
+            sumofsquares=this.singularoutput(outputnodes);
+            this.issquared=true;
+        } 
+        
+        const splitgraphout=this.splitgraph(sumofsquares);
+        
 
         /**@type {Map<GraphNode,GraphNode>} */
         this.cpu_out_to_gpu_in=splitgraphout.cpu_out_to_gpu_in;
 
         /**@type {GraphNode} */
         this.GPUgraph =splitgraphout.gpu_out;
+        
 
         /**@type {GraphNode} */
         this.completegraph=sumofsquares;
@@ -1042,6 +1322,17 @@ class VisualisationGraph2 {
         //todo
 
         
+
+    }
+
+    map_gpugraph_ip(fun){
+        this.cpu_out_to_gpu_in=new Map( arrayify(this.cpu_out_to_gpu_in.entries()).map((key,value)=>[key,fun(value)]))
+        this.GPUgraph=fun(this.GPUgraph);
+    }
+
+    simplify(){
+        const newnodes=commonsubexpressionelimination_inplace([this.GPUgraph])
+        this.map_gpugraph_ip((node)=>newnodes.get(node));
 
     }
 
@@ -1061,11 +1352,87 @@ class VisualisationGraph2 {
         }
     }
 
-    gencodeaberth(template){
-        //todo countroots
-        const argslength=this.cpu_out_to_gpu_in.size;
-        return new GraphToCodeGLSLVis(template).generate(this.GPUgraph,argslength);
+    gencodeAberth(template) {
+        //TODO countroots
+
+        const argsLength = this.cpu_out_to_gpu_in.size;
+    
+        template = template.replace(
+            "uniform float[?] args;",
+            argsLength > 0 ? `uniform float[${argsLength}] args;` : ""//0-length arrays are not allowed
+        );
+    
+        template = template.replace(
+            "DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){?}",
+            new GraphToCodeGLSLVis_aberth_ComplexDual().generate(this.GPUgraph)
+        );
+    
+        return template;
     }
+
+
+
+  
+
+    gencodeAberthHybrid(template) {
+        template = this.gencodeAberth(template);
+    
+        template = template.replace(
+            "float Summofsquares(vec3 rayDir, vec3 rayOrigin,float a){?}",
+            new GraphToCodeGLSLVis_simple().generate(this.GPUgraph)
+        );
+    
+        return template;
+    }
+
+
+
+
+    gencodexyzDual(template) {
+        //TODO countroots
+
+        const argsLength = this.cpu_out_to_gpu_in.size;
+    
+        template = template.replace(
+            "uniform float[?] args;",
+            argsLength > 0 ? `uniform float[${argsLength}] args;` : ""//0-length arrays are not allowed
+        );
+    
+        template = template.replace(
+            "xyzDual xyzDualSummofsquares(vec3 pos) {?}",
+            new GraphToCodeGLSLVis_xyzDual().generate(this.GPUgraph)
+        );
+    
+        return template;
+    }
+
+
+
+    calcpolydegree_gpu(){
+        return visitnodes(this.GPUgraph,(node,parentresults)=>{
+            if(node.operand instanceof VarOperand ) 
+                if(node.operand.name.startsWith("_V_")) return 1;
+                else return 0;
+            if(node.operand instanceof AddOperand || node.operand instanceof SubOperand){
+                return Math.max(...parentresults);
+            }
+            if(node.operand instanceof MulOperand){
+                return parentresults.reduce((prev,cur)=>prev+cur,0);
+            }
+            if(node.operand instanceof NegOperand){
+                return parentresults[0];
+            }
+            if(node.operand instanceof ConstOperand){
+                return 0;
+            }
+            if(node.operand instanceof DivOperand){
+                return parentresults[0];//only maximal degree
+            }
+            throw new Error("bad operation :"+node.operand.constructor.name);
+        }).get(this.GPUgraph);
+    }
+    
+   
 
     
     splitgraph(outputnode){
@@ -1192,3 +1559,19 @@ class GraphOutputMapping {
 }
 
 //todo make powercompare elimination
+
+/*
+function constantratioelimination(nodes){
+
+    nodes=arrayify(nodes);
+
+
+
+
+
+    visitnodes(nodes, (node, parentresults) => {
+       
+    }, nodereplacements);
+
+
+}*/
