@@ -48,7 +48,9 @@ vec3 normaltocol(vec3 normal){
     return normal*vec2(1,-1).xxy/.2+0.5;
 }
 
-
+vec3 getNormal(vec3 p){//normal aproximation in 2x2 pixels
+    return normalize( -cross(dFdx(p), dFdy(p)) );
+}
 
 
 float sum(vec3 v) {
@@ -65,13 +67,24 @@ float vmax(vec3 v) {
 #define xyzDual vec4
 
 
+extendedDual extendedDualMul(extendedDual a, extendedDual b) {
+    return extendedDual(
+        a[0] * b[0],                                                  // f * g
+        a[1] * b[0] + a[0] * b[1],                                    // f' * g + f * g'
+        a[2] * b[0] + 2.0 * a[1] * b[1] + a[0] * b[2],                // f'' * g + 2 f' g' + f g''
+        a[3] * b[0] + 3.0 * a[2] * b[1] + 3.0 * a[1] * b[2] + a[0] * b[3] // f''' * g + 3 f'' g' + 3 f' g'' + f g'''
+    );
+}
 
-xyzDual xyzDualMul(xyzDual a,xyzDual b){
-    return xyzDual(a.w*b.xyz+b.w*a.xyz,a.w*b.w);
+extendedDual extendedDualSqare(extendedDual a) {
+    return extendedDual(
+        a[0] * a[0],                                                  // f * g
+        2.*a[1] * a[0] ,                                    // f' * g + f * g'
+        2.*a[2] * a[0] + 2.0 * a[1] * a[1] ,                // f'' * g + 2 f' g' + f g''
+        2.*a[3] * a[0] + 6.0 * a[2] * a[1]  // f''' * g + 3 f'' g' + 3 f' g'' + f g'''
+    );
 }
-xyzDual xyzDualSqare(xyzDual a){
-    return xyzDual(2.*a.w*a.xyz,a.w*a.w);
-}
+
 
 xyzDual xyzDualSqrt(xyzDual a){
     float sqrtf=sqrt(a.w);
@@ -174,42 +187,8 @@ void DualComplexRaymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float x
 
 }
 
-vec3 getNormal(vec3 p,vec3 rayDir){//normal aproximation in 2x2 pixels
-    return normalize( -cross(dFdx(p), dFdy(p)) );
-    /*vec3 res=xyzDualSummofsquares(p-0.01*rayDir).xyz;
-    res*=sign(dot(res,rayDir));
-    return -normalize(res);*/
 
-}
 
-vec3 applyLighting(
-    vec3 baseColor,
-    vec3 normal,
-    vec3 lightDir,
-    vec3 viewDir,
-    float ambientStrength,
-    float specularStrength,
-    float shininess
-) {
-    normal = normalize(normal);
-    lightDir = normalize(lightDir);
-    viewDir = normalize(viewDir);
-
-    // Ambient
-    float ambient = ambientStrength;
-
-    // Diffuse (Lambert)
-    float diff = max(dot(normal, lightDir), 0.0);
-
-    // Specular (Phong)
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
-    
-    float specular = specularStrength * spec;
-
-    // Final color
-    return baseColor * (ambient + diff) + vec3(1.)*specular;
-}
 
 
 void main() {
@@ -249,19 +228,16 @@ void main() {
     gl_FragDepth = x/1000.;
 
     // Checkerboard pattern
-    float pattern = 0.5 + 0.5 * mod(sum(floor(p * 4.0)), 2.0); // Alternates between 0.5 and 1.0
-    // Isolinien
-    //float pattern=0.5 + 0.5 * ((fract(p.x * 4.0)<0.1)||(fract(p.y * 4.0)<0.1)||fract(p.z * 4.0)<0.1?1.:0.);
-    //float pattern=1.;
-    vec3 col=incolor.rgb*pattern;
-
-    col=applyLighting(col,getNormal(p,rayDir),vec3(1.,1.,1.),-rayDir,0.4,0.3,32.);
+    float checker = 0.5 + 0.5 * mod(sum(floor(p * 4.0)), 2.0); // Alternates between 0.5 and 1.0
+    
+    
+    vec3 col=incolor.rgb*checker;
 
 
 
     //col=vec3(1);
     col*=1.;//normaltocol(transpose(cameraMatrix)*getNormal(p));
-
+    //col=getlight(p,rayDir,col);
 
     /*
     if(any(isnan(col))){

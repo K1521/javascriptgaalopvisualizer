@@ -136,7 +136,7 @@ export class Cameracontroll{
         this.changed=true;
       };
       deltapos=deltapos.mul(movementfactor*4);
-      if(deltapos.abs()>0){
+      if(deltapos.length()>0){
         this.changed=true;
         this.cameraPos = this.cameraPos.add(this.c2w.mul(deltapos));
       }

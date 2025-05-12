@@ -2,6 +2,8 @@ export class GraphNode {
     constructor(operand,parents=[]) {
         if(operand === undefined)
             throw new Error("operand is undefined");
+        if(parents === undefined)
+            throw new Error("parents is undefined");
         this.parents = parents;
         this.operand = operand;
     }
@@ -29,7 +31,7 @@ class Operand {
 
     
 
-class AddOperand extends Operand {
+export class AddOperand extends Operand {
     eval(parentsvalues) {
         return parentsvalues.reduce((acc, val) => acc + val, 0);
     }
@@ -39,7 +41,7 @@ class AddOperand extends Operand {
     static instance = new AddOperand();
 }
 
-class MulOperand extends Operand {
+export class MulOperand extends Operand {
     eval(parentsvalues) {
         return parentsvalues.reduce((acc, val) => acc * val, 1);
     }
@@ -49,7 +51,7 @@ class MulOperand extends Operand {
     static instance = new MulOperand();
 }
 
-class SubOperand extends Operand {
+export class SubOperand extends Operand {
     eval(parentsvalues) {
         return parentsvalues.reduce((acc, val) => acc - val);
     }
@@ -59,7 +61,7 @@ class SubOperand extends Operand {
     static instance = new SubOperand();
 }
 
-class DivOperand extends Operand {
+export class DivOperand extends Operand {
     eval(parentsvalues) {
         return parentsvalues.reduce((acc, val) => acc / val);
     }
@@ -69,7 +71,7 @@ class DivOperand extends Operand {
     static instance = new DivOperand();
 }
 
-class ConstOperand extends Operand {
+export class ConstOperand extends Operand {
     constructor(value) {
         super();
         this.value = value;
@@ -106,7 +108,7 @@ class UnaryOperand extends Operand {
 
 }
 
-class NegOperand extends UnaryOperand {
+export class NegOperand extends UnaryOperand {
     constructor() {
         super((x) => -x);
     }
@@ -116,7 +118,7 @@ class NegOperand extends UnaryOperand {
     static instance = new NegOperand();
 }
 
-class AbsOperand extends UnaryOperand {
+export class AbsOperand extends UnaryOperand {
     constructor() {
         super((x) => Math.abs(x));
     }
@@ -126,7 +128,7 @@ class AbsOperand extends UnaryOperand {
     static instance = new AbsOperand();
 }
 
-class SqrtOperand extends UnaryOperand {
+export class SqrtOperand extends UnaryOperand {
     constructor() {
         super((x) => Math.sqrt(x));
     }
@@ -1018,6 +1020,47 @@ class GraphToCodeGLSLVis_xyzDual extends GraphToCodeGLSLVis_abstract_Dual{
 
 }
 
+class GraphToCodeGLSLVis_ExtendedDual extends GraphToCodeGLSLVis_abstract_Dual{
+    constructor(){
+        super("xyzDual");
+    }
+
+    emitheader() {
+       
+
+        /*
+        DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){
+    DualComplex x=DualComplex(ComplexMul(Complex(rayDir.x,0.),a)+Complex(rayOrigin.x,0.),rayDir.x,0.);
+    DualComplex y=DualComplex(ComplexMul(Complex(rayDir.y,0.),a)+Complex(rayOrigin.y,0.),rayDir.y,0.);
+    DualComplex z=DualComplex(ComplexMul(Complex(rayDir.z,0.),a)+Complex(rayOrigin.z,0.),rayDir.z,0.);
+    */
+        this.code+=`xyzDual xyzDualSummofsquares(vec3 pos) {\n`;
+        this.code+=`    xyzDual _V_X=xyzDual(1.,0.,0.,pos.x);\n`;
+        this.code+=`    xyzDual _V_Y=xyzDual(0.,1.,0.,pos.y);\n`;
+        this.code+=`    xyzDual _V_Z=xyzDual(0.,0.,1.,pos.z);\n`;
+        
+
+    }
+
+
+    dualmul(left,right){
+        if(left === right)
+            return `xyzDualSqare(${left})`;
+        return `xyzDualMul(${left},${right})`;
+    }
+
+    dualdiv(left,right){
+        return `xyzDualDiv(${left},${right})`;
+    }
+
+
+    dualCast(parentstring){
+        return `xyzDual(0.,0.,0.,${parentstring})`;
+    }
+
+
+}
+
 /**
  * 
  * @param {GraphNode[]} nodes 
@@ -1131,6 +1174,7 @@ function countnodes(nodes) {
 export function visitnodes(nodes,visitfunc,resultcache=new Map()) {
 
     function visit(node) {
+
         if (resultcache.has(node)) return resultcache.get(node);
         const parentresults = node.parents.map((parent) => visit(parent));
         const result = visitfunc(node, parentresults, resultcache);
@@ -1289,7 +1333,17 @@ class VisualisationGraph {
 
 
 
-
+function mapValues(map, fun, keepUndefined = true) {
+    return new Map(
+      Array.from(map.entries()).map(([key, value]) => {
+        const transformedValue = fun(value);
+        return [
+          key, 
+          (!keepUndefined && transformedValue === undefined) ? value : transformedValue
+        ];
+      })
+    );
+  }
 
 
 class VisualisationGraph2 {
@@ -1326,7 +1380,8 @@ class VisualisationGraph2 {
     }
 
     map_gpugraph_ip(fun){
-        this.cpu_out_to_gpu_in=new Map( arrayify(this.cpu_out_to_gpu_in.entries()).map((key,value)=>[key,fun(value)]))
+        //this.cpu_out_to_gpu_in=new Map( arrayify(this.cpu_out_to_gpu_in.entries()).map((key,value)=>[key,fun(value)]))
+        this.cpu_out_to_gpu_in=mapValues(this.cpu_out_to_gpu_in,fun,false);
         this.GPUgraph=fun(this.GPUgraph);
     }
 
@@ -1350,6 +1405,29 @@ class VisualisationGraph2 {
             if(value===undefined)throw new Error("maybe try to set all input values");
             shader.gl.uniform1f(shader.getUniformLocation(gpuname), value);
         }
+    }
+
+
+    gencode(template){
+        const argsLength = this.cpu_out_to_gpu_in.size;
+    
+        template = template.replace(
+            "uniform float[?] args;",
+            argsLength > 0 ? `uniform float[${argsLength}] args;` : ""//0-length arrays are not allowed
+        );
+        template = template.replace(
+            "DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){?}",
+            new GraphToCodeGLSLVis_aberth_ComplexDual().generate(this.GPUgraph)
+        );
+        template = template.replace(
+            "float Summofsquares(vec3 rayDir, vec3 rayOrigin,float a){?}",
+            new GraphToCodeGLSLVis_simple().generate(this.GPUgraph)
+        );
+        template = template.replace(
+            "xyzDual xyzDualSummofsquares(vec3 pos) {?}",
+            new GraphToCodeGLSLVis_xyzDual().generate(this.GPUgraph)
+        );
+        return template;
     }
 
     gencodeAberth(template) {

@@ -20,36 +20,68 @@ class Vector {
             throw new TypeError("Vectors must be of the same size for this operation");
         }
     }
+
     x(){return this.array[0];}
     y(){return this.array[1];}
     z(){return this.array[2];}
 
+    map(fun) { // Apply a function to each element of the vector
+        return new Vector(this.array.map(fun));
+    }
+
+    static binaryOp(fun,A,B) {
+        const Aisvector=A instanceof Vector;
+        const Bisvector=B instanceof Vector;
+        if(Aisvector && Bisvector){
+            A._checkSizeAndType(B);
+            return A.map((val, i) => fun(val, B.array[i]));
+        } else if(Aisvector){
+            return A.map(val => fun(val, B));
+        } else if(Bisvector){
+            return B.map(val => fun(A, val));
+        } else{
+            return fun(A,B);
+        }
+
+
+        /*if (typeof B === 'number') return new Vector(this.array.map(val => fun(val, B)));
+        this._checkSizeAndType(B);
+        return new Vector(this.array.map((val, i) => fun(val, B.array[i])));*/
+    }
+
     // Vector addition
     add(B) {
-        this._checkSizeAndType(B);
-        const result = this.array.map((val, idx) => val + B.array[idx]);
-        return new Vector(result);
+        return Vector.add(this,B);
     }
+    static add(A,B) {
+        return Vector.binaryOp( (a, b) => a + b,A,B);
+    }
+    
 
     // Vector subtraction
-    subtract(B) {
-        this._checkSizeAndType(B);
-        const result = this.array.map((val, idx) => val - B.array[idx]);
-        return new Vector(result);
+    sub(B) {
+        return Vector.sub(this,B);
     }
+    static sub(A,B) { 
+        return Vector.binaryOp( (a, b) => a - b,A,B);
+    }
+    
 
     // Scalar multiplication
-    mul(scalar) {
-        if (typeof scalar !== 'number') {
-            throw new TypeError("Multiplication must be by a scalar (number)");
-        }
-        const result = this.array.map(val => val * scalar);
-        return new Vector(result);
+    mul(B) {
+        return Vector.mul(this,B);
+    }
+    static mul(A,B) {
+        return Vector.binaryOp( (a, b) => a * b,A,B);
+    }
+    
+    div(B) {
+        return Vector.div(this,B);
+    } 
+    static div(A,B) {
+        return Vector.binaryOp( (a, b) => a / b,A,B);
     }
 
-    div(scalar){
-        return this.mul(1/scalar);
-    }
 
     // Dot product of two vectors
     dot(B) {
@@ -76,10 +108,24 @@ class Vector {
         return new Vector(result);
     }
 
-    abs(){return Math.sqrt(this.array.reduce((sum, val) => sum + val * val, 0));}
+    length(){return Math.sqrt(this.array.reduce((sum, val) => sum + val * val, 0));}
+
+    //this is element wise abs not the length of the vector
+    //use length() for that
+    abs(){return Vector.abs(this);}
+    static abs(A){
+        if(A instanceof Vector)return A.map(Math.abs);
+        return Math.abs(A);
+    }
+
+    sqrt(){return Vector.sqrt(this);}
+    static sqrt(A){
+        if(A instanceof Vector)return A.map(Math.sqrt);
+        return Math.sqrt(A);
+    }
 
     normalize(){
-        const l=this.abs();
+        const l=this.length();
         if(l===0)return new Vector(new Array(this.size()).fill(0));//this.mul(0);
         return this.div(l);
     }
@@ -254,8 +300,8 @@ class Matrix {
         const error = x.dot(y)/2;
 
         // Spread the error equally between x and y
-        const x_ort = x.subtract(y.mul(error));
-        const y_ort = y.subtract(x.mul(error));
+        const x_ort = x.sub(y.mul(error));
+        const y_ort = y.sub(x.mul(error));
 
 
         //const z_ort = x_ort.cross(y_ort);
@@ -294,7 +340,7 @@ class Matrix {
     }
 }
 
-
+/*
 class Multidual{
     constructor(f,dx,dy,dz,d1,d2,d3){
         this.f=f;
@@ -333,7 +379,148 @@ class Multidual{
         const halfinvsqrt=1/(2*sqrtf);
         return new Multidual(sqrtf,this.dx*halfinvsqrt,this.dy*halfinvsqrt,this.dz*halfinvsqrt,this.d1*halfinvsqrt,(2*this.f*this.d2-this.d1*this.d1)/(4*this.f*sqrtf),this.d3*halfinvsqrt-3*this.d1*(2*this.f*this.d2-this.d1*this.d1)/(8*this.f*this.f*sqrtf));
     }
+}*/
+
+class Multidual {
+    constructor(f, dx, dy, dz, d1, d2, d3) {
+        this.f = f;
+        this.dx = dx;
+        this.dy = dy;
+        this.dz = dz;
+        this.d1 = d1;
+        this.d2 = d2;
+        this.d3 = d3;
+    }
+
+    static promote(x) {
+        return (x instanceof Multidual) ? x : new Multidual(x, 0, 0, 0, 0, 0, 0);
+    }
+
+    add(other) {
+        other = Multidual.promote(other);
+        return new Multidual(
+            Vector.add(this.f, other.f),
+            Vector.add(this.dx, other.dx),
+            Vector.add(this.dy, other.dy),
+            Vector.add(this.dz, other.dz),
+            Vector.add(this.d1, other.d1),
+            Vector.add(this.d2, other.d2),
+            Vector.add(this.d3, other.d3)
+        );
+    }
+
+    sub(other) {
+        other = Multidual.promote(other);
+        return new Multidual(
+            Vector.sub(this.f, other.f),
+            Vector.sub(this.dx, other.dx),
+            Vector.sub(this.dy, other.dy),
+            Vector.sub(this.dz, other.dz),
+            Vector.sub(this.d1, other.d1),
+            Vector.sub(this.d2, other.d2),
+            Vector.sub(this.d3, other.d3)
+        );
+    }
+
+    mul(other) {
+        other = Multidual.promote(other);
+        const f = Vector.mul(this.f, other.f);
+        const dx = Vector.add(Vector.mul(this.dx, other.f), Vector.mul(this.f, other.dx));
+        const dy = Vector.add(Vector.mul(this.dy, other.f), Vector.mul(this.f, other.dy));
+        const dz = Vector.add(Vector.mul(this.dz, other.f), Vector.mul(this.f, other.dz));
+        const d1 = Vector.add(Vector.mul(this.d1, other.f), Vector.mul(this.f, other.d1));
+        const d2 = Vector.add(
+            Vector.mul(this.d2, other.f),
+            Vector.add(Vector.mul(this.d1, other.d1), Vector.mul(this.d1, other.d1)) // 2*this.d1*other.d1
+        );
+        const d2_scaled = Vector.add(d2, Vector.mul(this.f, other.d2));
+        const d3 = Vector.add(
+            Vector.mul(this.d3, other.f),
+            Vector.add(
+                Vector.mul(this.d2, Vector.mul(other.d1, 3)),
+                Vector.add(Vector.mul(this.d1, Vector.mul(other.d2, 3)), Vector.mul(this.f, other.d3))
+            )
+        );
+        return new Multidual(f, dx, dy, dz, d1, d2_scaled, d3);
+    }
+
+    square() {
+        return this.mul(this);
+    }
+
+    sqrt() {
+        const sqrtf = Vector.sqrt(this.f);
+        const halfInvSqrt = Vector.div(1, Vector.mul(2, sqrtf));
+        const f2 = Vector.mul(2, this.f);
+        const fourfsqrtf = Vector.mul(4, Vector.mul(this.f, sqrtf));
+        const eightf2sqrtf = Vector.mul(8, Vector.mul(Vector.mul(this.f, this.f), sqrtf));
+
+        const dx = Vector.mul(this.dx, halfInvSqrt);
+        const dy = Vector.mul(this.dy, halfInvSqrt);
+        const dz = Vector.mul(this.dz, halfInvSqrt);
+        const d1 = Vector.mul(this.d1, halfInvSqrt);
+
+        const term = Vector.sub(Vector.mul(f2, this.d2), Vector.mul(this.d1, this.d1));
+        const d2 = Vector.div(term, fourfsqrtf);
+
+        const term3 = Vector.mul(this.d3, halfInvSqrt);
+        const correction = Vector.mul(this.d1, term);
+        const d3 = Vector.sub(term3, Vector.div(Vector.mul(3, correction), eightf2sqrtf));
+
+        return new Multidual(sqrtf, dx, dy, dz, d1, d2, d3);
+    }
+
+    div(other) {
+        //this function was generated by chatgpt so it might be bad 
+        other = Multidual.promote(other);
+    
+        const invg = Vector.div(1, other.f);
+        const f = Vector.mul(this.f, invg);
+    
+        const g2 = Vector.mul(other.f, other.f);
+        const g3 = Vector.mul(g2, other.f);
+        const g4 = Vector.mul(g2, g2);
+    
+        // First derivatives
+        const dx = Vector.div(
+            Vector.sub(Vector.mul(this.dx, other.f), Vector.mul(this.f, other.dx)),
+            g2
+        );
+        const dy = Vector.div(
+            Vector.sub(Vector.mul(this.dy, other.f), Vector.mul(this.f, other.dy)),
+            g2
+        );
+        const dz = Vector.div(
+            Vector.sub(Vector.mul(this.dz, other.f), Vector.mul(this.f, other.dz)),
+            g2
+        );
+        const d1 = Vector.div(
+            Vector.sub(Vector.mul(this.d1, other.f), Vector.mul(this.f, other.d1)),
+            g2
+        );
+    
+        // Second derivative
+        const num2 = Vector.sub(
+            Vector.mul(this.d2, other.f),
+            Vector.add(
+                Vector.mul(Vector.mul(this.d1, other.d1), 2),
+                Vector.mul(this.f, other.d2)
+            )
+        );
+        const d2 = Vector.div(num2, g2);
+    
+        // Third derivative
+        const t1 = Vector.mul(this.d3, other.f);
+        const t2 = Vector.mul(this.d2, Vector.mul(other.d1, 3));
+        const t3 = Vector.mul(this.d1, Vector.mul(other.d2, 3));
+        const t4 = Vector.mul(this.f, other.d3);
+        const num3 = Vector.sub(t1, Vector.add(t2, Vector.add(t3, t4)));
+        const d3 = Vector.div(num3, g2);
+    
+        return new Multidual(f, dx, dy, dz, d1, d2, d3);
+    }
 }
+
 
 class Complex {
     constructor(real, imag) {

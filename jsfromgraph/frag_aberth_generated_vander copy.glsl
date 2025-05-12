@@ -23,12 +23,12 @@ uniform vec4 incolor;//only rgb are used currently (not alpha)
 const float FOV=120.;
 const float FOVfactor=1./tan(radians(FOV) * 0.5);
 const int ABERTH_MAXITER = 40;
-const float ABERTH_THRESHOLD = 1e-3;
-const float ROOT_ZERRO_THRESHOLD = 1e-1;
+const float ABERTH_THRESHOLD = 1e-5;
+const float ROOT_ZERRO_THRESHOLD = 1e-2;
 const int POLYDEGREE=4;
 //remember to sqare the ROOT_ZERRO_THRESHOLD 
 #define USE_DOUBLEROOTS 1
-#define USE_VANDER 1
+#define USE_VANDER 0
 #define USE_DUALCOMPLEX 1
 
 const float nan=sqrt(-1.);
@@ -314,7 +314,6 @@ void aberth_method(inout Complex[POLYDEGREE] roots, vec3 rayDir, vec3 rayOrigin)
 
 
     for (int iter = 0; iter < ABERTH_MAXITER; iter++) {
-        float max_change = 0.0; // Track the largest change in roots
 
         for (int k = done; k < POLYDEGREE; k++) {
             
@@ -348,9 +347,15 @@ void aberth_method(inout Complex[POLYDEGREE] roots, vec3 rayDir, vec3 rayOrigin)
 
             // Compute the correction term
             Complex w = ComplexDiv(a, Complex(1.0, 0.0) - ComplexMul(a, s));
-            if(any(isnan(w))||any(isinf(w))){
+            
+            bool wisnan=any(isnan(w))||any(isinf(w));
+            bool converged=dot(w,w) < ABERTH_THRESHOLD*ABERTH_THRESHOLD;
+            
+            if(wisnan || converged){
                 //debugcolor(vec3(1.,1.,0.));
-                
+
+                if(!wisnan)roots[k] -= w; // Update the root
+
 
                 //swap roots[k],roots[done]
                 Complex temp=roots[done];
@@ -362,16 +367,10 @@ void aberth_method(inout Complex[POLYDEGREE] roots, vec3 rayDir, vec3 rayOrigin)
             }
             roots[k] -= w; // Update the root
 
-            // Track the maximum change in root
-            max_change = float(max(max_change, dot(w,w)));//dot(w,w) instead of length(w)
+           
         }
         
 
-        // If the maximum change is smaller than the threshold, stop early
-        if (max_change < ABERTH_THRESHOLD*ABERTH_THRESHOLD) {
-            //debugcolor(vec3(float(iter+1)/float(ABERTH_MAXITER)));
-            break; // Converged, exit the loop
-        }
     }
 }
 #endif

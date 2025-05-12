@@ -9,8 +9,10 @@ uniform float[?] args;//gets replaced
 
 
 
-out vec4 color;
-
+layout(location = 0) out vec4 root0;
+layout(location = 1) out vec4 root1;
+layout(location = 2) out vec4 root2;
+layout(location = 3) out vec4 root3;
 
 //camera params
 uniform vec3 cameraPos;
@@ -36,12 +38,6 @@ const float pi=3.14159265359;
 const float goldenangle = (3.0 - sqrt(5.0)) * pi;
 
 
-vec3 overwritecol=vec3(0.);
-bool overrideactive=false;
-void debugcolor(vec3 c){//just for debug
-    overrideactive=true;
-    overwritecol=c;
-}
 
 vec3 normaltocol(vec3 normal){
     return normal*vec2(1,-1).xxy/.2+0.5;
@@ -172,93 +168,43 @@ void initial_roots(out Complex[POLYDEGREE] roots,Complex center) {
     }
 }
 
-void DualComplexRaymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float x) {
-    
-    Complex[POLYDEGREE] roots;
-    initial_roots(roots,Complex(1.0,0.0));
-    //inout Complex[POLYDEGREE] roots, vec3 rayDir, vec3 rayOrigin
-    aberth_method(roots,rayDir,rayOrigin);
-    
-
-    error=inf;
-    x=inf;
-    for(int i = 0; i < POLYDEGREE; ++i){
-        Complex r=roots[i];
-        r.y=abs(r.y);
-
-        if(r.x>=0. && r.x<x && r.y<ROOT_ZERRO_THRESHOLD){
-            error=r.y;
-            x=r.x;
-        }
-    }
-
-}
-
-
-
 
 
 void main() {
-    vec2 uv=(2.*gl_FragCoord.xy-windowsize)/windowsize.x;
-    //vec2 uv=(2.*gl_FragCoord.xy-windowsize)/windowsize*vec2(1.,windowsize.y/windowsize.x);
-    vec3 rayOrigin = cameraPos;
-    vec3 rayDir =cameraMatrix*normalize(vec3(uv, FOVfactor));//cam to view
-   
+    vec2 uv = (2.0 * gl_FragCoord.xy - windowsize) / windowsize;
 
+    // Initial orthographic ray
+    vec3 rayOrigin = vec3(uv, 0.0);
+    vec3 rayDir    = vec3(0.0, 0.0, 1.0);
 
+    // Transform ray to camera space
+    rayOrigin = cameraMatrix * rayOrigin;
+    rayDir    = cameraMatrix * rayDir;
 
-    
-    float error,x;
-    DualComplexRaymarch(rayDir,rayOrigin,error,x);
-    vec3 p=rayOrigin+x*rayDir;
+    // Compute roots along the ray
+    Complex[POLYDEGREE] Roots;
+    initial_roots(Roots, Complex(1.0, 0.0));
+    aberth_method(Roots, rayDir, rayOrigin);
 
-    //circle in middle of screen
-    if(length(uv)<0.01 && length(uv)>0.005){
-        color=vec4(0.5,1,0.5,1.);
-        gl_FragDepth=0.;
-        return;
+    // Pad output with nan
+    const int MAX_ROOTS = 8;
+    Complex[MAX_ROOTS] paddedRoots;
+    for (int i = 0; i < POLYDEGREE; ++i) {
+        paddedRoots[i] = Roots[i];
+    }
+    for (int i = POLYDEGREE; i < MAX_ROOTS; ++i) {
+        paddedRoots[i] = Complex(nan, nan);
     }
 
-    //debug
-    if(overrideactive){
-        gl_FragDepth=0.;
-        color=vec4(overwritecol,1.);return;
-        }
-    
-    //if x is to big we ignore it
-    if(x>1000.){
-        gl_FragDepth=1.;
-        return;
-    }
-
-    //set debth
-    gl_FragDepth = x/1000.;
-
-    // Checkerboard pattern
-    float checker = 0.5 + 0.5 * mod(sum(floor(p * 4.0)), 2.0); // Alternates between 0.5 and 1.0
-    
-    
-    vec3 col=incolor.rgb*checker;
-
-
-
-    //col=vec3(1);
-    col*=1.;//normaltocol(transpose(cameraMatrix)*getNormal(p));
-    //col=getlight(p,rayDir,col);
-
-    /*
-    if(any(isnan(col))){
-        col=vec3(1.,1.,0.);//nan is yellow
-    }
-    if(any(isinf(vec3(p))) || abs(p.x)>10E10||abs(p.y)>10E10||abs(p.z)>10E10){
-        col=vec3(0.,0.,0.5);//blue
-    }*/
-
-
-
-    
-
-    color= vec4(col,1.);
+    // Output two roots per texture (assuming out vec4 root0, root1, root2, root3)
+    root0 = vec4(paddedRoots[0].re, paddedRoots[0].im,
+                paddedRoots[1].re, paddedRoots[1].im);
+    root1 = vec4(paddedRoots[2].re, paddedRoots[2].im,
+                paddedRoots[3].re, paddedRoots[3].im);
+    root2 = vec4(paddedRoots[4].re, paddedRoots[4].im,
+                paddedRoots[5].re, paddedRoots[5].im);
+    root3 = vec4(paddedRoots[6].re, paddedRoots[6].im,
+                paddedRoots[7].re, paddedRoots[7].im);
 }
 
 
