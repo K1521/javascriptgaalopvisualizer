@@ -669,7 +669,7 @@ class pointrenderer{
               for (const i of [0, 2]) {
                 const a = pixelbuffer[idx + i];
                 const f = pixelbuffer[idx + i + 1];
-                if (Number.isNaN(a) || Number.isNaN(f)) continue;
+                if (!Number.isFinite(a) || !Number.isFinite(f)) continue;
                 const pt = ro.add(axis.mul(a));
                 points.push(pt.array);
               }
@@ -738,7 +738,7 @@ async function main(){
     //const frag=visgraph.gencodexyzDual(fragmentShaderSourceTemplate);
     const frag=visgraph.gencode(axis_aligned_glsl);
     const shader=new Shader(gl, vertexShaderSource,frag );
-    //console.log(visgraph.name+ " degree:"+ visgraph.calcpolydegree_gpu()+" issquared:"+visgraph.issquared);
+    console.log(visgraph.name+ " degree:"+ visgraph.calcpolydegree_gpu()+" issquared:"+visgraph.issquared);
     //console.log(frag);
     shader.use();
     visgraph.setuniforms(values,shader);
@@ -747,6 +747,7 @@ async function main(){
 
     //shader.gl.uniform4fv(shader.getUniformLocation('incolor'), [color.r,color.g,color.b,1.0]);
     //if(visgraph.name==="intersect")
+    if(visgraph.name==="t")
       shaders.push(shader);
 
       /*const newyvalues=evaluateGraphMultidual(new Vector([0,0,1]),new Vector([0,0,0]),xValues,visgraph,values).f.array;

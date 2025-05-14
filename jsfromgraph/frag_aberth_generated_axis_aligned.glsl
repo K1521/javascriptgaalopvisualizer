@@ -174,8 +174,8 @@ void main() {
     vec2 uv = (2.0 * gl_FragCoord.xy - windowsize) / windowsize;
 
     // Initial orthographic ray
-    vec3 rayOrigin = vec3(uv, 0.0);
-    vec3 rayDir    = vec3(0.0, 0.0, 1.0);
+    vec3 rayOrigin = vec3(uv, 0.0)*5.;
+    vec3 rayDir    = vec3(0.0, 0.0, 1.0)*5.;
 
     // Transform ray to camera space
     rayOrigin = cameraMatrix * rayOrigin;
@@ -186,14 +186,14 @@ void main() {
     initial_roots(Roots, Complex(1.0, 0.0));
     aberth_method(Roots, rayDir, rayOrigin);
 
-    // Pad output with nan
+    // Pad output with inf
     const int MAX_ROOTS = 8;
     Complex[MAX_ROOTS] paddedRoots;
     for (int i = 0; i < POLYDEGREE; ++i) {
         paddedRoots[i] = Roots[i];
     }
     for (int i = POLYDEGREE; i < MAX_ROOTS; ++i) {
-        paddedRoots[i] = Complex(nan, nan);
+        paddedRoots[i] = Complex(inf, inf);
     }
 
     // Output two roots per texture (assuming out vec4 root0, root1, root2, root3)
