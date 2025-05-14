@@ -197,14 +197,14 @@ void main() {
     }
 
     // Output two roots per texture (assuming out vec4 root0, root1, root2, root3)
-    root0 = vec4(paddedRoots[0].re, paddedRoots[0].im,
-                paddedRoots[1].re, paddedRoots[1].im);
-    root1 = vec4(paddedRoots[2].re, paddedRoots[2].im,
-                paddedRoots[3].re, paddedRoots[3].im);
-    root2 = vec4(paddedRoots[4].re, paddedRoots[4].im,
-                paddedRoots[5].re, paddedRoots[5].im);
-    root3 = vec4(paddedRoots[6].re, paddedRoots[6].im,
-                paddedRoots[7].re, paddedRoots[7].im);
+    root0 = vec4(paddedRoots[0],
+                 paddedRoots[1]);
+    root1 = vec4(paddedRoots[2],
+                 paddedRoots[3]);
+    root2 = vec4(paddedRoots[4],
+                 paddedRoots[5]);
+    root3 = vec4(paddedRoots[6],
+                 paddedRoots[7]);
 }
 
 

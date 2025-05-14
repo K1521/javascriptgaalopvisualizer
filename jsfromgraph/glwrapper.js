@@ -141,12 +141,23 @@ export class Cameracontroll{
         this.cameraPos = this.cameraPos.add(this.c2w.mul(deltapos));
       }
     }
-    upadeuniforms(shader){
+    updateuniforms(shader){
       const cameraPosLocation = shader.getUniformLocation('cameraPos');
       shader.gl.uniform3fv(cameraPosLocation, this.cameraPos.array);
       const c2wLocation = shader.getUniformLocation("cameraMatrix");
       shader.gl.uniformMatrix3fv(c2wLocation, true, new Float32Array(this.c2w.array.flat()));
     }
+
+    resizeCanvas(scale = 1.0) {
+      const canvas = this.canvas;
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.floor(canvas.clientWidth * dpr * scale);
+      const height = Math.floor(canvas.clientHeight * dpr * scale);
+      canvas.width = width;
+      canvas.height = height;
+      return [width, height];
+    }
+
 }
 
 
@@ -220,7 +231,7 @@ export class Shader{
   
     }
     render(){
-      this.camera.upadeuniforms(this.shader);
+      this.camera.updateuniforms(this.shader);
       //gl.clearColor(0.0, 0.0, 0.0, 1.0);
       //gl.clear(gl.COLOR_BUFFER_BIT);
       this.shader.gl.drawArrays(this.shader.gl.TRIANGLE_STRIP, 0, 4);

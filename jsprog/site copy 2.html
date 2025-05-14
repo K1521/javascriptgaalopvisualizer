@@ -375,7 +375,7 @@ class Cameracontroll{
       this.cameraPos = this.cameraPos.add(this.c2w.mul(deltapos));
     }
   }
-  upadeuniforms(shader){
+  updateuniforms(shader){
     const cameraPosLocation = shader.getUniformLocation('cameraPos');
     shader.gl.uniform3fv(cameraPosLocation, this.cameraPos.array);
     const c2wLocation = shader.getUniformLocation("cameraMatrix");
@@ -397,7 +397,7 @@ class renderingpipeline{
 
   }
   render(){
-    this.camera.upadeuniforms(this.shader);
+    this.camera.updateuniforms(this.shader);
     //gl.clearColor(0.0, 0.0, 0.0, 1.0);
     //gl.clear(gl.COLOR_BUFFER_BIT);
     this.shader.gl.drawArrays(this.shader.gl.TRIANGLE_STRIP, 0, 4);
@@ -594,7 +594,7 @@ const vertices = new Float32Array([
 
   function render(){
   upscaleshader.use();
-  camera.upadeuniforms(upscaleshader);
+  camera.updateuniforms(upscaleshader);
 
   for(let fb of framebuffers){
       /*targetresolution:resolutions[level],
@@ -612,7 +612,7 @@ const vertices = new Float32Array([
   }
 
   upscaledtocolor.use();
-  camera.upadeuniforms(upscaledtocolor);
+  camera.updateuniforms(upscaledtocolor);
 
   gl.bindFramebuffer(gl.FRAMEBUFFER, null);
   gl.viewport(0, 0, canvas.width,canvas.height);

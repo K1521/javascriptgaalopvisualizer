@@ -140,7 +140,10 @@ const gl = mainCanvas.getContext('webgl2',{preserveDrawingBuffer: true});//prese
 if (!gl) {
   alert("WebGL not supported!");
 }
-
+const ext = gl.getExtension('EXT_color_buffer_float');
+if (!ext) {
+    console.error('EXT_color_buffer_float not supported');
+}
 
 const xValues = [];
 let yValues = [];
@@ -286,7 +289,7 @@ class multirenderingpipeline{
   updateuniforms(shader){
     const windowsizeLocation = shader.getUniformLocation('windowsize');
     shader.gl.uniform2fv(windowsizeLocation, this.windowsize);
-    this.camera.upadeuniforms(shader);
+    this.camera.updateuniforms(shader);
   }
   resizeCanvas() {
     const canvas=this.camera.canvas;
@@ -441,6 +444,228 @@ gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, 1,-1, -1,1, 1,1, -1]), gl.S
 
 
 
+function createRootOutputTextures(gl, width, height) {
+  const textures = [];
+  const attachments = [
+    gl.COLOR_ATTACHMENT0,
+    gl.COLOR_ATTACHMENT1,
+    gl.COLOR_ATTACHMENT2,
+    gl.COLOR_ATTACHMENT3
+  ];
+  const framebuffer = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
+
+  for (const attachment of attachments) {
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(
+      gl.TEXTURE_2D, 0, gl.RGBA32F,
+      width, height, 0,
+      gl.RGBA, gl.FLOAT, null
+    );
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER, attachment, gl.TEXTURE_2D, tex, 0
+    );
+    textures.push(tex);
+  }
+
+  gl.drawBuffers(attachments); // Enable all 4 outputs
+  gl.bindBuffer(gl.ARRAY_BUFFER, uvQuadVertices);
+  return [textures,framebuffer];
+}
+
+
+const vShader=`
+// Vertex Shader
+precision highp float;
+
+attribute vec3 position;
+
+uniform mat3 cameraMatrix; // rotation-only view matrix (camera-to-world inverse)
+uniform vec3 cameraPos;    // camera position in world space
+uniform vec2 windowsize;   // used for gl_PointSize (optional)
+
+// You can add more uniforms for styling later
+
+void main() {
+    // Transform world position to camera/view space
+    vec3 relPos = position - cameraPos;
+    vec3 camPos = cameraMatrix * relPos;
+
+    // Pass it to gl_Position (homogeneous coordinates)
+    gl_Position = vec4(camPos, 1.0);
+
+    // Optional: set a constant point size
+    gl_PointSize = 2.0; // can be based on distance if needed
+}
+
+`
+
+const fShader=`
+// Fragment Shader
+precision highp float;
+
+void main() {
+    // Simple white dot
+    gl_FragColor = vec4(1.0); // white RGBA
+}
+
+`
+
+class pointrenderer{
+  constructor(cameracontroll,gl,orthshaders){
+    this.orthwh=[100,100];
+    const text_frame=createRootOutputTextures(gl,this.orthwh[0],this.orthwh[1]);
+    this.framebuffer=text_frame[1];
+    this.textures=text_frame[0];
+
+    this.gl=gl;
+    this.cameracontroll=cameracontroll;
+    this.shaders=orthshaders;  
+
+    const allpoints = this.renderorth();
+    //const pointBuffers = allpoints.map(obj => new Float32Array(obj.flat()));
+    //... make openglbuffer
+    this.pointBuffers = allpoints.map(obj => {
+      const flatData = new Float32Array(obj.flat());
+      const buffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.bufferData(gl.ARRAY_BUFFER, flatData, gl.STATIC_DRAW);
+      return { buffer, count: flatData.length / 3 };
+    });
+
+
+    //...make point renderer
+    this.pointshader=new Shader(gl, vShader,fShader);
+  }
+
+
+  render() {
+    const gl = this.gl;
+
+    // Render to the screen (default framebuffer)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    this.pointshader.use();
+    this.cameracontroll.updateuniforms(this.pointshader); // sets cameraPos and cameraMatrix
+
+    const [w, h] = this.cameracontroll.resizeCanvas(1);
+    gl.viewport(0, 0, w, h);
+
+    const windowsizeLocation = this.pointshader.getUniformLocation('windowsize');
+    gl.uniform2fv(windowsizeLocation, [w, h]);
+
+    const positionAttribLoc=this.pointshader.getAttribLocation("position");
+
+    gl.enableVertexAttribArray(positionAttribLoc);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+    gl.disable(gl.DEPTH_TEST);
+
+    for (const { buffer, count } of this.pointBuffers) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+      gl.vertexAttribPointer(positionAttribLoc, 3, gl.FLOAT, false, 0, 0);
+      gl.drawArrays(gl.POINTS, 0, count);
+    }
+
+    gl.disableVertexAttribArray(positionAttribLoc);
+  }
+
+
+
+
+
+
+  renderorth() {
+    const gl = this.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+    const attachments = [
+      gl.COLOR_ATTACHMENT0,
+      gl.COLOR_ATTACHMENT1,
+      gl.COLOR_ATTACHMENT2,
+      gl.COLOR_ATTACHMENT3
+    ];
+    gl.drawBuffers(attachments);
+    gl.bindBuffer(gl.ARRAY_BUFFER, uvQuadVertices);
+
+    const [w, h] = this.orthwh;
+    const pixelbuffer = new Float32Array(w * h * 4);
+
+    const projections = [
+      // +X axis
+      new Matrix([
+        [0, 0, 1],
+        [0, 1, 0],
+        [-1, 0, 0]
+      ]),
+      // +Y axis
+      new Matrix([
+        [1, 0, 0],
+        [0, 0, 1],
+        [0, -1, 0]
+      ]),
+      // +Z axis
+      new Matrix([
+        [1, 0, 0],
+        [0, 1, 0],
+        [0, 0, 1]
+      ])
+    ];
+
+    const allpoints = [];
+
+    for (const shader of this.shaders) {
+      shader.use();
+      const points = [];
+
+      for (const projection of projections) {
+        const axis = projection.mul(new Vector([0, 0, 1]));
+
+        const c2wLocation = shader.getUniformLocation("cameraMatrix");
+        gl.uniformMatrix3fv(c2wLocation, true, new Float32Array(projection.array.flat()));
+
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+        for (const attachment of attachments) {
+          gl.readBuffer(attachment);
+          gl.readPixels(0, 0, w, h, gl.RGBA, gl.FLOAT, pixelbuffer);
+
+          for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+              const idx = 4 * (y * w + x);
+              const uv = new Vector([
+                (2 * x - w) / w,
+                (2 * y - h) / h,
+                0
+              ]);
+              const ro = projection.mul(uv);
+
+              for (const i of [0, 2]) {
+                const a = pixelbuffer[idx + i];
+                const f = pixelbuffer[idx + i + 1];
+                if (Number.isNaN(a) || Number.isNaN(f)) continue;
+                const pt = ro.add(axis.mul(a));
+                points.push(pt.array);
+              }
+            }
+          }
+        }
+      }
+
+      allpoints.push( points );
+    }
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return allpoints;
+  }
+
+
+
+
+
+}
 
 
 
@@ -458,10 +683,12 @@ async function main(){
 
   //const fragmentShaderSource =await load("./frag3.glsl"); 
   //const fragmentShaderSource =await load("./frag_aberth.glsl"); 
-  const fragmentShaderSourceTemplate =await load("./frag_aberth_generated.glsl"); 
-  //const fragmentShaderSourceTemplate =await load("./frag_aberth_generated_vander.glsl"); 
+  //const fragmentShaderSourceTemplate =await load("./frag_aberth_generated.glsl"); 
+  const fragmentShaderSourceTemplate =await load("./frag_aberth_generated_vander.glsl"); 
   //const fragmentShaderSourceTemplate =await load("./frag_generated_xyzDual.glsl"); 
   //console.log(fragmentShaderSource);
+
+  const axis_aligned_glsl =await load("./frag_aberth_generated_axis_aligned.glsl"); 
 
   //const shader =new Shader(gl, vertexShaderSource,fragmentShaderSource );
   //shader.use();
@@ -485,7 +712,7 @@ async function main(){
     visgraph.simplify();
     //const frag=visgraph.gencodeAberthHybrid(fragmentShaderSourceTemplate);
     //const frag=visgraph.gencodexyzDual(fragmentShaderSourceTemplate);
-    const frag=visgraph.gencode(fragmentShaderSourceTemplate);
+    const frag=visgraph.gencode(axis_aligned_glsl);
     const shader=new Shader(gl, vertexShaderSource,frag );
     //console.log(visgraph.name+ " degree:"+ visgraph.calcpolydegree_gpu()+" issquared:"+visgraph.issquared);
     //console.log(frag);
@@ -494,7 +721,7 @@ async function main(){
     const color=graph.objectcolormap.get(visgraph.name); 
 
 
-    shader.gl.uniform4fv(shader.getUniformLocation('incolor'), [color.r,color.g,color.b,1.0]);
+    //shader.gl.uniform4fv(shader.getUniformLocation('incolor'), [color.r,color.g,color.b,1.0]);
     //if(visgraph.name==="intersect")
       shaders.push(shader);
 
@@ -505,7 +732,7 @@ async function main(){
       Plotly.redraw('plotlyDiagram');
   }
   console.log(gl);
-  let renderer=new multirenderingpipeline(camera,gl,shaders);
+  let renderer=new pointrenderer(camera,gl,shaders);
 
 
   
