@@ -509,7 +509,7 @@ precision highp float;
 
 void main() {
     // Simple white dot
-    gl_FragColor = vec4(1.0); // white RGBA
+    gl_FragColor = vec4(1.,0.,0.,1.); // white RGBA
 }
 
 `
@@ -528,8 +528,9 @@ class pointrenderer{
     const allpoints = this.renderorth();
     //const pointBuffers = allpoints.map(obj => new Float32Array(obj.flat()));
     //... make openglbuffer
+    console.log(allpoints);
     this.pointBuffers = allpoints.map(obj => {
-      const flatData = new Float32Array(obj.flat());
+      const flatData = new Float32Array(obj.flat());//TODO fix this uglyly chatgpt code
       const buffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
       gl.bufferData(gl.ARRAY_BUFFER, flatData, gl.STATIC_DRAW);
@@ -560,6 +561,9 @@ class pointrenderer{
     const positionAttribLoc=this.pointshader.getAttribLocation("position");
 
     gl.enableVertexAttribArray(positionAttribLoc);
+
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.enable(gl.BLEND);
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
     gl.disable(gl.DEPTH_TEST);
@@ -570,7 +574,9 @@ class pointrenderer{
       gl.drawArrays(gl.POINTS, 0, count);
     }
 
+
     gl.disableVertexAttribArray(positionAttribLoc);
+    gl.finish();
   }
 
 
@@ -580,15 +586,14 @@ class pointrenderer{
 
   renderorth() {
     const gl = this.gl;
-    gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+    
     const attachments = [
       gl.COLOR_ATTACHMENT0,
       gl.COLOR_ATTACHMENT1,
       gl.COLOR_ATTACHMENT2,
       gl.COLOR_ATTACHMENT3
     ];
-    gl.drawBuffers(attachments);
-    gl.bindBuffer(gl.ARRAY_BUFFER, uvQuadVertices);
+    
 
     const [w, h] = this.orthwh;
     const pixelbuffer = new Float32Array(w * h * 4);
@@ -620,17 +625,36 @@ class pointrenderer{
       shader.use();
       const points = [];
 
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+      gl.drawBuffers(attachments);
+      
+      const loc = shader.getAttribLocation("a_position");
+      gl.bindBuffer(gl.ARRAY_BUFFER, uvQuadVertices);
+      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+      gl.enableVertexAttribArray(loc);
+
+      gl.viewport(0,0,w,h);
+
+      const windowsizeLocation = shader.getUniformLocation('windowsize');
+      shader.gl.uniform2fv(windowsizeLocation, [w, h]);
+
       for (const projection of projections) {
         const axis = projection.mul(new Vector([0, 0, 1]));
 
         const c2wLocation = shader.getUniformLocation("cameraMatrix");
         gl.uniformMatrix3fv(c2wLocation, true, new Float32Array(projection.array.flat()));
 
+        
+       
+        
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
         for (const attachment of attachments) {
           gl.readBuffer(attachment);
           gl.readPixels(0, 0, w, h, gl.RGBA, gl.FLOAT, pixelbuffer);
+          console.log(pixelbuffer);
+          
 
           for (let y = 0; y < h; y++) {
             for (let x = 0; x < w; x++) {
@@ -725,11 +749,11 @@ async function main(){
     //if(visgraph.name==="intersect")
       shaders.push(shader);
 
-      const newyvalues=evaluateGraphMultidual(new Vector([0,0,1]),new Vector([0,0,0]),xValues,visgraph,values).f.array;
+      /*const newyvalues=evaluateGraphMultidual(new Vector([0,0,1]),new Vector([0,0,0]),xValues,visgraph,values).f.array;
       console.log(newyvalues);//push this code at the right pos and also check if the output is a array or a scalar
       yValues.length=0;
       yValues.push(...newyvalues);
-      Plotly.redraw('plotlyDiagram');
+      Plotly.redraw('plotlyDiagram');*/
   }
   console.log(gl);
   let renderer=new pointrenderer(camera,gl,shaders);

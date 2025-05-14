@@ -205,6 +205,8 @@ void main() {
                  paddedRoots[5]);
     root3 = vec4(paddedRoots[6],
                  paddedRoots[7]);
+    
+    //root0 = vec4(0.4,0.5,0.6,0.7);
 }
 
 
