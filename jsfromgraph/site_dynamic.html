@@ -781,6 +781,22 @@ class RenderContext {
     //const windowsizeLocation = this.pointshader.getUniformLocation('windowsize');
     //shader.gl.uniform2fv(windowsizeLocation, this.resolution);
   }
+  get quad() {
+    if (this._quad === undefined) {
+      const gl = this.gl;
+      const vertices = new Float32Array([
+        -1, 1,
+        -1, -1,
+        1, 1,
+        1, -1
+      ]);
+
+      this._quad= gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, this._quad );
+      gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    }
+    return this._quad;
+  }
 }
 
 
@@ -811,6 +827,50 @@ class RenderableObject {
   render(ctx) {
     const pipeline = this.activePipeline;
     if (pipeline) pipeline.render(ctx);
+  }
+}
+
+
+class LazyRenderingPipeline{
+  constructor(initFn) {
+    this._initFn = initFn;
+    this._initialized = false;
+  }
+
+  init() {
+    if (!this._initialized) {
+      this._initFn();
+      this._initialized = true;
+      return true;
+    }
+    return false;
+  }
+  render(ctx){
+    throw new Error("method not implemented");
+  }
+  update(ctx,nodecache=undefined){
+    throw new Error("method not implemented");
+  }
+}
+
+class simplerenderer extends renderingpipeline{
+  constructor(gl,visgraph,fragmentShaderSourceTemplate){
+    const frag=visgraph.gencode(fragmentShaderSourceTemplate);
+    const vertexShaderSource = `
+#version 300 es
+in vec4 a_position;
+void main(void) {
+  gl_Position = a_position;
+}
+`;
+    this.shader=new Shader(gl, vertexShaderSource,frag );
+  }
+  render(ctx){
+    ctx.updateViewport();
+    this.shader.use();
+    ctx.updateUniforms(this.shader);
+    ctx.gl.bindBuffer(gl.ARRAY_BUFFER, ctx.quad );
+    ctx.gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 }
 
