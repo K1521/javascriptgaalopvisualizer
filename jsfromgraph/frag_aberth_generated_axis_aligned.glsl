@@ -190,7 +190,8 @@ void main() {
     const int MAX_ROOTS = 8;
     Complex[MAX_ROOTS] paddedRoots;
     for (int i = 0; i < POLYDEGREE; ++i) {
-        paddedRoots[i] = Roots[i];
+        Complex r=Roots[i];
+        paddedRoots[i] = Complex(r.x,abs(r.y));
     }
     for (int i = POLYDEGREE; i < MAX_ROOTS; ++i) {
         paddedRoots[i] = Complex(inf, inf);

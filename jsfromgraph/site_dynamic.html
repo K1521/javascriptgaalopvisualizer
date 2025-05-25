@@ -515,14 +515,14 @@ void main() {
 `
 
 class pointrenderer{
-  constructor(cameracontroll,gl,orthshaders){
+  constructor(context,gl,orthshaders){
     this.orthwh=[100,100];
     const text_frame=createRootOutputTextures(gl,this.orthwh[0],this.orthwh[1]);
     this.framebuffer=text_frame[1];
     this.textures=text_frame[0];
 
     this.gl=gl;
-    this.cameracontroll=cameracontroll;
+    this.context=context;
     this.shaders=orthshaders;  
 
     const allpoints = this.renderorth();
@@ -550,13 +550,8 @@ class pointrenderer{
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
     this.pointshader.use();
-    this.cameracontroll.updateuniforms(this.pointshader); // sets cameraPos and cameraMatrix
-
-    const [w, h] = this.cameracontroll.resizeCanvas(1);
-    gl.viewport(0, 0, w, h);
-
-    const windowsizeLocation = this.pointshader.getUniformLocation('windowsize');
-    gl.uniform2fv(windowsizeLocation, [w, h]);
+    this.context.updateUniforms(this.pointshader); // sets cameraPos and cameraMatrix and windowsize
+    this.context.updateViewport(gl);
 
     const positionAttribLoc=this.pointshader.getAttribLocation("position");
 
@@ -668,8 +663,8 @@ class pointrenderer{
 
               for (const i of [0, 2]) {
                 const a = pixelbuffer[idx + i];
-                const f = pixelbuffer[idx + i + 1];
-                if (!Number.isFinite(a) || !Number.isFinite(f)) continue;
+                const imag = pixelbuffer[idx + i + 1];
+                if (!Number.isFinite(a) || !Number.isFinite(imag)||imag>0.01) continue;
                 const pt = ro.add(axis.mul(a));
                 points.push(pt.array);
               }
@@ -693,25 +688,34 @@ class pointrenderer{
 
 
 class RenderContext {
-  constructor(canvas, gl, scale = 1.0) {
+  constructor(canvas, gl, camera=undefined, scale = 1.0) {
     this.canvas = canvas;
     this.gl = gl;
 
-    this.setScale(scale);//sets scale and resolution
-    //this.scale
-    //this.resolution
-   
-
-
-    this.camera = new Cameracontroll(canvas, gl);
-    this.params = {}; // key-value store for arbitrary parameters
+    this.setScale(scale);//sets scale
     
-    this.updateResolution = this.updateResolution.bind(this);
-    window.addEventListener("resize", this.updateResolution);
+    this.setScale = this.setScale.bind(this);
+    window.addEventListener("resize", this.setScale);
 
-    this.useAdaptiveResolution=true;
     this.lowResolutionScale = 0.3;
     this.stillTime = performance.now();
+
+
+    this.camera = camera ?? new Cameracontroll(canvas, gl);
+    this.params = {}; // key-value store for parameters
+    this.objects=[];//list of RenderObjects
+  }
+
+  render(){
+    const gl=this.gl;
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.depthFunc(gl.LESS);
+    gl.enable(gl.DEPTH_TEST);
+    for(const object of this.objects){
+      object.render(this);
+    }
+    gl.finish();
   }
    
   update(deltatime){
@@ -721,7 +725,9 @@ class RenderContext {
     const moving = this.camera.changed;
     let changed=this.camera.changed;
 
-    if (moving) {
+    if(1.0==this.lowResolutionScale){
+        //pass 
+    }else if (moving) {
       this.stillTime = now;
       if (!this.isLowRes) {
         this.setScale(this.lowResolutionScale);
@@ -761,10 +767,23 @@ class RenderContext {
 
   updateUniforms(shader) {
     this.camera.updateuniforms(shader);
-    const resLoc = shader.getUniformLocation("uResolution");
-    if (resLoc) shader.gl.uniform2fv(resLoc, new Float32Array(this.resolution));
+    this.updateUniformWindowsize(shader);
+  }
+  updateUniformWindowsize(shader){
+    const resLoc = shader.getUniformLocation("windowsize");
+    if (resLoc) shader.gl.uniform2fv(resLoc, this.resolution);
+  }
+  updateViewport(gl=undefined){
+    gl??=this.gl;
+    const [w, h] = this.resolution;
+    gl.viewport(0, 0, w, h);
+
+    //const windowsizeLocation = this.pointshader.getUniformLocation('windowsize');
+    //shader.gl.uniform2fv(windowsizeLocation, this.resolution);
   }
 }
+
+
 class RenderableObject {
   constructor(name) {
     this.name = name;
@@ -776,17 +795,17 @@ class RenderableObject {
     return this.pipelines.get(this.activePipelineName);
   }
 
-  /*setActivePipeline(name) {
+  setActivePipeline(name) {
     if (!this.pipelines.has(name)) {
-      const pipeline = createShaderPipeline(name, this.name);
-      this.pipelines.set(name, pipeline);
+      //const pipeline = createShaderPipeline(name, this.name);
+      //this.pipelines.set(name, pipeline);
     }
     this.activePipelineName = name;
-  }*/
+  }
 
-  update(ctx) {
+  update(ctx,nodecache=undefined) {
     const pipeline = this.activePipeline;
-    if (pipeline) pipeline.update(ctx);
+    if (pipeline) pipeline.update(ctx,nodecache);
   }
 
   render(ctx) {
@@ -819,8 +838,8 @@ async function main(){
 
   //const shader =new Shader(gl, vertexShaderSource,fragmentShaderSource );
   //shader.use();
-  const camera=new Cameracontroll(mainCanvas,gl);
-  
+  //const camera=new Cameracontroll(mainCanvas,gl);
+  const context=new RenderContext(mainCanvas,gl);
   //let funmat=new Matrix([[-3.2,0., 0., 0., 0.,-3.2,0., 0., 0., 0., 0., 0., 1.5125, -5.225,   4.5125]]);
   /**/
   //let renderer=new renderingpipeline_coeffxyz(camera,shader);
@@ -860,7 +879,7 @@ async function main(){
       Plotly.redraw('plotlyDiagram');*/
   }
   console.log(gl);
-  let renderer=new pointrenderer(camera,gl,shaders);
+  let renderer=new pointrenderer(context,gl,shaders);
 
 
   
@@ -887,8 +906,8 @@ async function main(){
 
     
 
-    camera.update(deltatime);
-    if(camera.changed){
+    
+    if(context.update(deltatime)){
       //drawplot(camera,funmat.array);
       deltatimeavg=deltatimeavg*0.90+deltatime*0.10;
       fpscounter.innerText = `FPS: ${Math.ceil(1/deltatimeavg)}`;
