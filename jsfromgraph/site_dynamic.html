@@ -232,8 +232,8 @@ function drawplot(camera,coefficients){
   Plotly.redraw('plotlyDiagram');
 }
 
-const vertexShaderSource = `#version 300 es
-  in vec4 a_position;
+const passThroughVertexShaderSource = `#version 300 es
+  layout(location = 0) in vec4 a_position;
   void main(void) {
     gl_Position = a_position;
   }
@@ -511,15 +511,15 @@ const float FOV=120.;
 const float FOVfactor=1./tan(radians(FOV) * 0.5);
 
 void main() {
-    vec3 worldPos = position*4.9;
+    vec3 worldPos = position;
     vec3 viewVec = transpose(cameraMatrix) * (worldPos - cameraPos); // Transform to camera space
 
     // Reconstruct screen-space position (NDC) manually
-    float x = viewVec.x / (FOVfactor * viewVec.z*(windowsize.x / windowsize.y));
-    float y = viewVec.y / (FOVfactor * viewVec.z);
+    float x = FOVfactor*viewVec.x / ( viewVec.z);
+    float y = FOVfactor*viewVec.y / ( viewVec.z)*(windowsize.x / windowsize.y);
 
     // Perspective projection manually: NDC.x/y in [-1, 1], z = normalized depth
-    float z = viewVec.z / 1000.0; // Normalize depth to match raymarch
+    float z = length(viewVec)*sign(viewVec.z) / 1000.0; // Normalize depth to match raymarch
 
     // Convert z to NDC (-1 to 1): GPU expects this for depth
     float ndcZ = z * 2.0 - 1.0;
@@ -552,7 +552,7 @@ class RenderContext {
     window.addEventListener("resize", this.setScale);
 
 
-    this.highResolutionScale = 1.0;
+    this.highResolutionScale = 0.3;
     this.lowResolutionScale = 0.2;
     this.stillTime = performance.now();
 
@@ -566,8 +566,7 @@ class RenderContext {
     const gl=this.gl;
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.depthFunc(gl.LESS);
-    gl.enable(gl.DEPTH_TEST);
+    
     //gl.disable(gl.DEPTH_TEST);
     for(const object of this.objects){
       object.render(this);
@@ -646,7 +645,7 @@ class RenderContext {
     //const windowsizeLocation = this.pointshader.getUniformLocation('windowsize');
     //shader.gl.uniform2fv(windowsizeLocation, this.resolution);
   }
-  get quad() {
+  bindquad() {
     if (this._quad === undefined) {
       const gl = this.gl;
       const vertices = new Float32Array([
@@ -660,7 +659,20 @@ class RenderContext {
       gl.bindBuffer(gl.ARRAY_BUFFER, this._quad );
       gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
     }
-    return this._quad;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this._quad );
+  }
+
+  bindquadvao(){
+    if (this._quadvao === undefined) {
+      this._quadvao = gl.createVertexArray();
+      gl.bindVertexArray(this._quadvao);
+      const loc = 0;//this.shader.getAttribLocation("a_position");
+      this.bindquad();
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    }
+    gl.bindVertexArray(this._quadvao);
+    //return this._quadvao;
   }
   
 }
@@ -725,25 +737,9 @@ class simplerenderer extends LazyRenderingPipeline{
   constructor(ctx,gl,visgraph,fragmentShaderSourceTemplate,color){
     super(()=>{
       const frag=visgraph.gencode(fragmentShaderSourceTemplate);
-      const vertexShaderSource = `#version 300 es
-in vec4 a_position;
-void main(void) {
-  gl_Position = a_position;
-}
-`;
-      this.shader=new Shader(gl, vertexShaderSource,frag );
+
+      this.shader=new Shader(gl, passThroughVertexShaderSource,frag );
       this.shader.use();
-
-      this.quadvao = gl.createVertexArray();
-      gl.bindVertexArray(this.quadvao);
-
-      const loc = this.shader.getAttribLocation("a_position");
-      gl.bindBuffer(gl.ARRAY_BUFFER, ctx.quad);
-      gl.enableVertexAttribArray(loc);
-      gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-      
-      gl.bindVertexArray(null);
-
       
       gl.uniform4fv(this.shader.getUniformLocation('incolor'), [color.r,color.g,color.b,1.0]);
       
@@ -753,17 +749,19 @@ void main(void) {
   }
   render(ctx){
     const gl=ctx.gl;
+    gl.depthFunc(gl.LESS);
+    gl.enable(gl.DEPTH_TEST);
     this.shader.use();
-    gl.bindVertexArray(this.quadvao);
+    ctx.bindquadvao();
     ctx.updateViewport();
-    
     ctx.updateUniforms(this.shader);
-    gl.bindBuffer(gl.ARRAY_BUFFER, ctx.quad );
+    //gl.bindBuffer(gl.ARRAY_BUFFER, ctx.quad );
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     //console.log("1");
     
   }
   update(ctx,nodecache=undefined){
+    this.shader.use();
       if(nodecache===undefined){
         nodecache=new Map(ctx.params);
       }
@@ -773,7 +771,7 @@ void main(void) {
 }
 
 class pointcloudrenderer extends LazyRenderingPipeline{
-  constructor(gl,visgraph,vertexShaderSource,axis_aligned_glsl,color){
+  constructor(gl,visgraph,axis_aligned_glsl,color){
     super(()=>{
       this.orthwh=[100,100];
       const text_frame=createRootOutputTextures(gl,this.orthwh[0],this.orthwh[1]);
@@ -783,7 +781,7 @@ class pointcloudrenderer extends LazyRenderingPipeline{
       this.gl=gl;
 
       const frag=visgraph.gencode(axis_aligned_glsl);
-    const orthshader=new Shader(gl, vertexShaderSource,frag );
+    const orthshader=new Shader(gl, passThroughVertexShaderSource,frag );
     orthshader.use();
       //this.context=context;
       this.orthshader=orthshader;  
@@ -795,6 +793,15 @@ class pointcloudrenderer extends LazyRenderingPipeline{
       this.pointshader=new Shader(gl, vShader,fShader);
       this.pointshader.use();
       gl.uniform4fv(this.pointshader.getUniformLocation('incolor'), [color.r,color.g,color.b,1.0]);
+
+
+      this.pointvao=gl.createVertexArray();
+      gl.bindVertexArray(this.pointvao);
+      gl.bindBuffer(gl.ARRAY_BUFFER,  this.pointbuffer);
+      const positionAttribLoc=this.pointshader.getAttribLocation("position");
+      gl.enableVertexAttribArray(positionAttribLoc);
+      gl.vertexAttribPointer(positionAttribLoc, 3, gl.FLOAT, false, 0, 0);
+      
 
       /*const allpoints = this.renderorth();
       //const pointBuffers = allpoints.map(obj => new Float32Array(obj.flat()));
@@ -851,23 +858,22 @@ class pointcloudrenderer extends LazyRenderingPipeline{
 
 
    
-    this.orthshader.use();
+    
     const points = [];
 
+    this.orthshader.use();
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
     gl.drawBuffers(attachments);
     
-    const loc = this.orthshader.getAttribLocation("a_position");
-    gl.bindBuffer(gl.ARRAY_BUFFER, uvQuadVertices);
-    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    gl.enableVertexAttribArray(loc);
+    ctx.bindquadvao();
 
     gl.viewport(0,0,w,h);
 
     const windowsizeLocation = this.orthshader.getUniformLocation('windowsize');
     gl.uniform2fv(windowsizeLocation, [w, h]);
-
-    for (const projection of projections) {
+    const scale=5.;
+    for (let projection of projections) {
+      projection=projection.mul(scale);
       const axis = projection.mul(new Vector([0, 0, 1]));
 
       const c2wLocation = this.orthshader.getUniformLocation("cameraMatrix");
@@ -888,6 +894,7 @@ class pointcloudrenderer extends LazyRenderingPipeline{
         for (let y = 0; y < h; y++) {
           for (let x = 0; x < w; x++) {
             const idx = 4 * (y * w + x);
+            
             const uv = new Vector([
               (2 * x - w) / w,
               (2 * y - h) / h,
@@ -909,7 +916,7 @@ class pointcloudrenderer extends LazyRenderingPipeline{
 
 
     
-
+    gl.bindVertexArray(null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.pointbuffer);
@@ -922,32 +929,25 @@ class pointcloudrenderer extends LazyRenderingPipeline{
 
   render(ctx) {
     const gl = this.gl;
+    //gl.bindVertexArray(null);
 
     // Render to the screen (default framebuffer)
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
+    gl.depthFunc(gl.LESS);
+    gl.enable(gl.DEPTH_TEST);
     this.pointshader.use();
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     ctx.updateUniforms(this.pointshader); // sets cameraPos and cameraMatrix and windowsize
     ctx.updateViewport(gl);
 
-    const positionAttribLoc=this.pointshader.getAttribLocation("position");
 
-    gl.enableVertexAttribArray(positionAttribLoc);
-
-    //gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    //gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    gl.enable(gl.BLEND);
-    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-    //gl.disable(gl.DEPTH_TEST);
-    //console.log(this.count);
-    
-    gl.bindBuffer(gl.ARRAY_BUFFER,  this.pointbuffer);
-    gl.vertexAttribPointer(positionAttribLoc, 3, gl.FLOAT, false, 0, 0);
+    gl.bindVertexArray(this.pointvao);
     gl.drawArrays(gl.POINTS, 0, this.count);
     
     //gl.enable(gl.DEPTH_TEST);
 
-    gl.disableVertexAttribArray(positionAttribLoc);
+
     //gl.finish();
   }
 }
@@ -974,7 +974,7 @@ async function main(){
 
   const axis_aligned_glsl =await load("./frag_aberth_generated_axis_aligned.glsl"); 
 
-  //const shader =new Shader(gl, vertexShaderSource,fragmentShaderSource );
+  //const shader =new Shader(gl, passThroughVertexShaderSource,fragmentShaderSource );
   //shader.use();
   //const camera=new Cameracontroll(mainCanvas,gl);
   const context=new RenderContext(mainCanvas,gl);
@@ -999,7 +999,10 @@ async function main(){
  let torus;
   for(const visgraph of graph.createVisualisationgraphs2()){
     const obj= new RenderableObject(visgraph.name);
-    context.objects.push(obj);
+    //context.objects.push(obj);
+    //if(visgraph.name==="t"){
+      context.objects.push(obj);
+    
 
     visgraph.simplify();
     //const frag=visgraph.gencodeAberthHybrid(fragmentShaderSourceTemplate);
@@ -1014,7 +1017,7 @@ async function main(){
     //gl.uniform4fv(shader.getUniformLocation('incolor'), [color.r,color.g,color.b,1.0]);
     
     
-    obj.pipelines.set("point",new pointcloudrenderer(gl,visgraph,vertexShaderSource,axis_aligned_glsl,color));
+    obj.pipelines.set("point",new pointcloudrenderer(gl,visgraph,axis_aligned_glsl,color));
     obj.pipelines.set("aberth",new simplerenderer(context,gl,visgraph,fragmentShaderSourceTemplate,color));
     obj.setActivePipeline("point");
     //context.updateParams();
@@ -1035,9 +1038,9 @@ async function main(){
       yValues.push(...newyvalues);
       Plotly.redraw('plotlyDiagram');*/
   }
-  //context.render();
+  context.render();
+  //context.updateParams();
   context.updateParams();
-    //context.updateParams();
   console.log(gl);
   //let renderer=new pointrenderer(context,gl,shaders);
 
@@ -1067,11 +1070,13 @@ async function main(){
   const interval = 2; // switch every 2 seconds
   
   if (Math.floor(now) % (interval * 2) < interval) {
-    //torus.setActivePipeline("aberth");
+    torus.setActivePipeline("aberth");
+    //context.updateParams();
+    //torus.setActivePipeline("point");
   } else {
     torus.setActivePipeline("point");
   }
-    //context.updateParams();
+    context.updateParams();
 
 
     
