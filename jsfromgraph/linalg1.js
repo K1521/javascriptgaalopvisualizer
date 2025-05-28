@@ -171,7 +171,7 @@ class Matrix {
         return new Matrix(result);
     }
 
-    #scalarmul(B){
+    #scalarmul(scalar){
         return new Matrix(this.array.map(row => row.map(element => element * scalar)));
     }
 
@@ -189,7 +189,7 @@ class Matrix {
     mul(B){
         if(B instanceof Matrix)return this.#matmul(B);
         if(B instanceof Vector)return this.#vecmul(B);
-        if(typeof value === "number")return this.#scalarmul(B);
+        if(typeof B === "number")return this.#scalarmul(B);
         throw new TypeError(`Incompatible types for matmul: ${typeof this} and ${typeof B}`);
     }
 
