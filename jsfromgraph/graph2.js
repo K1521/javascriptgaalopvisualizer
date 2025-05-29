@@ -437,7 +437,7 @@ export class GaalopGraph {
     createVisualisationgraphs2(){
         const VisualisationGraphs=[];
         for (const [innerProductResultName,outputMultivectorName] of this.renderingExpression.entries()) {
-            const innerProductResultNodes=this.outputMultivectors.get(innerProductResultName).values();
+            const innerProductResultNodes=arrayify(this.outputMultivectors.get(innerProductResultName).values());
 
             VisualisationGraphs.push(new VisualisationGraph2(innerProductResultNodes,outputMultivectorName));
         }
@@ -1352,13 +1352,15 @@ class VisualisationGraph2 {
 
         
         let sumofsquares=undefined;
-        if (outputnodes.lengt === 1) {
+        if (outputnodes.length === 1) {
             sumofsquares=outputnodes[0];
+            
             this.issquared=false;
         }else{
             sumofsquares=this.singularoutput(outputnodes);
             this.issquared=true;
         } 
+        console.log(originalMultivectorName,outputnodes);
         
         const splitgraphout=this.splitgraph(sumofsquares);
         
@@ -1408,6 +1410,8 @@ class VisualisationGraph2 {
     }
 
 
+
+
     gencode(template){
         const argsLength = this.cpu_out_to_gpu_in.size;
     
@@ -1427,6 +1431,17 @@ class VisualisationGraph2 {
             "xyzDual xyzDualSummofsquares(vec3 pos) {?}",
             new GraphToCodeGLSLVis_xyzDual().generate(this.GPUgraph)
         );
+        template = template.replace(
+            "const int POLYDEGREE=?;",
+            `const int POLYDEGREE=${this.calcpolydegree_gpu()};`
+        );
+        template = template.replace(
+            "#define USE_DOUBLEROOTS ?",
+            `#define USE_DOUBLEROOTS ${this.issquared?1:0}`
+        );
+
+        
+
         return template;
     }
 
