@@ -25,9 +25,9 @@ const float FOVfactor=1./tan(radians(FOV) * 0.5);
 const int ABERTH_MAXITER = 40;
 const float ABERTH_THRESHOLD = 1e-3;
 const float ROOT_ZERRO_THRESHOLD = 1e-1;
-const int POLYDEGREE=4;
+const int POLYDEGREE=?;
 //remember to sqare the ROOT_ZERRO_THRESHOLD 
-#define USE_DOUBLEROOTS 1
+#define USE_DOUBLEROOTS ?
 
 
 const float nan=sqrt(-1.);
