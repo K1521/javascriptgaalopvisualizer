@@ -197,8 +197,10 @@ export class Shader{
       gl.shaderSource(shader, source);
       gl.compileShader(shader);
       if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.log(source);
         console.error("Shader compile failed:", gl.getShaderInfoLog(shader));
         alert(gl.getShaderInfoLog(shader));
+        
       }
       return shader;
     }
