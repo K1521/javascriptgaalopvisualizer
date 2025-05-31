@@ -1431,14 +1431,31 @@ class VisualisationGraph2 {
             "xyzDual xyzDualSummofsquares(vec3 pos) {?}",
             new GraphToCodeGLSLVis_xyzDual().generate(this.GPUgraph)
         );
-        template = template.replace(
-            "const int POLYDEGREE=?;",
-            `const int POLYDEGREE=${this.calcpolydegree_gpu()};`
+
+
+        const constants={
+            "POLYDEGREE":this.calcpolydegree_gpu(),
+            "USE_DOUBLEROOTS":this.issquared?1:0
+        }
+
+        for(const [name,value] of Object.entries(constants)){
+            template = template.replace(
+                `${name}=?;`,
+                `${name}=${value};`
+            );
+            template = template.replace(
+                `#define ${name} ?`,
+                `#define ${name} ${value}`
+            );
+        }
+        /*template = template.replace(
+            "POLYDEGREE=?;",
+            `POLYDEGREE=${this.calcpolydegree_gpu()};`
         );
         template = template.replace(
             "#define USE_DOUBLEROOTS ?",
             `#define USE_DOUBLEROOTS ${this.issquared?1:0}`
-        );
+        );*/
 
         
 

@@ -635,6 +635,11 @@ class RenderableObject {
   }
 
   setActivePipeline(name) {
+    if(name==null){
+      this.activePipelineName=null;
+      return;
+    }
+
     if (!this.pipelines.has(name)) {
       console.warn("pipline option doesnt exist");
     }
@@ -769,6 +774,7 @@ class pointcloudrenderer extends LazyRenderingPipeline{
 
   updateParams(ctx){
     if(this.paramsversion==ctx.paramsversion)return;
+    console.log("updaret pointcloud");
     this.paramsversion=ctx.paramsversion;
     const gl = this.gl;
     
@@ -836,7 +842,7 @@ class pointcloudrenderer extends LazyRenderingPipeline{
       for (const attachment of attachments) {
         gl.readBuffer(attachment);
         gl.readPixels(0, 0, w, h, gl.RGBA, gl.FLOAT, pixelbuffer);
-        //console.log(pixelbuffer);
+        console.log(pixelbuffer);
         
 
         for (let y = 0; y < h; y++) {
@@ -914,7 +920,7 @@ class pointcloudrenderer extends LazyRenderingPipeline{
       const tex = gl.createTexture();
       gl.bindTexture(gl.TEXTURE_2D, tex);
       gl.texImage2D(
-        gl.TEXTURE_2D, 0, gl.RGBA32F,
+        gl.TEXTURE_2D, 0, gl.RGBA32F,//gl.RGBA16F,
         width, height, 0,
         gl.RGBA, gl.FLOAT, null
       );
@@ -924,6 +930,11 @@ class pointcloudrenderer extends LazyRenderingPipeline{
         gl.FRAMEBUFFER, attachment, gl.TEXTURE_2D, tex, 0
       );
       textures.push(tex);
+    }
+
+    const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if (status !== gl.FRAMEBUFFER_COMPLETE) {
+      console.error("Framebuffer incomplete:", status);
     }
 
     return [textures,framebuffer];
@@ -1025,10 +1036,12 @@ async function main(){
 context.objects.get("t").setActivePipeline("aberth");
   
 //context.objects.get("intersect").setActivePipeline("aberth");
-context.objects.get("p").setActivePipeline("aberth");
+//context.objects.get("p").setActivePipeline("aberth");
 
 
-
+//context.objects.get("t").setActivePipeline("aberth");
+//context.objects.get("intersect").setActivePipeline(null);
+//context.objects.get("p").setActivePipeline("point");
 
 
 
@@ -1066,7 +1079,8 @@ context.objects.get("p").setActivePipeline("aberth");
     yValues.push(1000/frameTime);
 
     Plotly.redraw('plotlyDiagram');
-  }else
+  }else{
+    context.updateParams();
   if(context.update(deltatime)){
       //drawplot(camera,funmat.array);
       deltatimeavg=deltatimeavg*0.90+deltatime*0.10;
@@ -1074,6 +1088,7 @@ context.objects.get("p").setActivePipeline("aberth");
       
       context.render();
     }
+  }
     
     //renderer.render();
     requestAnimationFrame(animate);

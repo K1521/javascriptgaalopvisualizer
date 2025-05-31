@@ -27,9 +27,17 @@ const float FOVfactor=1./tan(radians(FOV) * 0.5);
 const int ABERTH_MAXITER = 40;
 const float ABERTH_THRESHOLD = 1e-3;
 const float ROOT_ZERRO_THRESHOLD = 1e-1;
-const int POLYDEGREE=4;
+
 //remember to sqare the ROOT_ZERRO_THRESHOLD 
-#define USE_DOUBLEROOTS 1
+
+#define POLYDEGREE ?
+#define USE_DOUBLEROOTS ?
+
+#if USE_DOUBLEROOTS
+    #define NUM_ROOTS (POLYDEGREE / 2)
+#else
+    #define NUM_ROOTS POLYDEGREE
+#endif
 
 
 const float nan=sqrt(-1.);
@@ -108,11 +116,11 @@ DualComplex DualComplexAdd(DualComplex a,float b){
 //the following gets replaced by generated code
 DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){?} //gets replaced
   
-void aberth_method(inout Complex[POLYDEGREE] roots, vec3 rayDir, vec3 rayOrigin) {
+void aberth_method(inout Complex[NUM_ROOTS] roots, vec3 rayDir, vec3 rayOrigin) {
     for (int iter = 0; iter < ABERTH_MAXITER; iter++) {
         float max_change = 0.0; // Track the largest change in roots
 
-        for (int k = 0; k < POLYDEGREE; k++) {
+        for (int k = 0; k < NUM_ROOTS; k++) {
             // Evaluate the polynomial and its derivative at the current root
             DualComplex res=DualComplexSummofsquares(rayDir,rayOrigin,roots[k]);
             Complex a = ComplexDiv(
@@ -124,14 +132,14 @@ void aberth_method(inout Complex[POLYDEGREE] roots, vec3 rayDir, vec3 rayOrigin)
         #if USE_DOUBLEROOTS
             Complex rk=roots[k];
             Complex s =ComplexInv(rk-ComplexConjugate(rk)); // Summation term
-            for (int j = 0; j < POLYDEGREE; j++) {
+            for (int j = 0; j < NUM_ROOTS; j++) {
                 if (j != k) { // Avoid self-interaction
                     s += ComplexInv(rk - roots[j])+ComplexInv(rk - ComplexConjugate(roots[j]));
                 }
             }
         #else
             Complex s = Complex(0.0); // Summation term
-            for (int j = 0; j < POLYDEGREE; j++) {
+            for (int j = 0; j < NUM_ROOTS; j++) {
                 if (j != k) {
                     Complex diff = roots[k] - roots[j];
                     s += ComplexInv(diff);
@@ -157,13 +165,13 @@ void aberth_method(inout Complex[POLYDEGREE] roots, vec3 rayDir, vec3 rayOrigin)
     }
 }
 
-void initial_roots(out Complex[POLYDEGREE] roots,Complex center) {
+void initial_roots(out Complex[NUM_ROOTS] roots,Complex center) {
     const Complex r1 = Complex(cos(goldenangle), sin(goldenangle)); // Base complex number
     roots[0]=r1;
-    for (int i = 1; i < POLYDEGREE; i++) {
+    for (int i = 1; i < NUM_ROOTS; i++) {
         roots[i] = ComplexMul(r1, roots[i-1]);
     }
-    for (int i = 0; i < POLYDEGREE; i++) {
+    for (int i = 0; i < NUM_ROOTS; i++) {
         roots[i]+=center;
     }
 }
@@ -182,18 +190,21 @@ void main() {
     rayDir    = cameraMatrix * rayDir;
 
     // Compute roots along the ray
-    Complex[POLYDEGREE] Roots;
+    Complex[NUM_ROOTS] Roots;
     initial_roots(Roots, Complex(1.0, 0.0));
     aberth_method(Roots, rayDir, rayOrigin);
 
     // Pad output with inf
     const int MAX_ROOTS = 8;
     Complex[MAX_ROOTS] paddedRoots;
-    for (int i = 0; i < POLYDEGREE; ++i) {
+    for (int i = 0; i < NUM_ROOTS; ++i) {
         Complex r=Roots[i];
-        paddedRoots[i] = Complex(r.x,abs(r.y));
+        r = Complex(r.x,abs(r.y));
+        if(any(isnan(r))) r = Complex(inf, inf);
+        paddedRoots[i] =r;
+        
     }
-    for (int i = POLYDEGREE; i < MAX_ROOTS; ++i) {
+    for (int i = NUM_ROOTS; i < MAX_ROOTS; ++i) {
         paddedRoots[i] = Complex(inf, inf);
     }
 
