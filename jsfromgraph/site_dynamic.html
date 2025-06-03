@@ -65,6 +65,7 @@
 import { Vector, Matrix, Multidual } from './linalg1.js';
 import {Cameracontroll,renderingpipeline,renderingpipeline_coeffxyz,Shader} from "./glwrapper.js";
 import {GaalopGraph,visitnodes,VarOperand,AddOperand,MulOperand,NegOperand,ConstOperand,DivOperand} from "./graph2.js";
+import { pinv, multiply, transpose } from 'https://cdn.jsdelivr.net/npm/mathjs@14.5.2/+esm';
 
 function evaluateGraphMultidual(rayDir, rayOrigin,t,graph,resultscache){
   t=new Vector(t);
@@ -79,7 +80,7 @@ function evaluateGraphMultidual(rayDir, rayOrigin,t,graph,resultscache){
   ]);
   for(const [cpunode,gpunode]of graph.cpu_out_to_gpu_in.entries()){
     if(!resultscache.has(cpunode)){
-      //console.log("missing "+cpunode.name+" in cache");
+
 
       throw new Error("missing "+cpunode.name+" in cache");
     }
@@ -112,7 +113,7 @@ return visitnodes(graph.GPUgraph,(node,parentresults)=>{
                 return Multidual.promote(node.operand.value);
             }
             if(node.operand instanceof DivOperand){
-              console.log("div "+parentresults[0]);
+              //console.log("div "+parentresults[0]);
                 return parentresults[0].div(parentresults[1]);//only maximal degree
             }
             throw new Error("bad operation :"+node.operand.constructor.name);
@@ -121,13 +122,18 @@ return visitnodes(graph.GPUgraph,(node,parentresults)=>{
 
 class Poly {
   constructor(coeffs) {
-    this.coeffs = coeffs; // no zero removal, per your request
+    for (const [key, value] of coeffs) {
+      if (value === 0) {
+        coeffs.delete(key);
+      }
+    }
+    this.coeffs = coeffs; 
   }
 
   static monomialToKey(monomial) {
     return JSON.stringify(
       Object.fromEntries(
-        Object.entries(monomial).sort((a, b) => (a[0] > b[0] ? 1 : -1))
+        Object.entries(monomial).filter(([k,v])=>v!=0).sort((a, b) => (a[0] > b[0] ? 1 : -1))
       )
     );
   }
@@ -145,6 +151,10 @@ class Poly {
   static var(varname, value = 1) {
     const key = Poly.monomialToKey({ [varname]: 1 });
     return new Poly(new Map([[key, value]]));
+  }
+  
+  entries(){
+    return this.coeffs.entries().map(([k,v])=>[Poly.keyToMonomial(k),v]);
   }
 
   add(other) {
@@ -169,10 +179,9 @@ class Poly {
     other = Poly.convert(other);
     const coeffs = new Map();
 
-    for (const [keyA, coeffA] of this.coeffs.entries()) {
-      const monomA = Poly.keyToMonomial(keyA);
-      for (const [keyB, coeffB] of other.coeffs.entries()) {
-        const monomB = Poly.keyToMonomial(keyB);
+    const entriesB=[...other.entries()];
+    for (const [monomA, coeffA] of this.entries()) {
+      for (const [monomB, coeffB] of entriesB) {
         const monom = { ...monomA };
         for (const [variable, power] of Object.entries(monomB)) {
           monom[variable] = (monom[variable] ?? 0) + power;
@@ -191,13 +200,11 @@ class Poly {
       throw new Error("only monomial division currently :(");
     }
 
-    const [[keyDivisor, coeffDivisor]] = other.coeffs.entries();
-    const monomDivisor = Poly.keyToMonomial(keyDivisor);
+    const [[monomDivisor, coeffDivisor]] = other.entries();
 
     const result = new Map();
 
-    for (const [keyDividend, coeffDividend] of this.coeffs.entries()) {
-      const monomDividend = Poly.keyToMonomial(keyDividend);
+    for (const [monomDividend, coeffDividend] of this.entries()) {
 
       // Subtract divisor exponents from dividend exponents
       for (const [variable, power] of Object.entries(monomDivisor)) {
@@ -222,8 +229,7 @@ class Poly {
 
   evaluate(point) {
     let result = 0;
-    for (const [key, coeff] of this.coeffs) {
-      const monom = Poly.keyToMonomial(key);
+    for (const [monom, coeff] of this.entries()) {
       let termVal = coeff;
       for (const [v, p] of Object.entries(monom)) {
         termVal *= (point[v] ?? 0) ** p;
@@ -235,8 +241,7 @@ class Poly {
 
   toString() {
     const terms = [];
-    for (const [key, coeff] of this.coeffs) {
-      const monom = Poly.keyToMonomial(key);
+    for (const [monom, coeff] of this.entries()) {
       const vars = Object.entries(monom)
         .map(([v, p]) => v + (p === 1 ? "" : "^" + p))
         .join("*");
@@ -270,6 +275,91 @@ class Poly {
 }
 
 
+//function transpose(matrix) {return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));}
+
+class BasisConvert{
+
+   static get dcga(){
+    if(this._dcga==undefined){
+    const x=Poly.var("_V_X");
+    const y=Poly.var("_V_Y");
+    const z=Poly.var("_V_Z");
+    
+    const xx=x.mul(x);
+    const yy=y.mul(y);
+    const zz=z.mul(z);
+
+    const r=xx.add(yy).add(zz);
+    const rp=(r.add(1)).mul(0.5);
+    const rm=(r.add(-1)).mul(0.5);
+    //console.log(r);
+    //console.log(rm);
+
+    const xy=x.mul(y);
+    const yz=y.mul(z);
+    const zx=z.mul(x);
+
+    const xrp=x.mul(rp);
+    const xrm=x.mul(rm);
+    const yrp=y.mul(rp);
+    const yrm=y.mul(rm);
+    const zrp=z.mul(rp);
+    const zrm=z.mul(rm);
+
+    const rprp=rp.mul(rp);
+    const rmrm=rm.mul(rm);
+    const rprm=rp.mul(rm);
+
+    const terms = [
+      xx, xy, zx, xrm, xrp,
+      yy, yz, yrm, yrp,
+      zz, zrm, zrp,
+      rmrm, rprm, rprp
+    ];
+
+     this._dcga=new BasisConvert(terms);
+    }
+    return this._dcga;
+  }
+
+  constructor(outputbasis) {
+    this.outputbasis = outputbasis;
+
+    // Collect all monomials used in any polynomial in the output basis
+    const monoms = [...new Set(outputbasis.flatMap(poly => [...poly.coeffs.keys()]))];
+    this.monoms = monoms;
+
+    // Build the output basis matrix: each column is a basis polynomial's coefficients
+    this.outputbasismat = transpose(
+      outputbasis.map(basispoly =>
+        monoms.map(m => basispoly.coeffs.get(m) ?? 0)
+      )
+    );
+
+    // Precompute the pseudoinverse for fast conversion
+    this.pinv = pinv(this.outputbasismat);
+    console.log(this.pinv);
+
+        //console.log(this.outputbasismat);
+    //outputbasismat*row=monompoly
+  }
+
+ 
+  convert(monompoly){
+    //outputbasismat*row=monompoly
+    let hits=0;
+    const monompolyrow=this.monoms.map(m=>{
+      const variable=monompoly.coeffs.get(m);
+      if(variable!==undefined)hits+=1;
+      return variable ?? 0;
+    });
+    if(hits<monompoly.coeffs.size)
+      throw Error("poly has monoms which are not in this basis :(");
+    return multiply(this.pinv, monompolyrow);
+  }
+}
+
+
 
   //console.log(graph);
   //console.log(graph.calcpolydegree_gpu());
@@ -285,7 +375,7 @@ const fpscounter=document.getElementById('fpsCounter')
 const mainCanvas = document.getElementById('mainCanvas');
 const diagramCanvas = document.getElementById('diagramCanvas');
 const gl = mainCanvas.getContext('webgl2',{preserveDrawingBuffer: true});//preserveDrawingBuffer for color picking
-//console.log(gl);
+
 if (!gl) {
   alert("WebGL not supported!");
 }
@@ -576,7 +666,6 @@ class RenderContext {
   }
   updateUniformWindowsize(shader){
     const resLoc = shader.getUniformLocation("windowsize");
-    //console.log(resLoc);
     if (resLoc) shader.gl.uniform2fv(resLoc, this.resolution);
   }
   updateViewport(gl=undefined){
@@ -684,6 +773,7 @@ class LazyRenderingPipeline{
 }
 
 class simplerenderer extends LazyRenderingPipeline{
+
   constructor(ctx,gl,visgraph,fragmentShaderSourceTemplate,color){
     super(()=>{
       const frag=visgraph.gencode(fragmentShaderSourceTemplate);
@@ -694,7 +784,7 @@ class simplerenderer extends LazyRenderingPipeline{
       gl.uniform4fv(this.shader.getUniformLocation('incolor'), [color.r,color.g,color.b,1.0]);
       
       this.visgraph=visgraph;
-      //console.log(frag);
+
     })
   }
   render(ctx){
@@ -707,20 +797,21 @@ class simplerenderer extends LazyRenderingPipeline{
     ctx.updateUniforms(this.shader);
     //gl.bindBuffer(gl.ARRAY_BUFFER, ctx.quad );
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    //console.log("1");
+
     
   }
   updateParams(ctx){
     if(this.paramsversion==ctx.paramsversion)return;
     this.paramsversion=ctx.paramsversion;
-    
     this.shader.use();
     this.visgraph.setuniforms(ctx.nodecache,this.shader);
-      //console.log(nodecache);
+
   }
 }
 
 class pointcloudrenderer extends LazyRenderingPipeline{
+
+  static pointshader=null;
   constructor(gl,visgraph,axis_aligned_glsl,color){
     super(()=>{
       this.orthwh=[100,100];
@@ -740,15 +831,16 @@ class pointcloudrenderer extends LazyRenderingPipeline{
       this.pointbuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, this.pointbuffer);
 
-      this.pointshader=new Shader(gl, vShader,fShader);
-      this.pointshader.use();
-      gl.uniform4fv(this.pointshader.getUniformLocation('incolor'), [color.r,color.g,color.b,1.0]);
+      pointcloudrenderer.pointshader ??= new Shader(gl, vShader, fShader);
+
+      this.color=color;
+      
 
 
       this.pointvao=gl.createVertexArray();
       gl.bindVertexArray(this.pointvao);
       gl.bindBuffer(gl.ARRAY_BUFFER,  this.pointbuffer);
-      const positionAttribLoc=this.pointshader.getAttribLocation("position");
+      const positionAttribLoc=pointcloudrenderer.pointshader.getAttribLocation("position");
       gl.enableVertexAttribArray(positionAttribLoc);
       gl.vertexAttribPointer(positionAttribLoc, 3, gl.FLOAT, false, 0, 0);
       
@@ -774,8 +866,10 @@ class pointcloudrenderer extends LazyRenderingPipeline{
 
   updateParams(ctx){
     if(this.paramsversion==ctx.paramsversion)return;
-    console.log("updaret pointcloud");
     this.paramsversion=ctx.paramsversion;
+
+    
+
     const gl = this.gl;
     
     const attachments = [
@@ -816,6 +910,7 @@ class pointcloudrenderer extends LazyRenderingPipeline{
     const points = [];
 
     this.orthshader.use();
+    this.visgraph.setuniforms(ctx.nodecache,this.orthshader);
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
     gl.drawBuffers(attachments);
     
@@ -842,7 +937,7 @@ class pointcloudrenderer extends LazyRenderingPipeline{
       for (const attachment of attachments) {
         gl.readBuffer(attachment);
         gl.readPixels(0, 0, w, h, gl.RGBA, gl.FLOAT, pixelbuffer);
-        console.log(pixelbuffer);
+
         
 
         for (let y = 0; y < h; y++) {
@@ -874,7 +969,6 @@ class pointcloudrenderer extends LazyRenderingPipeline{
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.pointbuffer);
-    //console.log(points);
     this.count=points.length;
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points.flat()), gl.STATIC_DRAW);
 
@@ -889,10 +983,11 @@ class pointcloudrenderer extends LazyRenderingPipeline{
 
     gl.depthFunc(gl.LESS);
     gl.enable(gl.DEPTH_TEST);
-    this.pointshader.use();
+    pointcloudrenderer.pointshader.use();
+    gl.uniform4fv(pointcloudrenderer.pointshader.getUniformLocation('incolor'), [this.color.r,this.color.g,this.color.b,1.0]);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    ctx.updateUniforms(this.pointshader); // sets cameraPos and cameraMatrix and windowsize
+    ctx.updateUniforms(pointcloudrenderer.pointshader); // sets cameraPos and cameraMatrix and windowsize
     ctx.updateViewport(gl);
 
 
@@ -942,13 +1037,111 @@ class pointcloudrenderer extends LazyRenderingPipeline{
 
 }
 
+class matrixrenderer{
+  constructor(visgraph){
+    this.visgraph=visgraph;
+    this.extractPolynomials();
 
+
+  }
+  extractPolynomials(){
+
+    //first convert gpu code to a polynom
+    const nametovar=new Map([
+      ["_V_X",Poly.var("_V_X")],
+      ["_V_Y",Poly.var("_V_Y")],
+      ["_V_Z",Poly.var("_V_Z")]
+    ]);
+    for(const [cpunode,gpunode]of this.visgraph.cpu_out_to_gpu_in.entries()){
+      nametovar.set(gpunode.operand.name,Poly.var(gpunode.operand.name));
+    }
+
+    console.log(this.visgraph.gencode("float Summofsquares(vec3 rayDir, vec3 rayOrigin,float a){?}"));
+    
+    
+    const nodecache= visitnodes(this.visgraph.outputnodes,(node,parentresults)=>{
+      if(node.operand instanceof VarOperand) {
+
+          if(nametovar.has(node.operand.name)){
+              return nametovar.get(node.operand.name);
+          }else{
+              //console.log("missing variable "+node.operand.name);
+              //return new Multidual(0,0,0,0,0,0,0);
+              throw new Error("missing variable "+node.operand.name);
+          }
+      }
+      if(node.operand instanceof AddOperand){
+          return parentresults.reduce((prev,cur)=>prev.add(cur));
+      }
+      if(node.operand instanceof MulOperand){
+          return parentresults.reduce((prev,cur)=>prev.mul(cur));
+      }
+      if(node.operand instanceof NegOperand){
+          return parentresults[0].mul(-1);
+      }
+      if(node.operand instanceof ConstOperand){
+          return Poly.convert(node.operand.value);
+      }
+      if(node.operand instanceof DivOperand){
+        //console.log("div "+parentresults[0]);
+          return parentresults[0].div(parentresults[1]);//only maximal degree
+      }
+      throw new Error("bad operation :"+node.operand.constructor.name);
+    });
+
+    /**@type {Poly[]} */
+    const outputnodes=this.visgraph.outputnodes.map(node=>nodecache.get(node));//list of polynoms
+    for(const poly of outputnodes){console.log(poly,poly.toString());}
+    const xyzstrings=new Set(["_V_X","_V_Y","_V_Z"]);
+    /** {Map<string,Poly>[]} */
+    /**@type {Map<string,number[]>[]} */
+    const outputpolyspervarperrow=outputnodes.map((poly)=>{// sorts monoms per variable  a*x+a*y+b*z->a:x+y,b:z
+      const polymap=new Map();
+      for(let [monom, value] of poly.entries()){
+        /**@type {String[]} */
+        const variables=Object.keys(monom).filter(v => !xyzstrings.has(v));
+        if(variables.length>1)throw new Error("transformation is not linear but it should be :(");
+        let varname;
+        if(variables.length==1){
+          varname=variables[0];
+          if(monom[varname]!=1)throw new Error("transformation is not linear but it should be :(");
+          delete monom[varname];
+        }else{
+          varname="";
+        }
+
+        if (!polymap.has(varname)) polymap.set(varname, new Poly(new Map()));//set default
+        polymap.get(varname).coeffs.set(Poly.monomialToKey(monom),value);
+      }
+
+
+      /**@type {Map<string,number[]>[]} */
+      const outputrowspervar=new Map(
+        polymap.entries().map(
+          ([varname,poly])=>[varname,BasisConvert.dcga.convert(poly)]
+        )
+      );
+      
+
+
+      return outputrowspervar;
+    });
+    console.log(outputpolyspervarperrow);
+
+
+
+
+
+
+    throw new Error("This code is only half finished. please continue here lol");
+  }
+}
 
 async function main(){
 
-    //let gajson=await load("./jsonexport.json");
+    let gajson=await load("./jsonexport.json");
     //let gajson=await load("./torus.json");
-    let gajson=await load("./torus_intersect.json");
+    //let gajson=await load("./torus_intersect.json");
     const graph=new GaalopGraph();
     graph.fromjson(gajson);
     //console.log(graph);
@@ -991,9 +1184,20 @@ async function main(){
     //context.objects.push(obj);
     //if(visgraph.name==="t"){
       context.addObject(obj);
+
+
+
+      
     
 
     visgraph.simplify();
+
+    //console.log(visgraph);
+    console.log(visgraph.name);
+      new matrixrenderer(visgraph);
+      continue;
+      
+      
     //const frag=visgraph.gencodeAberthHybrid(fragmentShaderSourceTemplate);
     //const frag=visgraph.gencodexyzDual(fragmentShaderSourceTemplate);
 
@@ -1022,6 +1226,7 @@ async function main(){
       yValues.push(...newyvalues);
       Plotly.redraw('plotlyDiagram');*/
   }
+  throw Error("you shall not pass");
   //context.render();
   //context.updateParams();
   context.updateParams();
@@ -1034,6 +1239,7 @@ async function main(){
   
   
 context.objects.get("t").setActivePipeline("aberth");
+console.log(context.objects.get("t").visgraph);
   
 //context.objects.get("intersect").setActivePipeline("aberth");
 //context.objects.get("p").setActivePipeline("aberth");

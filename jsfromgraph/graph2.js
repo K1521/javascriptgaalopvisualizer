@@ -1350,6 +1350,8 @@ class VisualisationGraph2 {
     constructor(outputnodes,originalMultivectorName) {
         this.name=originalMultivectorName;
 
+        outputnodes=arrayify(outputnodes);
+
         
         let sumofsquares=undefined;
         if (outputnodes.length === 1) {
@@ -1360,16 +1362,19 @@ class VisualisationGraph2 {
             sumofsquares=this.singularoutput(outputnodes);
             this.issquared=true;
         } 
-        console.log(originalMultivectorName,outputnodes);
+        //console.log(originalMultivectorName,outputnodes);
         
-        const splitgraphout=this.splitgraph(sumofsquares);
+        const splitgraphout=this.splitgraph([sumofsquares,...outputnodes]);
         
 
         /**@type {Map<GraphNode,GraphNode>} */
         this.cpu_out_to_gpu_in=splitgraphout.cpu_out_to_gpu_in;
 
+        /**@type {GraphNode[]} */
+        this.outputnodes= outputnodes.map(node=>splitgraphout.gpu_out.get(node));
+
         /**@type {GraphNode} */
-        this.GPUgraph =splitgraphout.gpu_out;
+        this.GPUgraph =splitgraphout.gpu_out.get(sumofsquares);
         
 
         /**@type {GraphNode} */
@@ -1385,10 +1390,11 @@ class VisualisationGraph2 {
         //this.cpu_out_to_gpu_in=new Map( arrayify(this.cpu_out_to_gpu_in.entries()).map((key,value)=>[key,fun(value)]))
         this.cpu_out_to_gpu_in=mapValues(this.cpu_out_to_gpu_in,fun,false);
         this.GPUgraph=fun(this.GPUgraph);
+        this.outputnodes=this.outputnodes.map(fun);
     }
 
     simplify(){
-        const newnodes=commonsubexpressionelimination_inplace([this.GPUgraph])
+        const newnodes=commonsubexpressionelimination_inplace([this.GPUgraph,...this.outputnodes]);//javascript syntax is weird 
         this.map_gpugraph_ip((node)=>newnodes.get(node));
 
     }
@@ -1545,10 +1551,10 @@ class VisualisationGraph2 {
    
 
     
-    splitgraph(outputnode){
+    splitgraph(outputnodes){
         //compute nodes dependont on _V_X or _V_Y or _V_Z
         const splitnodes=new Set();//these nodes are the gpu inputs which are precomputed on cpu
-        visitnodes(outputnode, (node, parentresults) => {
+        visitnodes(outputnodes, (node, parentresults) => {
             if (node.operand instanceof VarOperand) {
                 if(node.operand.name.startsWith("_V_")){
                     return {dependsonxyz:true,dependsonvariables:false}
@@ -1556,8 +1562,8 @@ class VisualisationGraph2 {
                     return {dependsonxyz:false,dependsonvariables:true}
                 }
             } else{
-                const dependsonxyz=parentresults.reduce((a,b)=> a||b.dependsonxyz,false);
-                const dependsonvariables=parentresults.reduce((a,b)=> a||b.dependsonvariables,false);
+                const dependsonxyz=parentresults.some(item => item.dependsonxyz);//reduce((a,b)=> a||b.dependsonxyz,false);
+                const dependsonvariables=parentresults.some(item => item.dependsonvariables);//.reduce((a,b)=> a||b.dependsonvariables,false);
 
                 if(dependsonxyz && dependsonvariables){
                     for (let i = 0; i < parentresults.length; i++) {
@@ -1574,7 +1580,7 @@ class VisualisationGraph2 {
 
         let nodecounter=0;
         const nodemap=new Map();//maps CPU splitnodes to GPU inputnodes
-        const GPUgraph=visitnodes(outputnode, (node, parentresults) => {
+        const gpuoutputmapunfiltered=visitnodes(outputnodes, (node, parentresults) => {
             if(splitnodes.has(node)){
                 const variable=new GraphNode(new VarOperand(`args[${nodecounter++}]`));
                 nodemap.set(node,variable);
@@ -1582,9 +1588,10 @@ class VisualisationGraph2 {
             } else{
                 return new GraphNode(node.operand,parentresults);//copy
             }
-        }).get(outputnode);
+        });
+        const gpuoutputmap=new Map(outputnodes.map((node)=>[node,gpuoutputmapunfiltered.get(node)]));
 
-        return {cpu_out_to_gpu_in:nodemap,gpu_out:GPUgraph };
+        return {cpu_out_to_gpu_in:nodemap,gpu_out:gpuoutputmap };
 
     }
 
