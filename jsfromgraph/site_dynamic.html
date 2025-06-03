@@ -1037,38 +1037,40 @@ class pointcloudrenderer extends LazyRenderingPipeline{
 
 }
 
-class matrixrenderer{
+class matrixextractor{
   constructor(visgraph){
     this.visgraph=visgraph;
-    this.extractPolynomials();
-
-
+    this.converted=this.extractPolynomials(BasisConvert.dcga);
   }
-  extractPolynomials(){
+  
+  setuniforms
+
+
+  extractPolynomials(basisconverter){
 
     //first convert gpu code to a polynom
-    const nametovar=new Map([
+    /*const nametovar=new Map([
       ["_V_X",Poly.var("_V_X")],
       ["_V_Y",Poly.var("_V_Y")],
       ["_V_Z",Poly.var("_V_Z")]
     ]);
     for(const [cpunode,gpunode]of this.visgraph.cpu_out_to_gpu_in.entries()){
       nametovar.set(gpunode.operand.name,Poly.var(gpunode.operand.name));
-    }
+    }*/
 
     console.log(this.visgraph.gencode("float Summofsquares(vec3 rayDir, vec3 rayOrigin,float a){?}"));
     
     
     const nodecache= visitnodes(this.visgraph.outputnodes,(node,parentresults)=>{
       if(node.operand instanceof VarOperand) {
-
-          if(nametovar.has(node.operand.name)){
+          return new Poly.var(node.operand.name);
+          /*if(nametovar.has(node.operand.name)){
               return nametovar.get(node.operand.name);
           }else{
               //console.log("missing variable "+node.operand.name);
               //return new Multidual(0,0,0,0,0,0,0);
               throw new Error("missing variable "+node.operand.name);
-          }
+          }*/
       }
       if(node.operand instanceof AddOperand){
           return parentresults.reduce((prev,cur)=>prev.add(cur));
@@ -1095,7 +1097,8 @@ class matrixrenderer{
     const xyzstrings=new Set(["_V_X","_V_Y","_V_Z"]);
     /** {Map<string,Poly>[]} */
     /**@type {Map<string,number[]>[]} */
-    const outputpolyspervarperrow=outputnodes.map((poly)=>{// sorts monoms per variable  a*x+a*y+b*z->a:x+y,b:z
+    const outputpolyspervarperrow=outputnodes.map((poly)=>{
+      // sorts monoms per variable  a*x+a*y+b*z->a:x+y,b:z
       const polymap=new Map();
       for(let [monom, value] of poly.entries()){
         /**@type {String[]} */
@@ -1111,30 +1114,30 @@ class matrixrenderer{
         }
 
         if (!polymap.has(varname)) polymap.set(varname, new Poly(new Map()));//set default
-        polymap.get(varname).coeffs.set(Poly.monomialToKey(monom),value);
+        polymap.get(varname).coeffs.set(Poly.monomialToKey(monom),value);//add monom to poly
       }
 
-
-      /**@type {Map<string,number[]>[]} */
+      //basis switch
+      /**@type {Map<string,number[]>} */
       const outputrowspervar=new Map(
         polymap.entries().map(
-          ([varname,poly])=>[varname,BasisConvert.dcga.convert(poly)]
+          ([varname,poly])=>[varname,basisvonverter.convert(poly)]
         )
       );
       
-
-
-      return outputrowspervar;
+      
     });
-    console.log(outputpolyspervarperrow);
+    return outputpolyspervarperrow;
+    //console.log(outputpolyspervarperrow);
 
 
 
 
 
 
-    throw new Error("This code is only half finished. please continue here lol");
+    //throw new Error("This code is only half finished. please continue here lol");
   }
+
 }
 
 async function main(){
@@ -1194,7 +1197,7 @@ async function main(){
 
     //console.log(visgraph);
     console.log(visgraph.name);
-      new matrixrenderer(visgraph);
+      new matrixextractor(visgraph);
       continue;
       
       
