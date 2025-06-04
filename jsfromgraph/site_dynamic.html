@@ -328,13 +328,6 @@ class BasisConvert{
       rmrm, rprm, rprp,     // 2 'r's
     ];*/
 
-    /*const terms = [
-    xy,xx, zx, xrm, xrp,
-      yy, yz, yrm, yrp,
-      zz, zrm, zrp,
-      rmrm, rprm, rprp
-    ];*/
-
     const reordering=BasisConvert.makepermutation(terms,gpuorder);
 
 
@@ -358,6 +351,7 @@ class BasisConvert{
 
   constructor(outputbasis,gpuorder=undefined) {
     this.outputbasis = outputbasis;
+    this.basisdegrees=outputbasis.map(b=>b.degree());
 
     
 
@@ -383,6 +377,22 @@ class BasisConvert{
         //console.log(this.outputbasismat);
     //outputbasismat*row=monompoly
   }
+
+  calcMaxDegree(M) {
+    let maxDegree = 0;
+
+    for (const row of M) {
+      for (let i = 0; i < row.length; i++) {
+        const coeff = row[i];
+        if (coeff !== 0) {
+          maxDegree = Math.max(this.basisdegrees[i], maxDegree);
+        }
+      }
+    }
+
+    return maxDegree;
+  }
+
   reorder(M){
     if(this.gpuorder===undefined)return M;
     return M.map(row=>{
@@ -1177,7 +1187,7 @@ class matrixextractor{
       //return R_;
     } 
 
-    M=this.basisconvert.reorder(M);
+    
 
     //console.log(M);
     return M;
@@ -1185,7 +1195,10 @@ class matrixextractor{
 
   setuniforms(nodecache,shader){
     /** @type {[]} */
-    const M=this.M(nodecache);
+    let M=this.M(nodecache);
+    const degree=this.basisconvert.calcMaxDegree(M);
+    M=this.basisconvert.reorder(M);//reorder to gpu order
+
     //console.log(M,shader.getUniformLocation(`M`));
 
       //for(const [value,i]of M.flat()){
@@ -1196,6 +1209,7 @@ class matrixextractor{
       shader.gl.uniform1fv(shader.getUniformLocation(`M`), M.flat());
 
       shader.gl.uniform1i(shader.getUniformLocation(`numrows`), M.length);
+      shader.gl.uniform1i(shader.getUniformLocation(`POLYDEGREE`), degree);//max degree of unsquared 
   }
 
 
