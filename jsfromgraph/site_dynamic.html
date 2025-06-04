@@ -555,25 +555,25 @@ class RenderContext {
     this.canvas = canvas;
     this.gl = gl;
 
-    
-    
-    this.setScale = this.setScale.bind(this);
-    window.addEventListener("resize", this.setScale);
-
-
-    this.highResolutionScale = 0.3;
-    this.lowResolutionScale = 0.2;
-    this.stillTime = performance.now();
-    this.setScale(this.lowResolutionScale);//sets scale
-
-
-
     this.camera = camera ?? new Cameracontroll(canvas, gl);
     this.params = new Map(); // key-value store for parameters
     this.nodecache= new Map(); 
     this.paramsversion=0;
 
     this.objects=new Map();;//list of RenderObjects
+
+
+
+    window.addEventListener("resize", ()=>{
+      this.setScale();
+      this.pipelineChanged();
+    });
+
+
+    this.highResolutionScale = 0.3;
+    this.lowResolutionScale = 0.2;
+    this.stillTime = performance.now();
+    this.setScale(this.lowResolutionScale);//sets scale
   }
 
   addObject(obj){
@@ -586,6 +586,8 @@ class RenderContext {
   pipelineChanged(){
     this.camera.changed=true;
   }
+
+  
 
   render(){
     const gl=this.gl;
@@ -1162,7 +1164,7 @@ class matrixextractor{
       nametovar.set(gpunode.operand.name,Poly.var(gpunode.operand.name));
     }*/
 
-    console.log(this.visgraph.gencode("float Summofsquares(vec3 rayDir, vec3 rayOrigin,float a){?}"));
+    //console.log(this.visgraph.gencode("float Summofsquares(vec3 rayDir, vec3 rayOrigin,float a){?}"));
     
     
     const nodecache= visitnodes(this.visgraph.outputnodes,(node,parentresults)=>{
@@ -1303,9 +1305,9 @@ async function main(){
     visgraph.simplify();
 
     //console.log(visgraph);
-    console.log(visgraph.name);
+    //console.log(visgraph.name);
     const matex=new matrixextractor(visgraph,BasisConvert.dcga);
-    console.log(matex.M(context.params));
+    //console.log(matex.M(context.params));
 
       //continue;
       
@@ -1343,7 +1345,7 @@ async function main(){
   //context.render();
   //context.updateParams();
   context.updateParams();
-  console.log(gl);
+  //console.log(gl);
   //let renderer=new pointrenderer(context,gl,shaders);
 
 
@@ -1359,7 +1361,7 @@ async function main(){
 
 
 //context.objects.get("t").setActivePipeline("aberth");
-context.objects.get("intersect").setActivePipeline("aberth");
+//context.objects.get("intersect").setActivePipeline("aberth");
 //context.objects.get("p").setActivePipeline("point");
 
 
