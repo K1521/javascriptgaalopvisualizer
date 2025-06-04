@@ -65,7 +65,7 @@
 import { Vector, Matrix, Multidual } from './linalg1.js';
 import {Cameracontroll,renderingpipeline,renderingpipeline_coeffxyz,Shader} from "./glwrapper.js";
 import {GaalopGraph,visitnodes,VarOperand,AddOperand,MulOperand,NegOperand,ConstOperand,DivOperand} from "./graph2.js";
-import { pinv, multiply, transpose } from 'https://cdn.jsdelivr.net/npm/mathjs@14.5.2/+esm';
+import { pinv, multiply, transpose ,qr} from 'https://cdn.jsdelivr.net/npm/mathjs@14.5.2/+esm';
 
 function evaluateGraphMultidual(rayDir, rayOrigin,t,graph,resultscache){
   t=new Vector(t);
@@ -338,6 +338,7 @@ class BasisConvert{
 
     // Precompute the pseudoinverse for fast conversion
     this.pinv = pinv(this.outputbasismat);
+    this.basislength=this.outputbasis.length;
     console.log(this.pinv);
 
         //console.log(this.outputbasismat);
@@ -598,7 +599,8 @@ class RenderContext {
     gl.finish();
   }
 
-  paramsChanged(){
+  paramsChanged(newparams=undefined){
+    this.params=newparams??this.params;
     this.nodecache=new Map(this.params);
     this.paramsversion = (this.paramsversion + 1) % Number.MAX_SAFE_INTEGER;//the modulo is useless because it wont overflow for years if you call this thousends of times per seccond
     
@@ -809,6 +811,48 @@ class simplerenderer extends LazyRenderingPipeline{
   }
 }
 
+class matrixrenderer extends LazyRenderingPipeline{
+
+  
+  constructor(ctx,gl,visgraph,matrixmaker,fragmentShaderSource,color){
+    super(()=>{
+      //const frag=visgraph.gencode(fragmentShaderSourceTemplate);
+
+      this.shader=new Shader(gl, passThroughVertexShaderSource,fragmentShaderSource );
+      this.shader.use();
+      //TODO make a shader cache
+      
+      gl.uniform4fv(this.shader.getUniformLocation('incolor'), [color.r,color.g,color.b,1.0]);
+      
+      this.visgraph=visgraph;
+      this.matrixmaker=matrixmaker;
+
+    })
+  }
+  render(ctx){
+    const gl=ctx.gl;
+    gl.depthFunc(gl.LESS);
+    gl.enable(gl.DEPTH_TEST);
+    this.shader.use();
+    ctx.bindquadvao();
+    ctx.updateViewport();
+    ctx.updateUniforms(this.shader);
+    //gl.bindBuffer(gl.ARRAY_BUFFER, ctx.quad );
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    
+  }
+  updateParams(ctx){
+    if(this.paramsversion==ctx.paramsversion)return;
+    this.paramsversion=ctx.paramsversion;
+    this.shader.use();
+    //this.visgraph.setuniforms(ctx.nodecache,this.shader);
+    this.matrixmaker.setuniforms(ctx.nodecache,this.shader);
+
+  }
+}
+
+
 class pointcloudrenderer extends LazyRenderingPipeline{
 
   static pointshader=null;
@@ -867,7 +911,6 @@ class pointcloudrenderer extends LazyRenderingPipeline{
   updateParams(ctx){
     if(this.paramsversion==ctx.paramsversion)return;
     this.paramsversion=ctx.paramsversion;
-
     
 
     const gl = this.gl;
@@ -1000,6 +1043,8 @@ class pointcloudrenderer extends LazyRenderingPipeline{
     //gl.finish();
   }
 
+
+
   static createRootOutputTextures(gl, width, height) {
     const textures = [];
     const attachments = [
@@ -1038,12 +1083,71 @@ class pointcloudrenderer extends LazyRenderingPipeline{
 }
 
 class matrixextractor{
-  constructor(visgraph){
+  constructor(visgraph,basisconvert){
     this.visgraph=visgraph;
-    this.converted=this.extractPolynomials(BasisConvert.dcga);
+    this.basisconvert=basisconvert;
+    this.converted=this.extractPolynomials(this.basisconvert);
   }
+
+
   
-  setuniforms
+  M(nodecache,useqr=true){
+    //.setuniforms(ctx.nodecache,this.shader);
+    const basislength=this.basisconvert.basislength;
+
+    const parameters = this.visgraph.parameters(nodecache);
+    parameters.set("",1);//"" stands for no parameter
+
+    const M = this.converted.map(varpolys => {
+      // Start with a zero array of appropriate length
+      let rowacc = Array.from({ length: basislength }, () => 0);
+
+      for (const [parametername, row] of varpolys) {
+        const weight = parameters.get(parametername);
+        if (weight === undefined) throw new Error(`Missing parameter: ${parametername}`);
+
+        // Element-wise addition: rowacc += weight * row
+        for (let i = 0; i < basislength; i++) {
+          rowacc[i] += row[i] * weight;
+        }
+      }
+
+      return rowacc;
+    });
+
+    if(useqr && M.length>1){
+      const R=qr(M).R;
+      const tol = 1e-12;
+
+      const R_ = R.filter(row =>
+        //row.reduce((acc, x) => Math.max(acc, Math.abs(x)), 0) > tol
+        row.some(x => Math.abs(x) > tol)
+      );
+      console.log(R,R_);
+      return R_;
+    } 
+
+    //console.log(M);
+    return M;
+  
+
+
+  }
+
+  setuniforms(nodecache,shader){
+    /** @type {[]} */
+    const M=this.M(nodecache);
+    //console.log(M,shader.getUniformLocation(`M`));
+
+      //for(const [value,i]of M.flat()){
+      /*M.flat().forEach((value,i)=>{
+        console.log(value,i,shader.getUniformLocation(`M[${i}]`));
+        shader.gl.uniform1f(shader.getUniformLocation(`M[${i}]`), value);
+      });*/
+      shader.gl.uniform1fv(shader.getUniformLocation(`M`), M.flat());
+
+      shader.gl.uniform1i(shader.getUniformLocation(`numrows`), M.length);
+  }
 
 
   extractPolynomials(basisconverter){
@@ -1063,7 +1167,7 @@ class matrixextractor{
     
     const nodecache= visitnodes(this.visgraph.outputnodes,(node,parentresults)=>{
       if(node.operand instanceof VarOperand) {
-          return new Poly.var(node.operand.name);
+          return Poly.var(node.operand.name);
           /*if(nametovar.has(node.operand.name)){
               return nametovar.get(node.operand.name);
           }else{
@@ -1092,12 +1196,12 @@ class matrixextractor{
     });
 
     /**@type {Poly[]} */
-    const outputnodes=this.visgraph.outputnodes.map(node=>nodecache.get(node));//list of polynoms
-    for(const poly of outputnodes){console.log(poly,poly.toString());}
+    const outputpolys=this.visgraph.outputnodes.map(node=>nodecache.get(node));//list of polynoms
+    for(const poly of outputpolys){console.log(poly,poly.toString());}
     const xyzstrings=new Set(["_V_X","_V_Y","_V_Z"]);
     /** {Map<string,Poly>[]} */
     /**@type {Map<string,number[]>[]} */
-    const outputpolyspervarperrow=outputnodes.map((poly)=>{
+    const outputpolyspervarperrow=outputpolys.map((poly)=>{
       // sorts monoms per variable  a*x+a*y+b*z->a:x+y,b:z
       const polymap=new Map();
       for(let [monom, value] of poly.entries()){
@@ -1121,9 +1225,10 @@ class matrixextractor{
       /**@type {Map<string,number[]>} */
       const outputrowspervar=new Map(
         polymap.entries().map(
-          ([varname,poly])=>[varname,basisvonverter.convert(poly)]
+          ([varname,poly])=>[varname,basisconverter.convert(poly)]
         )
       );
+      return outputrowspervar;
       
       
     });
@@ -1142,9 +1247,9 @@ class matrixextractor{
 
 async function main(){
 
-    let gajson=await load("./jsonexport.json");
+    //let gajson=await load("./jsonexport.json");
     //let gajson=await load("./torus.json");
-    //let gajson=await load("./torus_intersect.json");
+    let gajson=await load("./torus_intersect.json");
     const graph=new GaalopGraph();
     graph.fromjson(gajson);
     //console.log(graph);
@@ -1159,11 +1264,13 @@ async function main(){
   //console.log(fragmentShaderSource);
 
   const axis_aligned_glsl =await load("./frag_aberth_generated_axis_aligned.glsl"); 
+  const frag_aberth_matrix_glsl =await load("./frag_aberth_matrix2.glsl"); 
 
   //const shader =new Shader(gl, passThroughVertexShaderSource,fragmentShaderSource );
   //shader.use();
   //const camera=new Cameracontroll(mainCanvas,gl);
   const context=new RenderContext(mainCanvas,gl);
+  window.context =context;
   
   //let funmat=new Matrix([[-3.2,0., 0., 0., 0.,-3.2,0., 0., 0., 0., 0., 0., 1.5125, -5.225,   4.5125]]);
   /**/
@@ -1173,12 +1280,12 @@ async function main(){
 
   let shaders=[];
 
-  context.params = new Map([
-  ["a1", 0], ["a2", 0], ["a3", 0],
-  ["b1", 0], ["b2", 0.4], ["b3", 0],
-  ["c1", 0], ["c2", 0.45], ["c3", 0.2],
-  ["d14", 0.5], ["d24", 0.4], ["d34", 0.3],
-]);
+  context.paramsChanged(new Map([
+    ["a1", 0], ["a2", 0], ["a3", 0],
+    ["b1", 0], ["b2", 0.4], ["b3", 0],
+    ["c1", 0], ["c2", 0.45], ["c3", 0.2],
+    ["d14", 0.5], ["d24", 0.4], ["d34", 0.3],
+  ]));
 
 
 
@@ -1197,8 +1304,10 @@ async function main(){
 
     //console.log(visgraph);
     console.log(visgraph.name);
-      new matrixextractor(visgraph);
-      continue;
+    const matex=new matrixextractor(visgraph,BasisConvert.dcga);
+    console.log(matex.M(context.params));
+
+      //continue;
       
       
     //const frag=visgraph.gencodeAberthHybrid(fragmentShaderSourceTemplate);
@@ -1215,7 +1324,8 @@ async function main(){
     
     obj.pipelines.set("point",new pointcloudrenderer(gl,visgraph,axis_aligned_glsl,color));
     obj.pipelines.set("aberth",new simplerenderer(context,gl,visgraph,fragmentShaderSourceTemplate,color));
-    obj.setActivePipeline("point");
+    obj.pipelines.set("aberth_matrix",new matrixrenderer(context,gl,visgraph,matex,frag_aberth_matrix_glsl,color));
+    obj.setActivePipeline("aberth_matrix");
     //context.updateParams();
     //obj.setActivePipeline("aberth");
      //context.updateParams();
@@ -1229,7 +1339,7 @@ async function main(){
       yValues.push(...newyvalues);
       Plotly.redraw('plotlyDiagram');*/
   }
-  throw Error("you shall not pass");
+  //throw Error("you shall not pass");
   //context.render();
   //context.updateParams();
   context.updateParams();
@@ -1241,15 +1351,15 @@ async function main(){
   
   
   
-context.objects.get("t").setActivePipeline("aberth");
-console.log(context.objects.get("t").visgraph);
+//context.objects.get("t").setActivePipeline("aberth");
+//console.log(context.objects.get("t").visgraph);
   
 //context.objects.get("intersect").setActivePipeline("aberth");
 //context.objects.get("p").setActivePipeline("aberth");
 
 
 //context.objects.get("t").setActivePipeline("aberth");
-//context.objects.get("intersect").setActivePipeline(null);
+context.objects.get("intersect").setActivePipeline("aberth");
 //context.objects.get("p").setActivePipeline("point");
 
 

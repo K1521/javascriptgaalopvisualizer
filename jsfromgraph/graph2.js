@@ -1404,16 +1404,26 @@ class VisualisationGraph2 {
     }
 
     setuniforms(inputvaluescache,shader) {
-        this.evaluateCPUgraph(inputvaluescache);
+        //you need to do shader.use before this fun i think
+        for(const [gpuname,value]of this.parameters(inputvaluescache)){
+            shader.gl.uniform1f(shader.getUniformLocation(gpuname), value);
+        }
+    }
+
+    parameters(inputvaluescache,evaluate=true,throwundifined=true){
+        const parameters=new Map();
+        if(evaluate)this.evaluateCPUgraph(inputvaluescache);
         //console.log(inputvaluescache);
         for(const [cpunode,gpunode]of this.cpu_out_to_gpu_in.entries()){
             const value=inputvaluescache.get(cpunode);
 
             const gpuname=gpunode.operand.name;
-            if(value===undefined)throw new Error("maybe try to set all input values");
-            shader.gl.uniform1f(shader.getUniformLocation(gpuname), value);
+            if(value===undefined && throwundifined)throw new Error("maybe try to set all input values");
+            parameters.set(gpuname,value??0);
+            //shader.gl.uniform1f(shader.getUniformLocation(gpuname), value);
         }
-    }
+        return parameters;
+     }
 
 
 
