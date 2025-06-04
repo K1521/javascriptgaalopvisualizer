@@ -1450,7 +1450,7 @@ class VisualisationGraph2 {
 
 
         const constants={
-            "POLYDEGREE":this.calcpolydegree_gpu(),
+            "POLYDEGREE":VisualisationGraph2.calcpolydegree(this.GPUgraph),
             "USE_DOUBLEROOTS":this.issquared?1:0
         }
 
@@ -1531,11 +1531,15 @@ class VisualisationGraph2 {
     
         return template;
     }
-
-
-
+    
+    
     calcpolydegree_gpu(){
-        return visitnodes(this.GPUgraph,(node,parentresults)=>{
+        return VisualisationGraph2.calcpolydegree(this.GPUgraph);
+    }
+
+
+    static calcpolydegree(node){
+        return visitnodes(node,(node,parentresults)=>{
             if(node.operand instanceof VarOperand ) 
                 if(node.operand.name.startsWith("_V_")) return 1;
                 else return 0;
@@ -1555,7 +1559,7 @@ class VisualisationGraph2 {
                 return parentresults[0];//only maximal degree
             }
             throw new Error("bad operation :"+node.operand.constructor.name);
-        }).get(this.GPUgraph);
+        }).get(node);
     }
     
    
