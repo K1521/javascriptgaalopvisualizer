@@ -310,20 +310,59 @@ class BasisConvert{
     const rmrm=rm.mul(rm);
     const rprm=rp.mul(rm);
 
-    const terms = [
+    const gpuorder = [
       xx, xy, zx, xrm, xrp,
       yy, yz, yrm, yrp,
       zz, zrm, zrp,
-      rmrm, rprm, rprp
+      rmrm, rprm, 
+      rprp
     ];
+    const terms = [//i thought maybe this order is better because it has less therms with high degree in the triangular matrix
+      rmrm, rprm, rprp,     // 2 'r's
+      xrm, xrp, yrm, yrp, zrm, zrp, // 1 'r'
+      xx, xy, zx, yy, yz, zz        // 0 'r'
+    ];
+    /*const terms = [
+      xx, xy, zx, yy, yz, zz,        // 0 'r'
+      xrm, xrp, yrm, yrp, zrm, zrp, // 1 'r'
+      rmrm, rprm, rprp,     // 2 'r's
+    ];*/
 
-     this._dcga=new BasisConvert(terms);
+    /*const terms = [
+    xy,xx, zx, xrm, xrp,
+      yy, yz, yrm, yrp,
+      zz, zrm, zrp,
+      rmrm, rprm, rprp
+    ];*/
+
+    const reordering=BasisConvert.makepermutation(terms,gpuorder);
+
+
+     this._dcga=new BasisConvert(terms,reordering);
     }
     return this._dcga;
   }
 
-  constructor(outputbasis) {
+  static makepermutation(from,to){
+    if(from.length!=to.length){throw new Error("length mismatch");}
+    if((new Set(to)).size!=to.length){throw new Error("to has duplicate entries");}
+    const reorderingmap=new Map(from.map((v,i)=>[v,i]));
+    if(reorderingmap.size!=from.length){throw new Error("from has duplicate entries");}
+    const reordering=to.map(t=>{
+      const v=reorderingmap.get(t);
+      if(v===undefined)throw new Error("mismatched entries");
+      return v;
+    });
+    return reordering;
+  }
+
+  constructor(outputbasis,gpuorder=undefined) {
     this.outputbasis = outputbasis;
+
+    
+
+    this.gpuorder=gpuorder;// ?? [...outputbasis.keys()];//outputbasis.keys()==range(len(outputbasis))
+
 
     // Collect all monomials used in any polynomial in the output basis
     const monoms = [...new Set(outputbasis.flatMap(poly => [...poly.coeffs.keys()]))];
@@ -344,6 +383,14 @@ class BasisConvert{
         //console.log(this.outputbasismat);
     //outputbasismat*row=monompoly
   }
+  reorder(M){
+    if(this.gpuorder===undefined)return M;
+    return M.map(row=>{
+        const reorderedrow=this.gpuorder.map(i=>row[i]);
+        return reorderedrow;
+      });
+  }
+  
 
  
   convert(monompoly){
@@ -1100,7 +1147,7 @@ class matrixextractor{
     const parameters = this.visgraph.parameters(nodecache);
     parameters.set("",1);//"" stands for no parameter
 
-    const M = this.converted.map(varpolys => {
+    let M = this.converted.map(varpolys => {
       // Start with a zero array of appropriate length
       let rowacc = Array.from({ length: basislength }, () => 0);
 
@@ -1126,14 +1173,14 @@ class matrixextractor{
         row.some(x => Math.abs(x) > tol)
       );
       console.log(R,R_);
-      return R_;
+      M=R_;
+      //return R_;
     } 
+
+    M=this.basisconvert.reorder(M);
 
     //console.log(M);
     return M;
-  
-
-
   }
 
   setuniforms(nodecache,shader){
