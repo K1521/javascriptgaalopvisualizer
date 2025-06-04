@@ -1,64 +1,66 @@
 #version 300 es
 precision mediump float;
-const int polybasislength=15;
-const int numpolys=1;
 
 
 
-//const int polybasislength=...;
-//const ivec3[polybasislength] polybasis=...;
-//const int numpolys=...;
-//const int MAXPOLYDEGREE=...;#line 11 1 //code before this is defined in other file
-uniform float[numpolys*polybasislength] coefficientsxyz;
-/*layout(std140) uniform MyUBO {
-    float[numpolys*polybasislength] coefficientsxyz;
-};*/
 
-//step divided by length of deriv in xyz
+const int basislength=15;
+uniform int numrows;
 
-//in vec2 fragUV;
+
+
+
+uniform float[basislength*basislength] M;
+//uniform float[?] args;//gets replaced
+
+
+
 out vec4 color;
 
+
+//camera params
 uniform vec3 cameraPos;
-//uniform vec3 lightPos;
-//uniform float time;
 uniform vec2 windowsize;
 uniform mat3 cameraMatrix;
+
+uniform vec4 incolor;//only rgb are used currently (not alpha)
 
 
 const float FOV=120.;
 const float FOVfactor=1./tan(radians(FOV) * 0.5);
-const float EPSILON_RAYMARCHING=0.001;
-//const float EPSILON_NORMALS=0.001;
-//const float EPSILON_DERIV=0.0001;
-const float EPSILON_ROOTS=0.001;
-//const int MAX_RAY_ITER=128;
+const int ABERTH_MAXITER = 40;
+const float ABERTH_THRESHOLD = 1e-3;
+const float ROOT_ZERRO_THRESHOLD = 1e-1;
+
+//remember to sqare the ROOT_ZERRO_THRESHOLD 
+
+#define POLYDEGREE 4
+#define USE_DOUBLEROOTS 1
+
+#if USE_DOUBLEROOTS
+    #define NUM_ROOTS (POLYDEGREE / 2)
+#else
+    #define NUM_ROOTS POLYDEGREE
+#endif
 
 const float nan=sqrt(-1.);
-const float inf=pow(9.,999.);
+const float inf=pow(999.,999.);
 const float pi=3.14159265359;
 const float goldenangle = (3.0 - sqrt(5.0)) * pi;
-#define dcomplex vec2
-#define dnumcomplex float
-#define dnum float
-#define dintervall vec2
+
 
 vec3 overwritecol=vec3(0.);
 bool overrideactive=false;
-
-void debugcolor(vec3 c){
+void debugcolor(vec3 c){//just for debug
     overrideactive=true;
     overwritecol=c;
-}//TODO complete the code in main
-
-vec3 normaltocol(vec3 normal){
-    //return vec3(normal.x/2+0.5,normal.y/2+0.5,0.5-normal.z/2);
-    return normal*vec2(1,-1).xxy/.2+0.5;
-    //return normal;
-    //return normalize(pow((normal*vec2(1,-1).xxy+1)/2,vec3(1)));
 }
 
-vec3 getNormal(vec3 p){
+vec3 normaltocol(vec3 normal){
+    return normal*vec2(1,-1).xxy/.2+0.5;
+}
+
+vec3 getNormal(vec3 p){//normal aproximation in 2x2 pixels
     return normalize( -cross(dFdx(p), dFdy(p)) );
 }
 
@@ -72,9 +74,7 @@ int sum(ivec3 v) {
 float vmax(vec3 v) {
     return max(max(v.x, v.y), v.z);
 }
-/*bool any(bvec3 b) {
-    return b.x || b.y || b.z;
-}*/
+
 
 #define DualComplex vec4
 #define Complex vec2
@@ -122,13 +122,6 @@ DualComplex DualComplexAdd(DualComplex a,float b){
     return DualComplex(a.x+b, a.yzw);
 }
 
-
-
-
-
-
-
-
 DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){
     DualComplex x=DualComplex(ComplexMul(Complex(rayDir.x,0.),a)+Complex(rayOrigin.x,0.),rayDir.x,0.);
     DualComplex y=DualComplex(ComplexMul(Complex(rayDir.y,0.),a)+Complex(rayOrigin.y,0.),rayDir.y,0.);
@@ -143,14 +136,14 @@ DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){
     DualComplex rm=(r-DualComplex(1.,0.,0.,0.))*0.5;
 
     
-    if(numpolys==1){
+    if(numrows==1){
 
         return DualComplexSqare(
-            DualComplexMul(x,x*coefficientsxyz[0]+y*coefficientsxyz[1]+z*coefficientsxyz[2]+rm*coefficientsxyz[3]+rp*coefficientsxyz[4])+
-            DualComplexMul(y,y*coefficientsxyz[5]+z*coefficientsxyz[6]+rm*coefficientsxyz[7]+rp*coefficientsxyz[8])+
-            DualComplexMul(z,z*coefficientsxyz[9]+rm*coefficientsxyz[10]+rp*coefficientsxyz[11])+
-            DualComplexMul(rm,rm*coefficientsxyz[12]+rp*coefficientsxyz[13])+
-            DualComplexSqare(rp)*coefficientsxyz[14]
+            DualComplexMul(x,x*M[0]+y*M[1]+z*M[2]+rm*M[3]+rp*M[4])+
+            DualComplexMul(y,y*M[5]+z*M[6]+rm*M[7]+rp*M[8])+
+            DualComplexMul(z,z*M[9]+rm*M[10]+rp*M[11])+
+            DualComplexMul(rm,rm*M[12]+rp*M[13])+
+            DualComplexSqare(rp)*M[14]
         );
     }
 
@@ -172,13 +165,13 @@ DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){
     basis[14] = DualComplexSqare(rp);
 
     DualComplex sum=DualComplex(0.);
-    for(int i=0;i<numpolys;i++){
-        int index=polybasislength*i;
+    for(int i=0;i<numrows;i++){
+        int index=basislength*i;
         DualComplex term = vec4(0.0);
         
         // Accumulate the weighted sum
         for (int j = 0; j < 15; j++) {
-            term += coefficientsxyz[index + j] * basis[j];
+            term += M[index + j] * basis[j];
         }
         
         // Square and add to sum
@@ -189,17 +182,13 @@ DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){
 
     //[x**2, x*y, x*z, rm*x, rp*x, y**2, y*z, rm*y, rp*y, z**2, rm*z, rp*z, rm**2, rm*rp, rp**2]
 
-    
-
 }
-void aberth_method(inout Complex[4] roots, vec3 rayDir, vec3 rayOrigin,int pdegree) {
-    const float threshold = 1e-4; // Convergence threshold
-    const int max_iterations = 40; // Maximum iterations to avoid infinite loop
 
-    for (int iter = 0; iter < max_iterations; iter++) {
+void aberth_method(inout Complex[NUM_ROOTS] roots, vec3 rayDir, vec3 rayOrigin) {
+    for (int iter = 0; iter < ABERTH_MAXITER; iter++) {
         float max_change = 0.0; // Track the largest change in roots
 
-        for (int k = 0; k < pdegree; k++) {
+        for (int k = 0; k < NUM_ROOTS; k++) {
             // Evaluate the polynomial and its derivative at the current root
             DualComplex res=DualComplexSummofsquares(rayDir,rayOrigin,roots[k]);
             Complex a = ComplexDiv(
@@ -207,85 +196,74 @@ void aberth_method(inout Complex[4] roots, vec3 rayDir, vec3 rayOrigin,int pdegr
                 res.zw
             );
 
-            /*Complex s = Complex(0.0); // Summation term
-            for (int j = 0; j < pdegree; j++) {
-                if (j != k) { // Avoid self-interaction
-                    Complex diff = roots[k] - roots[j];
-                    s += ComplexInv(diff);
-                }
-            }*/
 
+        #if USE_DOUBLEROOTS
             Complex rk=roots[k];
-
-            Complex s = ComplexInv(rk-ComplexConjugate(rk)); // Summation term
-            for (int j = 0; j < pdegree; j++) {
+            Complex s =ComplexInv(rk-ComplexConjugate(rk)); // Summation term
+            for (int j = 0; j < NUM_ROOTS; j++) {
                 if (j != k) { // Avoid self-interaction
                     s += ComplexInv(rk - roots[j])+ComplexInv(rk - ComplexConjugate(roots[j]));
                 }
             }
+        #else
+            Complex s = Complex(0.0); // Summation term
+            for (int j = 0; j < NUM_ROOTS; j++) {
+                if (j != k) {
+                    Complex diff = roots[k] - roots[j];
+                    s += ComplexInv(diff);
+                }
+            }
+        #endif
 
             // Compute the correction term
             Complex w = ComplexDiv(a, Complex(1.0, 0.0) - ComplexMul(a, s));
-            if(any(isnan(w)))continue;
+            if(any(isnan(w))||any(isinf(w)))continue;
             roots[k] -= w; // Update the root
 
             // Track the maximum change in root
             max_change = float(max(max_change, length(w)));
         }
+        
 
         // If the maximum change is smaller than the threshold, stop early
-        if (max_change < threshold) {
+        if (max_change < ABERTH_THRESHOLD) {
+            //debugcolor(vec3(float(iter+1)/float(ABERTH_MAXITER)));
             break; // Converged, exit the loop
         }
     }
 }
 
-void initial_roots(out Complex[4] roots,Complex center) {
+void initial_roots(out Complex[NUM_ROOTS] roots,Complex center) {
     const Complex r1 = Complex(cos(goldenangle), sin(goldenangle)); // Base complex number
     roots[0]=r1;
-    for (int i = 1; i < 4; i++) {
+    for (int i = 1; i < NUM_ROOTS; i++) {
         roots[i] = ComplexMul(r1, roots[i-1]);
     }
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < NUM_ROOTS; i++) {
         roots[i]+=center;
     }
 }
 
-float DualComplexRaymarch(vec3 rayDir, inout vec3 rayOrigin) {
+void DualComplexRaymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float x) {
     
-    Complex[4] roots;
+    Complex[NUM_ROOTS] roots;
     initial_roots(roots,Complex(1.0,0.0));
-    //inout Complex[4] roots, vec3 rayDir, vec3 rayOrigin,int pdegree
-    aberth_method(roots,rayDir,rayOrigin,4);
+    //inout Complex[NUM_ROOTS] roots, vec3 rayDir, vec3 rayOrigin
+    aberth_method(roots,rayDir,rayOrigin);
+    
 
-    float beste=inf;
-    float bestx=inf;
-    for(int i = 0; i < 4; ++i){
+    error=inf;
+    x=inf;
+    for(int i = 0; i < NUM_ROOTS; ++i){
         Complex r=roots[i];
         r.y=abs(r.y);
-        if(r.x>=0. && r.y<beste){
-            beste=r.y;
-            bestx=r.x;
+
+        if(r.x>=0. && r.x<x && r.y<ROOT_ZERRO_THRESHOLD){
+            error=r.y;
+            x=r.x;
         }
     }
-    /*for(int i=3;i>0;i--){//bubblesort
-        for(int j=0;j<i;j++){
-            if(roots[j].x>roots[j+1].x){
-                vec2 temp=roots[j];
-                roots[j]=roots[j+1];
-                roots[j+1]=temp;
-            }
-        }
-    }
-    
-    int i=3;
-    beste=roots[i].y;
-    bestx=roots[i].x;
-    if(bestx<0.)beste=inf;*/
 
-
-    rayOrigin += rayDir * bestx;
-    return beste;
 }
 
 
@@ -299,56 +277,58 @@ void main() {
     vec3 rayDir =cameraMatrix*normalize(vec3(uv, FOVfactor));//cam to view
    
 
-    // Sphere tracing
-
-    vec3 p=rayOrigin;//vec3(0);//rayOrigin;
-    float dist=DualComplexRaymarch(rayDir,p);
-    //float x=dot(rayDir,p-rayOrigin);
-    //debugcolor(vec3((x)/10.));
-    //float dist=DualComplexRaymarch4(rayDir,p);
-    //p=(cameraMatrix)*p+rayOrigin;
 
 
-        
     
+    float error,x;
+    DualComplexRaymarch(rayDir,rayOrigin,error,x);
+    vec3 p=rayOrigin+x*rayDir;
+
+    //circle in middle of screen
+    if(length(uv)<0.01 && length(uv)>0.005){
+        color=vec4(0.5,1,0.5,1.);
+        gl_FragDepth=0.;
+        return;
+    }
+
+    //debug
+    if(overrideactive){
+        gl_FragDepth=0.;
+        color=vec4(overwritecol,1.);return;
+        }
+    
+    //if x is to big we ignore it
+    if(x>1000.){
+        gl_FragDepth=1.;
+        return;
+    }
+
+    //set debth
+    gl_FragDepth = x/1000.;
+
     // Checkerboard pattern
-    float checker = 0.3 + 0.7 * mod(sum(floor(p * 4.0)), 2.0); // Alternates between 0.5 and 1.0
-    //float checker = 0.3 + 0.7 * mod(sum(floor(p/(length(p-rayOrigin)/100+1) * 4.0)), 2.0);
-    //checker=(abs(mod(p.x,0.3))<0.03 || abs(mod(p.y,0.3))<0.03 || abs(mod(p.z,0.3))<0.03) ?1.0:0.3;
+    float checker = 0.5 + 0.5 * mod(sum(floor(p * 4.0)), 2.0); // Alternates between 0.5 and 1.0
     
-    vec3 col=vec3(checker);
+    
+    vec3 col=incolor.rgb*checker;
+
+
+
     //col=vec3(1);
     col*=1.;//normaltocol(transpose(cameraMatrix)*getNormal(p));
-    //col=vec3(abs());
     //col=getlight(p,rayDir,col);
-    //col=pow(col,vec3(0.4545));//gamma correction
-    //col=pow(col,vec3(2));
 
-    /*if ((abs(dist) < EPSILON_RAYMARCHING)) {
-        col*=vec3(0.5,1,0.5);
-    }else if ((abs(dist) < EPSILON_RAYMARCHING*10)){
-
-    } 
-    else {
-        col*=vec3(1,0.5,0.5);//red tint
-        
-        //color = vec4(0.0, 0.0, 0.0, 1.0); // Background
-    }*/
-    col*=mix(vec3(0.0, 1.0, 0.0), vec3(1.0, 0.0, 0.0), clamp(dist*20.,0.,1.));
-    
+    /*
     if(any(isnan(col))){
         col=vec3(1.,1.,0.);//nan is yellow
     }
     if(any(isinf(vec3(p))) || abs(p.x)>10E10||abs(p.y)>10E10||abs(p.z)>10E10){
         col=vec3(0.,0.,0.5);//blue
-    }
-    //if(length(uv)<0.01){col*=vec3(0.7,1,0.7);}//dot in middle of screen
-    if(length(uv)<0.01 && length(uv)>0.005){col=vec3(0.5,1,0.5);}//circle in middle of screen
+    }*/
 
 
-    if(overrideactive){
-        col=overwritecol;
-    }
+
+    
 
     color= vec4(col,1.);
 }
