@@ -869,15 +869,28 @@ class GraphToCodeGLSLVis_abstract_Dual extends GraphToCode {
 
         },this.typemap);
 
+        
 
+        this.singularoutput=false;
+        if(outputnode instanceof GraphNode){
+            outputnode=[outputnode];
+            this.singularoutput=true;
+        }
 
-
-        let glslfunction= this.generatecodeinternal([outputnode]);
+        let glslfunction= this.generatecodeinternal(outputnode);
         return glslfunction;
     }
 
     emitfooter(nodes,nodenstrings) {
-        this.code+= `    return ${nodenstrings[0]};\n}\n`;
+        if(this.singularoutput){
+            this.code+= `    return ${nodenstrings[0]};\n}\n`;
+        }else{
+            console.log(nodenstrings);
+            for(let i=0;i<nodenstrings.length;i++){
+                this.code+= `    result[${i}]=${nodenstrings[i]};\n`;
+            }
+            this.code+= `    }\n`;
+        }
     }
 
     stringifyassignment(name,nodestring,node) {
@@ -985,6 +998,7 @@ class GraphToCodeGLSLVis_xyzDual extends GraphToCodeGLSLVis_abstract_Dual{
     }
 
     emitheader() {
+        if(!this.singularoutput)throw new Error("only singular output supported rn");
        
 
         /*
@@ -1026,7 +1040,7 @@ class GraphToCodeGLSLVis_ExtendedDual extends GraphToCodeGLSLVis_abstract_Dual{
     }
 
     emitheader() {
-       
+        if(!this.singularoutput)throw new Error("only singular output supported rn");
 
         /*
         DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){
@@ -1056,6 +1070,44 @@ class GraphToCodeGLSLVis_ExtendedDual extends GraphToCodeGLSLVis_abstract_Dual{
 
     dualCast(parentstring){
         return `xyzDual(0.,0.,0.,${parentstring})`;
+    }
+
+
+}
+
+class GraphToCodeGLSLVis_Dual extends GraphToCodeGLSLVis_abstract_Dual{
+    constructor(){
+        super("Dual");
+    }
+
+    emitheader() {
+        if(this.singularoutput){
+            this.code+=`Dual DualSummofsquares(vec3 rayDir, vec3 rayOrigin,float a) {\n`;
+        }else{
+            this.code+=`const int numoutputs=${this.outputnodes.length};\n`;
+            this.code+=`void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {\n`;
+        }
+
+        this.code+=`    Dual _V_X=Dual(rayDir.x*a+rayOrigin.x,rayDir.x);\n`;
+        this.code+=`    Dual _V_Y=Dual(rayDir.y*a+rayOrigin.y,rayDir.y);\n`;
+        this.code+=`    Dual _V_Z=Dual(rayDir.z*a+rayOrigin.z,rayDir.z);\n`;  
+
+    }
+
+
+    dualmul(left,right){
+        if(left === right)
+            return `DualSquare(${left})`;
+        return `DualMul(${left},${right})`;
+    }
+
+    dualdiv(left,right){
+        return `DualDiv(${left},${right})`;
+    }
+
+
+    dualCast(parentstring){
+        return `Dual(${parentstring},0.)`;
     }
 
 
@@ -1447,6 +1499,10 @@ class VisualisationGraph2 {
             "xyzDual xyzDualSummofsquares(vec3 pos) {?}",
             new GraphToCodeGLSLVis_xyzDual().generate(this.GPUgraph)
         );
+        template = template.replace(
+            "void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {?}",
+            new GraphToCodeGLSLVis_Dual().generate(this.outputnodes)
+        );
 
 
         const constants={
@@ -1473,7 +1529,7 @@ class VisualisationGraph2 {
             `#define USE_DOUBLEROOTS ${this.issquared?1:0}`
         );*/
 
-        
+        console.log(template);
 
         return template;
     }

@@ -276,7 +276,18 @@ class Poly {
 
 
 //function transpose(matrix) {return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));}
+function rankQR(matrix, eps = 1e-10) {
+  const { R } = qr(matrix);
+  let rank = 0;
+  console.log(R);
 
+  for (let row of R) {
+    const nonZero = row.some(val => Math.abs(val) > eps);
+    if (nonZero) rank++;
+  }
+
+  return rank;
+}
 class BasisConvert{
 
    static get dcga(){
@@ -285,7 +296,7 @@ class BasisConvert{
     const y=Poly.var("_V_Y");
     const z=Poly.var("_V_Z");
     
-    const xx=x.mul(x);
+    /*const xx=x.mul(x);
     const yy=y.mul(y);
     const zz=z.mul(z);
 
@@ -321,17 +332,43 @@ class BasisConvert{
       rmrm, rprm, rprp,     // 2 'r's
       xrm, xrp, yrm, yrp, zrm, zrp, // 1 'r'
       xx, xy, zx, yy, yz, zz        // 0 'r'
-    ];
-    /*const terms = [
-      xx, xy, zx, yy, yz, zz,        // 0 'r'
-      xrm, xrp, yrm, yrp, zrm, zrp, // 1 'r'
-      rmrm, rprm, rprp,     // 2 'r's
     ];*/
 
-    const reordering=BasisConvert.makepermutation(terms,gpuorder);
+    const xx=x.mul(x);
+    const yy=y.mul(y);
+    const zz=z.mul(z);
+    const r=xx.add(yy).add(zz);
+
+    //const cgabase=[x,y,z,r,1]
 
 
-     this._dcga=new BasisConvert(terms,reordering);
+
+    const xy=x.mul(y);
+    const xz=x.mul(z);
+    const xr=x.mul(r);
+
+    const yz=y.mul(z);
+    const yr=y.mul(r);
+
+    const zr=z.mul(r);
+
+    const rr=r.mul(r);
+
+    const terms = [
+      Poly.convert(1),x,y,z,//r, r=xx+yy+zz so not linear independant
+      xx,xy,xz,xr,
+      yy,yz,yr,
+      zz,zr,
+      rr
+    ];
+    
+
+
+
+    //const reordering=BasisConvert.makepermutation(terms,gpuorder);
+
+
+     this._dcga=new BasisConvert(terms);//,reordering);
     }
     return this._dcga;
   }
@@ -368,6 +405,9 @@ class BasisConvert{
         monoms.map(m => basispoly.coeffs.get(m) ?? 0)
       )
     );
+
+    //console.log(rankQR(this.outputbasismat));
+    //throw new Error();
 
     // Precompute the pseudoinverse for fast conversion
     this.pinv = pinv(this.outputbasismat);
@@ -1321,13 +1361,14 @@ async function main(){
 
   //const fragmentShaderSource =await load("./frag3.glsl"); 
   //const fragmentShaderSource =await load("./frag_aberth.glsl"); 
-  const fragmentShaderSourceTemplate =await load("./frag_aberth_generated.glsl"); 
+  const frag_aberth_template_glsl =await load("./frag_aberth_generated.glsl"); 
+  const frag_Dual_gauss_template_glsl =await load("./frag_generated_Dual.glsl"); 
   //const fragmentShaderSourceTemplate =await load("./frag_aberth_generated_vander.glsl"); 
   //const fragmentShaderSourceTemplate =await load("./frag_generated_xyzDual.glsl"); 
   //console.log(fragmentShaderSource);
 
   const axis_aligned_glsl =await load("./frag_aberth_generated_axis_aligned.glsl"); 
-  const frag_aberth_matrix_glsl =await load("./frag_aberth_matrix2.glsl"); 
+  const frag_aberth_matrix_glsl =await load("./frag_aberth_matrix_dcga.glsl"); 
 
   //const shader =new Shader(gl, passThroughVertexShaderSource,fragmentShaderSource );
   //shader.use();
@@ -1386,9 +1427,10 @@ async function main(){
     
     
     obj.pipelines.set("point",new pointcloudrenderer(gl,visgraph,axis_aligned_glsl,color));
-    obj.pipelines.set("aberth",new simplerenderer(context,gl,visgraph,fragmentShaderSourceTemplate,color));
+    obj.pipelines.set("aberth",new simplerenderer(context,gl,visgraph,frag_aberth_template_glsl,color));
+    obj.pipelines.set("gauss",new simplerenderer(context,gl,visgraph,frag_Dual_gauss_template_glsl,color));
     obj.pipelines.set("aberth_matrix",new matrixrenderer(context,gl,visgraph,matex,frag_aberth_matrix_glsl,color));
-    obj.setActivePipeline("aberth_matrix");
+    obj.setActivePipeline("gauss");
     //context.updateParams();
     //obj.setActivePipeline("aberth");
      //context.updateParams();
