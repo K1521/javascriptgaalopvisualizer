@@ -24,14 +24,16 @@ uniform vec4 incolor;//only rgb are used currently (not alpha)
 
 const float FOV=120.;
 const float FOVfactor=1./tan(radians(FOV) * 0.5);
-const int ABERTH_MAXITER = 40;
-const float ABERTH_THRESHOLD = 1e-3;
+const int ABERTH_MAXITER = 60;
+const float ABERTH_THRESHOLD = 1e-8;
 const float ROOT_ZERRO_THRESHOLD = 1e-1;
 
 //remember to sqare the ROOT_ZERRO_THRESHOLD 
 
 #define POLYDEGREE ?
 #define USE_DOUBLEROOTS ?
+
+//#define NUM_ROOTS 3
 
 #if USE_DOUBLEROOTS
     #define NUM_ROOTS (POLYDEGREE / 2)
