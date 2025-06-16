@@ -1034,46 +1034,7 @@ class GraphToCodeGLSLVis_xyzDual extends GraphToCodeGLSLVis_abstract_Dual{
 
 }
 
-class GraphToCodeGLSLVis_ExtendedDual extends GraphToCodeGLSLVis_abstract_Dual{
-    constructor(){
-        super("xyzDual");
-    }
 
-    emitheader() {
-        if(!this.singularoutput)throw new Error("only singular output supported rn");
-
-        /*
-        DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){
-    DualComplex x=DualComplex(ComplexMul(Complex(rayDir.x,0.),a)+Complex(rayOrigin.x,0.),rayDir.x,0.);
-    DualComplex y=DualComplex(ComplexMul(Complex(rayDir.y,0.),a)+Complex(rayOrigin.y,0.),rayDir.y,0.);
-    DualComplex z=DualComplex(ComplexMul(Complex(rayDir.z,0.),a)+Complex(rayOrigin.z,0.),rayDir.z,0.);
-    */
-        this.code+=`xyzDual xyzDualSummofsquares(vec3 pos) {\n`;
-        this.code+=`    xyzDual _V_X=xyzDual(1.,0.,0.,pos.x);\n`;
-        this.code+=`    xyzDual _V_Y=xyzDual(0.,1.,0.,pos.y);\n`;
-        this.code+=`    xyzDual _V_Z=xyzDual(0.,0.,1.,pos.z);\n`;
-        
-
-    }
-
-
-    dualmul(left,right){
-        if(left === right)
-            return `xyzDualSqare(${left})`;
-        return `xyzDualMul(${left},${right})`;
-    }
-
-    dualdiv(left,right){
-        return `xyzDualDiv(${left},${right})`;
-    }
-
-
-    dualCast(parentstring){
-        return `xyzDual(0.,0.,0.,${parentstring})`;
-    }
-
-
-}
 
 class GraphToCodeGLSLVis_Dual extends GraphToCodeGLSLVis_abstract_Dual{
     constructor(){
@@ -1113,6 +1074,325 @@ class GraphToCodeGLSLVis_Dual extends GraphToCodeGLSLVis_abstract_Dual{
 
 }
 
+
+
+
+
+
+
+
+
+
+class GraphToCodeGLSLVis_abstract_Multitype extends GraphToCode {
+    constructor(allowMoreThenTwoParrents=false,generateDefaultOpsForFloat=true,generateDefaultTypeForFloat=true) {
+        super(false);
+        this.allowMoreThenTwoParrents=allowMoreThenTwoParrents;
+        this.generateDefaultOpsForFloat=generateDefaultOpsForFloat;
+        this.generateDefaultTypeForFloat=generateDefaultTypeForFloat;
+    }
+
+    generate(outputnode) {
+        
+        this.typemap=new Map(); //node->type
+        visitnodes(outputnode, (node, parenttypes) => {
+            if(node.operand instanceof VarOperand) {
+                if(node.operand.name.startsWith("args")) {
+                    return this.typeArgs();
+                }else if(node.operand.name.startsWith("_V_")) {
+                    return this.typeXYZ();
+                } else {
+                    throw new Error("unknown variable");
+                }
+            } 
+            if(node.operand instanceof ConstOperand){
+                return this.typeConst();
+            }
+            if(node.operand instanceof NegOperand){
+                return this.typeNeg(parenttypes[0]);
+            }
+
+            
+
+            if(node.operand instanceof DivOperand){
+                if(parenttypes.length!=2)new Error("Div must have 2 parents");
+                if(this.generateDefaultTypeForFloat&&parenttypes.every(t=>t=="float"))return "float";
+                return this.typeDiv(parenttypes);
+            }
+
+            if(this.generateDefaultTypeForFloat&&parenttypes.every(t=>t=="float"))return "float";
+
+            if((!this.allowMoreThenTwoParrents) && parenttypes.length==2)new Error("Node must have 2 parents");
+            if(node.operand instanceof MulOperand)return this.typeMul(parenttypes);
+            if(node.operand instanceof AddOperand)return this.typeAdd(parenttypes);
+            if(node.operand instanceof SubOperand)return this.typeSub(parenttypes);
+            
+            throw new Error("unknown nodetype");
+            
+        },this.typemap);
+
+        
+        this.singularoutput=false;
+        if(outputnode instanceof GraphNode){
+            outputnode=[outputnode];
+            this.singularoutput=true;
+        }
+        this.numOutputs=outputnode.length;
+
+        let glslfunction= this.generatecodeinternal(outputnode);
+        return glslfunction;
+    }
+
+    emitfooter(nodes,nodenstrings) {
+        if(this.singularoutput){
+            this.code+= `    return ${nodenstrings[0]};\n}\n`;
+        }else{
+            console.log(nodenstrings);
+            for(let i=0;i<nodenstrings.length;i++){
+                this.code+= `    result[${i}]=${nodenstrings[i]};\n`;
+            }
+            this.code+= `    }\n`;
+        }
+    }
+
+    emitheader() {
+        /*if(this.singularoutput){
+            this.code+=`const int numoutputs=${this.numOutputs};\n`
+            this.code+=`void fun(...,type out result[numoutputs]) {\n`;
+        }else{
+            this.code+=`type fun(...,) {\n`;
+        }
+        this.code+=`type _V_X=...;\n`;
+        this.code+=`type _V_Y=...;\n`;
+        this.code+=`type _V_Z=...;\n`;*/
+        throw Error("this method is abstract"); 
+    }
+
+    typeAdd(parenttypes){
+        throw Error("this method is abstract"); 
+    }
+
+    typeSub(parenttypes){
+        throw Error("this method is abstract"); 
+    }
+
+    typeMul(parenttypes){
+        throw Error("this method is abstract"); 
+    }
+
+    typeDiv(parenttypes){
+        throw Error("this method is abstract"); 
+    }
+
+    typeXYZ(){
+        throw Error("this method is abstract"); 
+    }
+
+    typeConst(){
+        return "float";
+    }
+
+    typeArgs(){
+        return "float";
+    }
+
+    typeNeg(parenttype){
+        return parenttype;
+    }
+
+
+
+    stringifyassignment(name,nodestring,node) {
+
+        return `    ${this.typemap.get(node)} ${name} = ${nodestring};\n`;    
+    }
+
+
+   stringifyAdd(node,parentstrings,parenttypes){
+    throw Error("this method is abstract");
+    }
+
+   stringifySub(node,parentstrings,parenttypes){
+    throw Error("this method is abstract");
+    }
+
+   stringifyMul(node,parentstrings,parenttypes){
+    throw Error("this method is abstract");
+    }
+
+   stringifyDiv(node,parentstrings,parenttypes){
+    throw Error("this method is abstract");
+    }
+
+   stringifyXYZ(node){
+        return node.operand.stringify();
+    }
+
+    stringifyArgs(node){
+        return node.operand.stringify();
+    }
+
+   stringifyConst(node){
+    throw Error("this method is abstract");
+    }
+
+   
+   stringifyNeg(node,parentstring,parenttype){
+    throw Error("this method is abstract");
+    }
+
+
+    stringifnode(node,parentstrings) {
+        const parenttypes=node.parents.map(p=>this.typemap.get(p));
+        if(
+            (this.generateDefaultOpsForFloat &&  
+            parenttypes.every(t=>t=="float") && 
+            this.typemap.get(node)=="float")
+        ){
+            if(node.operand instanceof ConstOperand){
+                const s = node.operand.value.toString();
+                if (s.includes('.') || s.includes('e') || s.includes('E')) return s;
+                return s + '.0'; 
+            }
+            return node.operand.stringify(parentstrings);
+        }
+
+
+
+        if(node.operand instanceof AddOperand) {
+           return this.stringifyAdd(node,parentstrings,parenttypes);
+        }
+        if(node.operand instanceof SubOperand) {
+            return this.stringifySub(node,parentstrings,parenttypes);
+        }
+        if(node.operand instanceof MulOperand) {
+            return this.stringifyMul(node,parentstrings,parenttypes);
+        }
+        if(node.operand instanceof DivOperand) {
+            return this.stringifyDiv(node,parentstrings,parenttypes);
+        }
+
+        if(node.operand instanceof ConstOperand) {
+            return this.stringifyConst(node);
+        }
+        if(node.operand instanceof VarOperand) {
+            if(node.operand.name.startsWith("args")) {
+                return this.stringifyArgs(node);
+            }else if(node.operand.name.startsWith("_V_")) {
+                return this.stringifyXYZ(node);
+            } else {
+                throw new Error("unknown variable");
+            }
+        }
+        if(node.operand instanceof NegOperand) {
+            return this.stringifyNeg(node,parentstrings[0],parenttypes[0]);
+        }
+       
+        return node.operand.stringify(parentstrings);
+    }
+}
+
+
+
+
+class GraphToCodeGLSLVis_Intervall extends GraphToCodeGLSLVis_abstract_Multitype{
+    emitheader() {
+        this.code+=`Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {\n`; 
+    }
+    typeAdd(parenttypes){
+        return "Intervall";
+    }
+    typeSub(parenttypes){
+        return "Intervall";
+    }
+
+    typeMul(parenttypes){
+        return "Intervall";
+    }
+
+    typeDiv(parenttypes){
+        return "Intervall";
+    }
+
+    typeXYZ(){
+        return "Intervall";
+    }
+
+    castToIntervall(parentstring,parenttype){
+        if (Array.isArray(parentstring) && Array.isArray(parenttype)) {
+            return parentstring.map((item,i) => this.castToIntervall(item, parenttype[i]));
+        }
+        if(parenttype=="Intervall")return parentstring;
+        if(parenttype=="float")return `Intervall(${parentstring})`;
+        throw new Error("unknown type");
+    }
+    
+   stringifyAdd(node,parentstrings,parenttypes){
+        let [left,right]=this.castToIntervall(parentstrings,parenttypes);
+        return `(${left}+${right})`;
+    }
+
+   stringifySub(node,parentstrings,parenttypes){
+        let [left,right]=this.castToIntervall(parentstrings,parenttypes);
+        return `IntervallSub(${left},${right})`;
+    }
+
+   stringifyMul(node,parentstrings,parenttypes){
+        let [left,right]=this.castToIntervall(parentstrings,parenttypes);
+        if(left==right)return `IntervallSquare(${left})`;
+        return `IntervallMul(${left},${right})`;
+    }
+
+   stringifyDiv(node,parentstrings,parenttypes){
+
+        const [left,right]=parentstrings;
+        const [tleft,tright]=parenttypes;
+        if(tright!="float")throw Error("only float div allowed");
+        return `IntervallMul(${left},Intervall(1./${right}))`;
+    }
+
+   
+
+   stringifyConst(node){
+    throw Error("this method is abstract");
+    }
+
+   
+   stringifyNeg(node,parentstring,parenttype){
+        return `IntervallNeg(${parentstring})`;
+    }
+
+}
+
+class GraphToCodeGLSLVis_Intervall_monom extends GraphToCodeGLSLVis_Intervall{
+
+
+    generate(outnodes){
+
+        visitnodes(outnodes,
+            (node,parrentresults)=>{
+                if(node.operand instanceof VarOperand) {
+                    if(node.operand.name.startsWith("args")) {
+                        return this.typeArgs();
+                    }else if(node.operand.name.startsWith("_V_")) {
+                        return this.typeXYZ();
+                    } else {
+                        throw new Error("unknown variable");
+                    }
+                } 
+                if(node.operand instanceof ConstOperand){
+                    return this.typeConst();
+                }
+                if(node.operand instanceof NegOperand){
+                    return this.typeNeg(parenttypes[0]);
+                }
+            }
+            );
+        return super.generate();
+    }
+
+}
+
+
 /**
  * 
  * @param {GraphNode[]} nodes 
@@ -1128,8 +1408,18 @@ function copygraph(nodes) {
     return new Map(nodes.map((node) => [node, nodereplacement.get(node)])); 
 }
 
+/**
+ * Converts an iterable or array into an array.
+ * @param {Iterable<T> | T[]} x - The input to convert.
+ * @returns {T[]} - The converted array.
+ */
+function arrayify(x) {
+    if (Array.isArray(x)) return x;
+    if (x[Symbol.iterator]) return Array.from(x); // any iterable
+    throw new TypeError("Value is not iterable");
+}
 
-
+/*
 export function commonsubexpressionelimination(nodes) {
     nodes=arrayify(nodes);
     const nodescopy=copygraph(nodes); //copy the graph to avoid modifying the original graph
@@ -1141,16 +1431,6 @@ export function commonsubexpressionelimination(nodes) {
 }
 
 
-/**
- * Converts an iterable or array into an array.
- * @param {Iterable<T> | T[]} x - The input to convert.
- * @returns {T[]} - The converted array.
- */
-function arrayify(x) {
-    if (Array.isArray(x)) return x;
-    if (x[Symbol.iterator]) return Array.from(x); // any iterable
-    throw new TypeError("Value is not iterable");
-}
 
 function commonsubexpressionelimination_inplace(nodes) {
 
@@ -1192,8 +1472,64 @@ function commonsubexpressionelimination_inplace(nodes) {
 
     return new Map(nodes.map((node)=>[node,nodereplacements.get(node)])); //this is a map of nodes to their replacements
 }	
+*/
+
+function commonsubexpressionelimination2(nodes){
+  
+    const noderepresentationcashe=new Map(); //string->node
+    const nodeids=new Map(); //node->integer //this is used to keep the representations short
+    let nodeidcounter=0;
+    const nodereplacements=new Map(); //node->node
+    nodes=arrayify(nodes);
 
 
+    visitnodes(nodes, (oldnode, parentresults) => {
+        /*node.parents=parentresults;//here we replace the parents of the node with the parents of the replacement node
+        //this is done in place because it is easier
+        //if we would create a new node, we would have to replace all references to the old node with the new node
+        //and this would be a lot of work*/
+
+
+
+    
+        //calculate signature
+        //if a node has the same parents and operand as another node, the parentsring is the same
+        const parentids = parentresults.map((parent) => nodeids.get(parent));
+
+        //if the operation is assosiative, we can sort the parents to get a unique representation
+        if (oldnode.operand instanceof AddOperand || oldnode.operand instanceof MulOperand) {
+            parentids.sort((a, b) => a - b);// .sort() would also work but i hope this is faster because it is a number
+        }
+        const signature = oldnode.operand.stringify(parentids);
+
+    
+
+        //getnode from node cache
+        if (noderepresentationcashe.has(signature)) {
+            return noderepresentationcashe.get(signature);
+        } else {
+            let newnode;
+            if(parentresults.every((replacement,idx)=>replacement==oldnode.parents[idx])){
+                //i am verry unsure why i put this line here. always copying should be saver i think
+                //so i guessyou can delete this? i think this requires slightly less memory but it should be negligible
+                newnode=oldnode;
+            }else{
+                newnode=new GraphNode(oldnode.operand,parentresults);//copy
+            }
+            
+
+            noderepresentationcashe.set(signature, newnode);
+            nodeids.set(newnode, String(nodeidcounter++));
+
+            return newnode;
+        }
+        
+        //so we can replace the node
+        
+    }, nodereplacements);
+
+    return new Map(nodes.map((node)=>[node,nodereplacements.get(node)])); //this is a map of nodes to their replacements
+}
 function countnodes(nodes) { 
     let count=0;
     visitnodes(nodes, (node, parentresults) => {
@@ -1446,7 +1782,7 @@ class VisualisationGraph2 {
     }
 
     simplify(){
-        const newnodes=commonsubexpressionelimination_inplace([this.GPUgraph,...this.outputnodes]);//javascript syntax is weird 
+        const newnodes=commonsubexpressionelimination2([this.GPUgraph,...this.outputnodes]);//javascript syntax is weird 
         this.map_gpugraph_ip((node)=>newnodes.get(node));
 
     }
@@ -1502,6 +1838,10 @@ class VisualisationGraph2 {
         template = template.replace(
             "void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {?}",
             new GraphToCodeGLSLVis_Dual().generate(this.outputnodes)
+        );
+        template = template.replace(
+            "Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {?}",
+            new GraphToCodeGLSLVis_Intervall().generate(this.GPUgraph)
         );
 
 
