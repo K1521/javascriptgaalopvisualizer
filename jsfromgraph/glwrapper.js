@@ -163,60 +163,93 @@ export class Cameracontroll{
 
   
 export class Shader{
-    constructor(gl,vertexShaderSource,fragmentShaderSource){
-      this.programm=Shader.createProgram(gl, vertexShaderSource,fragmentShaderSource );
-      this.gl=gl;
-      this.attributelocations=new Map();
-      this.uniformlocations=new Map();
+  static emptyfragmentshader = `#version 300 es
+  precision highp float;
+  void main() {
+  }
+  `;
+  constructor(gl,vertexShaderSource,fragmentShaderSource,varyings=undefined,buffermode=undefined){
+    //this.programm=Shader.createProgram(gl, vertexShaderSource,fragmentShaderSource );
+    this.gl=gl;
+    buffermode??=gl.INTERLEAVED_ATTRIBS; //cant be a default arg because gl doesnt exist
+
+    //compile the shader
+    const vertexShader = Shader.compileShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
+    const fragmentShader = Shader.compileShader(gl, fragmentShaderSource ?? Shader.emptyfragmentshader, gl.FRAGMENT_SHADER);
+    const program = gl.createProgram();
+    this.program=program;
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+
+    if(varyings){
+      this.varyings=varyings;
+      gl.transformFeedbackVaryings(
+        program,
+        varyings,
+        buffermode,
+      );
     }
+
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error("Program link failed:", gl.getProgramInfoLog(program));
+    }
+
+
+    //init cache
+    this.attributelocations=new Map();
+    this.uniformlocations=new Map();
+  }
+
+  use(){
+    this.gl.useProgram(this.program);
+  }
+
+  getUniformLocation(name){
+    var loc=this.uniformlocations.get(name);
+    if(loc==undefined){
+      loc=this.gl.getUniformLocation(this.program,name);
+      this.uniformlocations.set(name,loc);
+    }
+    return loc;
+  }
+  getAttribLocation(name){
+    var loc=this.attributelocations.get(name);
+    if(loc==undefined){
+      loc=this.gl.getAttribLocation(this.program,name);
+      this.attributelocations.set(name,loc);
+    }
+    return loc;
+  }
   
-    use(){
-      this.gl.useProgram(this.programm);
+
+  static compileShader(gl, source, type) {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.log(source);
+      console.error("Shader compile failed:", gl.getShaderInfoLog(shader));
+      alert(gl.getShaderInfoLog(shader));
+      
     }
-  
-    getUniformLocation(name){
-      var loc=this.uniformlocations.get(name);
-      if(loc==undefined){
-        loc=this.gl.getUniformLocation(this.programm,name);
-        this.uniformlocations.set(name,loc);
-      }
-      return loc;
+    return shader;
+  }
+
+  /*static createProgram(gl, vertexShaderSource, fragmentShaderSource ) {
+    const vertexShader = Shader.compileShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
+    const fragmentShader = Shader.compileShader(gl, fragmentShaderSource, gl.FRAGMENT_SHADER);
+    const program = gl.createProgram();
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+
+
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error("Program link failed:", gl.getProgramInfoLog(program));
     }
-    getAttribLocation(name){
-      var loc=this.attributelocations.get(name);
-      if(loc==undefined){
-        loc=this.gl.getAttribLocation(this.programm,name);
-        this.attributelocations.set(name,loc);
-      }
-      return loc;
-    }
-    
-  
-    static compileShader(gl, source, type) {
-      const shader = gl.createShader(type);
-      gl.shaderSource(shader, source);
-      gl.compileShader(shader);
-      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        console.log(source);
-        console.error("Shader compile failed:", gl.getShaderInfoLog(shader));
-        alert(gl.getShaderInfoLog(shader));
-        
-      }
-      return shader;
-    }
-  
-    static createProgram(gl, vertexShaderSource, fragmentShaderSource) {
-      const vertexShader = Shader.compileShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
-      const fragmentShader = Shader.compileShader(gl, fragmentShaderSource, gl.FRAGMENT_SHADER);
-      const program = gl.createProgram();
-      gl.attachShader(program, vertexShader);
-      gl.attachShader(program, fragmentShader);
-      gl.linkProgram(program);
-      if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        console.error("Program link failed:", gl.getProgramInfoLog(program));
-      }
-      return program;
-    }
+    return program;
+  }*/
 }
 
 

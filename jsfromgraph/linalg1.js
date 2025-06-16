@@ -338,6 +338,44 @@ class Matrix {
       
         return new Matrix(transposed);
     }
+
+    inv() {
+        const m = this.array;
+    
+        if (this.size()[0] !== 3 || this.size()[1] !== 3) {
+            throw new Error("Matrix inversion only implemented for 3x3 matrices.");
+        }
+    
+        const a = m[0][0], b = m[0][1], c = m[0][2];
+        const d = m[1][0], e = m[1][1], f = m[1][2];
+        const g = m[2][0], h = m[2][1], i = m[2][2];
+    
+        const A =   (e*i - f*h),
+              B = - (d*i - f*g),
+              C =   (d*h - e*g),
+              D = - (b*i - c*h),
+              E =   (a*i - c*g),
+              F = - (a*h - b*g),
+              G =   (b*f - c*e),
+              H = - (a*f - c*d),
+              I =   (a*e - b*d);
+    
+        const det = a*A + b*B + c*C;
+    
+        if (Math.abs(det) < 1e-10) {
+            throw new Error("Matrix is singular and cannot be inverted");
+        }
+    
+        const invDet = 1 / det;
+    
+        const invMatrix = [
+            [A * invDet, D * invDet, G * invDet],
+            [B * invDet, E * invDet, H * invDet],
+            [C * invDet, F * invDet, I * invDet]
+        ];
+    
+        return new Matrix(invMatrix);
+    }
 }
 
 /*
