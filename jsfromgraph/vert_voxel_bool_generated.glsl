@@ -119,11 +119,10 @@ float IntervallMidpoint(Intervall a) {
     return (a.x + a.y) * 0.5;
 }
 
+bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {?}
 
-Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {?}
 
 
 bool evaluatevoxel(Intervall x, Intervall y, Intervall z) {
-    Intervall d=IntervallSummofsquares(x,y,z);
-    return d.x <=0. && 0. <=d.y;
+    return evaluatevoxelIntervall3d(x,y,z);
 }
