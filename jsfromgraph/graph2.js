@@ -26,7 +26,24 @@ class Operand {
 }
 
 
-
+export class MaxOperand extends Operand {
+    eval(parentsvalues) {
+        return Math.max(...parentsvalues);
+    }
+    stringify(parentstrings) {
+        return `max(${parentstrings.join(",")})`;
+    }
+    static instance = new MaxOperand();
+}
+export class MinOperand extends Operand {
+    eval(parentsvalues) {
+        return Math.min(...parentsvalues);
+    }
+    stringify(parentstrings) {
+        return `min(${parentstrings.join(",")})`;
+    }
+    static instance = new MinOperand();
+}
 
 
     
@@ -81,7 +98,13 @@ export class ConstOperand extends Operand {
         return this.value;
     }
     stringify(parentstrings) {
-        return this.value.toString();
+        
+        const s= this.value.toString();
+
+        if (s.includes('.') || s.includes('e') || s.includes('E')) return s;
+        else return s + '.0';
+        
+
     }
 
 }
@@ -600,7 +623,7 @@ export class GraphToCode{
         console.log(this.outputnodes.length);
         this.code = "";
         this.noderepresentationcashe=new Map(); //node->string
-        this.assignmentnodes=this.computeassignmentnodes(this.outputnodes); //node->string
+        this.assignmentnodes=this.computeassignmentnodes(this.outputnodes); //set of nodes which will be variables in glsl
 
         //this generates the code for the function
         this.emitheader();
@@ -617,7 +640,12 @@ export class GraphToCode{
     }
 
     
-
+     /**
+     * 
+     * @param {string} name -name of left side
+     * @param {String} nodestring -string for right side
+     * @param {GraphNode} node -node for right side
+     */
     stringifyassignment(name,nodestring,node) {
         return `    ${name} = ${nodestring};\n`;    
     }
@@ -634,7 +662,6 @@ export class GraphToCode{
 
     /**
      * 
-     * param {Map<GraphNode,String>} returnvalues - A map of output nodes to their string representations. 
      * @param {GraphNode[]} nodes -this are the outputnodes generateinternal is called with
      * @param {String[]} nodenstrings -string for the nodes
      * 
@@ -708,9 +735,10 @@ class GraphToCodeGLSLVis_simple extends GraphToCode {
            return `(${leftparent}+${rightparent})`;
         }
         if(node.operand instanceof ConstOperand){
-            const s = node.operand.value.toString();
-            if (s.includes('.') || s.includes('e') || s.includes('E')) return s;
-            return s + '.0'; 
+            return node.operand.stringify();
+            //const s = node.operand.value.toString();
+            //if (s.includes('.') || s.includes('e') || s.includes('E')) return s;
+            //return s + '.0'; 
         }
         return node.operand.stringify(parentresults);
     }
@@ -1080,53 +1108,14 @@ class GraphToCodeGLSLVis_Dual extends GraphToCodeGLSLVis_abstract_Dual{
 
 
 
-
-
-
-class GraphToCodeGLSLVis_abstract_Multitype extends GraphToCode {
-    constructor(allowMoreThenTwoParrents=false,generateDefaultOpsForFloat=true,generateDefaultTypeForFloat=true) {
-        super(false);
-        this.allowMoreThenTwoParrents=allowMoreThenTwoParrents;
-        this.generateDefaultOpsForFloat=generateDefaultOpsForFloat;
-        this.generateDefaultTypeForFloat=generateDefaultTypeForFloat;
-    }
+class GraphToCodeGLSLVis_abstract_Multitype2 extends GraphToCode {
+   
 
     generate(outputnode) {
         
         this.typemap=new Map(); //node->type
         visitnodes(outputnode, (node, parenttypes) => {
-            if(node.operand instanceof VarOperand) {
-                if(node.operand.name.startsWith("args")) {
-                    return this.typeArgs();
-                }else if(node.operand.name.startsWith("_V_")) {
-                    return this.typeXYZ();
-                } else {
-                    throw new Error("unknown variable");
-                }
-            } 
-            if(node.operand instanceof ConstOperand){
-                return this.typeConst();
-            }
-            if(node.operand instanceof NegOperand){
-                return this.typeNeg(parenttypes[0]);
-            }
-
-            
-
-            if(node.operand instanceof DivOperand){
-                if(parenttypes.length!=2)new Error("Div must have 2 parents");
-                if(this.generateDefaultTypeForFloat&&parenttypes.every(t=>t=="float"))return "float";
-                return this.typeDiv(parenttypes);
-            }
-
-            if(this.generateDefaultTypeForFloat&&parenttypes.every(t=>t=="float"))return "float";
-
-            if((!this.allowMoreThenTwoParrents) && parenttypes.length==2)new Error("Node must have 2 parents");
-            if(node.operand instanceof MulOperand)return this.typeMul(parenttypes);
-            if(node.operand instanceof AddOperand)return this.typeAdd(parenttypes);
-            if(node.operand instanceof SubOperand)return this.typeSub(parenttypes);
-            
-            throw new Error("unknown nodetype");
+            return this.calctype(node,parenttypes);
             
         },this.typemap);
 
@@ -1154,6 +1143,83 @@ class GraphToCodeGLSLVis_abstract_Multitype extends GraphToCode {
         }
     }
 
+    calctype(node,parenttypes){
+        throw Error("this method is abstract"); 
+    }
+
+    emitheader() {
+        /*if(this.singularoutput){
+            this.code+=`const int numoutputs=${this.numOutputs};\n`
+            this.code+=`void fun(...,type out result[numoutputs]) {\n`;
+        }else{
+            this.code+=`type fun(...,) {\n`;
+        }
+        this.code+=`type _V_X=...;\n`;
+        this.code+=`type _V_Y=...;\n`;
+        this.code+=`type _V_Z=...;\n`;*/
+        throw Error("this method is abstract"); 
+    }
+
+
+
+    stringifyassignment(name,nodestring,node) {
+
+        return `    ${this.typemap.get(node)} ${name} = ${nodestring};\n`;    
+    }
+
+
+
+    stringifnode(node,parentstrings) {
+        throw Error("this method is abstract");
+    }
+}
+
+
+class GraphToCodeGLSLVis_abstract_Multitype extends GraphToCodeGLSLVis_abstract_Multitype2 {
+    constructor(allowMoreThenTwoParrents=false,generateDefaultOpsForFloat=true,generateDefaultTypeForFloat=true) {
+        super(false);
+        this.allowMoreThenTwoParrents=allowMoreThenTwoParrents;
+        this.generateDefaultOpsForFloat=generateDefaultOpsForFloat;
+        this.generateDefaultTypeForFloat=generateDefaultTypeForFloat;
+    }
+
+    calctype(node, parenttypes) {
+        if(node.operand instanceof VarOperand) {
+            if(node.operand.name.startsWith("args")) {
+                return this.typeArgs();
+            }else if(node.operand.name.startsWith("_V_")) {
+                return this.typeXYZ();
+            } else {
+                throw new Error("unknown variable");
+            }
+        } 
+        if(node.operand instanceof ConstOperand){
+            return this.typeConst();
+        }
+        if(node.operand instanceof NegOperand){
+            return this.typeNeg(parenttypes[0]);
+        }
+
+        
+
+        if(node.operand instanceof DivOperand){
+            if(parenttypes.length!=2)new Error("Div must have 2 parents");
+            if(this.generateDefaultTypeForFloat&&parenttypes.every(t=>t=="float"))return "float";
+            return this.typeDiv(parenttypes);
+        }
+
+        if(this.generateDefaultTypeForFloat&&parenttypes.every(t=>t=="float"))return "float";
+
+        if((!this.allowMoreThenTwoParrents) && parenttypes.length==2)new Error("Node must have 2 parents");
+        if(node.operand instanceof MulOperand)return this.typeMul(parenttypes);
+        if(node.operand instanceof AddOperand)return this.typeAdd(parenttypes);
+        if(node.operand instanceof SubOperand)return this.typeSub(parenttypes);
+        
+        throw new Error("unknown nodetype");
+        
+    }
+
+   
     emitheader() {
         /*if(this.singularoutput){
             this.code+=`const int numoutputs=${this.numOutputs};\n`
@@ -1363,32 +1429,326 @@ class GraphToCodeGLSLVis_Intervall extends GraphToCodeGLSLVis_abstract_Multitype
 
 }
 
-class GraphToCodeGLSLVis_Intervall_monom extends GraphToCodeGLSLVis_Intervall{
+
+
+
+
+class inter3d {
+    //converted using chatgpt from python
+    /**
+     * coeffs: { keyString: GraphNode }
+     * keyString is something like "1,0,0" representing exponents (ix^1 * iy^0 * iz^0)
+     */
+    constructor(coeffs = {}) {
+        this.coeffs = coeffs;
+    }
+
+    static ix = new inter3d({ '1,0,0': new GraphNode(new ConstOperand(1), []) });
+    static iy = new inter3d({ '0,1,0': new GraphNode(new ConstOperand(1), []) });
+    static iz = new inter3d({ '0,0,1': new GraphNode(new ConstOperand(1), []) });
+  
+    /** 
+     * Convert various types to inter3d:
+     * - inter3d instance: return as is
+     * - number 0: return empty polynomial
+     * - other number: return constant polynomial with that number wrapped as GraphNode
+     * @returns {inter3d}
+     */
+    static convert(x) {
+        if (x instanceof inter3d) return x;
+        if (typeof x === 'number') {
+            if (x === 0) return new inter3d();
+            return new inter3d({ '0,0,0': new GraphNode(new ConstOperand(x), []) });
+        }
+        if(x instanceof GraphNode){
+            return new inter3d({ '0,0,0': x });
+        }
+        throw new Error("Cannot convert to inter3d: " + x);
+    }
+
+    /**
+     * Utility: parse key string "x,y,z" to array of integers
+     * @returns {number[]}
+     */
+    static keyToArray(key) {
+        return key.split(',').map(Number);
+    }
+
+    /**
+     * Utility: add two keys element-wise: "1,0,0" + "0,2,1" -> "1,2,1"
+     */
+    static addKeys(a, b) {
+        const arrA = inter3d.keyToArray(a);
+        const arrB = inter3d.keyToArray(b);
+        return arrA.map((v, i) => v + arrB[i]).join(',');
+    }
+
+    /*static subKeys(a, b) {
+        const arrA = inter3d.keyToArray(a);
+        const arrB = inter3d.keyToArray(b);
+        return arrA.map((v, i) => v - arrB[i]).join(',');
+    }*/
+  
+    /**
+     * Add two inter3d polynomials symbolically.
+     * The coefficients are GraphNodes and addition creates AddOperand nodes.
+     */
+    add(other) {
+        other = inter3d.convert(other);
+        const resultCoeffs = {};
+    
+        const keys = new Set([...Object.keys(this.coeffs), ...Object.keys(other.coeffs)]);
+        for (const k of keys) {
+            const a = this.coeffs[k];
+            const b = other.coeffs[k];
+            if (a && b) {
+                resultCoeffs[k] = new GraphNode(AddOperand.instance, [a, b]);
+            } else {
+                resultCoeffs[k] = a || b;
+            }
+        }
+        return new inter3d(resultCoeffs);
+    }
+
+    sub(other) {
+        other = inter3d.convert(other);
+        const resultCoeffs = {};
+    
+        const keys = new Set([...Object.keys(this.coeffs), ...Object.keys(other.coeffs)]);
+        for (const k of keys) {
+            const a = this.coeffs[k];
+            const b = other.coeffs[k];
+            if (a && b) {
+                resultCoeffs[k] = new GraphNode(SubOperand.instance, [a, b]);
+            } else if(a){
+                resultCoeffs[k] = a;
+            } else{//if b
+                resultCoeffs[k] = new GraphNode(NegOperand.instance, [b]);
+            }
+        }
+        return new inter3d(resultCoeffs);
+    }
+  
+    /**
+     * Multiply two inter3d polynomials symbolically.
+     * Coefficients are GraphNodes, multiplication creates MulOperand nodes,
+     * addition of same exponent terms creates AddOperand nodes.
+     */
+    mul(other) {
+        other = inter3d.convert(other);
+        const resultCoeffs = {};
+    
+        for (const [ka, va] of Object.entries(this.coeffs)) {
+            for (const [kb, vb] of Object.entries(other.coeffs)) {
+                const e = inter3d.addKeys(ka, kb);
+                const mulNode = new GraphNode(MulOperand.instance, [va, vb]);
+                const existing = resultCoeffs[e];
+                if (existing) {
+                    resultCoeffs[e] = new GraphNode(AddOperand.instance, [existing, mulNode]);
+                } else {
+                    resultCoeffs[e] = mulNode;
+                }
+            }
+        }
+        return new inter3d(resultCoeffs);
+    }
+
+    /**
+     * 
+     */
+    div(other) {
+        other = inter3d.convert(other);
+    
+        const keys = Object.keys(other.coeffs);
+        if (keys.length !== 1) {
+            throw new Error("Only monomial division is supported.");
+        }
+    
+        const monomKey = keys[0];
+        const divisorExponents = monomKey.split(",").map(Number);
+        const divisorNode = other.coeffs[monomKey];
+        if(divisorNode==undefined)throw new Error("divisorNode is undefined");
+    
+        const result = {};
+    
+        for (const [dividendKey,dividendValue] of Object.entries(this.coeffs)) {
+            if(dividendValue==undefined)throw new Error("dividendValue is undefined");
+            const dividendExponents = inter3d.keyToArray(dividendKey);
+            const resultExponents = dividendExponents.map((dividendExponent,i)=>dividendExponent-divisorExponents[i]);
+            const resultKey = resultExponents.join(",");
+            result[resultKey] = new GraphNode(
+                DivOperand.instance,
+                [dividendValue, divisorNode]
+            );
+        }
+    
+        return new inter3d(result);
+    }
+
+    neg() {
+        const result = {};
+        for (const [key, value] of Object.entries(this.coeffs)) {
+            result[key] = new GraphNode(
+                MulOperand.instance,
+                [new GraphNode(new ConstOperand(-1), []), value]
+            );
+        }
+        return new inter3d(result);
+    }
+    
+    static transformgraph(outputnodes) {
+        const cache = new Map();
+    
+        visitnodes(outputnodes, (node, parentResults) => {
+            // NEGATION
+            if (node.operand instanceof NegOperand) {
+                return parentResults[0].neg();
+            }
+    
+            // MULTIPLICATION
+            if (node.operand instanceof MulOperand) {
+                return parentResults.reduce((acc, cur) => acc.mul(cur));
+            }
+    
+            // ADDITION
+            if (node.operand instanceof AddOperand) {
+                return parentResults.reduce((acc, cur) => acc.add(cur));
+            }
+    
+            // SUBTRACTION
+            if (node.operand instanceof SubOperand) {
+                return parentResults.slice(1).reduce((acc, cur) => acc.sub(cur), parentResults[0]);
+            }
+    
+            // DIVISION
+            if (node.operand instanceof DivOperand) {
+                return parentResults.slice(1).reduce((acc, cur) => acc.div(cur), parentResults[0]);
+            }
+
+            if (node.operand instanceof VarOperand && node.operand.name.startsWith("_V_")) {
+                let I;
+                switch (node.operand.name) {
+                    case "_V_X": I=inter3d.ix;break;
+                    case "_V_Y": I=inter3d.iy;break;
+                    case "_V_Z": I=inter3d.iz;break;
+                    default:
+                        throw new Error("Unknown symbolic variable: " + node.operand.name);
+                }
+                return I.mul(inter3d.convert(new GraphNode(new VarOperand("delta")))).add(inter3d.convert(node));
+            }
+
+    
+            // handles const/var nodes
+            if (node.parents.length === 0) {
+                return inter3d.convert(node);
+            }
+    
+            throw new Error("Unhandled node type in transformgraph: " + node.operand.constructor.name);
+        }, cache);
+    
+        // Return a Map from original nodes to their transformed inter3d results
+        return new Map(outputnodes.map((node)=>[node,cache.get(node)]));
+    }
+  
+
+}
+ 
+export class ReturnIfIntervallDoesntContainZeroOperand extends Operand {
+    eval([low, high]) {
+        return low <= 0 && 0 <= high;
+    }
+
+    stringify([low, high]) {
+        return `if (!(${low} <= 0. && 0. <= ${high})) return false;`;
+    }
+
+    static instance = new ReturnIfIntervallDoesntContainZeroOperand();
+}
+
+class GraphToCodeGLSLVis_Intervall_monom extends GraphToCodeGLSLVis_simple{
 
 
     generate(outnodes){
+        const returnnodes=[];
 
-        visitnodes(outnodes,
-            (node,parrentresults)=>{
-                if(node.operand instanceof VarOperand) {
-                    if(node.operand.name.startsWith("args")) {
-                        return this.typeArgs();
-                    }else if(node.operand.name.startsWith("_V_")) {
-                        return this.typeXYZ();
-                    } else {
-                        throw new Error("unknown variable");
-                    }
-                } 
-                if(node.operand instanceof ConstOperand){
-                    return this.typeConst();
+        const transformed=[...inter3d.transformgraph(outnodes).values()];
+
+        const nullnode=new GraphNode(new ConstOperand(0));
+        for(const intervallpoly of transformed){
+
+            let low=undefined;
+            let high=undefined;
+
+
+            for (const [k, coeff] of Object.entries(intervallpoly.coeffs)) {
+                const exponents=inter3d.keyToArray(k);
+                let lowadd;
+                let highadd;
+
+                if(exponents.every(x=>x===0)){
+                    lowadd=coeff;
+                    highadd=coeff;
+                }else if(exponents.every(x=>x%2==0)){//even exponents are >=0
+                    //if coeff <0 i want the intervall is [c,0]
+                    //else it is [0,c]
+                    //so [min(c,0),max(c,0)]
+                    lowadd=new GraphNode(MinOperand.instance,[coeff,nullnode]) ;
+                    highadd=new GraphNode(MaxOperand.instance,[coeff,nullnode]);
+                }else{//odd exponents
+
+                    //low -=abs(coeffs)
+                    //high +=abs(coeffs)
+                    
+                    highadd=new GraphNode(AbsOperand.instance,[coeff]);
+                    lowadd=new GraphNode(NegOperand.instance,[highadd]);
                 }
-                if(node.operand instanceof NegOperand){
-                    return this.typeNeg(parenttypes[0]);
+                if(low==undefined){
+                    low=lowadd;
+                }else{
+                    low=new GraphNode(AddOperand.instance,[low,lowadd]);
                 }
+                if(high==undefined){
+                    high=highadd;
+                }else{
+                    high=new GraphNode(AddOperand.instance,[high,highadd]);
+                }
+
             }
-            );
-        return super.generate();
+            returnnodes.push(new GraphNode(new ReturnIfIntervallDoesntContainZeroOperand(),[low,high]));
+
+
+        }
+
+        this.returnnodes=new Set(commonsubexpressionelimination2(returnnodes).values());
+        return this.generatecodeinternal(this.returnnodes);
+
+
+        
     }
+
+    emitheader(){
+        this.returnnodes.forEach(x => this.assignmentnodes.add(x));
+        this.code+=`bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {\n`;
+        this.code+=`    float _V_X=(x.x+x.y)/2.;\n`;//Voxel mitte
+        this.code+=`    float _V_Y=(y.x+y.y)/2.;\n`;
+        this.code+=`    float _V_Z=(z.x+z.y)/2.;\n`;
+        this.code+=`    float delta=(x.y-x.x)/2.;\n`;//Voxel kantenlänge
+        //this.code+=`    \n`;
+
+    }
+
+    emitfooter(){
+        this.code+=`    return true;\n`;
+        this.code+=`}\n`;
+    }
+    stringifyassignment(name,nodestring,node) {
+        if(this.returnnodes.has(node)){
+            return nodestring+"\n";
+        }
+
+        return `    float ${name} = ${nodestring};\n`;    
+    }
+
 
 }
 
@@ -1562,18 +1922,21 @@ function countnodes(nodes) {
 export function visitnodes(nodes,visitfunc,resultcache=new Map()) {
 
     function visit(node) {
-
+        
         if (resultcache.has(node)) return resultcache.get(node);
         const parentresults = node.parents.map((parent) => visit(parent));
         const result = visitfunc(node, parentresults, resultcache);
         resultcache.set(node, result);
+
         return result;
     }
 
     if (nodes instanceof GraphNode) {
+        if(nodes==undefined)throw new Error("encountered undefined");
         visit(nodes);
     } else if (typeof nodes === "object" && Symbol.iterator in nodes) {
         for (const node of nodes) {
+            if(node==undefined)throw new Error("encountered undefined");
             visit(node);
         }
     } else throw new Error("nodes must be a GraphNode or an iterable of GraphNodes");
@@ -1842,6 +2205,10 @@ class VisualisationGraph2 {
         template = template.replace(
             "Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {?}",
             new GraphToCodeGLSLVis_Intervall().generate(this.GPUgraph)
+        );
+        template = template.replace(
+            "bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {?}",
+            new GraphToCodeGLSLVis_Intervall_monom().generate(this.outputnodes)
         );
 
 
