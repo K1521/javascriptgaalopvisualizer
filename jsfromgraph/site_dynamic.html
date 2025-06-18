@@ -46,6 +46,30 @@
       /*background-color: white;*/
       /*border-radius: 5px;*/
     }
+
+    #object-visualization-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: sans-serif;
+  max-width: 400px;
+}
+
+.object-visualization-mode {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.object-visualization-mode label {
+  flex: 1;
+  min-width: 100px;
+}
+
+.object-visualization-mode select {
+  flex: 2;
+  min-width: 180px;
+}
   </style>
 </head>
 <body>
@@ -57,6 +81,7 @@
   </div>
   <div id="shaderControls" style="position: absolute; bottom: 10px; right: 10px; background-color: rgba(0,0,0,0.7); padding: 10px; border-radius: 10px; color: white; max-height: 40%; overflow-y: auto;">
     <strong>Shaders</strong><br>
+    <div id="object-visualization-controls"></div>
     <!-- checkboxes will be inserted here dynamically -->
   </div>
   <script type="module">
@@ -774,13 +799,22 @@ class RenderableObject {
     this.ctx=context;
   }
 
+
+
+  addPipeline(name,pipeline){
+    if(this.pipelines.has(name))throw new Error("option already exists");
+    this.pipelines.set(name,pipeline);
+    pipeline.setRenderableObject(this);
+  }
+
   get activePipeline() {
     return this.pipelines.get(this.activePipelineName);
   }
 
   setActivePipeline(name) {
-    if(name==null){
+    if(name==null || name==""){
       this.activePipelineName=null;
+      this.ctx.pipelineChanged();
       return;
     }
 
@@ -824,6 +858,10 @@ class LazyRenderingPipeline{
   }
   updateParams(ctx){
     throw new Error("method not implemented");
+  }
+
+  setRenderableObject(obj){
+    this._obj=obj;
   }
 }
 
@@ -900,6 +938,7 @@ class matrixrenderer extends LazyRenderingPipeline{
     this.paramsversion=ctx.paramsversion;
     this.shader.use();
     //this.visgraph.setuniforms(ctx.nodecache,this.shader);
+    console.log(this.visgraph.name);
     this.matrixmaker.setuniforms(ctx.nodecache,this.shader);
 
   }
@@ -1673,7 +1712,7 @@ void main() {
             }
           }
         }
-        const epsilon = 1e-4;
+        /*const epsilon = 1e-4;
         const allpoints=all.map(idx=>points[idx].map(p=>(((p/scale + 1) * s - 1) / 2)));
         if (allpoints.some(([px, py,pz]) =>
           px < x - epsilon || px > x + 1 + epsilon ||
@@ -1682,7 +1721,7 @@ void main() {
         )) {
           console.warn(`Bucket mismatch at (${x}, ${y})`);
           //console.log("Points:", allpoints);
-        }
+        }*/
 
       }
      
@@ -1962,6 +2001,8 @@ class Voxelrenderer extends LazyRenderingPipeline{
     super(() => {
 
       this.scale=4;
+      this.maxlevel=10;//dont set higher than 10
+      this.maxvoxel=3750000;//max vertCount is 30000000 so definetly dont subdivide if there are more than 30000000/8=3750000
 
       this.visgraph=visgraph;
       this.gl = gl;
@@ -2079,10 +2120,20 @@ class Voxelrenderer extends LazyRenderingPipeline{
     let inarray = [0];
     
 
-    for (let level = 1; level <=9; level++) {
+    for (let level = 1; level <=this.maxlevel && inarray.length<this.maxvoxel; level++) {
       //for (; level < 6; level++) inarray=this.subdivideVoxels(inarray, level-1);
 
       inarray=this.subdivideVoxels(inarray, level-1);//subdivides voxels from level-1 to level
+
+      /*if(inarray.some(x=>this.packVoxel(this.unpackVoxel(x))!=x)){
+        throw new Error("bad voxel packing");
+      }*/
+      inarray.forEach(x=>{
+        if(this.packVoxel(...this.unpackVoxel(x))!=x){
+          throw new Error("bad voxel packing");
+        }
+      })
+
       console.log(level,inarray.length);
       gl.uniform1i(this.voxelshader.getUniformLocation("level"), level);
       //console.log("in",inarray);
@@ -2162,7 +2213,7 @@ class Voxelrenderer extends LazyRenderingPipeline{
 
     const edgelength=this.voxelEdgeLength(this.level)/2;
     const points=inarray.flatMap(packed=>this.voxelToPosition(this.unpackVoxel(packed))).map(x=>x+edgelength);
-    console.log(points);
+    //console.log(points);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.pointbuffer);
     gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(points) , gl.STATIC_DRAW);
     this.pointbuffer_size=inarray.length;
@@ -2183,6 +2234,7 @@ class Voxelrenderer extends LazyRenderingPipeline{
 
 
   packVoxel(x, y, z) {
+    if(x>0x3FF || y>0x3FF || z>0x3FF)throw new Error("coord out of bounds");
     return ( (z & 0x3FF) << 20 ) | ( (y & 0x3FF) << 10 ) | (x & 0x3FF);
   }
   unpackVoxel(packed) {
@@ -2218,6 +2270,10 @@ class Voxelrenderer extends LazyRenderingPipeline{
     const dx = this.packVoxel(step, 0, 0);
     const dy = this.packVoxel(0, step, 0);
     const dz = this.packVoxel(0, 0, step);
+    //console.log(dx,this.unpackVoxel(dx),currentLevel);
+    if(currentLevel==10){
+      throw new Error("level to high");
+    }
 
     return parentVoxels.flatMap(packedVoxel => [
       packedVoxel,
@@ -2297,6 +2353,7 @@ class matrixextractor{
         console.log(value,i,shader.getUniformLocation(`M[${i}]`));
         shader.gl.uniform1f(shader.getUniformLocation(`M[${i}]`), value);
       });*/
+      console.log(degree);
       shader.gl.uniform1fv(shader.getUniformLocation(`M`), M.flat());
 
       shader.gl.uniform1i(shader.getUniformLocation(`numrows`), M.length);
@@ -2399,6 +2456,48 @@ class matrixextractor{
 
 }
 
+
+function addPipelineSelectorForObject(renderableObject, container) {
+  const wrapper = document.createElement('div');
+  wrapper.classList.add('object-visualization-mode');
+
+  // Label
+  const label = document.createElement('label');
+  label.textContent = renderableObject.name;
+  wrapper.appendChild(label);
+
+  // Selector
+  const select = document.createElement('select');
+  for (const methodName of renderableObject.pipelines.keys()) {
+    const option = document.createElement('option');
+    option.value = methodName;
+    option.textContent = methodName;
+    select.appendChild(option);
+  }
+  {
+  const option = document.createElement('option');
+  option.value = "";
+  option.textContent = "no_visualization";
+  select.appendChild(option);
+  }
+
+  // Set initial selection
+  select.value ="";// renderableObject.activePipelineName ?? [...renderableObject.pipelines.keys()][0];
+
+  // On change: update active pipeline + call ctx
+  select.onchange = () => {
+    renderableObject.setActivePipeline(select.value);
+  };
+
+  wrapper.appendChild(select);
+  container.appendChild(wrapper);
+
+  // Immediately set the pipeline on first insert if none is active
+  if (renderableObject.activePipelineName === null) {
+    renderableObject.setActivePipeline(select.value);
+  }
+}
+
 async function main(){
 
     //let gajson=await load("./jsonexport.json");
@@ -2443,7 +2542,7 @@ async function main(){
     ["d14", 0.5], ["d24", 0.4], ["d34", 0.3],
   ]));
 
-
+  const object_visualization_controls = document.getElementById('object-visualization-controls');
 
   for(const visgraph of graph.createVisualisationgraphs2()){
     const obj= new RenderableObject(visgraph.name);
@@ -2478,18 +2577,19 @@ async function main(){
     //gl.uniform4fv(shader.getUniformLocation('incolor'), [color.r,color.g,color.b,1.0]);
     
     
-    obj.pipelines.set("point",new pointcloudrenderer(gl,visgraph,axis_aligned_glsl,color));
-    obj.pipelines.set("lines",new linegridrenderer(gl,visgraph,axis_aligned_glsl,color));
-    obj.pipelines.set("aberth",new simplerenderer(context,gl,visgraph,frag_aberth_template_glsl,color));
-    obj.pipelines.set("gauss",new simplerenderer(context,gl,visgraph,frag_Dual_gauss_template_glsl,color));
-    obj.pipelines.set("aberth_matrix",new matrixrenderer(context,gl,visgraph,matex,frag_aberth_matrix_glsl,color));
-    obj.pipelines.set("voxelpoint",new Voxelrenderer(gl,visgraph,vert_voxel_generated_glsl,color));
-    obj.pipelines.set("voxelpoint2",new Voxelrenderer(gl,visgraph,vert_voxel_bool_generated_glsl,color));
+    obj.addPipeline("point",new pointcloudrenderer(gl,visgraph,axis_aligned_glsl,color));
+    obj.addPipeline("lines",new linegridrenderer(gl,visgraph,axis_aligned_glsl,color));
+    obj.addPipeline("aberth",new simplerenderer(context,gl,visgraph,frag_aberth_template_glsl,color));
+    obj.addPipeline("gauss",new simplerenderer(context,gl,visgraph,frag_Dual_gauss_template_glsl,color));
+    obj.addPipeline("aberth_matrix",new matrixrenderer(context,gl,visgraph,matex,frag_aberth_matrix_glsl,color));
+    obj.addPipeline("voxelpoint",new Voxelrenderer(gl,visgraph,vert_voxel_generated_glsl,color));
+    obj.addPipeline("voxelpoint2",new Voxelrenderer(gl,visgraph,vert_voxel_bool_generated_glsl,color));
     
-    obj.setActivePipeline("voxelpoint");
+    //obj.setActivePipeline("voxelpoint2");
     //context.updateParams();
     //obj.setActivePipeline("aberth");
      //context.updateParams();
+    addPipelineSelectorForObject(obj,object_visualization_controls);
 
     
       
@@ -2510,7 +2610,7 @@ async function main(){
   //throw Error("you shall not pass");
   //context.render();
   //context.updateParams();
-  context.updateParams();
+  //context.updateParams();
   //console.log(gl);
   //let renderer=new pointrenderer(context,gl,shaders);
 
@@ -2518,9 +2618,9 @@ async function main(){
   
   
   
-  context.objects.get("t").setActivePipeline("point");
+//context.objects.get("t").setActivePipeline("point");
 //context.objects.get("t").setActivePipeline("aberth");
-context.objects.get("intersect").setActivePipeline("lines");
+//context.objects.get("intersect").setActivePipeline("lines");
 //console.log(context.objects.get("t").visgraph);
   
 //context.objects.get("intersect").setActivePipeline("aberth");
