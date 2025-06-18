@@ -37,10 +37,10 @@ const float ROOT_ZERRO_THRESHOLD = 1e-1;
 
 
 const int MAX_NUM_ROOTS=4;
-bool USE_DOUBLEROOTS=true;
+
 int numroots=MAX_NUM_ROOTS;//can change after compile time
 uniform int POLYDEGREE;//degree of sum of squares
-
+#define USE_DOUBLEROOTS (numroots!=1)
 
 const float nan=sqrt(-1.);
 const float inf=pow(999.,999.);
@@ -172,6 +172,7 @@ DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){
         }
         
         // Square and add to sum
+        if(!USE_DOUBLEROOTS)return term;
         sum += DualComplexSqare(term);
     }
     return (sum);
@@ -193,28 +194,31 @@ void aberth_method(inout Complex[MAX_NUM_ROOTS] roots, vec3 rayDir, vec3 rayOrig
                 res.zw
             );
 
-        Complex s;
-        if(USE_DOUBLEROOTS){
-            Complex rk=roots[k];
-            Complex s =ComplexInv(rk-ComplexConjugate(rk)); // Summation term
-            for (int j = 0; j < numroots; j++) {
-                if (j != k) { // Avoid self-interaction
-                    s += ComplexInv(rk - roots[j])+ComplexInv(rk - ComplexConjugate(roots[j]));
+            Complex s;
+            if(USE_DOUBLEROOTS){
+                Complex rk=roots[k];
+                s =ComplexInv(rk-ComplexConjugate(rk)); // Summation term
+                for (int j = 0; j < numroots; j++) {
+                    if (j != k) { // Avoid self-interaction
+                        s += ComplexInv(rk - roots[j])+ComplexInv(rk - ComplexConjugate(roots[j]));
+                    }
+                }
+            }else{    
+            
+		
+                s = Complex(0.0); // Summation term
+                for (int j = 0; j < numroots; j++) {
+                    if (j != k) {
+                        Complex diff = roots[k] - roots[j];
+                        s += ComplexInv(diff);
+                    }
                 }
             }
-        }else{    
-        
-            Complex s = Complex(0.0); // Summation term
-            for (int j = 0; j < numroots; j++) {
-                if (j != k) {
-                    Complex diff = roots[k] - roots[j];
-                    s += ComplexInv(diff);
-                }
-            }
-        }
+		 
+
 
             // Compute the correction term
-            Complex w = ComplexDiv(a, Complex(1.0, 0.0) - ComplexM  ul(a, s));
+            Complex w = ComplexDiv(a, Complex(1.0, 0.0) - ComplexMul(a, s));
             if(any(isnan(w))||any(isinf(w)))continue;
             roots[k] -= w; // Update the root
 
@@ -269,7 +273,7 @@ void DualComplexRaymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float x
 
 
 void main() {
-    USE_DOUBLEROOTS=numrows!=1;
+    //USE_DOUBLEROOTS=numrows!=1;
     numroots=POLYDEGREE;
         
 
