@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Await Test</title>
+</head>
+<body>
+  <h1>Open the Console (F12) to see results</h1>
+  <script>
+    function delay(name, ms) {
+      console.log(`${name} started at ${performance.now().toFixed(0)}ms`);
+      return new Promise(resolve => {
+        setTimeout(() => {
+          console.log(`${name} done at ${performance.now().toFixed(0)}ms`);
+          resolve();
+        }, ms);
+      });
+    }
+
+    async function sequentialTest() {
+      console.log('--- Sequential for...of ---');
+      const tasks = [delay("A", 1000), delay("B", 1000)];
+
+      for (const task of tasks) {
+        await task;
+      }
+
+      console.log('--- Sequential done ---');
+    }
+
+    async function parallelTest() {
+      console.log('--- forEach with async callback ---');
+      const tasks = [ delay("C", 1000), delay("D", 1000)];
+
+      tasks.forEach(async task => {
+        await task;
+      });
+
+      console.log('--- forEach done (does not wait!) ---');
+    }
+
+    async function trueParallelTest() {
+      console.log('--- Promise.all with map ---');
+      const tasks = [delay("E", 1000), delay("F", 1000)];
+
+      await Promise.all(tasks);
+      console.log('--- Promise.all done ---');
+    }
+
+    async function runAll() {
+      await sequentialTest();
+      await new Promise(r => setTimeout(r, 500)); // short pause
+      await parallelTest();
+      await new Promise(r => setTimeout(r, 1500)); // wait to observe result
+      await trueParallelTest();
+    }
+
+    //runAll();
+
+    async function A() {
+        console.log("start A");
+        await new Promise(resolve => setTimeout(() => resolve(), 100));
+        console.log("end A");
+        return "A"
+    }
+
+    async function test2(){
+        const a=A();
+        console.log(a);
+        console.log(await a);
+        console.log(a);
+
+    }
+    //test2();
+    async function test3(){
+        let last=performance.now();
+        for(let i=0;i<100;i++){
+            await new Promise(resolve => setTimeout(() => resolve(), 0))
+            const now=performance.now();
+
+            console.log(now,now-last);
+            last=now;
+        }
+
+    }
+    test3();
+
+
+  </script>
+</body>
+</html>
