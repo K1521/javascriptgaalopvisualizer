@@ -219,7 +219,7 @@ void main() {
     float error,x;
     DualComplexRaymarch(rayDir,rayOrigin,error,x);
     vec3 p=rayOrigin+x*rayDir;
-    //x*=raydirLocal.z;//undo normalization 
+    x*=raydirLocal.z;//undo normalization. This means x is the z in view space
 
     //circle in middle of screen
     if(length(uv)<0.01 && length(uv)>0.005){
