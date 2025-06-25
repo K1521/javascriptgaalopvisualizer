@@ -974,7 +974,7 @@ void main() {
     float y = FOVfactor*viewVec.y / ( viewVec.z)*(windowsize.x / windowsize.y);
 
     // Perspective projection manually: NDC.x/y in [-1, 1], z = normalized depth
-    float z = length(viewVec)*sign(viewVec.z) / 1000.0; // Normalize depth to match raymarch
+    float z = viewVec.z/1000.;//length(viewVec)*sign(viewVec.z) / 1000.0; // Normalize depth to match raymarch
 
     // Convert z to NDC (-1 to 1): GPU expects this for depth
     float ndcZ = z * 2.0 - 1.0;
@@ -1327,7 +1327,7 @@ void main() {
         discard;
     }
     //gl_FragDepth=0.;
-    float z = length(v_viewPos) / zMax; 
+    float z = v_viewPos.z/ zMax;//length(v_viewPos) / zMax; 
 
     // Write to depth buffer manually
     gl_FragDepth =clamp(z ,0.,1.);

@@ -418,13 +418,12 @@ void DualComplexRaymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float x
 
 
 
-
-
 void main() {
     vec2 uv=(2.*gl_FragCoord.xy-windowsize)/windowsize.x;
     //vec2 uv=(2.*gl_FragCoord.xy-windowsize)/windowsize*vec2(1.,windowsize.y/windowsize.x);
     vec3 rayOrigin = cameraPos;
-    vec3 rayDir =cameraMatrix*normalize(vec3(uv, FOVfactor));//cam to view
+    vec3 raydirLocal=normalize(vec3(uv, FOVfactor));
+    vec3 rayDir =cameraMatrix*raydirLocal;//cam to view
    
 
 
@@ -433,6 +432,7 @@ void main() {
     float error,x;
     DualComplexRaymarch(rayDir,rayOrigin,error,x);
     vec3 p=rayOrigin+x*rayDir;
+    x*=raydirLocal.z;//undo normalization. This means x is the z in view space
 
     //circle in middle of screen
     if(length(uv)<0.01 && length(uv)>0.005){
