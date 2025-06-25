@@ -607,9 +607,9 @@ function drawplot(camera,coefficients){
 }
 
 const passThroughVertexShaderSource = `#version 300 es
-  layout(location = 0) in vec4 a_position;
+  layout(location = 0) in vec2 uv;
   void main(void) {
-    gl_Position = a_position;
+    gl_Position = vec4(uv,0.,0.);
   }
 `;
 
@@ -777,7 +777,7 @@ class RenderContext {
     if (this._quadvao === undefined) {
       this._quadvao = gl.createVertexArray();
       gl.bindVertexArray(this._quadvao);
-      const loc = 0;//this.shader.getAttribLocation("a_position");
+      const loc = 0;//this.shader.getAttribLocation("uv");
       this.bindquad();
       gl.enableVertexAttribArray(loc);
       gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
@@ -947,7 +947,7 @@ class matrixrenderer extends LazyRenderingPipeline{
 
 class pointcloudrenderer extends LazyRenderingPipeline{
 
-static vShader=`#version 300 es
+  static vShader=`#version 300 es
 // Vertex Shader
 //this shader is so complicated because i wrote my raycasting code before this and then made this code to fit the raycasting logic
 precision highp float;
@@ -984,7 +984,7 @@ void main() {
     // Optional point size
     gl_PointSize = 3.0;
 }`;
-static fShader=`#version 300 es
+  static fShader=`#version 300 es
 // Fragment Shader
 precision highp float;
 uniform vec4 incolor;
@@ -1878,6 +1878,163 @@ void main() {
 }
 
 
+class Buffers{
+  constructor(ctx){
+    this.ctx=ctx;
+    this.inithigh(1000,1000);
+    this.initlow(100,100);
+  }
+
+  initupscaleshader(){
+    const gl=ctx.gl;
+
+const upscalefrag=`#version 300 es
+// Fragment Shader
+precision highp float;
+
+in vec3 v_viewPos;
+
+uniform vec4 incolor;
+
+out vec4 fragColor;
+
+const float zMax = 1000.0; // same as your normalization factor
+
+flat in vec3 v_color;
+
+void main() {
+    if (v_viewPos.z <= 0.0) {
+        discard;
+    }
+    //gl_FragDepth=0.;
+    float z = length(v_viewPos) / zMax; 
+
+    // Write to depth buffer manually
+    gl_FragDepth =clamp(z ,0.,1.);
+
+    fragColor = vec4(incolor.rgb, 1.0);
+    //fragColor = vec4(v_color, 1.0);
+}`;
+    this.upscaleshader=new Shader(passThroughVertexShaderSource,);
+  }
+
+  render(){
+    const ctx=this.ctx;
+    const gl=ctx.gl;
+    gl.depthFunc(gl.LESS);
+    gl.enable(gl.DEPTH_TEST);
+    this.upscaleshader.use();
+    ctx.bindquadvao();
+    //ctx.updateViewport();
+    //ctx.updateUniforms(this.shader);
+    //gl.bindBuffer(gl.ARRAY_BUFFER, ctx.quad );
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+
+
+  inithigh(width, height){
+    const gl=ctx.gl;
+
+
+    this.high_framebuffer=gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.high_framebuffer);
+
+    this.high_renderbuffer_color=gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER,this.high_renderbuffer_color);
+    //gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA8, width, height);//or RGB8
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.RENDERBUFFER,this.high_renderbuffer_color);
+
+    this.high_renderbuffer_depth=gl.createRenderbuffer();
+    gl.bindRenderbuffer(gl.RENDERBUFFER,this.high_renderbuffer_depth);
+    //gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);//or gl.DEPTH_COMPONENT24 or gl.DEPTH_COMPONENT32F
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.high_renderbuffer_depth);
+    
+
+    this.resizelow(width, height);
+
+    {const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if (status !== gl.FRAMEBUFFER_COMPLETE) {
+      console.error("Framebuffer incomplete:", status);
+    }}
+  }
+
+  initlow(width, height){
+    const gl=ctx.gl;
+
+
+    this.low_framebuffer=gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.low_framebuffer);
+
+    this.low_texture_color=gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.low_texture_color);
+    /*gl.texImage2D(
+      gl.TEXTURE_2D, 0, gl.RGBA8,
+      width, height, 0,
+      gl.RGBA, gl.UNSIGNED_BYTE, null
+    );*/
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.low_texture_color, 0
+    );
+
+    this.low_texture_depth=gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.low_texture_depth);
+    /*gl.texImage2D(
+      gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT16,
+      width, height, 0,
+      gl.RGBA, gl.UNSIGNED_SHORT, null
+    );*/
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.low_texture_depth, 0
+    );
+    
+
+    this.resizehigh(width, height);
+
+    {const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if (status !== gl.FRAMEBUFFER_COMPLETE) {
+      console.error("Framebuffer incomplete:", status);
+    }}
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
+  resizehigh(width, height){
+    gl.bindRenderbuffer(gl.RENDERBUFFER,this.high_renderbuffer_color);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA8, width, height);//or RGB8
+
+    gl.bindRenderbuffer(gl.RENDERBUFFER,this.high_renderbuffer_depth);
+    gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, width, height);
+  }
+
+  resizelow(width, height){
+    gl.bindTexture(gl.TEXTURE_2D, this.low_texture_color);
+    gl.texImage2D(
+      gl.TEXTURE_2D, 0, gl.RGBA8,
+      width, height, 0,
+      gl.RGBA, gl.UNSIGNED_BYTE, null
+    );
+
+    gl.bindTexture(gl.TEXTURE_2D, this.low_texture_depth);
+    gl.texImage2D(
+      gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT16,
+      width, height, 0,
+      gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null
+    );
+  }
+
+
+
+
+}
+
 
 const testvoxelshader = `#version 300 es
 //precision highp float;
@@ -2482,7 +2639,7 @@ function addPipelineSelectorForObject(renderableObject, container) {
   }
 
   // Set initial selection
-  select.value ="";// renderableObject.activePipelineName ?? [...renderableObject.pipelines.keys()][0];
+  select.value ="aberth";// renderableObject.activePipelineName ?? [...renderableObject.pipelines.keys()][0];
 
   // On change: update active pipeline + call ctx
   select.onchange = () => {

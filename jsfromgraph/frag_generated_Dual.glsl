@@ -105,7 +105,7 @@ void DualComplexRaymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float x
     error=inf;
     x=inf;*/
 
-    const float threshold=1e-3;
+    const float threshold=1e-2;
     const float minstep=0.00001;
 
     Dual[numoutputs] result;
@@ -159,7 +159,7 @@ void DualComplexRaymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float x
             x=xact;
             error=e;
         }
-        xact-=res.x / res.y;;
+        xact-=res.x / res.y;
     }
     if(error<threshold)return;*/
     x=inf;
