@@ -421,11 +421,19 @@ void DualComplexRaymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float x
 
 
 
+uniform vec2 focal;
 void main() {
-    vec2 uv=(2.*gl_FragCoord.xy-windowsize)/windowsize.x;
+    //vec2 uv=(2.*gl_FragCoord.xy-windowsize)/windowsize.x;
     //vec2 uv=(2.*gl_FragCoord.xy-windowsize)/windowsize*vec2(1.,windowsize.y/windowsize.x);
+    //vec3 rayOrigin = cameraPos;
+    //vec3 raydirLocal=normalize(vec3(uv, FOVfactor));
+    //vec3 rayDir =cameraMatrix*raydirLocal;//cam to view
+
+
+
+    vec2 uv=(2.*gl_FragCoord.xy-windowsize)/(windowsize*focal);
     vec3 rayOrigin = cameraPos;
-    vec3 raydirLocal=normalize(vec3(uv, FOVfactor));
+    vec3 raydirLocal=normalize(vec3(uv, 1.));
     vec3 rayDir =cameraMatrix*raydirLocal;//cam to view
    
 
@@ -437,18 +445,13 @@ void main() {
     vec3 p=rayOrigin+x*rayDir;
     x*=raydirLocal.z;//undo normalization. This means x is the z in view space
 
-    //circle in middle of screen
-    if(length(uv)<0.01 && length(uv)>0.005){
-        color=vec4(0.5,1,0.5,1.);
-        gl_FragDepth=0.;
-        return;
-    }
 
+    
     //debug
     if(overrideactive){
         gl_FragDepth=0.;
         color=vec4(overwritecol,1.);return;
-        }
+    }
     
     //if x is to big we ignore it
     if(x>1000.){

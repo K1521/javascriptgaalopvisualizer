@@ -250,6 +250,16 @@ export class Shader{
     }
     return program;
   }*/
+
+  uniform2fv(nameOrLocation, value) {
+    //maybe check if shader is in use
+    const loc = (typeof nameOrLocation === "string")
+        ? this.getUniformLocation(nameOrLocation)
+        : nameOrLocation;
+
+    if (loc === null) return;
+    this.gl.uniform2fv(loc, value);
+  }
 }
 
 
