@@ -16,7 +16,6 @@ layout(location = 3) out vec4 root3;
 
 //camera params
 uniform vec3 cameraPos;
-uniform vec2 windowsize;
 uniform mat3 cameraMatrix;
 
 uniform vec4 incolor;//only rgb are used currently (not alpha)
@@ -179,12 +178,12 @@ void initial_roots(out Complex[NUM_ROOTS] roots,Complex center) {
 }
 
 
-
+//in vec2 v_rayDirXY;
+in vec2 v_screen;
 void main() {
-    vec2 uv = (2.0 * gl_FragCoord.xy - windowsize) / windowsize;
 
     // Initial orthographic ray
-    vec3 rayOrigin = vec3(uv, 0.0);
+    vec3 rayOrigin = vec3(v_screen, 0.0);
     vec3 rayDir    = vec3(0.0, 0.0, 1.0);
 
     // Transform ray to camera space
