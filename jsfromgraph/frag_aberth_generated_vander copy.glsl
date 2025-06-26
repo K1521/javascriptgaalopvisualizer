@@ -14,7 +14,6 @@ out vec4 color;
 
 //camera params
 uniform vec3 cameraPos;
-uniform vec2 windowsize;
 uniform mat3 cameraMatrix;
 
 uniform vec4 incolor;//only rgb are used currently (not alpha)
@@ -418,19 +417,11 @@ void DualComplexRaymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float x
 
 
 
-uniform vec2 focal;
+in vec2 v_rayDirXY;
+//in vec2 v_screen;
 void main() {
-    //vec2 uv=(2.*gl_FragCoord.xy-windowsize)/windowsize.x;
-    //vec2 uv=(2.*gl_FragCoord.xy-windowsize)/windowsize*vec2(1.,windowsize.y/windowsize.x);
-    //vec3 rayOrigin = cameraPos;
-    //vec3 raydirLocal=normalize(vec3(uv, FOVfactor));
-    //vec3 rayDir =cameraMatrix*raydirLocal;//cam to view
-
-
-
-    vec2 uv=(2.*gl_FragCoord.xy-windowsize)/(windowsize*focal);
     vec3 rayOrigin = cameraPos;
-    vec3 raydirLocal=normalize(vec3(uv, 1.));
+    vec3 raydirLocal=normalize(vec3(v_rayDirXY, 1.));
     vec3 rayDir =cameraMatrix*raydirLocal;//cam to view
    
 
