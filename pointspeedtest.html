@@ -1,33 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Point Cloud Benchmark</title>
   <style>
-    canvas { width: 100%; height: 100%; display: block; }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  </style>
+
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    #fpsCounter {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 20px;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 5px;
+      border-radius: 5px;
+    }
+
+    #diagramPanel {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 30%;
+      height: 40%;
+      background-color: rgba(0, 0, 0, 0.7);
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    #plotlyDiagram {
+      width: 100%;
+      height: 100%;
+      /*background-color: white;*/
+      /*border-radius: 5px;*/
+    }
   </style>
 </head>
+
 <body>
-<canvas id="glcanvas"></canvas>
-<script>
+  <canvas id="glcanvas"></canvas>
+  <div id="diagramPanel">
+    <div id="plotlyDiagram"></div>
+  </div>
+  <script>
+const xValues = [];
+let yValues = [];
+const traces = [{
+  x: xValues,
+  y: yValues,
+  mode: 'markers', // this is the key for point cloud
+  type: 'scatter', // scatter + markers = point cloud
+  name: 'Render Time vs Scale',
+  marker: {
+    color: 'blue',
+    size: 2,
+    opacity: 0.5
+  }
+}];
+Plotly.newPlot('plotlyDiagram', traces,
+  {
+    title: 'f',
+    margin: { l: 40, r: 20, b: 40, t: 40 },
+    xaxis: { rangemode: 'tozero', title: "Height of Viewport in pixels" },
+    yaxis: { rangemode: 'tozero', title: "Time (ms)" }
+  });
+
+
+
+
+
 const canvas = document.getElementById("glcanvas");
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 const gl = canvas.getContext("webgl2");
+/*
+const vsSource = `#version 300 es
+in vec3 aPosition;
+out vec2 p;
+void main() {
+gl_PointSize = 5.0;
+gl_Position = vec4(aPosition.xy/aPosition.z, 0.0, 1.0);
+p=aPosition.xy;
+}`;
+
+const fsSourceo = `#version 300 es
+precision mediump float;
+out vec4 fragColor;
+in vec2 p;
+
+void main() {
+float sum = 0.0;
+for (int i = 0; i < 0; ++i) {
+sum += sin(float(i) + p.x) * cos(float(i) + p.y);
+}
+
+float pattern = 0.5 + 0.5 * mod(floor(p.x * 4.0) + floor(p.y * 4.0), 2.0);
+vec3 col = vec3(1.0) * pattern;
+
+sum=clamp(sum,0.,1.);
+col *= 0.5 + 0.5 * sin(sum * 0.0001);
+
+fragColor = vec4(col, 1.0);
+discard;
+}
+`;
+const fsSource = `#version 300 es
+precision mediump float;
+in vec2 p;
+out vec4 fragColor;
+void main() {
+float pattern = 0.5 + 0.5 * mod(floor(p.x * 4.0) + floor(p.y * 4.0), 2.0);
+vec3 col = vec3(1.0) * pattern;
+fragColor = vec4(col, 1.0);
+}
+`;*/
 
 const vsSource = `#version 300 es
-in vec2 aPosition;
-void main() {
-  gl_PointSize = 5.0;
-  gl_Position = vec4(aPosition, 0.0, 1.0);
-}`;
+precision highp float;
+
+uniform vec2 focal;
+
+out vec2 v_screen;
+out vec2 v_rayDirXY; // not normalized
+out vec2 v_uv;
+
+  void main(void) {
+    vec2 pos[3] = vec2[](
+      vec2(-1.0, -1.0),
+      vec2(3.0, -1.0),
+      vec2(-1.0, 3.0)
+    );
+
+
+    vec2 screen = pos[gl_VertexID]; //screen cords [-1,1]
+
+    v_uv=(screen+1.)*0.5;
+    v_screen=screen;
+    gl_Position = vec4(screen,0.,1.);
+    v_rayDirXY = screen / focal;
+  }
+`;
 
 const fsSource = `#version 300 es
 precision mediump float;
+in vec2 v_uv;
 out vec4 fragColor;
+
 void main() {
-  fragColor = vec4(1.0);
-}`;
+  // Original checkerboard pattern
+  float pattern = 0.5 + 0.5 * mod(floor(v_uv.x * 4.0) + floor(v_uv.y * 4.0), 2.0);
+  vec3 col = vec3(1.0) * pattern;
+
+  // Waste time with a heavy loop
+  float sum = 0.0;
+  for (int i = 0; i < 1000; i++) {
+    float f = float(i);
+    sum += sin(f + v_uv.x * 100.0) * cos(f + v_uv.y * 100.0);
+  }
+
+  // Use sum to affect output color so compiler doesn't optimize it out
+  col *= 0.5 + 0.5 * sin(sum * 0.00001);
+
+  fragColor = vec4(col, 1.0);
+}
+`;
 
 function compile(gl, type, src) {
   const shader = gl.createShader(type);
@@ -51,10 +209,11 @@ gl.useProgram(program);
 const posLoc = gl.getAttribLocation(program, "aPosition");
 
 function generatePoints(n) {
-  const arr = new Float32Array(n * 2);
+  const arr = new Float32Array(n * 3);
   for (let i = 0; i < n; i++) {
-    arr[2 * i] = Math.random() * 2 - 1;
-    arr[2 * i + 1] = Math.random() * 2 - 1;
+    arr[3 * i] = Math.random() * 2 - 1;
+    arr[3 * i + 1] = (Math.random() * 2 - 1);
+    arr[3 * i + 2] = 1;
   }
   return arr;
 }
@@ -66,24 +225,175 @@ const buffer = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 gl.bufferData(gl.ARRAY_BUFFER, points, gl.STATIC_DRAW);
 gl.enableVertexAttribArray(posLoc);
-gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 0, 0);
 
+
+function* percentGenerator() {
+  while (true) {
+    for (let i = 0; i <= 100; i++) {
+      yield i / 100;
+    }
+  }
+
+}
+
+function* percentGeneratorShuffeled() {
+  while (true) {
+    // Create array [0, 1, 2, ..., 100]
+    const indices = Array.from({ length: 1001 }, (_, i) => i);
+
+    // Shuffle using Fisher–Yates
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+
+    // Yield shuffled values scaled to [0, 1]
+    for (const i of indices) {
+      yield i / 1000;
+    }
+  }
+}
+
+//let gen=percentGeneratorShuffeled();
+//let gen=percentGenerator();
 function draw() {
-  const t0 = performance.now();
+
+  let w;
+  let h;
+
+
+  /*
+  const h1=Math.round(canvas.height*gen.next().value);
+  const w1=Math.round(canvas.width*gen.next().value);
+  const h2=Math.round(canvas.height*gen.next().value);
+  const w2=Math.round(canvas.width*gen.next().value);
+
+  [w,h]=w1*h1>w2*h2?[w1,h1]:[w2,h2]; */
+
+  //h=canvas.height;
+  h = Math.round(canvas.height * gen.next().value);
+
+  w = canvas.width;
+  //w=Math.round(canvas.width*gen.next().value);
+
+  //gl.viewport(0, 0,w,h);
+  gl.enable(gl.SCISSOR_TEST);
+  gl.scissor(0, 0, w, h);
+
+
+
+
 
   gl.clearColor(0, 0, 0, 1);
   gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.finish();
+
+  const t0 = performance.now();
+  //for(let i =0;i<10000;i++)gl.drawArrays(gl.POINTS, 0, 1000);
   gl.drawArrays(gl.POINTS, 0, N);
+
+
 
   // Wait for GPU to finish
   gl.finish();
 
   const t1 = performance.now();
   const fps = (1000 / (t1 - t0)).toFixed(1);
-  document.title = `Rendering ${N.toLocaleString()} points @ ${fps} FPS`;
+  //document.title = `Rendering ${N.toLocaleString()} points @ ${fps} FPS`;
+  xValues.push(w * h);
+  yValues.push((t1 - t0));
+  Plotly.redraw('plotlyDiagram');
   requestAnimationFrame(draw);
 }
-draw();
-</script>
+//draw();
+
+function range(start, end, step = 1) {
+  const length = Math.ceil((end - start) / step);
+  return Array.from({ length }, (_, i) => start + i * step);
+}
+
+
+
+function* randchoiceloop(arr) {
+  arr = [...arr];
+  while (true) {
+    // Create array [0, 1, 2, ..., 100]
+    //const indices = Array.from({ length: n }, (_, i) => i);
+
+    // Shuffle using Fisher–Yates
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+
+    // Yield shuffled values scaled to [0, 1]
+    for (const i of arr) {
+      yield i;
+    }
+  }
+}
+let gen = randchoiceloop(range(1, 100));
+function draw2() {
+
+  let w;
+  let h;
+
+
+  /*
+  const h1=Math.round(canvas.height*gen.next().value);
+  const w1=Math.round(canvas.width*gen.next().value);
+  const h2=Math.round(canvas.height*gen.next().value);
+  const w2=Math.round(canvas.width*gen.next().value);
+
+  [w,h]=w1*h1>w2*h2?[w1,h1]:[w2,h2]; */
+
+  h = canvas.height;
+  w = canvas.width;
+  //w=Math.round(canvas.width*gen.next().value);
+
+  //gl.viewport(0, 0,w,h);
+
+
+  const xTiles = gen.next().value;
+
+
+
+  gl.clearColor(0, 0, 0, 1);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  gl.finish();
+
+  const t0 = performance.now();
+  //for(let i =0;i<10000;i++)gl.drawArrays(gl.POINTS, 0, 1000);
+  gl.enable(gl.SCISSOR_TEST);
+
+  for (let x = 0; x < xTiles; x++) {
+    const x0 = Math.floor(w * x / xTiles);
+    const x1 = Math.floor(w * (x + 1) / xTiles);
+    gl.scissor(x0, 0, x1 - x0, h);
+
+    //gl.drawArrays(gl.POINTS, 0, N / 10);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    //console.log([x0,0,x1-x0,h]);
+  }
+  //return;
+  gl.disable(gl.SCISSOR_TEST);
+
+
+  // Wait for GPU to finish
+  gl.finish();
+
+  const t1 = performance.now();
+  const fps = (1000 / (t1 - t0)).toFixed(1);
+  //document.title = `Rendering ${N.toLocaleString()} points @ ${fps} FPS`;
+  xValues.push(xTiles);
+  yValues.push((t1 - t0));
+  Plotly.redraw('plotlyDiagram');
+  requestAnimationFrame(draw2);
+}
+draw2();
+  </script>
 </body>
+
 </html>
