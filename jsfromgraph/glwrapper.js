@@ -5,7 +5,7 @@ function radians(degrees){return degrees*Math.PI/180;}
 
 
 export class Cameracontroll{
-    constructor(canvas,gl){
+    constructor(canvas,gl,_onChange=null){
         //todo replace gl with this.gl
       this.canvas=canvas;
       this.colorpicker=true;
@@ -29,16 +29,21 @@ export class Cameracontroll{
         shift: false,
         space: false
       };
-      this.changed=true;
-      // Bind event listener functions to maintain 'this' context
-      this.mousemove = this.mousemove.bind(this);
-      this.mousedown = this.mousedown.bind(this);
-      this.mouseup = this.mouseup.bind(this);
-      this.keydown = this.keydown.bind(this);
-      this.keyup = this.keyup.bind(this);
-  
+
       this.initeventlisteners()
+
+      this.onChange = _onChange;
     }
+
+    set onChange(callback) {
+      this._onChange = callback;
+      this.camChanged();
+    }
+
+    camChanged(){
+      this._onChange?.();
+    }
+
     mousemove(event){
       const rect = this.canvas.getBoundingClientRect();
       const xcord=event.clientX - rect.left;
@@ -64,7 +69,7 @@ export class Cameracontroll{
   
         this.c2w=this.c2w.mul(Matrix.rotationMatrix(new Vector([0,-1,0]),uangle).mul(
             Matrix.rotationMatrix(new Vector([-1,0,0]),vangle)));
-        this.changed=true;
+        this.camChanged();
       }
   
       this.mouse.x = xcord;
@@ -111,6 +116,13 @@ export class Cameracontroll{
     }
   
     initeventlisteners(){
+      // Bind event listener functions to maintain 'this' context
+      this.mousemove = this.mousemove.bind(this);
+      this.mousedown = this.mousedown.bind(this);
+      this.mouseup = this.mouseup.bind(this);
+      this.keydown = this.keydown.bind(this);
+      this.keyup = this.keyup.bind(this);
+  
       window.addEventListener('mousemove', this.mousemove);
       this.canvas.addEventListener('mousedown', this.mousedown);//uses canvas because moving on other elements shouldnt influence the camera
       window.addEventListener('mouseup', this.mouseup);
@@ -129,15 +141,15 @@ export class Cameracontroll{
       if(this.keysPressed.w)deltapos=deltapos.add(new Vector([0,0,1]));
       if(this.keysPressed.q){
         this.c2w=this.c2w.mul(Matrix.rotationMatrix(new Vector([0,1,0]),radians(-movementfactor*30)));
-        this.changed=true;
+        this.camChanged();
       };
       if(this.keysPressed.e){
         this.c2w=this.c2w.mul(Matrix.rotationMatrix(new Vector([0,1,0]),radians(movementfactor*30)));
-        this.changed=true;
+        this.camChanged();
       };
       deltapos=deltapos.mul(movementfactor*4);
       if(deltapos.length()>0){
-        this.changed=true;
+        this.camChanged();
         this.cameraPos = this.cameraPos.add(this.c2w.mul(deltapos));
       }
     }
@@ -260,6 +272,17 @@ export class Shader{
     if (loc === null) return;
     this.gl.uniform2fv(loc, value);
   }
+  uniform1i(nameOrLocation, value) {
+    //maybe check if shader is in use
+    const loc = (typeof nameOrLocation === "string")
+        ? this.getUniformLocation(nameOrLocation)
+        : nameOrLocation;
+
+    if (loc === null) return;
+    this.gl.uniform1i(loc, value);
+  }
+
+
 }
 
 

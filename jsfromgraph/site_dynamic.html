@@ -497,7 +497,7 @@ class BasisConvert{
 const fpscounter=document.getElementById('fpsCounter')
 const mainCanvas = document.getElementById('mainCanvas');
 const diagramCanvas = document.getElementById('diagramCanvas');
-const gl = mainCanvas.getContext('webgl2',{preserveDrawingBuffer: true});//preserveDrawingBuffer for color picking
+const gl = mainCanvas.getContext('webgl2',{preserveDrawingBuffer: true,antialias: false});//preserveDrawingBuffer for color picking
 
 if (!gl) {
   alert("WebGL not supported!");
@@ -621,6 +621,7 @@ uniform vec2 focal;
 
 out vec2 v_screen;
 out vec2 v_rayDirXY; // not normalized
+out vec2 v_uv;
 
   void main(void) {
     vec2 pos[3] = vec2[](
@@ -632,6 +633,7 @@ out vec2 v_rayDirXY; // not normalized
 
     vec2 screen = pos[gl_VertexID]; //screen cords [-1,1]
 
+    v_uv=(screen+1.)*0.5;
     v_screen=screen;
     gl_Position = vec4(screen,0.,1.);
     v_rayDirXY = screen / focal;
@@ -654,6 +656,10 @@ async function load(url) {
 
 class RenderContext {
   constructor(canvas, gl, camera=undefined) {
+    this.requestRender = this.requestRender.bind(this);
+
+
+
     this.canvas = canvas;
     this.gl = gl;
 
@@ -664,11 +670,13 @@ class RenderContext {
 
     this.objects=new Map();;//list of RenderObjects
 
+    this.multires=new MultiResBuffer2(this);
+
 
 
     window.addEventListener("resize", ()=>{
       this.setScale();
-      this.pipelineChanged();
+      this.requestRender();
     });
 
 
@@ -676,6 +684,10 @@ class RenderContext {
     this.lowResolutionScale = 0.2;
     this.stillTime = performance.now();
     this.setScale(this.lowResolutionScale);//sets scale
+
+
+    this.changed=true;
+    this.camera.onChange=this.requestRender;
   }
 
   addObject(obj){
@@ -685,14 +697,15 @@ class RenderContext {
     this.objects.set(obj.name,obj);
   }
 
-  pipelineChanged(){
-    this.camera.changed=true;
+  requestRender(){
+    this.changed=true;
+    //console.log("changed");
   }
 
   
 
   render(){
-    const gl=this.gl;
+    /*const gl=this.gl;
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
@@ -700,7 +713,30 @@ class RenderContext {
     for(const object of this.objects.values()){
       object.render(this);
     }
+    gl.finish();*/
+
+
+    const gl=this.gl;
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    //context.updateViewport();
+
+    this.multires.clear();
+    this.multires.targetlow();
+    for(const object of this.objects.values()){
+      object.render(this);
+    }
+
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    this.updateViewport();
+    this.multires.render_low();
+
     gl.finish();
+
   }
 
   paramsChanged(newparams=undefined){
@@ -720,8 +756,8 @@ class RenderContext {
     this.camera.update(deltatime);
 
     const now = performance.now();
-    const moving = this.camera.changed;
-    let changed=this.camera.changed;
+    const moving = this.changed;
+    let changed=this.changed;
 
     if(this.highResolutionScale==this.lowResolutionScale){
         //pass 
@@ -740,7 +776,7 @@ class RenderContext {
       changed=true;
     }
 
-    this.camera.changed=false;
+    this.changed=false;
     return changed;
 
 
@@ -792,6 +828,7 @@ class RenderContext {
   updateViewport(gl=undefined){
     gl??=this.gl;
     const [w, h] = this.resolution;
+    //gl.viewport(0, 0, w, h);
     gl.viewport(0, 0, w, h);
 
     //const windowsizeLocation = this.pointshader.getUniformLocation('windowsize');
@@ -855,7 +892,7 @@ class RenderableObject {
   setActivePipeline(name) {
     if(name==null || name==""){
       this.activePipelineName=null;
-      this.ctx.pipelineChanged();
+      this.ctx.requestRender();
       return;
     }
 
@@ -865,7 +902,7 @@ class RenderableObject {
     if(this.activePipelineName==name)return;
     this.activePipelineName = name;
     this.activePipeline?.init();//inits the lazy pipeline
-    this.ctx.pipelineChanged();
+    this.ctx.requestRender();
   }
 
   updateParams() {
@@ -923,16 +960,12 @@ class simplerenderer extends LazyRenderingPipeline{
   }
   render(ctx){
     const gl=ctx.gl;
+
     gl.depthFunc(gl.LESS);
     gl.enable(gl.DEPTH_TEST);
     this.shader.use();
-    ctx.bindquadvao();
-    ctx.updateViewport();
     ctx.updateUniforms(this.shader);
-    //gl.bindBuffer(gl.ARRAY_BUFFER, ctx.quad );
     gl.drawArrays(gl.TRIANGLES, 0, 3);
-
-    
   }
   updateParams(ctx){
     if(this.paramsversion==ctx.paramsversion)return;
@@ -966,10 +999,7 @@ class matrixrenderer extends LazyRenderingPipeline{
     gl.depthFunc(gl.LESS);
     gl.enable(gl.DEPTH_TEST);
     this.shader.use();
-    ctx.bindquadvao();
-    ctx.updateViewport();
     ctx.updateUniforms(this.shader);
-    //gl.bindBuffer(gl.ARRAY_BUFFER, ctx.quad );
     gl.drawArrays(gl.TRIANGLES, 0, 3);
 
     
@@ -1075,7 +1105,7 @@ void main() {
       const positionAttribLoc=pointcloudrenderer.pointshader.getAttribLocation("position");
       gl.enableVertexAttribArray(positionAttribLoc);
       gl.vertexAttribPointer(positionAttribLoc, 3, gl.FLOAT, false, 0, 0);
-      
+      gl.bindVertexArray(null);
 
       /*const allpoints = this.renderorth();
       //const pointBuffers = allpoints.map(obj => new Float32Array(obj.flat()));
@@ -1145,7 +1175,7 @@ void main() {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
     gl.drawBuffers(attachments);
     
-    ctx.bindquadvao();
+    //ctx.bindquadvao();
 
     gl.viewport(0,0,s,s);
 
@@ -1208,27 +1238,14 @@ void main() {
 
   render(ctx) {
     const gl = this.gl;
-    //gl.bindVertexArray(null);
-
-    // Render to the screen (default framebuffer)
-
     gl.depthFunc(gl.LESS);
     gl.enable(gl.DEPTH_TEST);
     pointcloudrenderer.pointshader.use();
     gl.uniform4fv(pointcloudrenderer.pointshader.getUniformLocation('incolor'), [this.color.r,this.color.g,this.color.b,1.0]);
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     ctx.updateUniforms(pointcloudrenderer.pointshader); // sets cameraPos and cameraMatrix and windowsize
-    ctx.updateViewport(gl);
-
-
     gl.bindVertexArray(this.pointvao);
     gl.drawArrays(gl.POINTS, 0, this.count);
-    
-    //gl.enable(gl.DEPTH_TEST);
-
-
-    //gl.finish();
+    gl.bindVertexArray(null);
   }
 
 
@@ -1416,10 +1433,12 @@ void main() {
       this.pointvao=gl.createVertexArray();
       gl.bindVertexArray(this.pointvao);
       gl.bindBuffer(gl.ARRAY_BUFFER,  this.pointbuffer);
+      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.linebuffer);
+
       const positionAttribLoc=linegridrenderer.lineshader.getAttribLocation("position");
       gl.enableVertexAttribArray(positionAttribLoc);
       gl.vertexAttribPointer(positionAttribLoc, 3, gl.FLOAT, false, 0, 0);
-      
+      gl.bindVertexArray(null);
 
       /*const allpoints = this.renderorth();
       //const pointBuffers = allpoints.map(obj => new Float32Array(obj.flat()));
@@ -1497,7 +1516,7 @@ void main() {
     gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
     gl.drawBuffers(attachments);
     
-    ctx.bindquadvao();
+    //ctx.bindquadvao();
 
     gl.viewport(0,0,s,s);
 
@@ -1820,47 +1839,21 @@ void main() {
 
   render(ctx) {
     const gl = this.gl;
-    //gl.bindVertexArray(null);
-
-    // Render to the screen (default framebuffer)
-
     gl.depthFunc(gl.LESS);
     gl.enable(gl.DEPTH_TEST);
-    //gl.disable(gl.DEPTH_TEST);
-    /*pointcloudrenderer.pointshader.use();
-    gl.uniform4fv(pointcloudrenderer.pointshader.getUniformLocation('incolor'), [this.color.r,this.color.g,this.color.b,1.0]);
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    ctx.updateUniforms(pointcloudrenderer.pointshader); // sets cameraPos and cameraMatrix and windowsize
-    ctx.updateViewport(gl);
-
-
-    gl.bindVertexArray(this.pointvao);
-    gl.drawArrays(gl.POINTS, 0, this.count);*/
-
 
     linegridrenderer.lineshader.use();
     gl.uniform4fv(linegridrenderer.lineshader.getUniformLocation('incolor'), [this.color.r,this.color.g,this.color.b,1.0]);
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    ctx.updateUniforms(linegridrenderer.lineshader); // sets cameraPos and cameraMatrix and windowsize
-    ctx.updateViewport(gl);
-
-
+    ctx.updateUniforms(linegridrenderer.lineshader); // sets cameraPos and cameraMatrix and focal
     
     gl.bindVertexArray(this.pointvao); // VAO with vertex positions bound
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.linebuffer);
     gl.drawElements(gl.LINES, this.lineCount, gl.UNSIGNED_SHORT, 0);
-    //console.log( this.lineCount);
-    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,null);
-
-
-    //gl.drawArrays(gl.POINTS, 0, this.count);//points
+    //gl.drawArrays(gl.POINTS, 0, this.count);
     gl.bindVertexArray(null);
 
 
 
-    gl.uniform4fv(linegridrenderer.lineshader.getUniformLocation('incolor'), [this.color.r*0.7,this.color.g*0.7,this.color.b*0.7,1.0]);
+    /*gl.uniform4fv(linegridrenderer.lineshader.getUniformLocation('incolor'), [this.color.r*0.7,this.color.g*0.7,this.color.b*0.7,1.0]);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.trianglesbuffer);
     const positionLoc = linegridrenderer.lineshader.getAttribLocation('position');
     gl.enableVertexAttribArray(positionLoc);
@@ -1877,7 +1870,7 @@ void main() {
 
 
 
-    gl.disableVertexAttribArray(positionLoc);
+    gl.disableVertexAttribArray(positionLoc);*/
 
     
     //gl.enable(gl.DEPTH_TEST);
@@ -1926,61 +1919,125 @@ void main() {
 }
 
 
-class Buffers{
+class MultiResBuffer{
   constructor(ctx){
     this.ctx=ctx;
-    this.inithigh(1000,1000);
+    this.inithigh(736,350);
     this.initlow(100,100);
+    this.initupscaleshader();
   }
+
+  
 
   initupscaleshader(){
-    const gl=ctx.gl;
+    const gl=this.ctx.gl;
 
-const upscalefrag=`#version 300 es
-// Fragment Shader
-precision highp float;
+    const upscalefrag=`#version 300 es
+    precision highp float;
 
-in vec3 v_viewPos;
+    in vec2 v_uv;
+    out vec4 fragColor;
 
-uniform vec4 incolor;
+    uniform sampler2D u_color;
+    uniform sampler2D u_depth;
 
-out vec4 fragColor;
+    void main() {
+      // Sample color and depth from low-res textures
+      fragColor = texture(u_color, v_uv);
 
-const float zMax = 1000.0; // same as your normalization factor
-
-flat in vec3 v_color;
-
-void main() {
-    if (v_viewPos.z <= 0.0) {
-        discard;
-    }
-    //gl_FragDepth=0.;
-    float z = length(v_viewPos) / zMax; 
-
-    // Write to depth buffer manually
-    gl_FragDepth =clamp(z ,0.,1.);
-
-    fragColor = vec4(incolor.rgb, 1.0);
-    //fragColor = vec4(v_color, 1.0);
-}`;
-    this.upscaleshader=new Shader(raycastingVertexShaderSource,upscalefrag);
+      float depth = texture(u_depth, v_uv).r;
+      gl_FragDepth = depth; // Pass depth manually
+    }`;
+    this.upscaleshader=new Shader(gl,raycastingVertexShaderSource,upscalefrag);
   }
 
-  render(){
-    const ctx=this.ctx;
-    const gl=ctx.gl;
+
+
+  render_low() {
+   /** @type{RenderContext} */
+    const ctx = this.ctx;
+    const gl = ctx.gl;
+
+    // 1) Blit high-res framebuffer color to default framebuffer (canvas)
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, this.high_framebuffer);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null); // default framebuffer
+
+    const [width,height] = ctx.resolution;
+    {const err = gl.getError();
+    if (err !== gl.NO_ERROR) {
+      console.warn("Rendering error:", err);
+    }}
+
+    // Blit color and buffer
+    gl.blitFramebuffer(
+      0, 0, 1000, 1000,       // src rect
+      0, 0, width, height,       // dst rect
+      gl.COLOR_BUFFER_BIT,       // mask
+      gl.NEAREST                 // filter
+    );
+    {const err = gl.getError();
+    if (err !== gl.NO_ERROR) {
+      console.warn("Rendering error:", err);
+    }}
+    gl.blitFramebuffer(
+      0, 0, 1000, 1000,       // src rect
+      0, 0, width, height,       // dst rect
+      gl.DEPTH_BUFFER_BIT,       // mask
+      gl.NEAREST                 // filter
+    );
+     {const err = gl.getError();
+    if (err !== gl.NO_ERROR) {
+      console.warn("Rendering error:", err);
+    }}
+
+
+    // Unbind framebuffers after blit
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+
+    // 2) Now upscale low-res texture over the default framebuffer
     gl.depthFunc(gl.LESS);
     gl.enable(gl.DEPTH_TEST);
+    
     this.upscaleshader.use();
+
+    // Bind low-res color texture to texture unit 0
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.low_texture_color);
+    this.upscaleshader.uniform1i("u_color", 0);
+
+    // Bind low-res depth texture to texture unit 1
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.low_texture_depth);
+    //gl.uniform1i(this.upscaleshader.getUniformLocation("u_depth"), 1);
+    this.upscaleshader.uniform1i("u_depth", 1);
+
+    // Draw fullscreen triangle or quad (depending on your setup)
     ctx.bindquadvao();
-    //ctx.updateViewport();
-    //ctx.updateUniforms(this.shader);
-    //gl.bindBuffer(gl.ARRAY_BUFFER, ctx.quad );
     gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    // Cleanup bindings (optional)
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.useProgram(null);
+
+
+    {const err = gl.getError();
+    if (err !== gl.NO_ERROR) {
+      console.warn("Rendering error:", err);
+    }}
+  }
+  clear(){
+    const gl=this.ctx.gl;
+    for(const fb of [this.high_framebuffer,this.low_framebuffer,null]){
+      gl.bindFramebuffer(gl.FRAMEBUFFER,fb);
+      gl.clearColor(0.0, 0.0, 0.0, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    }
   }
 
 
   inithigh(width, height){
+    const ctx = this.ctx;
     const gl=ctx.gl;
 
 
@@ -1998,7 +2055,7 @@ void main() {
     gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,this.high_renderbuffer_depth);
     
 
-    this.resizelow(width, height);
+    this.resizehigh(width, height);
 
     {const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     if (status !== gl.FRAMEBUFFER_COMPLETE) {
@@ -2007,6 +2064,7 @@ void main() {
   }
 
   initlow(width, height){
+    const ctx = this.ctx;
     const gl=ctx.gl;
 
 
@@ -2044,7 +2102,7 @@ void main() {
     );
     
 
-    this.resizehigh(width, height);
+    this.resizelow(width, height);
 
     {const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
     if (status !== gl.FRAMEBUFFER_COMPLETE) {
@@ -2055,6 +2113,7 @@ void main() {
   }
 
   resizehigh(width, height){
+    const gl = this.ctx.gl;
     gl.bindRenderbuffer(gl.RENDERBUFFER,this.high_renderbuffer_color);
     gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA8, width, height);//or RGB8
 
@@ -2063,6 +2122,7 @@ void main() {
   }
 
   resizelow(width, height){
+    const gl = this.ctx.gl;
     gl.bindTexture(gl.TEXTURE_2D, this.low_texture_color);
     gl.texImage2D(
       gl.TEXTURE_2D, 0, gl.RGBA8,
@@ -2079,6 +2139,7 @@ void main() {
   }
 
   destroy() {
+    const gl = this.ctx.gl;
     gl.deleteFramebuffer(this.high_framebuffer);
     gl.deleteRenderbuffer(this.high_renderbuffer_color);
     gl.deleteRenderbuffer(this.high_renderbuffer_depth);
@@ -2093,6 +2154,216 @@ void main() {
 
 }
 
+
+
+
+
+
+
+class textureFramebuffer{
+
+  static upscaleshader=undefined;
+
+  initupscaleshader(){
+    const gl=this.gl;
+
+    const upscalefrag=`#version 300 es
+    precision highp float;
+
+    in vec2 v_uv;
+    out vec4 fragColor;
+
+    uniform sampler2D u_color;
+    uniform sampler2D u_depth;
+
+    void main() {
+      // Sample color and depth from low-res textures
+      fragColor = texture(u_color, v_uv);
+
+      float depth = texture(u_depth, v_uv).r;
+      gl_FragDepth = depth; // Pass depth manually
+    }`;
+    textureFramebuffer.upscaleshader??=new Shader(gl,raycastingVertexShaderSource,upscalefrag);
+  }
+  upscale(){
+    const gl=this.gl;
+
+
+    //gl.depthFunc(gl.LESS);
+    //gl.enable(gl.DEPTH_TEST);
+    gl.disable(gl.DEPTH_TEST);
+    
+    textureFramebuffer.upscaleshader.use();
+    
+
+    // Bind low-res color texture to texture unit 0
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.texture_color);
+    textureFramebuffer.upscaleshader.uniform1i("u_color", 0);
+
+    // Bind low-res depth texture to texture unit 1
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.texture_depth);
+    //gl.uniform1i(this.upscaleshader.getUniformLocation("u_depth"), 1);
+    textureFramebuffer.upscaleshader.uniform1i("u_depth", 1);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    // Cleanup bindings (optional)
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    gl.useProgram(null);
+  }
+  
+  constructor(gl,width=0,height=0){
+    this.gl=gl;
+    this.initupscaleshader();
+
+
+
+    this.framebuffer=gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+
+    this.texture_color=gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.texture_color);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.texture_color, 0
+    );
+
+    this.texture_depth=gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.texture_depth);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.texture_depth, 0
+    );
+    
+
+    this.resize(width, height);
+
+
+    {const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if (status !== gl.FRAMEBUFFER_COMPLETE) {
+      console.error("Framebuffer incomplete:", status);
+    }}
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  
+  }
+
+  bind(){
+    const gl=this.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.framebuffer);
+  }
+
+  updateViewport(){
+    const gl=this.gl;
+    const [w, h] = this.resolution;
+    gl.viewport(0, 0, w, h);
+  }
+
+  clear(){
+    const gl=this.gl;
+    this.bind();
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    //gl.clearDepth(1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  }
+
+  get resolution(){
+    return this._resolution;
+  }
+  set resolution([width, height]){
+    this.resize(width,height);
+  }
+
+  resize(width, height){
+    this._resolution=[width,height];
+
+    const gl = this.gl;
+    gl.bindTexture(gl.TEXTURE_2D, this.texture_color);
+    gl.texImage2D(
+      gl.TEXTURE_2D, 0, gl.RGBA8,
+      width, height, 0,
+      gl.RGBA, gl.UNSIGNED_BYTE, null
+    );
+
+    gl.bindTexture(gl.TEXTURE_2D, this.texture_depth);
+    gl.texImage2D(
+      gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT16,
+      width, height, 0,
+      gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null
+    );
+  }
+
+    destroy() {
+      const gl = this.gl;
+      gl.deleteFramebuffer(this.framebuffer);
+      gl.deleteRenderbuffer(this.renderbuffer_color);
+      gl.deleteRenderbuffer(this.renderbuffer_depth);
+    }
+
+
+}
+
+
+class MultiResBuffer2{
+  constructor(ctx){
+    this.ctx=ctx;
+    this.framebuffer=new textureFramebuffer(ctx.gl,100,100);
+  }
+
+  targetlow(){
+    this.framebuffer.updateViewport();
+    this.framebuffer.bind();
+  }
+
+
+
+  render_low() {
+   /** @type{RenderContext} */
+    const ctx = this.ctx;
+    const gl = ctx.gl;
+
+    //
+    
+    this.framebuffer.upscale();
+  }
+  clear(){
+    this.framebuffer.clear();
+  }
+}
+
+class MultiResCanvas{
+  constructor(ctx){
+    this.ctx=ctx;
+    this.framebuffer=new textureFramebuffer(ctx.gl,100,100);
+  }
+
+  targetlow(){
+    this.framebuffer.updateViewport();
+    this.framebuffer.bind();
+  }
+
+
+
+  render_low() {
+   /** @type{RenderContext} */
+    const ctx = this.ctx;
+    const gl = ctx.gl;
+
+    //
+    
+    this.framebuffer.upscale();
+  }
+  clear(){
+    this.framebuffer.clear();
+  }
+}
 
 const testvoxelshader = `#version 300 es
 //precision highp float;
@@ -2268,7 +2539,7 @@ class Voxelrenderer extends LazyRenderingPipeline{
       const point_positionAttribLoc=pointcloudrenderer.pointshader.getAttribLocation("position");
       gl.enableVertexAttribArray(point_positionAttribLoc);
       gl.vertexAttribPointer(point_positionAttribLoc, 3, gl.FLOAT, false, 0, 0);
-      
+      gl.bindVertexArray(null);
 
 
 
@@ -2287,27 +2558,14 @@ class Voxelrenderer extends LazyRenderingPipeline{
     
   render(ctx) {
     const gl = this.gl;
-    //gl.bindVertexArray(null);
-
-    // Render to the screen (default framebuffer)
-
     gl.depthFunc(gl.LESS);
     gl.enable(gl.DEPTH_TEST);
     pointcloudrenderer.pointshader.use();
     gl.uniform4fv(pointcloudrenderer.pointshader.getUniformLocation('incolor'), [this.color.r,this.color.g,this.color.b,1.0]);
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     ctx.updateUniforms(pointcloudrenderer.pointshader); // sets cameraPos and cameraMatrix and windowsize
-    ctx.updateViewport(gl);
-
-
     gl.bindVertexArray(this.pointvao);
     gl.drawArrays(gl.POINTS, 0, this.pointbuffer_size);
-    
-    //gl.enable(gl.DEPTH_TEST);
-
-
-    //gl.finish();
+    gl.bindVertexArray(null);
   }
   
   updateParams(ctx) {
