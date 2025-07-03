@@ -1,0 +1,73 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>rAF vs setTimeout Benchmark</title>
+</head>
+<body>
+  <h1>Open the console to see results</h1>
+  <script>
+    const ITERATIONS = 100;
+
+
+
+
+
+
+
+
+let running=true;
+
+
+let l=[];
+function push(s){
+    if(l.length>500){
+        running=false;
+        console.log(l);
+
+        let freq={};
+        for(const i of l){
+            freq[i]=(freq[i]||0)+1;
+        }
+        console.log(freq);
+        return;
+    }
+    l.push(s);
+}
+
+
+function looptask(){
+    push("task");
+
+    if(running)setTimeout(looptask, 0);
+}
+
+function looptaskt(t){
+    push("task"+t);
+
+    if(running)setTimeout(()=>looptaskt(t), 0);
+}
+
+function loopanim(){
+    push("anim");
+    if(running)requestAnimationFrame(loopanim, 0);
+}
+
+function hybrid(){
+    push("hybrid");
+    if(running)setTimeout(()=>requestAnimationFrame(hybrid, 0), 0);
+}
+
+looptask();
+loopanim();
+hybrid();
+for(let i=0;i<20;i++)looptaskt(i);
+
+
+
+
+  </script>
+</body>
+</html>
