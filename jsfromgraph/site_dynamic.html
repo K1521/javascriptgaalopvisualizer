@@ -299,6 +299,113 @@ class Poly {
   }
 }
 
+class RenderLoop {
+  constructor(gl, animate) {
+    this.gl = gl;
+    this.animate = animate; // now expects a timestamp param
+    this.syncold = null;
+    this.syncnew = null;
+    this.running = false;
+  }
+
+  loop(timestamp) {
+    if (!this.running) return;
+
+    const gl = this.gl;
+
+    /*if (!this.syncold){
+        const status=gl.clientWaitSync(this.syncold,  gl.SYNC_FLUSH_COMMANDS_BIT, 0);
+        //console.log(status);
+        if(status==gl.TIMEOUT_EXPIRED)console.log("TIMEOUT_EXPIRED");
+        else if(status==gl.ALREADY_SIGNALED)console.log("ALREADY_SIGNALED");
+        else if(status==gl.CONDITION_SATISFIED)console.log("CONDITION_SATISFIED");
+        else if(status==gl.WAIT_FAILED)console.log("WAIT_FAILED");
+        
+      }*/
+    if (
+      !this.syncold || 
+      gl.clientWaitSync(this.syncold,  gl.SYNC_FLUSH_COMMANDS_BIT, 0)!== gl.TIMEOUT_EXPIRED
+    )  {
+      if (this.syncold) {
+        gl.deleteSync(this.syncold);
+        this.syncold = null;
+      }
+
+      this.animate(timestamp); // forward timestamp here
+      //gl.finish();
+
+      this.syncold = this.syncnew;
+      this.syncnew = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+      //gl.finish();
+    }
+    
+
+    requestAnimationFrame((ts) => this.loop(ts));
+  }
+    loop3(timestamp) {
+    if (!this.running) return;
+
+    const gl = this.gl;
+
+
+     /*if (!this.syncold){
+        const status=gl.clientWaitSync(this.syncold,  gl.SYNC_FLUSH_COMMANDS_BIT, 0);
+        //console.log(status);
+        if(status==gl.TIMEOUT_EXPIRED)console.log("TIMEOUT_EXPIRED");
+        else if(status==gl.ALREADY_SIGNALED)console.log("ALREADY_SIGNALED");
+        else if(status==gl.CONDITION_SATISFIED)console.log("CONDITION_SATISFIED");
+        else if(status==gl.WAIT_FAILED)console.log("WAIT_FAILED");
+        
+      }*/
+    let gpubussy=false;
+    if (!this.syncold){
+        const status=gl.clientWaitSync(this.syncold,  gl.SYNC_FLUSH_COMMANDS_BIT, 0);
+        gl.deleteSync(this.syncold);
+        gpubussy||=status!== gl.TIMEOUT_EXPIRED
+
+        //console.log(status);
+        /*if(status==gl.TIMEOUT_EXPIRED)console.log("TIMEOUT_EXPIRED");
+        else if(status==gl.ALREADY_SIGNALED)console.log("ALREADY_SIGNALED");
+        else if(status==gl.CONDITION_SATISFIED)console.log("CONDITION_SATISFIED");
+        else if(status==gl.WAIT_FAILED)console.log("WAIT_FAILED");*/
+        
+      }
+
+    if (gpubussy) {
+
+      this.animate(timestamp); // forward timestamp here
+      //gl.finish();
+
+      this.syncold = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+      //gl.finish();
+    }
+    
+
+    requestAnimationFrame((ts) => this.loop(ts));
+  }
+  loop2(timestamp) {
+    if (!this.running) return;
+
+    const gl = this.gl;
+
+      gl.finish();
+      this.animate(timestamp); // forward timestamp here
+      gl.flush();
+
+    requestAnimationFrame((ts) => this.loop2(ts));
+  }
+
+  start() {
+    if (!this.running) {
+      this.running = true;
+      requestAnimationFrame((ts) => this.loop2(ts));
+    }
+  }
+
+  stop() {
+    this.running = false;
+  }
+}
 
 //function transpose(matrix) {return matrix[0].map((_, colIndex) => matrix.map(row => row[colIndex]));}
 function rankQR(matrix, eps = 1e-10) {
@@ -671,7 +778,7 @@ class RenderContext {
 
     this.objects=new Map();;//list of RenderObjects
 
-    this.multires=new MultiResCanvas(this);//new MultiResBuffer2(this);
+    this.multires=new MultiResBuffer3(this);//new MultiResBuffer2(this);
 
 
 
@@ -679,6 +786,7 @@ class RenderContext {
       this.multires.resize();
       this.requestRender();
     });
+    window.dispatchEvent(new Event("resize"));
 
 
     
@@ -853,15 +961,20 @@ class RenderableObject {
     this.ctx.requestRender();
   }
 
-  updateParams() {
-    const pipeline = this.activePipeline;
-    if (pipeline) pipeline.updateParams(this.ctx);
-  }
+updateParams() {
+  this.activePipeline?.updateParams(this.ctx);
+}
 
-  render() {
-    const pipeline = this.activePipeline;
-    if (pipeline) pipeline.render(this.ctx);
-  }
+render() {
+  this.activePipeline?.render(this.ctx);
+}
+
+isTilable() {
+  return this.activePipeline?.isTilable();
+}
+
+
+  
 }
 
 
@@ -889,6 +1002,7 @@ class LazyRenderingPipeline{
   setRenderableObject(obj){
     this._obj=obj;
   }
+  isTilable(){return false;}
 }
 
 class simplerenderer extends LazyRenderingPipeline{
@@ -922,6 +1036,7 @@ class simplerenderer extends LazyRenderingPipeline{
     this.visgraph.setuniforms(ctx.nodecache,this.shader);
 
   }
+  isTilable(){return true;}
 }
 
 class matrixrenderer extends LazyRenderingPipeline{
@@ -961,6 +1076,8 @@ class matrixrenderer extends LazyRenderingPipeline{
     this.matrixmaker.setuniforms(ctx.nodecache,this.shader);
 
   }
+
+   isTilable(){return true;}
 }
 
 
@@ -1232,6 +1349,8 @@ void main() {
 
     return [textures,framebuffer];
   }
+
+   isTilable(){return false;}
 
 }
 
@@ -1863,6 +1982,7 @@ void main() {
 
     return [textures,framebuffer];
   }
+   isTilable(){return false;}
 
 }
 
@@ -2139,7 +2259,7 @@ class textureFramebuffer{
 
     //gl.depthFunc(gl.LESS);
     //gl.enable(gl.DEPTH_TEST);
-    gl.disable(gl.DEPTH_TEST);
+    //gl.disable(gl.DEPTH_TEST);
     
     textureFramebuffer.upscaleshader.use();
     
@@ -2257,37 +2377,243 @@ class textureFramebuffer{
 
 
 }
+class MultiresBase{
+  update(){
+   
+  }
 
+  resize(){//screen got resized
 
-class MultiResBuffer2{
+  }
+
+  render(){
+
+  }
+
+}
+
+class MultiResBuffer2 extends MultiresBase{
   constructor(ctx){
+    super();
     this.ctx=ctx;
     this.framebuffer=new textureFramebuffer(ctx.gl,100,100);
   }
 
-  target(){
-    this.framebuffer.updateViewport();
-    this.framebuffer.bind();
+  resize(){
+    const canvas=this.ctx.canvas;
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.floor(canvas.clientWidth * dpr);
+      const height = Math.floor(canvas.clientHeight * dpr);
+      canvas.width = width;
+      canvas.height = height;
+      //console.log(width,height);
+      this.framebuffer.resize(Math.floor(width * 0.3),Math.floor(height * 0.3));
   }
-
-
 
   render() {
    /** @type{RenderContext} */
     const ctx = this.ctx;
     const gl = ctx.gl;
 
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    //context.updateViewport();
+
+    this.framebuffer.clear();
+    this.framebuffer.updateViewport();
+    this.framebuffer.bind();
+    for(const object of this.ctx.objects.values()){
+      object.render(this.ctx);
+    }
+
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    this.ctx.updateViewport();
+
+    //gl.finish();
+  
+
     //
     
     this.framebuffer.upscale();
   }
-  clear(){
+
+}
+
+class MultiResBuffer3 extends MultiresBase {
+  constructor(ctx) {
+    super();
+    this.ctx = ctx;
+    this.framebufferLow = new textureFramebuffer(ctx.gl, 100, 100);
+    this.framebuffer = new textureFramebuffer(ctx.gl, 100, 100);
+
+    this.sceduler = null;
+    this.resetSceduler();
+  }
+
+  resetSceduler() {
+    this.sceduler = this.tileScheduler();
+  }
+
+  update() {
+    if (this.ctx.moved) {
+      this.resetSceduler();
+    }
+
+    if (this.sceduler!=null) {
+      this.ctx.requestRender();
+    }
+  }
+
+  render() {
+    if (this.sceduler==null) return;
+    const result = this.sceduler.next();
+    if (result.done) {
+      this.sceduler = null;
+    }
+  }
+
+  resize(){
+    const canvas=this.ctx.canvas;
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.floor(canvas.clientWidth * dpr);
+      const height = Math.floor(canvas.clientHeight * dpr);
+      canvas.width = width;
+      canvas.height = height;
+      //console.log(width,height);
+      this.framebufferLow.resize(Math.floor(width * 0.2),Math.floor(height * 0.2));
+      this.framebuffer.resize(width,height);
+
+      this.resetSceduler();
+  }
+
+
+
+  renderNormal() {
+   /** @type{RenderContext} */
+    const ctx = this.ctx;
+    const gl = ctx.gl;
+
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    //context.updateViewport();
+
+    this.framebufferLow.clear();
     this.framebuffer.clear();
+
+   
+    for(const object of this.ctx.objects.values()){
+
+      let targetbuffer;
+      if(object.isTilable()){
+        targetbuffer=this.framebufferLow;
+      }else{
+        targetbuffer=this.framebuffer;
+      }
+
+
+       targetbuffer.updateViewport();
+       targetbuffer.bind();
+      object.render(this.ctx);
+    }
+
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    this.ctx.updateViewport();
+
+    //gl.finish();
+  
+
+    //
+     gl.depthFunc(gl.LESS);
+    gl.enable(gl.DEPTH_TEST);
+    this.framebufferLow.upscale();
+     this.framebuffer.upscale();
+  }
+
+  renderTile(x, y, w, h) {
+    const ctx = this.ctx;
+    const gl = ctx.gl;
+
+    this.ctx.updateViewport();
+    gl.enable(gl.SCISSOR_TEST);
+    gl.scissor(x, y, w, h);
+    this.framebuffer.bind();
+    for (const object of this.ctx.objects.values()) {
+      if (object.isTilable()) {
+        object.render(this.ctx);
+      }
+
+    }
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    this.framebuffer.upscale();
+
+    gl.disable(gl.SCISSOR_TEST);
+  }
+
+  *tileScheduler(tileSize = 256) {
+    this.renderNormal(); // Optional low-res fallback render
+    yield;
+
+    const ctx = this.ctx;
+    const canvas = ctx.canvas;
+    const width = canvas.width;
+    const height = canvas.height;
+
+    /*for (let tileY = 0; tileY < height; tileY += tileSize) {
+      for (let tileX = 0; tileX < width; tileX += tileSize) {
+        const w = Math.min(tileSize, width - tileX);
+        const h = Math.min(tileSize, height - tileY);
+
+        this.renderTile(tileX, tileY, w, h);
+        yield;
+      }
+    }*/
+   const centerX = width / 2;
+  const centerY = height / 2;
+
+  const tiles = [];
+
+  for (let tileY = 0; tileY < height; tileY += tileSize) {
+      for (let tileX = 0; tileX < width; tileX += tileSize) {
+      const cx = tileX + tileSize / 2;
+      const cy = tileY + tileSize / 2;
+      const distSq = (cx - centerX) ** 2 + (cy - centerY) ** 2;
+
+      tiles.push({
+        tileX,
+        tileY,
+        w: Math.min(tileSize, width - tileX),
+        h: Math.min(tileSize, height - tileY),
+        distSq
+      });
+    }
+  }
+
+  tiles.sort((a, b) => a.distSq - b.distSq);//i wantet a sort of circular pattern
+
+  for (const { tileX, tileY, w, h } of tiles) {
+    this.renderTile(tileX, tileY, w, h);
+    yield;
   }
 }
 
-class MultiResCanvas{
+}
+
+
+
+class MultiResCanvas extends MultiresBase{
   constructor(ctx){
+    super();
     this.ctx=ctx;
 
 
@@ -2364,7 +2690,7 @@ class MultiResCanvas{
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     this.ctx.updateViewport();
 
-    gl.finish();
+    //gl.finish();
   }
   clear(){
     const gl=this.ctx.gl;
@@ -2769,6 +3095,8 @@ class Voxelrenderer extends LazyRenderingPipeline{
       packedVoxel + dx + dy + dz,
     ]);
   }
+
+  isTilable(){return false;}
 }
 
 class matrixextractor{
@@ -3163,10 +3491,11 @@ async function main(){
   }
     
     //renderer.render();
-    requestAnimationFrame(animate);
+    
     
   }
-  requestAnimationFrame(animate);
+  const renderLoop = new RenderLoop(gl, animate);
+  renderLoop.start();
 }
 main();
   </script>
