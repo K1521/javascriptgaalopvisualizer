@@ -657,6 +657,7 @@ async function load(url) {
 class RenderContext {
   constructor(canvas, gl, camera=undefined) {
     this.requestRender = this.requestRender.bind(this);
+    this.camMoved = this.camMoved.bind(this);
 
 
 
@@ -684,7 +685,8 @@ class RenderContext {
 
 
     this.changed=true;
-    this.camera.onChange=this.requestRender;
+    this.moved=true;
+    this.camera.onChange=this.camMoved;
   }
 
   addObject(obj){
@@ -699,44 +701,27 @@ class RenderContext {
     //console.log("changed");
   }
 
+  camMoved(){
+    this.requestRender();
+    this.moved=true
+    //console.log("changed");
+  }
+
   
 
-  render(force=false){
-    if(!(this.changed||force))return;
-    /*const gl=this.gl;
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    
-    //gl.disable(gl.DEPTH_TEST);
-    for(const object of this.objects.values()){
-      object.render(this);
-    }
-    gl.finish();*/
+  render(deltatime,force=false){
+    this.camera.update(deltatime);
+    this.multires.update();
 
-
-    const gl=this.gl;
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-    //context.updateViewport();
-
-    this.multires.clear();
-    this.multires.target();
-    for(const object of this.objects.values()){
-      object.render(this);
-    }
-
-
-    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    this.updateViewport();
-    this.multires.render();
-
-    gl.finish();
+    if(!(this.changed||force))return false;
     this.changed=false;
-
+    this.moved=false;
+    
+    this.multires.render();
+    return true;
   }
+
+
 
   paramsChanged(newparams=undefined){
     this.params=newparams??this.params;
@@ -751,10 +736,7 @@ class RenderContext {
     }
   }
    
-  update(deltatime){
-    this.camera.update(deltatime);
-    this.multires.update();
-  }
+  
 
 
   get clientResolution(){
@@ -2327,7 +2309,7 @@ class MultiResCanvas{
 
   update(){
     const now = performance.now();
-    const moving = this.ctx.changed;
+    const moving = this.ctx.moved;
 
     if(this.highResolutionScale==this.lowResolutionScale){
         //pass 
@@ -2364,7 +2346,25 @@ class MultiResCanvas{
 
 
   render() {
+        const gl=this.ctx.gl;
 
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    //context.updateViewport();
+
+    this.clear();
+    this.target();
+    for(const object of this.ctx.objects.values()){
+      object.render(this.ctx);
+    }
+
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    this.ctx.updateViewport();
+
+    gl.finish();
   }
   clear(){
     const gl=this.ctx.gl;
@@ -3152,14 +3152,13 @@ async function main(){
 
     Plotly.redraw('plotlyDiagram');
   }else{
+    
+    
     context.updateParams();
-    context.update(deltatime);
-  if(context.changed){
+  if(context.render(deltatime)){
       //drawplot(camera,funmat.array);
       deltatimeavg=deltatimeavg*0.90+deltatime*0.10;
       fpscounter.innerText = `FPS: ${Math.ceil(1/deltatimeavg)}`;
-      
-      context.render();
     }
   }
     
