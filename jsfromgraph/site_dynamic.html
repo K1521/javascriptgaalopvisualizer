@@ -670,20 +670,17 @@ class RenderContext {
 
     this.objects=new Map();;//list of RenderObjects
 
-    this.multires=new MultiResBuffer2(this);
+    this.multires=new MultiResCanvas(this);//new MultiResBuffer2(this);
 
 
 
     window.addEventListener("resize", ()=>{
-      this.setScale();
+      this.multires.resize();
       this.requestRender();
     });
 
 
-    this.highResolutionScale = 0.3;
-    this.lowResolutionScale = 0.2;
-    this.stillTime = performance.now();
-    this.setScale(this.lowResolutionScale);//sets scale
+    
 
 
     this.changed=true;
@@ -704,7 +701,8 @@ class RenderContext {
 
   
 
-  render(){
+  render(force=false){
+    if(!(this.changed||force))return;
     /*const gl=this.gl;
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -725,7 +723,7 @@ class RenderContext {
     //context.updateViewport();
 
     this.multires.clear();
-    this.multires.targetlow();
+    this.multires.target();
     for(const object of this.objects.values()){
       object.render(this);
     }
@@ -733,9 +731,10 @@ class RenderContext {
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     this.updateViewport();
-    this.multires.render_low();
+    this.multires.render();
 
     gl.finish();
+    this.changed=false;
 
   }
 
@@ -754,54 +753,21 @@ class RenderContext {
    
   update(deltatime){
     this.camera.update(deltatime);
-
-    const now = performance.now();
-    const moving = this.changed;
-    let changed=this.changed;
-
-    if(this.highResolutionScale==this.lowResolutionScale){
-        //pass 
-    }else if (moving) {
-      this.stillTime = now;
-      if (!this.isLowRes) {
-        this.setScale(this.lowResolutionScale);
-        //console.log("set to low res");
-        changed=true;
-      };
-      
-    }else if (this.isLowRes && (now - this.stillTime > 500)) {//not moving for 0.5 sec
-      this.setScale(this.highResolutionScale);
-        //console.log("set to high res");
-
-      changed=true;
-    }
-
-    this.changed=false;
-    return changed;
-
-
+    this.multires.update();
   }
 
-  get isLowRes(){return this.scale<this.highResolutionScale;}
+
   get clientResolution(){
     //actual canvas res in pixel
-    return [this.canvas.clientWidth, this.canvas.clientHeight];
+    const canvas=this.canvas;
+    return [canvas.clientWidth, canvas.clientHeight];
   }
 
   get resolution(){
     //canvas res for rendering
-    return [this.canvas.width,this.canvas.height];
+    const canvas=this.canvas;
+    return [canvas.width,canvas.height];
   }
-
-  setScale(scale=undefined) {
-    if(scale)this.scale=scale;
-    const dpr = window.devicePixelRatio || 1;
-    const width = Math.floor(this.canvas.clientWidth * dpr * this.scale);
-    const height = Math.floor(this.canvas.clientHeight * dpr * this.scale);
-    this.canvas.width = width;
-    this.canvas.height = height;
-  }
-
   updateUniforms(shader) {
     this.camera.updateuniforms(shader);
     this.updateUniformWindowsize(shader);
@@ -2317,14 +2283,14 @@ class MultiResBuffer2{
     this.framebuffer=new textureFramebuffer(ctx.gl,100,100);
   }
 
-  targetlow(){
+  target(){
     this.framebuffer.updateViewport();
     this.framebuffer.bind();
   }
 
 
 
-  render_low() {
+  render() {
    /** @type{RenderContext} */
     const ctx = this.ctx;
     const gl = ctx.gl;
@@ -2341,27 +2307,71 @@ class MultiResBuffer2{
 class MultiResCanvas{
   constructor(ctx){
     this.ctx=ctx;
-    this.framebuffer=new textureFramebuffer(ctx.gl,100,100);
+
+
+    this.highResolutionScale = 0.3;
+    this.lowResolutionScale = 0.2;
+    this.stillTime = performance.now();
+    this.setScale(this.lowResolutionScale);//sets scale
   }
 
-  targetlow(){
-    this.framebuffer.updateViewport();
-    this.framebuffer.bind();
+  resize(){
+    this.setScale();
+  }
+
+  target(){
+    this.ctx.updateViewport();
+    const gl=this.ctx.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  }
+
+  update(){
+    const now = performance.now();
+    const moving = this.ctx.changed;
+
+    if(this.highResolutionScale==this.lowResolutionScale){
+        //pass 
+    }else if (moving) {
+      this.stillTime = now;
+      if (!this.isLowRes) {
+        this.setScale(this.lowResolutionScale);
+        //console.log("set to low res");
+        this.ctx.requestRender();
+      };
+      
+    }else if (this.isLowRes && (now - this.stillTime > 500)) {//not moving for 0.5 sec
+      this.setScale(this.highResolutionScale);
+        //console.log("set to high res");
+
+      this.ctx.requestRender();
+    }
+  }
+
+  
+  get isLowRes(){return this.scale<this.highResolutionScale;}
+
+
+  setScale(scale=undefined) {
+    if(scale)this.scale=scale;
+    const canvas=this.ctx.canvas;
+    const dpr = window.devicePixelRatio || 1;
+    const width = Math.floor(canvas.clientWidth * dpr * this.scale);
+    const height = Math.floor(canvas.clientHeight * dpr * this.scale);
+    canvas.width = width;
+    canvas.height = height;
   }
 
 
 
-  render_low() {
-   /** @type{RenderContext} */
-    const ctx = this.ctx;
-    const gl = ctx.gl;
+  render() {
 
-    //
-    
-    this.framebuffer.upscale();
   }
   clear(){
-    this.framebuffer.clear();
+    const gl=this.ctx.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    //gl.clearDepth(1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   }
 }
 
@@ -3143,7 +3153,8 @@ async function main(){
     Plotly.redraw('plotlyDiagram');
   }else{
     context.updateParams();
-  if(context.update(deltatime)){
+    context.update(deltatime);
+  if(context.changed){
       //drawplot(camera,funmat.array);
       deltatimeavg=deltatimeavg*0.90+deltatime*0.10;
       fpscounter.innerText = `FPS: ${Math.ceil(1/deltatimeavg)}`;
