@@ -17,7 +17,7 @@ export class MultiResBuffer3 extends MultiresBase {
   }
 
   update() {
-    if (this.ctx.moved) {
+    if (this.ctx.changed) {
       this.resetSceduler();
     }
 
