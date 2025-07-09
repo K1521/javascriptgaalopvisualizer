@@ -84,6 +84,10 @@ Dual DualAbs(Dual a) {
 void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {?}
 
 
+
+
+
+
 void DualComplexRaymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float x) {
     
 

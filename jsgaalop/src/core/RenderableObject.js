@@ -1,9 +1,12 @@
 
+import { RenderContext } from "./RenderContext";
+
 export class RenderableObject {
   constructor(name,context) {
     this.name = name;
     this.pipelines = new Map(); // methodName -> ShaderPipeline
     this.activePipelineName = null;
+    /** @type{RenderContext} */
     this.ctx=context;
   }
 

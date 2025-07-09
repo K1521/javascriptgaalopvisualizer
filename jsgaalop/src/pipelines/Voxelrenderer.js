@@ -1,6 +1,8 @@
 import { LazyRenderingPipeline } from "./LazyRenderingPipeline.js";
 import { Shader } from "../glwrapper/glwrapper.js";
 import { shaderSources } from "../glwrapper/shaderimporter.js";
+
+import { pointshaderfactory } from "./pointcloudrenderer.js";
 export class Voxelrenderer extends LazyRenderingPipeline{
 
   constructor(gl,visgraph, vertexshader,color) {
@@ -49,14 +51,14 @@ export class Voxelrenderer extends LazyRenderingPipeline{
       gl.bindBuffer(gl.ARRAY_BUFFER, this.pointbuffer);
       this.pointbuffer_size=0;
 
-      pointcloudrenderer.pointshader ??= new Shader(gl, pointcloudrenderer.vShader, pointcloudrenderer.fShader);
+      this.pointshader=pointshaderfactory.getcached(gl);
 
       this.color=color;
       
       this.pointvao=gl.createVertexArray();
       gl.bindVertexArray(this.pointvao);
       gl.bindBuffer(gl.ARRAY_BUFFER,  this.pointbuffer);
-      const point_positionAttribLoc=pointcloudrenderer.pointshader.getAttribLocation("position");
+      const point_positionAttribLoc=this.pointshader.getAttribLocation("position");
       gl.enableVertexAttribArray(point_positionAttribLoc);
       gl.vertexAttribPointer(point_positionAttribLoc, 3, gl.FLOAT, false, 0, 0);
       gl.bindVertexArray(null);
@@ -80,9 +82,9 @@ export class Voxelrenderer extends LazyRenderingPipeline{
     const gl = this.gl;
     gl.depthFunc(gl.LESS);
     gl.enable(gl.DEPTH_TEST);
-    pointcloudrenderer.pointshader.use();
-    gl.uniform4fv(pointcloudrenderer.pointshader.getUniformLocation('incolor'), [this.color.r,this.color.g,this.color.b,1.0]);
-    ctx.updateUniforms(pointcloudrenderer.pointshader); // sets cameraPos and cameraMatrix and windowsize
+    this.pointshader.use();
+    gl.uniform4fv(this.pointshader.getUniformLocation('incolor'), [this.color.r,this.color.g,this.color.b,1.0]);
+    ctx.updateUniforms(this.pointshader); // sets cameraPos and cameraMatrix and windowsize
     gl.bindVertexArray(this.pointvao);
     gl.drawArrays(gl.POINTS, 0, this.pointbuffer_size);
     gl.bindVertexArray(null);

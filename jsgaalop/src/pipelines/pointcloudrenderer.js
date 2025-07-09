@@ -1,9 +1,11 @@
 import { LazyRenderingPipeline } from "./LazyRenderingPipeline.js";
 import { Shader } from "../glwrapper/glwrapper.js";
 import { shaderSources } from "../glwrapper/shaderimporter.js";
-export class pointcloudrenderer extends LazyRenderingPipeline{
+import { Matrix ,Vector} from "../util/linalg1.js";
+import { ShaderCache } from "../glwrapper/shadercache.js";
 
-  static vShader=`#version 300 es
+
+const vShader=`#version 300 es
 // Vertex Shader
 //this shader is so complicated because i wrote my raycasting code before this and then made this code to fit the raycasting logic
 precision highp float;
@@ -17,8 +19,8 @@ uniform vec3 cameraPos;
 uniform vec2 windowsize;
 
 
-const float FOV=120.;
-const float FOVfactor=1./tan(radians(FOV) * 0.5);
+//const float FOV=120.;
+//const float FOVfactor=1./tan(radians(FOV) * 0.5);
 uniform vec2 focal;
 
 void main() {
@@ -43,7 +45,7 @@ void main() {
     // Optional point size
     gl_PointSize = 3.0;
 }`;
-  static fShader=`#version 300 es
+const fShader=`#version 300 es
 // Fragment Shader
 precision highp float;
 uniform vec4 incolor;
@@ -57,7 +59,11 @@ void main() {
 
 `;
 
-  static pointshader=null;
+export const pointshaderfactory=new ShaderCache(null,vShader,fShader);
+
+export class pointcloudrenderer extends LazyRenderingPipeline{
+
+  
   constructor(gl,visgraph,axis_aligned_glsl,color){
     super(()=>{
       this.orthsize=100;
@@ -78,7 +84,7 @@ void main() {
       this.pointbuffer = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, this.pointbuffer);
 
-      pointcloudrenderer.pointshader ??= new Shader(gl, pointcloudrenderer.vShader, pointcloudrenderer.fShader);
+      this.pointshader=pointshaderfactory.getcached(gl);
 
       this.color=color;
       
@@ -87,7 +93,7 @@ void main() {
       this.pointvao=gl.createVertexArray();
       gl.bindVertexArray(this.pointvao);
       gl.bindBuffer(gl.ARRAY_BUFFER,  this.pointbuffer);
-      const positionAttribLoc=pointcloudrenderer.pointshader.getAttribLocation("position");
+      const positionAttribLoc=this.pointshader.getAttribLocation("position");
       gl.enableVertexAttribArray(positionAttribLoc);
       gl.vertexAttribPointer(positionAttribLoc, 3, gl.FLOAT, false, 0, 0);
       gl.bindVertexArray(null);
@@ -225,9 +231,9 @@ void main() {
     const gl = this.gl;
     gl.depthFunc(gl.LESS);
     gl.enable(gl.DEPTH_TEST);
-    pointcloudrenderer.pointshader.use();
-    gl.uniform4fv(pointcloudrenderer.pointshader.getUniformLocation('incolor'), [this.color.r,this.color.g,this.color.b,1.0]);
-    ctx.updateUniforms(pointcloudrenderer.pointshader); // sets cameraPos and cameraMatrix and windowsize
+    this.pointshader.use();
+    gl.uniform4fv(this.pointshader.getUniformLocation('incolor'), [this.color.r,this.color.g,this.color.b,1.0]);
+    ctx.updateUniforms(this.pointshader); // sets cameraPos and cameraMatrix and windowsize
     gl.bindVertexArray(this.pointvao);
     gl.drawArrays(gl.POINTS, 0, this.count);
     gl.bindVertexArray(null);

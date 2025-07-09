@@ -40,7 +40,7 @@ export class RenderContext {
 
 
     this.changed=true;
-    this.moved=true;
+    this.moved=true;//moved is not used i belive?
     this.camera.onChange=this.camMoved;
   }
 
@@ -51,20 +51,20 @@ export class RenderContext {
     this.objects.set(obj.name,obj);
   }
 
-  requestRender(){
+  requestRender(){ 
     this.changed=true;
-    //console.log("changed");
   }
 
   camMoved(){
     this.requestRender();
-    this.moved=true
+    this.moved=true;//not used i belive?
     //console.log("changed");
   }
 
   
 
   render(deltatime,force=false){
+    console.log("render",this.changed)
     this.camera.update(deltatime);
     this.multires.update();
 
