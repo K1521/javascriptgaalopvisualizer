@@ -1,6 +1,7 @@
 import { MultiresBase } from "./MultiresBase.js";
 import { textureFramebuffer } from "../glwrapper/textureFramebuffer.js";
 
+import { RenderContext } from "../core/RenderContext.js";
 export class MultiResBuffer3 extends MultiresBase {
   constructor(ctx) {
     super();

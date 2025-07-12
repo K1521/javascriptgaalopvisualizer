@@ -1,5 +1,5 @@
 
-import { RenderContext } from "./RenderContext";
+import { RenderContext } from "./RenderContext.js";
 
 export class RenderableObject {
   constructor(name,context) {
