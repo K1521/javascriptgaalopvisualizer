@@ -1073,7 +1073,7 @@ class GraphToCodeGLSLVis_Dual extends GraphToCodeGLSLVis_abstract_Dual{
         if(this.singularoutput){
             this.code+=`Dual DualSummofsquares(vec3 rayDir, vec3 rayOrigin,float a) {\n`;
         }else{
-            this.code+=`const int numoutputs=${this.outputnodes.length};\n`;
+            //this.code+=`const int numoutputs=${this.outputnodes.length};\n`;
             this.code+=`void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {\n`;
         }
 
@@ -2214,7 +2214,8 @@ class VisualisationGraph2 {
 
         const constants={
             "POLYDEGREE":VisualisationGraph2.calcpolydegree(this.GPUgraph),
-            "USE_DOUBLEROOTS":this.issquared?1:0
+            "USE_DOUBLEROOTS":this.issquared?1:0,
+            "numoutputs":this.outputnodes.length,
         }
 
         for(const [name,value] of Object.entries(constants)){
