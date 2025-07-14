@@ -1,10 +1,11 @@
+#version 300 es
+precision mediump float;
 
 
 
 
 
 
-//#include "header.glsl"
 //#include "utilfrag.glsl"
 //#include "util.glsl"
 //#include "generated_functions.glsl"

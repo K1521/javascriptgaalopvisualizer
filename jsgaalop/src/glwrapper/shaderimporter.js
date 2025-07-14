@@ -54,19 +54,55 @@ export const shaderSources = {//for code highliting
 
 
 /**
- * Generator function that extracts raw include paths from GLSL shader code.
- * It looks for lines matching the pattern: // #include "relative/path.glsl"
+ * Generator that yields interleaved code and include parts,
+ * with line number metadata for each.
  *
- * @param {string} shaderCode - The GLSL shader source code.
- * @yields {string} - Each relative include path found in the shader code.
+ * @param {string} shaderCode - The full shader source text.
+ * @returns {Generator<{ type: 'code' | 'include', value: string, line: number }>}
  */
 function* extractIncludes(shaderCode) {
   const includeRegex = /^\s*\/\/\s*#include\s+"([^"]+)"\s*$/gm;
+
+  let lastIndex = 0;
+  let currentLine = 1;
   let match;
+
   while ((match = includeRegex.exec(shaderCode)) !== null) {
-    yield match[1]; // raw include path, e.g. "../common.glsl"
+    const matchStart = match.index;
+    const matchEnd = includeRegex.lastIndex;
+
+    const chunkBefore = shaderCode.slice(lastIndex, matchStart);
+    const chunkBeforeLines = chunkBefore.split('\n');
+
+    if (chunkBefore.trim()) {
+      yield {
+        type: 'code',
+        value: chunkBefore,
+        line: currentLine,
+      };
+    }
+
+    yield {
+      type: 'include',
+      value: match[1],
+      line: currentLine + chunkBeforeLines.length - 1,
+    };
+
+    currentLine += chunkBeforeLines.length;
+
+    lastIndex = matchEnd;
+  }
+
+  const remaining = shaderCode.slice(lastIndex);
+  if (remaining.trim()) {
+    yield {
+      type: 'code',
+      value: remaining,
+      line: currentLine,
+    };
   }
 }
+
 
 /**
  * Recursively loads a GLSL shader file and all its included files,
@@ -103,12 +139,24 @@ async function loadWithIncludes(entryUrl) {
     const baseUrl = new URL('.', resolvedUrl).toString();
 
     // Recursively load all includes first, resolving relative paths
-    for (const includePath of extractIncludes(code)) {
-      const includeUrl = new URL(includePath, baseUrl).toString();//resolves relative path
-      await loadRec(includeUrl);
+    for (const item of extractIncludes(code)) {
+      if(item.type=="code"){
+        const isVersionLine = item.value.trimStart().startsWith("#version");
+        if (isVersionLine) {
+          // Allow #version only at the very top
+          chunks.push(item.value.trimStart());
+        } else {
+          chunks.push(`// from ${resolvedUrl} @ line ${item.line}\n${item.value}`);
+        }
+      }else if(item.type=="include"){
+        const includePath=item.value;
+        const includeUrl = new URL(includePath, baseUrl).toString();//resolves relative path
+        await loadRec(includeUrl);
+        }
     }
+    //chunks.push(code);
 
-    chunks.push(code);
+    
 
     visited.add(resolvedUrl);
     onStack.delete(resolvedUrl);
