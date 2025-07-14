@@ -10,7 +10,7 @@ uniform float[?] args;
 #else
     #define NUM_ROOTS POLYDEGREE
 #endif
-const int numoutputs=?
+const int numoutputs=?;
 
 
 
