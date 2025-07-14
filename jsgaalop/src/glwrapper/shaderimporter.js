@@ -55,9 +55,15 @@ export const shaderSources  = {
 
 const basePath = "./src/shadersource/";//relative to index
 
+
 await Promise.all(
   Object.entries(shaderSources).map(async ([name, path]) => {
     const source = await load(basePath + path);
     shaderSources[name] = source;
   })
 );
+
+
+async function loadwithincludes(url) {
+  
+}

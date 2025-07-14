@@ -1,6 +1,8 @@
 import { LazyRenderingPipeline } from "./LazyRenderingPipeline.js";
 import { Shader } from "../glwrapper/glwrapper.js";
 import { shaderSources } from "../glwrapper/shaderimporter.js";
+
+import { pinv, multiply, transpose ,qr} from 'https://cdn.jsdelivr.net/npm/mathjs@14.5.2/+esm';
 export class matrixrenderer extends LazyRenderingPipeline{
 
   
