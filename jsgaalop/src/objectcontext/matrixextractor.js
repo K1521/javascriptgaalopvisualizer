@@ -1,6 +1,6 @@
 import {GaalopGraph,visitnodes,VarOperand,AddOperand,MulOperand,NegOperand,ConstOperand,DivOperand} from "../core/graph2.js";
 import { Poly } from "../util/poly.js";
-
+import { pinv, multiply, transpose ,qr} from 'https://cdn.jsdelivr.net/npm/mathjs@14.5.2/+esm';
 
 export class matrixextractor{
   constructor(visgraph,basisconvert){
