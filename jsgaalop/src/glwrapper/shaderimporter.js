@@ -179,7 +179,7 @@ async function loadWithIncludes(entryUrl) {
   vertRaycastFullscreen:"vertRaycastFullscreen.glsl",
 };*/
 export const shaderSources  = {
-  fragTemplateAberth: "shaderlibv1/frag_aberth.glsl",//raycasting using aberth
+  fragTemplateAberth: "shaderlibv1/raycasting_frag_shaders/frag_aberth.glsl",//raycasting using aberth
   fragTemplateDualGauss: "frag_generated_Dual.glsl",//raycasting using Gauss
   fragTemplateAxisAligned: "frag_aberth_generated_axis_aligned.glsl",//orthographic , outputs roots for each ray 
   fragTemplateAberthMatrix: "frag_aberth_matrix_dcga.glsl",//raycasting using aberth with matrix
