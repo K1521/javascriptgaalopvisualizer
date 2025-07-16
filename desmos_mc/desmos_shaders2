@@ -1,0 +1,890 @@
+#version 300 es
+#define varying in
+layout(location = 0) out highp vec4 pc_fragColor;
+#define gl_FragColor pc_fragColor
+#define gl_FragDepthEXT gl_FragDepth
+#define texture2D texture
+#define textureCube texture
+#define texture2DProj textureProj
+#define texture2DLodEXT textureLod
+#define texture2DProjLodEXT textureProjLod
+#define textureCubeLodEXT textureLod
+#define texture2DGradEXT textureGrad
+#define texture2DProjGradEXT textureProjGrad
+#define textureCubeGradEXT textureGrad
+precision highp float;
+precision highp int;
+#define HIGH_PRECISION
+#define SHADER_TYPE Material
+#define SHADER_NAME GraphSurfaceMaterial
+#define DCG_SUPPORTS_PICKING true
+#define DOUBLE_SIDED
+uniform mat4 viewMatrix;
+uniform vec3 cameraPosition;
+uniform bool isOrthographic;
+#define OPAQUE
+
+vec4 LinearToLinear( in vec4 value ) {
+	return value;
+}
+
+vec4 LinearTosRGB( in vec4 value ) {
+	return vec4( mix( pow( value.rgb, vec3( 0.41666 ) ) * 1.055 - vec3( 0.055 ), value.rgb * 12.92, vec3( lessThanEqual( value.rgb, vec3( 0.0031308 ) ) ) ), value.a );
+}
+
+vec4 linearToOutputTexel( vec4 value ) { return LinearToLinear( value ); }
+
+
+uniform vec3 diffuse;
+uniform vec3 emissive;
+uniform float roughness;
+uniform float metalness;
+uniform float opacity;
+varying vec3 vNormal;
+
+varying vec3 vViewPosition;
+
+
+#define RECIPROCAL_PI 0.3183098861837907
+#define RECIPROCAL_PI2 0.15915494309189535
+#define EPSILON 1e-6
+
+#define saturate( a ) clamp( a, 0.0, 1.0 )
+
+float pow2( const in float x ) { return x*x; }
+vec3 pow2( const in vec3 x ) { return x*x; }
+float pow4( const in float x ) { float x2 = x*x; return x2*x2; }
+float max3( const in vec3 v ) { return max( max( v.x, v.y ), v.z ); }
+
+#ifdef HIGH_PRECISION
+	float precisionSafeLength( vec3 v ) { return length( v ); }
+#else
+	float precisionSafeLength( vec3 v ) {
+		float maxComponent = max3( abs( v ) );
+		return length( v / maxComponent ) * maxComponent;
+	}
+#endif
+
+struct IncidentLight {
+	vec3 color;
+	vec3 direction;
+};
+
+struct ReflectedLight {
+	vec3 directDiffuse;
+	vec3 directSpecular;
+	vec3 indirectDiffuse;
+	vec3 indirectSpecular;
+};
+
+struct GeometricContext {
+	vec3 normal;
+	vec3 viewDir;
+};
+
+vec3 inverseTransformDirection( in vec3 dir, in mat4 matrix ) {
+	return normalize( ( vec4( dir, 0.0 ) * matrix ).xyz );
+}
+
+vec3 BRDF_Lambert( const in vec3 diffuseColor ) {
+	return RECIPROCAL_PI * diffuseColor;
+}
+
+vec3 F_Schlick( const in vec3 f0, const in float f90, const in float dotVH ) {
+	float fresnel = exp2( ( - 5.55473 * dotVH - 6.98316 ) * dotVH );
+	return f0 * ( 1.0 - fresnel ) + ( f90 * fresnel );
+}
+
+
+#ifdef USE_MAP
+	varying vec2 vMapUv;
+	uniform sampler2D map;
+#endif
+
+#ifdef USE_ALPHATEST
+	uniform float alphaTest;
+#endif
+
+#if defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR )
+	varying vec3 vColor;
+#endif
+
+#if defined(USE_INSTANCING_PICKINGCOLOR) || defined(USE_VERTEX_PICKING_COLOR)
+	varying vec4 vPickingColor;
+#endif
+
+
+uniform vec3 ambientLightColor;
+
+vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
+	vec3 irradiance = ambientLightColor;
+	return irradiance;
+}
+
+#if 2 > 0
+	struct DirectionalLight {
+		vec3 direction;
+		vec3 color;
+	};
+	uniform DirectionalLight directionalLights[ 2 ];
+	void getDirectionalLightInfo( const in DirectionalLight directionalLight, const in GeometricContext geometry, out IncidentLight light ) {
+		light.color = directionalLight.color;
+		light.direction = directionalLight.direction;
+	}
+#endif
+
+struct PhysicalMaterial {
+	vec3 diffuseColor;
+	float roughness;
+	vec3 specularColor;
+	float specularF90;
+};
+
+vec3 clearcoatSpecular = vec3( 0.0 );
+vec3 sheenSpecular = vec3( 0.0 );
+
+float V_GGX_SmithCorrelated( const in float alpha, const in float dotNL, const in float dotNV ) {
+	float a2 = pow2( alpha );
+	float gv = dotNL * sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNV ) );
+	float gl = dotNV * sqrt( a2 + ( 1.0 - a2 ) * pow2( dotNL ) );
+	return 0.5 / max( gv + gl, EPSILON );
+}
+
+float D_GGX( const in float alpha, const in float dotNH ) {
+	float a2 = pow2( alpha );
+	float denom = pow2( dotNH ) * ( a2 - 1.0 ) + 1.0; // avoid alpha = 0 with dotNH = 1
+	return RECIPROCAL_PI * a2 / pow2( denom );
+}
+
+vec3 BRDF_GGX( const in vec3 lightDir, const in vec3 viewDir, const in vec3 normal, const in PhysicalMaterial material ) {
+	vec3 f0 = material.specularColor;
+	float f90 = material.specularF90;
+	float roughness = material.roughness;
+	float alpha = pow2( roughness ); // UE4's roughness
+	vec3 halfDir = normalize( lightDir + viewDir );
+	float dotNL = saturate( dot( normal, lightDir ) );
+	float dotNV = saturate( dot( normal, viewDir ) );
+	float dotNH = saturate( dot( normal, halfDir ) );
+	float dotVH = saturate( dot( viewDir, halfDir ) );
+	vec3 F = F_Schlick( f0, f90, dotVH );
+	float V = V_GGX_SmithCorrelated( alpha, dotNL, dotNV );
+	float D = D_GGX( alpha, dotNH );
+	return F * ( V * D );
+}
+
+vec2 DFGApprox( const in vec3 normal, const in vec3 viewDir, const in float roughness ) {
+	float dotNV = saturate( dot( normal, viewDir ) );
+	const vec4 c0 = vec4( - 1, - 0.0275, - 0.572, 0.022 );
+	const vec4 c1 = vec4( 1, 0.0425, 1.04, - 0.04 );
+	vec4 r = roughness * c0 + c1;
+	float a004 = min( r.x * r.x, exp2( - 9.28 * dotNV ) ) * r.x + r.y;
+	vec2 fab = vec2( - 1.04, 1.04 ) * a004 + r.zw;
+	return fab;
+}
+
+void computeMultiscattering( const in vec3 normal, const in vec3 viewDir, const in vec3 specularColor, const in float specularF90, const in float roughness, inout vec3 singleScatter, inout vec3 multiScatter ) {
+	vec2 fab = DFGApprox( normal, viewDir, roughness );
+	vec3 Fr = specularColor;
+	vec3 FssEss = Fr * fab.x + specularF90 * fab.y;
+	float Ess = fab.x + fab.y;
+	float Ems = 1.0 - Ess;
+	vec3 Favg = Fr + ( 1.0 - Fr ) * 0.047619; // 1/21
+	vec3 Fms = FssEss * Favg / ( 1.0 - Ems * Favg );
+	singleScatter += FssEss;
+	multiScatter += Fms * Ems;
+}
+
+void RE_Direct_Physical( const in IncidentLight directLight, const in GeometricContext geometry, const in PhysicalMaterial material, inout ReflectedLight reflectedLight ) {
+	float dotNL = saturate( dot( geometry.normal, directLight.direction ) );
+	vec3 irradiance = dotNL * directLight.color;
+	reflectedLight.directSpecular += irradiance * BRDF_GGX( directLight.direction, geometry.viewDir, geometry.normal, material );
+	reflectedLight.directDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );
+}
+
+void RE_IndirectDiffuse_Physical( const in vec3 irradiance, const in PhysicalMaterial material, inout ReflectedLight reflectedLight ) {
+	reflectedLight.indirectDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );
+}
+
+void RE_IndirectSpecular_Physical(const in GeometricContext geometry, const in PhysicalMaterial material, inout ReflectedLight reflectedLight) {
+	vec3 singleScattering = vec3( 0.0 );
+	vec3 multiScattering = vec3( 0.0 );
+	computeMultiscattering( geometry.normal, geometry.viewDir, material.specularColor, material.specularF90, material.roughness, singleScattering, multiScattering );
+	vec3 totalScattering = singleScattering + multiScattering;
+	vec3 diffuse = material.diffuseColor * ( 1.0 - max( max( totalScattering.r, totalScattering.g ), totalScattering.b ) );
+}
+
+
+  varying vec3 vPosition;
+  uniform bool clip_x;
+  uniform bool clip_y;
+  uniform bool clip_z;
+  uniform float xMin;
+  uniform float xMax;
+  uniform float yMin;
+  uniform float yMax;
+  uniform float zMin;
+  uniform float zMax;
+  uniform float zMinForAnimation;
+  uniform float zMaxForAnimation;
+  uniform int dcgRenderMode;
+
+  
+#ifdef DCG_SUPPORTS_PICKING
+  uniform vec4 pickingColor;
+  // License: MIT License (c) 2014 Mikola Lysenko
+// https://github.com/mikolalysenko/glsl-read-float/blob/master/index.glsl
+
+#define FLOAT_MAX  1.70141184e38
+#define FLOAT_MIN  1.17549435e-38
+
+lowp vec4 encode_float(highp float v) {
+  highp float av = abs(v);
+
+  //Handle special cases
+  if(av < FLOAT_MIN) {
+    return vec4(0.0, 0.0, 0.0, 0.0);
+  } else if(v > FLOAT_MAX) {
+    return vec4(127.0, 128.0, 0.0, 0.0) / 255.0;
+  } else if(v < -FLOAT_MAX) {
+    return vec4(255.0, 128.0, 0.0, 0.0) / 255.0;
+  }
+
+  highp vec4 c = vec4(0,0,0,0);
+
+  //Compute exponent and mantissa
+  highp float e = floor(log2(av));
+  highp float m = av * pow(2.0, -e) - 1.0;
+
+  //Unpack mantissa
+  c[1] = floor(128.0 * m);
+  m -= c[1] / 128.0;
+  c[2] = floor(32768.0 * m);
+  m -= c[2] / 32768.0;
+  c[3] = floor(8388608.0 * m);
+
+  //Unpack exponent
+  highp float ebias = e + 127.0;
+  c[0] = floor(ebias / 2.0);
+  ebias -= c[0] * 2.0;
+  c[1] += floor(ebias) * 128.0;
+
+  //Unpack sign bit
+  c[0] += 128.0 * step(0.0, -v);
+
+  //Scale back to range
+  return c / 255.0;
+}
+
+#endif
+
+    uniform float NaN;
+    uniform float Infinity;
+    #define dcg_PI 3.141592653589793
+    #define dcg_PI_INV 0.3183098861837907
+    
+  float dcg_round(float x);
+  float dcg_hypot(float x, float y);
+  float dcg_rtxsqpone(float x);
+  float dcg_rtxsqmone(float x);
+  float dcg_cos(float x);
+  float dcg_sin(float x);
+  float dcg_tan(float x);
+  float dcg_tanh(float x);
+  vec2 dcg_complex(float u, float v);
+  vec2 dcg_complexDivide(vec2 a, vec2 b);
+
+
+    float dcg_rawpow(float x, float y) {
+  if (isnan(x) || isnan(y)) return NaN;
+  if (y==0.0) return 1.0;
+  if (isinf(y)) {
+    float a = abs(x);
+    if (a == 1.0) return NaN;
+    if (y > 0.0) {
+      return a > 1.0 ? Infinity : 0.0;
+    } else {
+      return a < 1.0 ? Infinity : 0.0;
+    }
+  }
+  if (x > 0.0) return pow(x, y);
+  else if (x == 0.0) {
+    if (y > 0.0) return 0.0;
+    else if (y == 0.0) return 1.0;
+    else return Infinity;
+  } else {
+    float m = mod(y, 2.0);
+    if (m == 1.0) return -pow(-x, y);
+    else return pow(-x, y);
+  }
+}
+float dcg_pow(float x, float y) {
+  if (isnan(x) || isnan(y)) return NaN;
+  if (y==0.0) return 1.0;
+  if (isinf(y)) {
+    float a = abs(x);
+    if (a == 1.0) return NaN;
+    if (y > 0.0) {
+      return a > 1.0 ? Infinity : 0.0;
+    } else {
+      return a < 1.0 ? Infinity : 0.0;
+    }
+  }
+  if (x > 0.0) return pow(x,y);
+  else if (x == 0.0) {
+    if (y > 0.0) return 0.0;
+    if (y == 0.0) return 1.0;
+    if (y < 0.0) return Infinity;
+  } else {
+    float m = mod(y, 2.0);
+    if (m == 0.0) return pow(-x, y);
+    else if (m == 1.0) return -pow(-x, y);
+    else {
+      vec2 a0 = vec2(0.0, 1.0);
+      vec2 a1 = vec2(1.0, 0.0);
+      float approx = y;
+      for (int i=0; i<12; i+=1) {
+        float whole = floor(approx);
+        vec2 a = whole * a1 + a0;
+        if (a.y > 100.0) break;
+        a0 = a1; a1 = a;
+        if (approx == whole) break;
+        approx = 1.0 / (approx - whole);
+      }
+      float r = a1.x / a1.y;
+      float m = max(max(abs(y), abs(r)), 1.0);
+      if (abs(mod(a1.y, 2.0) - 1.0) < 0.01 && abs((r - y)/y) < 0.00001) {
+        return (mod(a1.x, 2.0) == 0.0 ? 1.0 : -1.0) * pow(-x, y);
+      } else {
+        return NaN;
+      }
+    }
+  }
+}
+float dcg_add(float x, float y) {
+  return isnan(x) || isnan(y) ? NaN
+    : isinf(x) && isinf(y) && x != y ? NaN
+    : x + y;
+}
+float dcg_sub(float x, float y) {
+  return isnan(x) || isnan(y) ? NaN
+    : isinf(x) && isinf(y) && x != -y ? NaN
+    : x - y;
+}
+float dcg_mul(float x, float y) {
+  return isnan(x) || isnan(y) ? NaN
+    : isinf(x) && y == 0.0 ? NaN
+    : x == 0.0 && isinf(y) ? NaN
+    : x * y;
+}
+float dcg_div(float x, float y) {
+  return isnan(x) || isnan(y) ? NaN
+    : isinf(x) && isinf(y) ? NaN
+    : x == 0.0 && y == 0.0 ? NaN
+    : x / y;
+}
+float dcg_neg(float x) {
+  return isnan(x) ? NaN : -x;
+}
+float dcg_square(float x) {
+  return x*x;
+}
+bool dcg_equal(float x, float y) {
+  return isnan(x) || isnan(y) ? false : x == y;
+}
+bool dcg_less(float x, float y) {
+  return isnan(x) || isnan(y) ? false : x < y;
+}
+bool dcg_lessEqual(float x, float y) {
+  return isnan(x) || isnan(y) ? false : x <= y;
+}
+bool dcg_greater(float x, float y) {
+  return isnan(x) || isnan(y) ? false : x > y;
+}
+bool dcg_greaterEqual(float x, float y) {
+  return isnan(x) || isnan(y) ? false : x >= y;
+}
+float dcg_gcd2(float u, float v) {
+  for (int i=0; i<95; i++) {
+    if (v == 0.0) break;
+    u = mod(u, v);
+    if (u == 0.0) break;
+    v = mod(v, u);
+  }
+  return u+v;
+}
+float dcg_log1p(float x) {
+  return x - 0.5 * x * x == x ? x : log(1.0 + x);
+}
+bool dcg_isPiMultiple(float absx) {
+  if (absx > 1.0e5) return false;
+  return floor(0.5 + dcg_PI_INV * absx) * dcg_PI == absx;
+}
+bool dcg_isOddHalfPiMultiple(float absx) {
+  if (absx > 1.0e5) return false;
+  float n = floor(0.5 + 2.0 * dcg_PI_INV * absx);
+  return mod(n, 2.0) == 1.0 && n * dcg_PI == 2.0 * absx;
+}
+vec2 dcg_conj(vec2 a) { return vec2(a.x, -a.y); }
+vec2 dcg_subComplexDivide(vec2 a, vec2 b) {
+  float u1 = a.x; float v1 = a.y;
+  float u2 = b.x; float v2 = b.y;
+  float r = v2 / u2;
+  float t = 1.0 / (u2 + v2 * r);
+  if (r == 0.0) {
+    return dcg_complex((u1 + v2 * (v1 / u2)) * t, (v1 - v2 * (u1 / u2)) * t);
+  } else {
+    return dcg_complex((u1 + v1 * r) * t, (v1 - u1 * r) * t);
+  }
+}
+vec2 dcg_complexFromPolarRounded(float r, float theta) {
+  if (isnan(r) || isnan(theta)) return vec2(NaN, NaN);
+  if (r == 0.0) return vec2(0.0, 0.0);
+  return dcg_complex(r * dcg_cos(theta), r * dcg_sin(theta));
+}
+vec2 dcg_complexReciprocal(vec2 z) {
+  return dcg_complexDivide(vec2(1.0,0.0), z);
+}
+float dcg_compareAscendingNaNLast(float x, float y) {
+  float diff = dcg_sub(x,y);
+  return !isnan(diff) ? diff : float(isnan(x)) - float(isnan(y));
+}
+float dcg_compareComplexLexicographic(vec2 x, vec2 y) {
+  float realComparison = dcg_compareAscendingNaNLast(x.x, y.x);
+  return realComparison != 0.0 ? realComparison : dcg_compareAscendingNaNLast(x.y, y.y);
+}
+
+    float dcg_sin(float x){ return isinf(x) || isnan(x) ? NaN : dcg_isPiMultiple(abs(x)) ? 0.0 : sin(x); }
+float dcg_cos(float x){ return isinf(x) || isnan(x) ? NaN : dcg_isOddHalfPiMultiple(abs(x)) ? 0.0 : cos(x); }
+float dcg_tan(float x){ float a=abs(x);
+return isinf(x) || isnan(x) ? NaN
+  : dcg_isPiMultiple(a) ? 0.0
+  : dcg_isOddHalfPiMultiple(a) ? Infinity
+  : tan(x); }
+float dcg_cot(float x){ float a=abs(x);
+return isinf(x) || isnan(x) ? NaN
+  : a < 0.03 ? 1.0/x - x/3.0
+  : dcg_isPiMultiple(a) ? Infinity
+  : dcg_isOddHalfPiMultiple(a) ? 0.0
+  : 1.0 / tan(x); }
+float dcg_sec(float x){ return isinf(x) || isnan(x) ? NaN : dcg_isOddHalfPiMultiple(abs(x)) ? Infinity: 1.0 / cos(x); }
+float dcg_csc(float x){ float a=abs(x);
+return isinf(x) || isnan(x) ? NaN
+  : a < 0.03 ? 1.0/x + x/6.0
+  : dcg_isPiMultiple(a) ? Infinity
+  : 1.0 / sin(x); }
+float dcg_arcsin(float x){ if (isinf(x) || isnan(x)) { return NaN; }
+if (x == 1.0) { return dcg_PI/2.0; }
+if (x == -1.0) { return -dcg_PI/2.0; }
+if (x > 1.0 || x < -1.0) return NaN;
+float y0 = asin(x);
+return y0 + (x - sin(y0)) / cos(y0); }
+float dcg_arccos(float x){ if (isinf(x) || isnan(x)) { return NaN; }
+if (x == 1.0) { return 0.0; }
+if (x == -1.0) { return dcg_PI; }
+if (x > 1.0 || x < -1.0) return NaN;
+float y0 = acos(x);
+return y0 + (cos(y0) - x) / sin(y0); }
+float dcg_arctan(float x, float y){ return isnan(x) || isnan(y) ? NaN
+  : isinf(x) && isinf(y) ?
+    (y > 0.0 ? 0.25 : 0.75) * sign(x) * dcg_PI
+  : x == 0.0 && y == 0.0 ? y
+  : atan(x, y)
+; }
+float dcg_arccot(float x){ return isnan(x) ? NaN : dcg_PI/2.0 - atan(x); }
+float dcg_arcsec(float x){ return isnan(x) ? NaN : dcg_arccos(1.0/x); }
+float dcg_arccsc(float x){ return isnan(x) ? NaN : dcg_arcsin(1.0/x); }
+float dcg_sinh(float x){ return isinf(x) ? x : isnan(x) ? NaN : sinh(x); }
+float dcg_cosh(float x){ return isinf(x) ? Infinity : isnan(x) ? NaN : cosh(x); }
+float dcg_tanh(float x){ return abs(x) > 10.0 ? sign(x) : isnan(x) ? NaN : tanh(x); }
+float dcg_coth(float x){ return abs(x) > 10.0 ? sign(x) : isnan(x) ? NaN : x == 0.0 ? Infinity : abs(x) < 0.03 ? 1.0/x + x/3.0 : 1.0/tanh(x); }
+float dcg_sech(float x){ return isinf(x) ? 0.0 : isnan(x) ? NaN : 1.0/cosh(x); }
+float dcg_csch(float x){ return isinf(x) ? 0.0 : isnan(x) ? NaN : x == 0.0 ? Infinity : abs(x) < 0.03 ? 1.0/x - x/6.0 : 1.0/sinh(x); }
+float dcg_arcsinh(float x){ float a=abs(x);
+return isnan(x) ? NaN : sign(x) * (
+  1.0 + x * x == 1.0
+    ? dcg_log1p(a)
+    : log(a + dcg_rtxsqpone(a))
+); }
+float dcg_arccosh(float x){ return x < 1.0 || isnan(x) ? NaN : log(x + dcg_rtxsqmone(x)); }
+float dcg_arctanh(float x){ if (isnan(x) || abs(x) > 1.0) { return NaN; }
+if (x == 1.0) { return Infinity; }
+if (x == -1.0) { return -Infinity; }
+float y0 = 0.5*(dcg_log1p(x) - dcg_log1p(-x));
+float c = cosh(y0);
+return y0 + (x - tanh(y0)) * c * c; }
+float dcg_arccoth(float x){ return isnan(x) ? NaN : abs(x) >= 1.0 ? dcg_arctanh(1.0/x) : NaN; }
+float dcg_arcsech(float x){ return isnan(x) ? NaN : 0.0 < x && x <= 1.0 ? dcg_arccosh(1.0/x) : x == 0.0 ? Infinity : NaN; }
+float dcg_arccsch(float x){ return isinf(x) ? 0.0 : isnan(x) ? NaN : dcg_arcsinh(1.0/x); }
+float dcg_sinpiSeries(float x){ float xsq = x*x;
+return x*(dcg_PI-xsq*(5.167708-xsq*(2.549761-xsq*0.5890122))); }
+float dcg_sinpi(float x){ if (isnan(x) || isinf(x)) { return NaN; }
+if (x==0.0) { return x; }
+if (x == floor(x)) { return x > 0.0 ? 0.0 : -0.0; }
+int i = int(dcg_round(2.0*x));
+float t = -0.5 * float(i) + x;
+float s = bool(i & 2) ? -1.0 : 1.0;
+float y = bool(i & 1) ? cos(dcg_PI * t) : dcg_sinpiSeries(t);
+return s*y; }
+float dcg_sincpi(float x){ return isnan(x) ? NaN : isinf(x) ? 0.0 : x == 0.0 ? 1.0 : dcg_sinpi(x)/(dcg_PI*x);; }
+float dcg_sqrt(float x){ return isnan(x) ? NaN : x >= 0.0 ? sqrt(x) : NaN; }
+float dcg_rtxsqpone(float x){ return dcg_hypot(x, 1.0); }
+float dcg_rtxsqmone(float x){ float t = x*x; return isnan(x) || t < 1.0 ? NaN : t - 1.0 == t ? abs(x) : sqrt(t - 1.0); }
+float dcg_hypot(float x, float y){ if (isnan(x) || isnan(y)) return NaN;
+if (isinf(x) || isinf(y)) return Infinity;
+x = abs(x);
+y = abs(y);
+float m = max(x,y);
+x /= m;
+y /= m;
+return m == 0.0 ? 0.0 : sqrt(x*x + y*y) * m; }
+float dcg_min(float x, float y){ return isnan(x) || isnan(y) ? NaN : min(x, y); }
+float dcg_max(float x, float y){ return isnan(x) || isnan(y) ? NaN : max(x, y); }
+float dcg_log(float x){ return isnan(x) ? NaN : x > 0.0 ? log(x)*0.4342944819 : x == 0.0 ? -Infinity : NaN; }
+float dcg_logbase(float x, float y){ return isnan(x) || isnan(y) ? NaN
+: y == 1.0 ?
+  (
+    x > 1.0 ? Infinity
+    : x == 1.0 ? NaN
+    : x < 0.0 ? NaN
+    : -Infinity
+  )
+: y > 0.0 ?
+  (
+    x > 0.0 ? log(x)/log(y)
+    : x == 0.0 && !isinf(y) ? -Infinity
+    : NaN
+  )
+: NaN; }
+float dcg_ln(float x){ return isnan(x) ? NaN : x > 0.0 ? log(x) : x == 0.0 ? -Infinity : NaN; }
+float dcg_exp(float x){ return isnan(x) ? NaN : exp(x); }
+float dcg_floor(float x){ return isnan(x) ? NaN : floor(x); }
+float dcg_ceil(float x){ return isnan(x) ? NaN : ceil(x); }
+float dcg_round(float x){ return isinf(x) || isnan(x) ? x : floor(0.5 + x); }
+float dcg_abs(float x){ return isnan(x) ? NaN : abs(x); }
+float dcg_sign(float x){ return isnan(x) ? NaN : sign(x); }
+float dcg_mod(float x, float y){ return isinf(x) || isinf(y) || isnan(x) || isnan(y) || y == 0.0 ? NaN : mod(x, y); }
+float dcg_stirlingPrefactor(float x, float y){ if (isnan(x) || isnan(y)) { return NaN; }
+return pow(x/exp(1.0), y); }
+float dcg_stirlerrSeries(float x){ float S0 = 0.083333336;
+float S1 = 0.0027777778;
+float S2 = 0.0007936508;
+float nn = x*x;
+return (S0-(S1-S2/nn)/nn)/x; }
+float dcg_factorialAsymptotic(float x){ return dcg_stirlingPrefactor(x,x)*sqrt(2.0*dcg_PI*x)*exp(dcg_stirlerrSeries(x)); }
+float dcg_factorialMinimax(float x){ float n1 = 2.1618295;
+    float n2 = 1.5849807;
+    float n3 = 0.4026814;
+    float d1 = 2.2390451;
+    float d2 = 1.6824219;
+    float d3 = 0.43668285;
+
+    float n = 1.0 + x*(n1 + x*(n2 + x*n3));
+    float d = 1.0 + x*(d1 + x*(d2 + x*d3));
+    float xp1 = x+1.0;
+
+    return dcg_stirlingPrefactor(xp1,x)*sqrt(xp1)*(n/d);
+     }
+float dcg_factorialPositive(float x){ return (x>33.0)?Infinity:(x>8.0)?dcg_factorialAsymptotic(x):dcg_factorialMinimax(x);; }
+float dcg_factorial(float x){ if (isnan(x) || (isinf(x) && x < 0.0)) { return NaN; }
+bool isInteger = x == floor(x);
+if (x < 0.0) {
+  if (isInteger) return Infinity;
+  return 1.0 / (dcg_sincpi(x) * dcg_factorialPositive(-x));
+}
+float approx = dcg_factorialPositive(x);
+return isInteger ? dcg_round(approx) : approx; }
+float dcg_distance(vec2 a, vec2 b){ 
+if (any(isnan(a)) || any(isnan(b))) return NaN;
+vec2 d = a-b;
+return dcg_hypot(d.x, d.y); }
+float dcg_distanceThreeD(vec3 a, vec3 b){ 
+if (any(isnan(a)) || any(isnan(b))) return NaN;
+vec3 d = a-b;
+return dcg_hypot(dcg_hypot(d.x, d.y), d.z); }
+vec3 dcg_hsv(float h, float s, float v){ if (isnan(h) || isnan(s) || isnan(v)) {discard;}
+vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+if (isinf(h)) h = 0.0;
+vec3 p = abs(fract(h / 360.0 + K.xyz) * 6.0 - K.www);
+return vec3(clamp(v, 0.0, 1.0) * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), clamp(s, 0.0, 1.0))); }
+vec3 dcg_rgb(float r, float g, float b){ if (isnan(r) || isnan(g) || isnan(b)) {discard;}
+return clamp(vec3(r,g,b),0.0,255.0)/255.0; }
+float dcg_erf(float x){ if (isnan(x)) return NaN;
+float t = abs(x);
+float n = x*x;
+float r = -n;
+return sign(x) * (
+  r < -750.0
+    ? 1.0
+    : t >= 0.065
+    ? 1.0 - exp(r) * (
+      t > 50000000.0
+        ? r / t
+        : t > 50.0
+        ? (r * (n * (n + 4.5) + 2.0)) / (t * (n * (n + 5.0) + 3.75))
+        : ((0.9999999999999999+t*(2.224574423459406+t*(2.444115549920689+
+          t*(1.7057986861852539+t*(0.8257463703357973+
+            t*(0.28647031042892007+t*(0.07124513844341643+
+              t*(0.012296749268608364+t*(0.001347817214557592+
+                0.00007263959403471071*t))))))))
+          )/(1.0+t*(3.352953590554884+t*(5.227518529742423+
+            t*(5.003720878235473+t*(3.266590890998987+
+              t*(1.5255421920765353+t*(0.5185887413188858+
+                t*(0.12747319185915415+t*(0.02185979575963238+
+                  t*(0.0023889438122503674+0.00012875032817508128*t
+          ))))))))))
+        )
+    )
+    : t*(1.1283791670955126+r*(0.37612638903183754+
+        r*(0.11283791670955126+r*(0.026866170645131252+
+          0.005223977625442188*r))))
+); }
+bool dcg_restriction(bool x){ return x; }
+bool dcg_restrictionToBoolean(bool x){ return x; }
+vec2 dcg_complex(float u, float v){ if (isnan(u) || isnan(v)) { return vec2(NaN, NaN); }
+return vec2(u,v); }
+float dcg_real(vec2 c){ return c.x; }
+float dcg_imag(vec2 c){ return c.y; }
+float dcg_arg(vec2 c){ return dcg_arctan(c.y,c.x); }
+float dcg_peelableCoerceComplexToReal(vec2 a){ return a.y == 0.0 ? a.x : NaN; }
+float dcg_coerceComplexToReal(vec2 a){ return a.y == 0.0 ? a.x : NaN; }
+vec2 dcg_coerceRealToComplex(float x){ return isnan(x) ? vec2(NaN, NaN) : vec2(x, 0); }
+vec2 dcg_complexSqrt(vec2 z){ float u = z.x; float v = z.y;
+float r = sqrt(0.5 * (abs(u) + dcg_hypot(u, v)));
+if (r == 0.0 || isnan(v) || isinf(v)) return dcg_complex(r, v);
+if (u > 0.0) return dcg_complex(r, 0.5 * (v / r));
+if (v < 0.0) r = -r;
+return dcg_complex(0.5 * (v / r), r); }
+vec2 dcg_complexDivide(vec2 a, vec2 b){ float u1 = a.x; float v1 = a.y;
+float u2 = b.x; float v2 = b.y;
+if (isnan(u1) || isnan(v1) || isnan(u2) || isnan(v2)) return vec2(NaN, NaN);
+if (isinf(u1) || isinf(v1)) return vec2(NaN, NaN);
+if (u2 == 0.0 && v2 == 0.0) return vec2(NaN, NaN);
+if (isinf(u2) || isinf(v2)) return vec2(0.0, 0.0);
+if (abs(v2) <= abs(u2)) {
+  return dcg_subComplexDivide(a, b);
+} else {
+  return dcg_conj(dcg_subComplexDivide(a.yx, b.yx));
+} }
+vec2 dcg_wirtingerEqualOrWarning(vec2 a, vec2 b){ return b; }
+vec2 dcg_complexLn(vec2 z){ float u = z.x; float v = z.y;
+return dcg_complex(dcg_ln(dcg_hypot(u,v)), dcg_arctan(v,u)); }
+vec2 dcg_complexExp(vec2 z){ float u = z.x; float v = z.y;
+if (isnan(u)) return vec2(NaN, NaN);
+float r = exp(u);
+return v == 0.0 ? vec2(r, 0.0) : dcg_complexFromPolarRounded(r, v); }
+vec2 dcg_complexPow(vec2 z1, vec2 z2){ float u2 = z2.x; float v2 = z2.y;
+float u1 = z1.x; float v1 = z1.y;
+if (isnan(u1) || isnan(v1) || isnan(u2) || isnan(v2))
+  return vec2(NaN, NaN);
+float r1 = dcg_hypot(u1, v1);
+float theta1 = dcg_arctan(v1, u1);
+float rOut = pow(r1, u2) * exp(-theta1 * v2);
+float thetaOut = log(r1) * v2 + theta1 * u2;
+if (!isinf(rOut)) {
+  return dcg_complexFromPolarRounded(rOut, thetaOut);
+} else {
+  return dcg_complexFromPolarRounded(
+    exp(u2 * log(r1) - theta1 * v2),
+    thetaOut
+  );
+}
+ }
+vec2 dcg_complexSin(vec2 z){ float u = z.x; float v = z.y;
+return dcg_complex(dcg_sin(u) * dcg_cosh(v), dcg_cos(u) * dcg_sinh(v)); }
+vec2 dcg_complexCos(vec2 z){ float u = z.x; float v = z.y;
+return dcg_complex(dcg_cos(u) * dcg_cosh(v), -dcg_sin(u) * dcg_sinh(v)); }
+vec2 dcg_complexSinh(vec2 z){ float u = z.x; float v = z.y;
+return dcg_complex(dcg_sinh(u) * dcg_cos(v), dcg_cosh(u) * dcg_sin(v)); }
+vec2 dcg_complexCosh(vec2 z){ float u = z.x; float v = z.y;
+return dcg_complex(dcg_cosh(u) * dcg_cos(v), dcg_sinh(u) * dcg_sin(v)); }
+vec2 dcg_complexTanh(vec2 z){ float u = z.x; float v = z.y;
+      float tanv = dcg_tan(v); float tanhu = dcg_tanh(u);
+      if (isnan(tanv) || isnan(tanhu)) return vec2(NaN, NaN);
+      if (isinf(tanv)) return vec2(1.0 / tanhu, 0.0);
+
+      float tanv2 = tanv * tanv;
+      float secv2 = 1.0 + tanv2;
+      float sinhu = dcg_sinh(u);
+      float sinhu2 = sinhu * sinhu;
+      float tanhu2 = tanhu * tanhu;
+      return dcg_complex(
+        (secv2 * tanhu) / (1.0 + tanv2 * tanhu2),
+        tanv / (1.0 + secv2 * sinhu2)
+      ); }
+vec2 dcg_complexTan(vec2 z){ float u = z.x; float v = z.y;
+vec2 t = dcg_complexTanh(vec2(-v, u));
+return vec2(t.y, -t.x); }
+vec2 dcg_complexSec(vec2 z){ return dcg_complexReciprocal(dcg_complexCos(z)); }
+vec2 dcg_complexCsc(vec2 z){ return dcg_complexReciprocal(dcg_complexSin(z)); }
+vec2 dcg_complexCot(vec2 z){ return dcg_complexReciprocal(dcg_complexTan(z)); }
+vec2 dcg_complexSech(vec2 z){ return dcg_complexReciprocal(dcg_complexCosh(z)); }
+vec2 dcg_complexCsch(vec2 z){ return dcg_complexReciprocal(dcg_complexSinh(z)); }
+vec2 dcg_complexCoth(vec2 z){ return dcg_complexReciprocal(dcg_complexTanh(z)); }
+vec2 dcg_complexLogbase(vec2 z, vec2 base){ 
+float u = z.x; float v = z.y;
+float bu = base.x; float bv = base.y;
+if (any(isnan(z)) || any(isnan(base))) return vec2(NaN, NaN);
+if (bv == 0.0 && bu == 0.0) return vec2(NaN, NaN);
+if (u == 0.0 && v == 0.0) return vec2(-Infinity, 0);
+return dcg_complexDivide(dcg_complexLn(z), dcg_complexLn(base)); }
+vec2 dcg_complexLog(vec2 z){ return dcg_complexLogbase(z, vec2(10.0,0.0)); }
+    
+    
+    
+    
+uniform int uDepthPeel; // 1 or 0
+uniform vec2 uInverseScreenSize;
+uniform highp sampler2D uOpaqueDepthTexture;
+uniform highp sampler2D uPrevDepthTexture;
+uniform int uDepthPeelLayer;
+uniform float uDepthOffset;
+
+    
+
+
+
+void main() {
+
+    if (clip_x && (vPosition.x < xMin || vPosition.x > xMax)) {discard;}
+  if (clip_y && (vPosition.y < yMin || vPosition.y > yMax)) {discard;}
+  if (clip_z && (vPosition.z < zMin || vPosition.z > zMax)) {discard;}
+  if ((vPosition.z < zMinForAnimation) || (vPosition.z > zMaxForAnimation)) {discard;}
+
+  if (uDepthPeel != 0) {
+    vec2 screenPos = gl_FragCoord.xy * uInverseScreenSize;
+    float opaqueDepth = texture2D(uOpaqueDepthTexture, screenPos).x;
+    if (opaqueDepth + uDepthOffset - gl_FragCoord.z < 0.0) {
+      discard;
+    }
+
+    if(uDepthPeelLayer != 0){
+      vec4 texel = texture2D(uPrevDepthTexture,screenPos);
+      float prevDepth = texel.x;
+      if(prevDepth + uDepthOffset - gl_FragCoord.z >= 0. ){
+        discard;
+      }
+    }
+  }
+vec4 diffuseColor = vec4( diffuse, opacity );
+
+	#if defined( USE_COLOR  ) || defined( USE_INSTANCING_COLOR  )
+		diffuseColor.rgb = vColor;
+	#endif
+
+	
+
+	ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
+	vec3 totalEmissiveRadiance = emissive;
+
+	
+#ifdef USE_MAP
+	diffuseColor *= texture2D( map, vMapUv );
+#endif
+
+#ifdef USE_ALPHATEST
+	if ( diffuseColor.a < alphaTest ) discard;
+#endif
+
+	float roughnessFactor = roughness;
+	float metalnessFactor = metalness;
+	float faceDirection = gl_FrontFacing ? 1.0 : - 1.0;
+	vec3 normal = normalize( vNormal );
+	#ifdef DOUBLE_SIDED
+		normal *= faceDirection;
+	#endif
+
+	// non perturbed normal for clearcoat among others
+	vec3 geometryNormal = normal;
+
+	// accumulation
+	
+PhysicalMaterial material;
+material.diffuseColor = diffuseColor.rgb * ( 1.0 - metalnessFactor );
+
+vec3 dxy = max( abs( dFdx( geometryNormal ) ), abs( dFdy( geometryNormal ) ) );
+float geometryRoughness = max( max( dxy.x, dxy.y ), dxy.z );
+
+material.roughness = max( roughnessFactor, 0.0525 );// 0.0525 corresponds to the base mip of a 256 cubemap.
+material.roughness += geometryRoughness;
+material.roughness = min( material.roughness, 1.0 );
+material.specularColor = mix( vec3( 0.04 ), diffuseColor.rgb, metalnessFactor );
+material.specularF90 = 1.0;
+
+GeometricContext geometry;
+geometry.normal = normal;
+geometry.viewDir = ( isOrthographic ) ? vec3( 0, 0, 1 ) : normalize( vViewPosition );
+
+IncidentLight directLight;
+
+#if ( 2 > 0 )
+	DirectionalLight directionalLight;
+	
+		directionalLight = directionalLights[ 0 ];
+		getDirectionalLightInfo( directionalLight, geometry, directLight );
+		RE_Direct_Physical( directLight, geometry, material, reflectedLight );
+	
+		directionalLight = directionalLights[ 1 ];
+		getDirectionalLightInfo( directionalLight, geometry, directLight );
+		RE_Direct_Physical( directLight, geometry, material, reflectedLight );
+	
+#endif
+
+vec3 irradiance = getAmbientLightIrradiance( ambientLightColor );
+RE_IndirectDiffuse_Physical( irradiance, material, reflectedLight );
+
+RE_IndirectSpecular_Physical( geometry, material, reflectedLight );
+
+
+	// modulation
+
+	vec3 totalDiffuse = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse;
+	vec3 totalSpecular = reflectedLight.directSpecular + reflectedLight.indirectSpecular;
+
+	vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;
+
+	#ifdef DCG_SUPPORTS_PICKING
+if (dcgRenderMode == 1) {
+  #if defined(USE_INSTANCING_PICKINGCOLOR) || defined(USE_VERTEX_PICKING_COLOR)
+  gl_FragColor = vPickingColor;
+  #else
+  gl_FragColor = pickingColor;
+  #endif
+  return;
+} else if (dcgRenderMode == 2) {
+  gl_FragColor = encode_float(vPosition.x);
+  return;
+} else if (dcgRenderMode == 3) {
+  gl_FragColor = encode_float(vPosition.y);
+  return;
+} else if (dcgRenderMode == 4) {
+  gl_FragColor = encode_float(vPosition.z);
+  return;
+}
+#endif
+
+
+	
+#ifdef OPAQUE
+  diffuseColor.a = 1.0;
+#endif
+
+gl_FragColor = vec4( outgoingLight, diffuseColor.a );
+gl_FragColor = linearToOutputTexel( gl_FragColor );
+
+#ifdef PREMULTIPLIED_ALPHA
+	// Get get normal blending with premultipled, use with CustomBlending, OneFactor, OneMinusSrcAlphaFactor, AddEquation.
+	gl_FragColor.rgb *= gl_FragColor.a;
+#endif
+
+
+	
+
+	  gl_FragColor = LinearTosRGB( gl_FragColor );
+
+
+	if (uDepthPeel == 1) {
+		// When depth peeling, we render with transparent: false, which causes <opaque_fragment> to set gl_FragColor.a = 1.
+		// We need to set it back to the correct value so that it can be respsected in compositing.
+		gl_FragColor.a = opacity;
+	}
+}

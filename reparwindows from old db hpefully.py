@@ -1,3 +1,6 @@
+#i bricked my windows by deleating the StateRepository database
+#this script adds some entries from the old db and was able to bring my system back
+#
 import sqlite3
 
 
