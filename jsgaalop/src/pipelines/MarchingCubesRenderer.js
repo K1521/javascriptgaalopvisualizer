@@ -9,21 +9,48 @@ import { PackedVoxelGrid } from "../voxelutil/PackedVoxelGrid.js";
 
 
 
-export class Voxelrenderer extends LazyRenderingPipeline{
+export class MarchingCubesRenderer extends LazyRenderingPipeline{
 
   constructor(gl,visgraph, vertexshader,color) {
     super(() => {
 
-
+      this.scale=4;
       this.maxlevel=10;//dont set higher than 10
       this.maxvoxel=3750000;//max vertCount is 30000000 so definetly dont subdivide if there are more than 30000000/8=3750000
 
       this.visgraph=visgraph;
       this.gl = gl;
       //vertexshader=testvoxelshader;
-      
+      vertexshader=visgraph.gencode(vertexshader);
 
-      this.voxelfilter=new PackedVoxelGridFilter(gl,vertexshader,visgraph);   
+      //setup voxel subdivision
+      this.voxelshader = new Shader(gl,vertexshader, null, ["outPackedVoxel"]);
+
+
+      //input vao and buffer
+      this.vao = gl.createVertexArray();
+      gl.bindVertexArray(this.vao);
+      this.inbuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.inbuffer);
+      const voxel_positionAttribLoc = this.voxelshader.getAttribLocation("inPackedVoxel"); 
+      gl.enableVertexAttribArray(voxel_positionAttribLoc);
+      gl.vertexAttribIPointer(voxel_positionAttribLoc, 1, gl.INT, 0, 0); // integer attribute
+      gl.bindVertexArray(null);
+
+
+      //output transform feedback and buffer
+      this.tf = gl.createTransformFeedback();
+
+      //this.chunkSize = 4096;
+      this.outbuffer = gl.createBuffer();
+      gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, this.outbuffer);
+      //gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER, this.chunkSize * 4, gl.DYNAMIC_READ);//4 bytes per int
+
+      gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.tf);
+      gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.outbuffer);
+
+      gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+
 
       //setup point rendering
       this.pointbuffer = gl.createBuffer();
@@ -64,71 +91,6 @@ export class Voxelrenderer extends LazyRenderingPipeline{
     this.paramsversion = ctx.paramsversion;
 
     const gl = this.gl;
-    //voxel to points
-    const voxelGrid=new PackedVoxelGrid([[-this.scale,this.scale],[-this.scale,this.scale],[-this.scale,this.scale]]);
-    this.voxelfilter.apply(voxelGrid,ctx);
-
-    const points=voxelGrid.getPositions(0.5,0.5,0.5);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.pointbuffer);
-    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(points) , gl.STATIC_DRAW);
-    this.pointbuffer_size=voxelGrid.length;
-
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-  }
-
-
-  isTilable(){return false;}
-}
-
-
-
-
-class PackedVoxelGridFilter{
-  constructor(gl,vertexshader,visgraph){
-      this.maxlevel=10;//dont set higher than 10
-      this.maxvoxel=3750000;//max vertCount is 30000000 so definetly dont subdivide if there are more than 30000000/8=3750000
-      this.scale=4;
-      this.gl = gl;
-      this.visgraph=visgraph;
-
-
-    vertexshader=visgraph.gencode(vertexshader);
-      this.voxelshader = new Shader(gl,vertexshader, null, ["outPackedVoxel"]);
-
-
-      //input vao and buffer
-      this.vao = gl.createVertexArray();
-      gl.bindVertexArray(this.vao);
-      this.inbuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.inbuffer);
-      const voxel_positionAttribLoc = this.voxelshader.getAttribLocation("inPackedVoxel"); 
-      gl.enableVertexAttribArray(voxel_positionAttribLoc);
-      gl.vertexAttribIPointer(voxel_positionAttribLoc, 1, gl.INT, 0, 0); // integer attribute
-      gl.bindVertexArray(null);
-
-
-      //output transform feedback and buffer
-      this.tf = gl.createTransformFeedback();
-
-      //this.chunkSize = 4096;
-      this.outbuffer = gl.createBuffer();
-      gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, this.outbuffer);
-      //gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER, this.chunkSize * 4, gl.DYNAMIC_READ);//4 bytes per int
-
-      gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.tf);
-      gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.outbuffer);
-
-      gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
-
-  }
-/**
- * 
- * @param {PackedVoxelGrid} voxelGrid 
- * @param {RenderingContext} ctx 
- */
-  apply(voxelGrid,ctx){
-    const gl = this.gl;
 
 
     //voxel subdivision
@@ -136,11 +98,7 @@ class PackedVoxelGridFilter{
     this.voxelshader.use();
     this.visgraph.setuniforms(ctx.nodecache,this.voxelshader);
    
-    //gl.uniform1f(this.voxelshader.getUniformLocation("scale"),this.scale); 
-    const boundsMin = [voxelGrid.minx, voxelGrid.miny, voxelGrid.minz];
-    this.voxelshader.uniform3fv("boundsMin", boundsMin);
-    const boundsMax = [voxelGrid.maxx, voxelGrid.maxy, voxelGrid.maxz];
-    this.voxelshader.uniform3fv("boundsMax", boundsMax);
+    gl.uniform1f(this.voxelshader.getUniformLocation("scale"),this.scale); 
 
 
     gl.bindVertexArray(this.vao);
@@ -152,7 +110,8 @@ class PackedVoxelGridFilter{
 
     //let inarray = [0];
     
-    
+    const voxelGrid=new PackedVoxelGrid([[-this.scale,this.scale],[-this.scale,this.scale],[-this.scale,this.scale]]);
+
 
     while (voxelGrid.level <this.maxlevel && voxelGrid.length<this.maxvoxel) {
       //for (; level < 6; level++) inarray=this.subdivideVoxels(inarray, level-1);
@@ -163,7 +122,12 @@ class PackedVoxelGridFilter{
       /*if(inarray.some(x=>this.packVoxel(this.unpackVoxel(x))!=x)){
         throw new Error("bad voxel packing");
       }*/
-    
+      voxelGrid.voxels.forEach(x=>{
+        if(this.packVoxel(...this.unpackVoxel(x))!=x){
+          throw new Error("bad voxel packing");
+        }
+      })
+
       console.log(voxelGrid.level,voxelGrid.length);
       gl.uniform1i(this.voxelshader.getUniformLocation("level"), voxelGrid.level);
       //console.log("in",inarray);
@@ -230,12 +194,88 @@ class PackedVoxelGridFilter{
       //console.log(inarray.map(x=>this.unpackVoxel(x)));
       //this.level=level;
     }
-    gl.bufferData(gl.ARRAY_BUFFER, 0, gl.STATIC_DRAW);
+
     //gl.endTransformFeedback();
     gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
     gl.disable(gl.RASTERIZER_DISCARD);
     gl.bindVertexArray(null);
-    
 
+    //voxel to points
+
+
+    const points=voxelGrid.getPositions(0.5,0.5,0.5);
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.pointbuffer);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(points) , gl.STATIC_DRAW);
+    this.pointbuffer_size=voxelGrid.length;
+
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
   }
+
+  voxelEdgeLength(level) {
+    // Total divisions along one axis at max level is 2^10 (1024)
+    // At level 0: 1 voxel spans the entire [-1,1] range → length = 2.0
+    // Each level subdivides by factor of 2, so edge length halves each level
+    // So edge length = 2.0 / 2^level
+
+    return 2.0 / (1 << level);
+  }
+
+
+
+  packVoxel(x, y, z) {
+    if(x>0x3FF || y>0x3FF || z>0x3FF)throw new Error("coord out of bounds");
+    return ( (z & 0x3FF) << 20 ) | ( (y & 0x3FF) << 10 ) | (x & 0x3FF);
+  }
+  unpackVoxel(packed) {
+    // packed is an int 
+    // We use >>> 0 to treat as unsigned 32-bit integer
+    const u = packed >>> 0;//not actually needed
+    //const u=packed;
+    const x = u & 0x3FF;           // lower 10 bits
+    const y = (u >>> 10) & 0x3FF;  // next 10 bits
+    const z = (u >>> 20) & 0x3FF;  // next 10 bits
+    return [x,y,z];
+  }
+
+  voxelToPosition(voxelCoords) {
+    // voxelCoords: [x, y, z], each in [0..1023]
+
+    return voxelCoords.map(c => this.scale*((c) * (2.0 / 1024.0) - 1.0));
+  }
+
+  /**
+   * Given an array of packed voxels and current subdivision level,
+   * returns a flat array of their 8 child voxels each.
+   * 
+   * @param {number[]} parentVoxels - array of packed voxels (ints)
+   * @param {number} currentLevel - subdivision level (0 to 9)
+   * @returns {number[]} Array of packed child voxels
+  */
+  subdivideVoxels(parentVoxels, currentLevel) {
+    const step = 1 << (10 - currentLevel - 1);
+    //const dx = step;
+    //const dy = step << 10;
+    //const dz = step << 20;
+    const dx = this.packVoxel(step, 0, 0);
+    const dy = this.packVoxel(0, step, 0);
+    const dz = this.packVoxel(0, 0, step);
+    //console.log(dx,this.unpackVoxel(dx),currentLevel);
+    if(currentLevel==10){
+      throw new Error("level to high");
+    }
+
+    return parentVoxels.flatMap(packedVoxel => [
+      packedVoxel,
+      packedVoxel + dx,
+      packedVoxel + dy,
+      packedVoxel + dz,
+      packedVoxel + dx + dy,
+      packedVoxel + dx + dz,
+      packedVoxel + dy + dz,
+      packedVoxel + dx + dy + dz,
+    ]);
+  }
+
+  isTilable(){return false;}
 }

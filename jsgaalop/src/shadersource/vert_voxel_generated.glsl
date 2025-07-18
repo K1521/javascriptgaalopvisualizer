@@ -9,7 +9,9 @@ in int inPackedVoxel;
 flat out int outPackedVoxel;
 
 uniform int level;
-uniform float scale;
+//uniform float scale;
+uniform vec3 boundsMin;
+uniform vec3 boundsMax;
 
 ivec3 unpackVoxel(int packed) {
     uint u = uint(packed);
@@ -19,10 +21,18 @@ ivec3 unpackVoxel(int packed) {
     return ivec3(x, y, z);
 }
 
+
 vec3 voxelToPosition(ivec3 voxelCoords) {
+    // Normalize voxel coords to [0,1]
+    vec3 t = vec3(voxelCoords) / 1024.0;
+
+    // Linear interpolate between boundsMin and boundsMax
+    return mix(boundsMin, boundsMax, t);
+}
+/*vec3 voxelToPosition(ivec3 voxelCoords) {
     //return vec3(voxelCoords) * (2.0 / 1024.0) - 1.0;//maps to [-1,1]
     return scale*vec3(voxelCoords-ivec3(512)) / (512.0);//potentially more precision (like 1 bit)
-}
+}*/
 
 int packVoxel(ivec3 coords) {
     return int((coords.z << 20u) | (coords.y << 10u) | coords.x);

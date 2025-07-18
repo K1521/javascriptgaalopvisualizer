@@ -61,6 +61,42 @@ void main() {
 
 export const pointshaderfactory=new ShaderCache(null,vShader,fShader);
 
+class PointShader{
+  constructor(gl){
+      this.gl=gl;
+      this.count=0;
+      this.shader=pointshaderfactory.getcached(gl);
+      
+      this.vao=gl.createVertexArray();
+      gl.bindVertexArray(this.vao);
+      this.pointbuffer = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER,  this.pointbuffer);
+      const positionAttribLoc=this.shader.getAttribLocation("position");
+      gl.enableVertexAttribArray(positionAttribLoc);
+      gl.vertexAttribPointer(positionAttribLoc, 3, gl.FLOAT, false, 0, 0);
+      gl.bindVertexArray(null);
+  }
+  render(ctx,color){
+    const gl=this.gl;
+    this.shader.use();
+    this.shader.uniform4fv('incolor', [color.r,color.g,color.b,1.0]);
+    ctx.updateUniforms(this.shader); // sets cameraPos and cameraMatrix and windowsize
+    gl.bindVertexArray(this.vao);
+    gl.drawArrays(gl.POINTS, 0, this.count);
+    gl.bindVertexArray(null);
+  }
+  setpoints(points){
+    const gl=this.gl;
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.pointbuffer);
+    this.count=points.length/3;
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points), gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+  }
+
+}
+
+
 export class pointcloudrenderer extends LazyRenderingPipeline{
 
   
@@ -81,22 +117,14 @@ export class pointcloudrenderer extends LazyRenderingPipeline{
       this.orthshader=orthshader;  
 
 
-      this.pointbuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.pointbuffer);
+      
 
-      this.pointshader=pointshaderfactory.getcached(gl);
+      this.pointshader=new PointShader(gl);
 
       this.color=color;
       
 
 
-      this.pointvao=gl.createVertexArray();
-      gl.bindVertexArray(this.pointvao);
-      gl.bindBuffer(gl.ARRAY_BUFFER,  this.pointbuffer);
-      const positionAttribLoc=this.pointshader.getAttribLocation("position");
-      gl.enableVertexAttribArray(positionAttribLoc);
-      gl.vertexAttribPointer(positionAttribLoc, 3, gl.FLOAT, false, 0, 0);
-      gl.bindVertexArray(null);
 
       /*const allpoints = this.renderorth();
       //const pointBuffers = allpoints.map(obj => new Float32Array(obj.flat()));
@@ -112,7 +140,7 @@ export class pointcloudrenderer extends LazyRenderingPipeline{
 
 
       //...make point renderer
-      this.count=0;
+      
       
     });
   }
@@ -220,10 +248,7 @@ export class pointcloudrenderer extends LazyRenderingPipeline{
     gl.bindVertexArray(null);
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.pointbuffer);
-    this.count=points.length;
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(points.flat()), gl.STATIC_DRAW);
-
+    this.pointshader.setpoints(points.flat());
 
   }
 
@@ -231,12 +256,7 @@ export class pointcloudrenderer extends LazyRenderingPipeline{
     const gl = this.gl;
     gl.depthFunc(gl.LESS);
     gl.enable(gl.DEPTH_TEST);
-    this.pointshader.use();
-    gl.uniform4fv(this.pointshader.getUniformLocation('incolor'), [this.color.r,this.color.g,this.color.b,1.0]);
-    ctx.updateUniforms(this.pointshader); // sets cameraPos and cameraMatrix and windowsize
-    gl.bindVertexArray(this.pointvao);
-    gl.drawArrays(gl.POINTS, 0, this.count);
-    gl.bindVertexArray(null);
+    this.pointshader.render(ctx,this.color);
   }
 
 

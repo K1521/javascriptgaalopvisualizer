@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vertex Data Generation + Query Benchmark</title>
+  <style>
+    body { font-family: monospace; white-space: pre; }
+  </style>
+</head>
+<body>
+  <div id="output">Running combined benchmark...</div>
+
+  <script>
+    const COUNT = 100000;
+    const CYCLES = 500;
+
+    function randomFloat() {
+      return Math.random();
+    }
+
+    // Test 1: Map<key, [f, dx, dy, dz]>
+    function test1() {
+      const map = new Map();
+      const keys = [];
+      for (let i = 0; i < COUNT; i++) {
+        const key = i.toString(36);
+        keys.push(key);
+        map.set(key, [randomFloat(), randomFloat(), randomFloat(), randomFloat()]);
+      }
+      let sum = 0;
+      for (let i = 0; i < COUNT; i++) {
+        const v = map.get(keys[i]);
+        sum += v[0] + v[1] + v[2] + v[3];
+      }
+      return sum;
+    }
+
+    // Test 2: Map<key, {f, dx, dy, dz}>
+    function test2() {
+      const map = new Map();
+      const keys = [];
+      for (let i = 0; i < COUNT; i++) {
+        const key = i.toString(36);
+        keys.push(key);
+        map.set(key, { f: randomFloat(), dx: randomFloat(), dy: randomFloat(), dz: randomFloat() });
+      }
+      let sum = 0;
+      for (let i = 0; i < COUNT; i++) {
+        const v = map.get(keys[i]);
+        sum += v.f + v.dx + v.dy + v.dz;
+      }
+      return sum;
+    }
+
+    // Test 3: Map<key, index> + Float32Array
+    function test3() {
+      const map = new Map();
+      const keys = [];
+      const data = new Float32Array(COUNT * 4);
+      for (let i = 0; i < COUNT; i++) {
+        const key = i.toString(36);
+        keys.push(key);
+        const base = i * 4;
+        data[base] = randomFloat();
+        data[base + 1] = randomFloat();
+        data[base + 2] = randomFloat();
+        data[base + 3] = randomFloat();
+        map.set(key, i);
+      }
+      let sum = 0;
+      for (let i = 0; i < COUNT; i++) {
+        const idx = map.get(keys[i]) * 4;
+        sum += data[idx] + data[idx + 1] + data[idx + 2] + data[idx + 3];
+      }
+      return sum;
+    }
+
+    // Test 4: Random baseline (Map<index,index> + plain array)
+    function test4() {
+      const map = new Map();
+      const data = [];
+      for (let i = 0; i < COUNT; i++) {
+        data.push(randomFloat());
+        data.push(randomFloat());
+        data.push(randomFloat());
+        data.push(randomFloat());
+        map.set(i, i);
+      }
+      let sum = 0;
+      for (let i = 0; i < COUNT; i++) {
+        const base = map.get(keys[i]) * 4;
+        sum += data[base] + data[base + 1] + data[base + 2] + data[base + 3];
+      }
+      return sum;
+    }
+
+    // Test 5: Plain Float32Array sum (generate + sum)
+    function test5() {
+      const data = new Float32Array(COUNT * 4);
+      for (let i = 0; i < data.length; i++) {
+        data[i] = randomFloat();
+      }
+      let sum = 0;
+      for (let i = 0; i < data.length; i++) {
+        sum += data[i];
+      }
+      return sum;
+    }
+
+    const funcs = [test1, test2, test3, test4, test5];
+    const names = [
+      'Map<key, [f,dx,dy,dz]>',
+      'Map<key, {f,dx,dy,dz}>',
+      'Map<key, index> + Float32Array',
+      'Random baseline (Map<index,index> + Array)',
+      'Plain Float32Array generate+sum'
+    ];
+
+    const times = new Array(funcs.length).fill(0);
+    const runs = new Array(funcs.length).fill(0);
+    const output = document.getElementById('output');
+
+    async function runBenchmark() {
+      for (let cycle = 0; cycle < CYCLES; cycle++) {
+        const fnIndex = cycle % funcs.length;
+        const func = funcs[fnIndex];
+        const t0 = performance.now();
+        const sum = func();
+        const t1 = performance.now();
+        times[fnIndex] += (t1 - t0);
+        runs[fnIndex]++;
+
+        if ((cycle + 1) % 10 === 0) {
+          let report = `Cycle ${cycle + 1} / ${CYCLES}\n`;
+          for (let i = 0; i < funcs.length; i++) {
+            report += `${names[i]}: ${(times[i] / runs[i]).toFixed(2)} ms avg\n`;
+          }
+          report += `Last sum (prevent optimize out): ${sum.toFixed(3)}`;
+          output.textContent = report;
+          await new Promise(r => setTimeout(r, 10)); // Yield to UI
+        }
+      }
+      output.textContent += `\nBenchmark complete!`;
+    }
+
+    runBenchmark();
+  </script>
+</body>
+</html>

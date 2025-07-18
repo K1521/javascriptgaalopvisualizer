@@ -296,24 +296,34 @@ export class Shader{
     return shader;
   }
 
+  resolveUniformLocation(nameOrLocation) {
+    return (typeof nameOrLocation === "string")
+      ? this.getUniformLocation(nameOrLocation)
+      : nameOrLocation;
+  }
+
+  uniform1i(nameOrLocation, value) {
+    const loc = this.resolveUniformLocation(nameOrLocation);
+    if (loc === null) return;
+    this.gl.uniform1i(loc, value);
+  }
 
   uniform2fv(nameOrLocation, value) {
-    //maybe check if shader is in use
-    const loc = (typeof nameOrLocation === "string")
-        ? this.getUniformLocation(nameOrLocation)
-        : nameOrLocation;
-
+    const loc = this.resolveUniformLocation(nameOrLocation);
     if (loc === null) return;
     this.gl.uniform2fv(loc, value);
   }
-  uniform1i(nameOrLocation, value) {
-    //maybe check if shader is in use
-    const loc = (typeof nameOrLocation === "string")
-        ? this.getUniformLocation(nameOrLocation)
-        : nameOrLocation;
 
+  uniform3fv(nameOrLocation, value) {
+    const loc = this.resolveUniformLocation(nameOrLocation);
     if (loc === null) return;
-    this.gl.uniform1i(loc, value);
+    this.gl.uniform3fv(loc, value);
+  }
+
+  uniform4fv(nameOrLocation, value) {
+    const loc = this.resolveUniformLocation(nameOrLocation);
+    if (loc === null) return;
+    this.gl.uniform4fv(loc, value);
   }
 
 
