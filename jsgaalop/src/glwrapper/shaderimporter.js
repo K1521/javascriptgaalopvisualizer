@@ -61,7 +61,8 @@ export const shaderSources = {//for code highliting
  * @returns {Generator<{ type: 'code' | 'include', value: string, line: number }>}
  */
 function* extractIncludes(shaderCode) {
-  const includeRegex = /^\s*\/\/\s*#include\s+"([^"]+)"\s*$/gm;
+  //const includeRegex = /^\s*\/\/\s*#include\s+"([^"]+)"\s*$/gm;
+  const includeRegex = /^#include\s+"([^"]+)"\s*$/gm;
 
   let lastIndex = 0;
   let currentLine = 1;
