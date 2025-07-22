@@ -18,8 +18,8 @@ import { PackedVoxelGridFilter } from "./Voxelrenderer.js";
  * @param {number} [epsilon=1e-10] - Tolerance for near-zero check.
  * @returns {boolean} True if vector length is less than epsilon.
  */
-function isVec3NearZero([x, y, z], epsilon = 1e-10) {
-  return x * x + y * y + z * z < epsilon * epsilon;
+function isVec3NearZero([x, y, z], epsilon = 0) {
+  return x * x + y * y + z * z <= epsilon * epsilon;
 }
 
 /**
@@ -318,7 +318,7 @@ export class MarchingCubesRenderer extends LazyRenderingPipeline{
     this.visgraph.setuniforms(ctx,this.gaussnewton.shader);
     const [evaluationresults]=this.gaussnewton.transform(voxelvertices.getVertices());
     const [vertflat,triflat]=this.marchingcubes(voxelvertices,evaluationresults);
-    this.count=triflat.length/3;
+    this.count=vertflat.length;
     gl.bindBuffer(gl.ARRAY_BUFFER,this.pointbuffer);
     gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertflat),gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER,null);
