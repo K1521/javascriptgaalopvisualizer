@@ -6,9 +6,9 @@ precision mediump float;
 
 
 
-//#//include "../common/utilfrag.glsl"
-//#//include "../common/util.glsl"
-//#include "../common/generated_functions.glsl"
+//#include "../common/utilfrag.glsl"
+//#include "../common/util.glsl"
+#include "../common/generated_functions.glsl"
 
 
 in vec3 position;
