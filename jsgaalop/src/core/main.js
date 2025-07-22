@@ -17,6 +17,7 @@ import { simplerenderer } from "../pipelines/simplerenderer.js";
 import { matrixrenderer } from "../pipelines/matrixrenderer.js";
 import { Voxelrenderer } from "../pipelines/Voxelrenderer.js";
 import { addPipelineSelectorForObject } from "../ui/PipelineSelector.js";
+import { MarchingCubesRenderer } from "../pipelines/MarchingCubesRenderer.js";
 
 
 
@@ -419,8 +420,8 @@ async function main(){
     obj.addPipeline("aberth_matrix",new matrixrenderer(context,gl,visgraph,matex,shaderSources.fragTemplateAberthMatrix,color));
     obj.addPipeline("voxelpoint",new Voxelrenderer(gl,visgraph,shaderSources.vertTemplateVoxel,color));
     obj.addPipeline("voxelpoint2",new Voxelrenderer(gl,visgraph,shaderSources.vertTemplateVoxelBool,color));
+    obj.addPipeline("marching_cubes",new MarchingCubesRenderer(gl,visgraph,shaderSources.vertTemplateVoxelBool,shaderSources.computeTemplatexyzDual,color));
 
-    
     //obj.setActivePipeline("voxelpoint2");
     //context.updateParams();
     //obj.setActivePipeline("aberth");

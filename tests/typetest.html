@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head><title>Transform Feedback Varying Types</title></head>
+<body>
+<canvas id="glcanvas" width="1" height="1"></canvas>
+<script>
+const canvas = document.getElementById("glcanvas");
+const gl = canvas.getContext("webgl2");
+if (!gl) {
+  alert("WebGL2 not supported");
+}
+
+// Simple shader that outputs a vec3 and a float
+const vsSource = `#version 300 es
+in vec3 position;
+out vec3 v_position;
+out float v_length;
+
+void main() {
+  v_position = position;
+  v_length = length(position);
+  gl_Position = vec4(position, 1.0);
+}`;
+
+const varyings = ["v_position", "v_length"];
+
+// Compile shader
+function createShader(gl, type, source) {
+  const shader = gl.createShader(type);
+  gl.shaderSource(shader, source);
+  gl.compileShader(shader);
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    throw new Error(gl.getShaderInfoLog(shader));
+  }
+  return shader;
+}
+
+const vs = createShader(gl, gl.VERTEX_SHADER, vsSource);
+const fs = createShader(gl, gl.FRAGMENT_SHADER, `#version 300 es
+precision highp float;
+out vec4 outColor;
+void main() { outColor = vec4(1.0); }
+`);
+
+const program = gl.createProgram();
+gl.attachShader(program, vs);
+gl.attachShader(program, fs);
+
+// Set transform feedback varyings
+gl.transformFeedbackVaryings(program, varyings, gl.SEPARATE_ATTRIBS);
+
+gl.linkProgram(program);
+if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+  throw new Error(gl.getProgramInfoLog(program));
+}
+
+// Print varying info
+console.log("Transform Feedback Varyings:");
+for (let i = 0; i < varyings.length; i++) {
+  const info = gl.getTransformFeedbackVarying(program, i);
+  console.log(`  name: ${info.name}, size: ${info.size}, type: 0x${info.type.toString(16)}`);
+  console.log(info.type);
+}
+</script>
+</body>
+</html>

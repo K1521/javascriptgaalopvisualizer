@@ -14,7 +14,7 @@ export class Voxelrenderer extends LazyRenderingPipeline{
   constructor(gl,visgraph, vertexshader,color) {
     super(() => {
 
-
+      this.scale=4;
       this.maxlevel=10;//dont set higher than 10
       this.maxvoxel=3750000;//max vertCount is 30000000 so definetly dont subdivide if there are more than 30000000/8=3750000
 
@@ -24,6 +24,7 @@ export class Voxelrenderer extends LazyRenderingPipeline{
       
 
       this.voxelfilter=new PackedVoxelGridFilter(gl,vertexshader,visgraph);   
+      //this.voxelfilter.maxvoxel=100000
 
       //setup point rendering
       this.pointbuffer = gl.createBuffer();
@@ -84,7 +85,7 @@ export class Voxelrenderer extends LazyRenderingPipeline{
 
 
 
-class PackedVoxelGridFilter{
+export class PackedVoxelGridFilter{
   constructor(gl,vertexshader,visgraph){
       this.maxlevel=10;//dont set higher than 10
       this.maxvoxel=3750000;//max vertCount is 30000000 so definetly dont subdivide if there are more than 30000000/8=3750000
