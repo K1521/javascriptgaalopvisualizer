@@ -318,7 +318,7 @@ export class MarchingCubesRenderer extends LazyRenderingPipeline{
     this.visgraph.setuniforms(ctx,this.gaussnewton.shader);
     const [evaluationresults]=this.gaussnewton.transform(voxelvertices.getVertices());
     const [vertflat,triflat]=this.marchingcubes(voxelvertices,evaluationresults);
-    this.count=vertflat.length;
+    this.count=vertflat.length/3;
     gl.bindBuffer(gl.ARRAY_BUFFER,this.pointbuffer);
     gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertflat),gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER,null);
