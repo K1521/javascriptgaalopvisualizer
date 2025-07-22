@@ -239,6 +239,20 @@ export class Shader{
     this.uniformlocations=new Map();
   }
 
+  /**
+   * Retrieves the list of WebGLActiveInfo objects for each transform feedback varying.
+   *
+   * @returns {WebGLActiveInfo[]|undefined} An array of info objects (name, size, type), or undefined if no varyings are defined.
+   */
+  getTransformFeedbackVaryings() {
+    if (!this.varyings) return undefined;
+
+    return this.varyings.map((_, i) =>
+      this.gl.getTransformFeedbackVarying(this.program, i)
+    );
+  }
+  
+
   use(){
     this.gl.useProgram(this.program);
   }

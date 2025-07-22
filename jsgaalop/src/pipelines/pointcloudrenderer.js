@@ -63,18 +63,18 @@ export const pointshaderfactory=new ShaderCache(null,vShader,fShader);
 
 class PointShader{
   constructor(gl){
-      this.gl=gl;
-      this.count=0;
-      this.shader=pointshaderfactory.getcached(gl);
-      
-      this.vao=gl.createVertexArray();
-      gl.bindVertexArray(this.vao);
-      this.pointbuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER,  this.pointbuffer);
-      const positionAttribLoc=this.shader.getAttribLocation("position");
-      gl.enableVertexAttribArray(positionAttribLoc);
-      gl.vertexAttribPointer(positionAttribLoc, 3, gl.FLOAT, false, 0, 0);
-      gl.bindVertexArray(null);
+    this.gl=gl;
+    this.count=0;
+    this.shader=pointshaderfactory.getcached(gl);
+    
+    this.vao=gl.createVertexArray();
+    gl.bindVertexArray(this.vao);
+    this.pointbuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER,  this.pointbuffer);
+    const positionAttribLoc=this.shader.getAttribLocation("position");
+    gl.enableVertexAttribArray(positionAttribLoc);
+    gl.vertexAttribPointer(positionAttribLoc, 3, gl.FLOAT, false, 0, 0);
+    gl.bindVertexArray(null);
   }
   render(ctx,color){
     const gl=this.gl;
@@ -111,8 +111,8 @@ export class pointcloudrenderer extends LazyRenderingPipeline{
       this.visgraph=visgraph;
 
       const frag=visgraph.gencode(axis_aligned_glsl);
-    const orthshader=new Shader(gl, shaderSources.vertRaycastFullscreen,frag );
-    orthshader.use();
+      const orthshader=new Shader(gl, shaderSources.vertRaycastFullscreen,frag );
+      orthshader.use();
       //this.context=context;
       this.orthshader=orthshader;  
 

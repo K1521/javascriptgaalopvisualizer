@@ -186,6 +186,7 @@ export const shaderSources  = {
   vertTemplateVoxel: "vert_voxel_generated.glsl",//compute shader for voxels, bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {?}
   vertTemplateVoxelBool: "vert_voxel_bool_generated.glsl",//compute shader for voxels, Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {?}
   vertRaycastFullscreen:"vertRaycastFullscreen.glsl",
+  computeTemplatexyzDual:"shaderlibv1/computeshaders/dualxyz.glsl",
 };
 const basePath = "./src/shadersource/";//relative to index
 

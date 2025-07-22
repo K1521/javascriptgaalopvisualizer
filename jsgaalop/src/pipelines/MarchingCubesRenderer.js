@@ -6,68 +6,270 @@ import { pointshaderfactory } from "./pointcloudrenderer.js";
 
 
 import { PackedVoxelGrid } from "../voxelutil/PackedVoxelGrid.js";
+import { TransformFeedbackWrapper } from "../glwrapper/TransformFeedbackWrapper.js";
+import { VoxelVertexMapper } from "../voxelutil/VoxelVertexMapper.js";
+
+import * as tables from "../voxelutil/mctabel.js";
+import { PackedVoxelGridFilter } from "./Voxelrenderer.js";
+
+/**
+ * Checks if a 3D vector is near zero in magnitude.
+ * @param {[number, number, number]} vec - The input vector [x, y, z].
+ * @param {number} [epsilon=1e-10] - Tolerance for near-zero check.
+ * @returns {boolean} True if vector length is less than epsilon.
+ */
+function isVec3NearZero([x, y, z], epsilon = 1e-10) {
+  return x * x + y * y + z * z < epsilon * epsilon;
+}
+
+/**
+ * Computes the dot product of two 3D vectors.
+ * @param {[number, number, number]} a - First vector.
+ * @param {[number, number, number]} b - Second vector.
+ * @returns {number} The dot product a · b.
+ */
+function dotVec3([ax, ay, az], [bx, by, bz]) {
+  return ax * bx + ay * by + az * bz;
+}
 
 
+/**
+ * Computes the reordering index array to convert values from `fromOrder` to `toOrder`.
+ * Each order is an array of coordinate arrays, e.g., [[0,0,0], [1,0,0], ...]
+ *
+ * @param {number[][]} fromOrder - The current order of coordinates.
+ * @param {number[][]} toOrder - The desired target order of coordinates.
+ * @returns {number[]} - An array of indices such that
+ *                       reordered[i] = original[reordering[i]] matches toOrder.
+ */
+export function makeReordering(fromOrder, toOrder) {
+  return toOrder.map(target =>
+    fromOrder.findIndex(source =>
+      source[0] === target[0] &&
+      source[1] === target[1] &&
+      source[2] === target[2]
+    )
+  );
+}
+
+
+/**
+ * Reorders elements in the array according to the given reordering.
+ *
+ * @template T
+ * @param {T[]} array - The array to reorder.
+ * @param {number[]} reordering - The index map (as produced by `makeReordering`).
+ * @returns {T[]} - The reordered array.
+ */
+export function reorderArray(array, reordering) {
+  return reordering.map(i => array[i]);
+}
+
+
+function float32arrayify(input) {
+  if (input instanceof Float32Array) return input;
+
+  if (Array.isArray(input)) {
+    if (input.length === 0) return new Float32Array(); // Empty input
+
+    const first = input[0];
+    if (Array.isArray(first)) {
+      return new Float32Array(input.flat());
+    } else {
+      return new Float32Array(input); // flat number[]
+    }
+  }
+
+  if (input && typeof input[Symbol.iterator] === "function") {
+    return float32arrayify(Array.from(input));
+  }
+
+  throw new TypeError("Expected Float32Array, number[], number[][], or iterable of numbers");
+}
+
+/**
+ * Runs a transform feedback shader on a single input attribute (e.g. vec3 array).
+ * Handles buffer, VAO, and shader setup internally.
+ */
+class SingleInputTransformFeedback extends TransformFeedbackWrapper {
+  /**
+   * @param {WebGL2RenderingContext} gl - The WebGL2 context.
+   * @param {string} vertexShaderSource - GLSL source for the vertex shader.
+   * @param {string} [inputAttribName="inValue"] - The name of the single input attribute (e.g., "position").
+   * @param {string|string[]} [varyings=["outValue"]] - Names of output variables to capture via transform feedback.
+   * @param {number} [componentsPerVertex=3] - Number of components per input vertex (e.g., 3 for vec3).
+   */
+  constructor(
+    gl,
+    vertexShaderSource,
+    inputAttribName = "inValue",
+    varyings = ["outValue"],
+    componentsPerVertex = 3
+  ) {
+    super(gl, vertexShaderSource, Array.isArray(varyings) ? varyings : [varyings]);
+
+    this.componentsPerVertex = componentsPerVertex;
+
+    this.vao = gl.createVertexArray();
+    gl.bindVertexArray(this.vao);
+
+    this.pointBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.pointBuffer);
+
+    const location = this.shader.getAttribLocation(inputAttribName);
+    gl.enableVertexAttribArray(location);
+    gl.vertexAttribPointer(location, componentsPerVertex, gl.FLOAT, false, 0, 0);
+
+    gl.bindVertexArray(null);
+  }
+
+  /**
+   * Runs the transform feedback shader on the given input.
+   * @param {Float32Array | number[] | number[][] | Iterable<number>} inputData - Input data (flat or nested array).
+   * @returns {Float32Array[]} An array of Float32Arrays, one per output varying.
+   */
+  transform(inputData) {
+    const inputArray = float32arrayify(inputData);
+    if (inputArray.length % this.componentsPerVertex !== 0) {
+      throw new Error(`Input length must be divisible by ${this.componentsPerVertex}`);
+    }
+
+    const gl = this.gl;
+    const vertexCount = inputArray.length / this.componentsPerVertex;
+
+    this.useshader();
+    gl.bindVertexArray(this.vao);
+
+    // Allocate or update buffer (assumes size doesn't shrink often)
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.pointBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, inputArray, gl.DYNAMIC_DRAW);
+
+    const result = super.run(vertexCount);
+    gl.bindVertexArray(null);
+
+    return result;
+  }
+}
+
+  const vShader=`#version 300 es
+precision highp float;
+
+in vec3 position;
+
+uniform mat3 cameraMatrix;
+uniform vec3 cameraPos;
+uniform vec2 windowsize;
+
+const float FOV = 120.0;
+const float NEAR = 0.01;
+const float FAR = 100.0;
+
+out vec3 v_viewPos;
+
+// Simple hash function to generate a float from a vec3 seed
+float hash(vec3 p) {
+    p = fract(p * 0.1031);
+    p += dot(p, p.yzx + 33.33);
+    return fract((p.x + p.y) * p.z);
+}
+
+vec3 pseudoRandomColor(vec3 seed) {
+    return vec3(
+        hash(seed + vec3(1.0, 0.0, 0.0)),
+        hash(seed + vec3(0.0, 1.0, 0.0)),
+        hash(seed + vec3(0.0, 0.0, 1.0))
+    )*0.8+0.2;
+}
+flat out vec3 v_color;
+out vec3 v_worldPos;
+
+uniform vec2 focal;
+
+void main() {
+    vec3 worldPos = position;
+    v_worldPos=position;
+    vec3 viewVec = transpose(cameraMatrix) * (worldPos - cameraPos);
+    v_viewPos = viewVec;
+
+    // Perspective projection (manually)
+    //float aspect = windowsize.x / windowsize.y;
+    //float f = 1.0 / tan(radians(FOV) * 0.5);
+    viewVec.z*=-1.;
+
+    vec2 xy=focal*viewVec.xy;
+
+    //float x_clip = f * viewVec.x;
+    //float y_clip = f * viewVec.y* aspect;
+    float z_clip = (FAR + NEAR) / (NEAR - FAR) * viewVec.z + (2.0 * FAR * NEAR) / (NEAR - FAR);
+    float w_clip = -viewVec.z;
+
+    gl_Position = vec4(xy, z_clip, w_clip);
+    gl_PointSize = 5.0;
+
+    v_color = pseudoRandomColor(position);
+}`;
+const fShader=`#version 300 es
+// Fragment Shader
+precision highp float;
+
+in vec3 v_viewPos;
+in vec3 v_worldPos;
+
+
+uniform vec4 incolor;
+
+out vec4 fragColor;
+
+const float zMax = 1000.0; // same as your normalization factor
+
+flat in vec3 v_color;
+
+void main() {
+    if (v_viewPos.z <= 0.0) {
+        discard;
+    }
+    //gl_FragDepth=0.;
+    float z = v_viewPos.z/ zMax;//length(v_viewPos) / zMax; 
+
+    // Write to depth buffer manually
+    gl_FragDepth =clamp(z ,0.,1.);
+
+    //fragColor = vec4(incolor.rgb, 1.0);
+    //fragColor = vec4(v_color, 1.0);
+    float pattern = 0.5 + 0.5 * mod(floor(v_worldPos.x * 4.0) + floor(v_worldPos.y * 4.0) + floor(v_worldPos.z * 4.0), 2.0);
+    fragColor = vec4(incolor.rgb*pattern, 1.0);
+ 
+}`;
 
 export class MarchingCubesRenderer extends LazyRenderingPipeline{
-
-  constructor(gl,visgraph, vertexshader,color) {
+  constructor(gl,visgraph, vertexshaderfilter,vertexshadergaussnewton,color) {
     super(() => {
-
       this.scale=4;
-      this.maxlevel=10;//dont set higher than 10
-      this.maxvoxel=3750000;//max vertCount is 30000000 so definetly dont subdivide if there are more than 30000000/8=3750000
-
       this.visgraph=visgraph;
       this.gl = gl;
       //vertexshader=testvoxelshader;
-      vertexshader=visgraph.gencode(vertexshader);
+  
+      this.voxelfilter=new PackedVoxelGridFilter(gl,vertexshaderfilter,visgraph);   
+      this.voxelfilter.maxvoxel=10000;
 
-      //setup voxel subdivision
-      this.voxelshader = new Shader(gl,vertexshader, null, ["outPackedVoxel"]);
-
-
-      //input vao and buffer
-      this.vao = gl.createVertexArray();
-      gl.bindVertexArray(this.vao);
-      this.inbuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.inbuffer);
-      const voxel_positionAttribLoc = this.voxelshader.getAttribLocation("inPackedVoxel"); 
-      gl.enableVertexAttribArray(voxel_positionAttribLoc);
-      gl.vertexAttribIPointer(voxel_positionAttribLoc, 1, gl.INT, 0, 0); // integer attribute
-      gl.bindVertexArray(null);
-
-
-      //output transform feedback and buffer
-      this.tf = gl.createTransformFeedback();
-
-      //this.chunkSize = 4096;
-      this.outbuffer = gl.createBuffer();
-      gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, this.outbuffer);
-      //gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER, this.chunkSize * 4, gl.DYNAMIC_READ);//4 bytes per int
-
-      gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.tf);
-      gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.outbuffer);
-
-      gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
-
-
-      //setup point rendering
-      this.pointbuffer = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.pointbuffer);
-      this.pointbuffer_size=0;
-
-      this.pointshader=pointshaderfactory.getcached(gl);
+      this.gaussnewton=new SingleInputTransformFeedback(gl,visgraph.gencode(vertexshadergaussnewton),"position",["result"],3);
+      
+      this.trishader=new Shader(gl,vShader,fShader);   
 
       this.color=color;
-      
+
+
+      this.pointbuffer = gl.createBuffer();
+
       this.pointvao=gl.createVertexArray();
       gl.bindVertexArray(this.pointvao);
       gl.bindBuffer(gl.ARRAY_BUFFER,  this.pointbuffer);
-      const point_positionAttribLoc=this.pointshader.getAttribLocation("position");
-      gl.enableVertexAttribArray(point_positionAttribLoc);
-      gl.vertexAttribPointer(point_positionAttribLoc, 3, gl.FLOAT, false, 0, 0);
+      const positionAttribLoc=this.trishader.getAttribLocation("position");
+      gl.enableVertexAttribArray(positionAttribLoc);
+      gl.vertexAttribPointer(positionAttribLoc, 3, gl.FLOAT, false, 0, 0);
       gl.bindVertexArray(null);
+      this.count=0;
+      
     });
   }
 
@@ -75,15 +277,23 @@ export class MarchingCubesRenderer extends LazyRenderingPipeline{
 
     
   render(ctx) {
-    const gl = this.gl;
+    /** @type{WebGL2RenderingContext} */
+    const gl=this.gl;
     gl.depthFunc(gl.LESS);
     gl.enable(gl.DEPTH_TEST);
-    this.pointshader.use();
-    gl.uniform4fv(this.pointshader.getUniformLocation('incolor'), [this.color.r,this.color.g,this.color.b,1.0]);
-    ctx.updateUniforms(this.pointshader); // sets cameraPos and cameraMatrix and windowsize
-    gl.bindVertexArray(this.pointvao);
-    gl.drawArrays(gl.POINTS, 0, this.pointbuffer_size);
+
+    this.trishader.use();
+    gl.uniform4fv(this.trishader.getUniformLocation('incolor'), [this.color.r,this.color.g,this.color.b,1.0]);
+    ctx.updateUniforms(this.trishader); // sets cameraPos and cameraMatrix and focal
+    
+    gl.bindVertexArray(this.pointvao); // VAO with vertex positions bound
+    //gl.drawElements(gl.LINES, this.lineCount, gl.UNSIGNED_SHORT, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, this.count);
+    //gl.drawArrays(gl.POINTS, 0, this.count);
     gl.bindVertexArray(null);
+
+
+    
   }
   
   updateParams(ctx) {
@@ -91,191 +301,169 @@ export class MarchingCubesRenderer extends LazyRenderingPipeline{
     this.paramsversion = ctx.paramsversion;
 
     const gl = this.gl;
-
-
-    //voxel subdivision
-
-    this.voxelshader.use();
-    this.visgraph.setuniforms(ctx.nodecache,this.voxelshader);
-   
-    gl.uniform1f(this.voxelshader.getUniformLocation("scale"),this.scale); 
-
-
-    gl.bindVertexArray(this.vao);
-
-    gl.enable(gl.RASTERIZER_DISCARD);
-
-    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.tf);
-    //gl.beginTransformFeedback(gl.POINTS);
-
-    //let inarray = [0];
-    
-    const voxelGrid=new PackedVoxelGrid([[-this.scale,this.scale],[-this.scale,this.scale],[-this.scale,this.scale]]);
-
-
-    while (voxelGrid.level <this.maxlevel && voxelGrid.length<this.maxvoxel) {
-      //for (; level < 6; level++) inarray=this.subdivideVoxels(inarray, level-1);
-
-      //inarray=this.subdivideVoxels(inarray, level-1);//subdivides voxels from level-1 to level
-      voxelGrid.subdivide();
-      
-      /*if(inarray.some(x=>this.packVoxel(this.unpackVoxel(x))!=x)){
-        throw new Error("bad voxel packing");
-      }*/
-      voxelGrid.voxels.forEach(x=>{
-        if(this.packVoxel(...this.unpackVoxel(x))!=x){
-          throw new Error("bad voxel packing");
-        }
-      })
-
-      console.log(voxelGrid.level,voxelGrid.length);
-      gl.uniform1i(this.voxelshader.getUniformLocation("level"), voxelGrid.level);
-      //console.log("in",inarray);
-      //console.log(inarray.map(x=>this.unpackVoxel(x)));
-
-      //const edgelength=this.voxelEdgeLength(level)/2;
-      //const points=inarray.flatMap(packed=>this.voxelToPosition(this.unpackVoxel(packed)));//.map(x=>x+edgelength);
-      //console.log("inputmid",points);
-
-      /*let processedResults = [];
-      for (let i = 0; i < inarray.length; i += this.chunkSize) {
-        const chunk = inarray.slice(i, i + this.chunkSize);
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.inbuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Int32Array(chunk), gl.STATIC_DRAW);
-
-        gl.beginTransformFeedback(gl.POINTS);
-        gl.drawArrays(gl.POINTS, 0, chunk.length);
-        gl.endTransformFeedback();
-
-        gl.finish();
-
-        // Read back results
-        gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, this.outbuffer);
-        const results = new Int32Array(chunk.length);
-        gl.getBufferSubData(gl.TRANSFORM_FEEDBACK_BUFFER, 0, results);
-
-
-        // Use results for next iteration
-        //console.log(results);
-        processedResults.push(...Array.from(results).filter(x => x !== -1));
-      }
-      //console.log(results);
-      inarray = processedResults;*/
-
-
-        //const chunk = inarray.slice(i, i + this.chunkSize);
-        gl.bindBuffer(gl.ARRAY_BUFFER, this.inbuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Int32Array(voxelGrid.voxels), gl.STATIC_DRAW);
-
-        gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, this.outbuffer);//set buffer size
-        gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER,voxelGrid.length * 4, gl.DYNAMIC_READ);//*4 because  size is in bytes and i have ints
-
-
-        gl.beginTransformFeedback(gl.POINTS);
-        gl.drawArrays(gl.POINTS, 0, voxelGrid.length);
-        gl.endTransformFeedback();
-
-        gl.finish();
-
-        // Read back results
-        gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, this.outbuffer);
-        const results = new Int32Array(voxelGrid.length);
-        gl.getBufferSubData(gl.TRANSFORM_FEEDBACK_BUFFER, 0, results);
-
-
-        // Use results for next iteration
-        //console.log(results);
-        voxelGrid.voxels=Array.from(results).filter(x => x !== -1);
-      
-
-
-      //console.log(inarray);
-      //console.log("out",inarray);
-      //console.log(inarray.map(x=>this.unpackVoxel(x)));
-      //this.level=level;
-    }
-
-    //gl.endTransformFeedback();
-    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
-    gl.disable(gl.RASTERIZER_DISCARD);
-    gl.bindVertexArray(null);
-
     //voxel to points
+    const voxelGrid=new PackedVoxelGrid([[-this.scale,this.scale],[-this.scale,this.scale],[-this.scale,this.scale]]);
+    this.voxelfilter.apply(voxelGrid,ctx);
+    const voxelvertices=new VoxelVertexMapper(voxelGrid);
 
 
-    const points=voxelGrid.getPositions(0.5,0.5,0.5);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.pointbuffer);
-    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(points) , gl.STATIC_DRAW);
-    this.pointbuffer_size=voxelGrid.length;
 
+    /*gl.bindBuffer(gl.ARRAY_BUFFER,this.pointbuffer);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(voxelvertices.getVertices()),gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER,null);
+    this.count=voxelvertices.getVertices().length/3;
+    return;*/
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+    this.gaussnewton.useshader();
+    this.visgraph.setuniforms(ctx,this.gaussnewton.shader);
+    const [evaluationresults]=this.gaussnewton.transform(voxelvertices.getVertices());
+    const [vertflat,triflat]=this.marchingcubes(voxelvertices,evaluationresults);
+    this.count=triflat.length/3;
+    gl.bindBuffer(gl.ARRAY_BUFFER,this.pointbuffer);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(vertflat),gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER,null);
+
   }
 
-  voxelEdgeLength(level) {
-    // Total divisions along one axis at max level is 2^10 (1024)
-    // At level 0: 1 voxel spans the entire [-1,1] range → length = 2.0
-    // Each level subdivides by factor of 2, so edge length halves each level
-    // So edge length = 2.0 / 2^level
-
-    return 2.0 / (1 << level);
-  }
-
-
-
-  packVoxel(x, y, z) {
-    if(x>0x3FF || y>0x3FF || z>0x3FF)throw new Error("coord out of bounds");
-    return ( (z & 0x3FF) << 20 ) | ( (y & 0x3FF) << 10 ) | (x & 0x3FF);
-  }
-  unpackVoxel(packed) {
-    // packed is an int 
-    // We use >>> 0 to treat as unsigned 32-bit integer
-    const u = packed >>> 0;//not actually needed
-    //const u=packed;
-    const x = u & 0x3FF;           // lower 10 bits
-    const y = (u >>> 10) & 0x3FF;  // next 10 bits
-    const z = (u >>> 20) & 0x3FF;  // next 10 bits
-    return [x,y,z];
-  }
-
-  voxelToPosition(voxelCoords) {
-    // voxelCoords: [x, y, z], each in [0..1023]
-
-    return voxelCoords.map(c => this.scale*((c) * (2.0 / 1024.0) - 1.0));
-  }
 
   /**
-   * Given an array of packed voxels and current subdivision level,
-   * returns a flat array of their 8 child voxels each.
    * 
-   * @param {number[]} parentVoxels - array of packed voxels (ints)
-   * @param {number} currentLevel - subdivision level (0 to 9)
-   * @returns {number[]} Array of packed child voxels
-  */
-  subdivideVoxels(parentVoxels, currentLevel) {
-    const step = 1 << (10 - currentLevel - 1);
-    //const dx = step;
-    //const dy = step << 10;
-    //const dz = step << 20;
-    const dx = this.packVoxel(step, 0, 0);
-    const dy = this.packVoxel(0, step, 0);
-    const dz = this.packVoxel(0, 0, step);
-    //console.log(dx,this.unpackVoxel(dx),currentLevel);
-    if(currentLevel==10){
-      throw new Error("level to high");
+   * @param {VoxelVertexMapper} voxelvertices 
+   * @param {Float32Array} evaluationresults 
+   */
+  marchingcubes(voxelvertices,evaluationresults){
+    
+    const cubecornersgrey=[[0, 0, 0], [0, 0, 1], [0, 1, 1], [0, 1, 0], [1, 1, 0],[1, 1, 1],[1, 0, 1],[1, 0, 0]]; 
+    const remappingidxCubeToGrey=makeReordering(VoxelVertexMapper.cornerOffset,cubecornersgrey);
+    
+    const cubecornerstable=tables.cubecorners;
+    const remappingidxGreyToTabel=makeReordering(cubecornersgrey,cubecornerstable);
+    const zero=[0,0,0];
+
+
+    let hasnegative=false;
+    for(let i=3;i<evaluationresults.length;i+=4)
+      if(evaluationresults[i]<0){
+        hasnegative=true;
+        break;
+      }
+    const vertflat=[];
+    const triflat=[];
+    for(const vertexIndices of voxelvertices.getVoxels()){
+      const vertexIndicesGrey=reorderArray(vertexIndices,remappingidxCubeToGrey);
+      const vertexIndicesTabel=reorderArray(vertexIndicesGrey,remappingidxGreyToTabel);
+
+      let tableindex=0;
+      if(hasnegative){
+        const values=vertexIndicesTabel.map(idx=>{
+          const base=idx*4;
+          return evaluationresults[base+3];
+        });
+        for(let i=0;i<8;i++){
+          if(values[i]>0)tableindex|=1<<i;
+        }
+      } else{
+        const vecs=vertexIndicesGrey.map(idx=>{
+          const base=idx*4;
+          return [0,1,2].map(offset=>evaluationresults[base+offset]);
+        });
+
+        let lastvec;//lastvec cant be zero
+        for(let i=0;i<8;i++){
+          if(isVec3NearZero(vecs[i])){
+            vecs[i]=zero;
+          }else{
+            lastvec=vecs[i];//lastvec is vecs[7]. if it would be 0 it is vecs[6] an so on
+          }
+        }
+
+
+        let actsign=true;
+        let signs=[];
+        for(let i=0;i<8;i++){
+          const actvec=vecs[i];
+          if(actvec===zero){
+            signs.push(actsign);
+            //prevent a sign switch at 0
+            // vu=[1,0,0] vd=[-1,0,0] 
+            //the idea is that if i have [vu zero vd] or [vu zero zero vd] or similar
+            //i only do one sign change
+          }else{ 
+            if(dotVec3(actvec,lastvec)<0)actsign=!actsign;
+            signs.push(actsign);
+            lastvec=actvec;
+          }
+        }
+        signs=reorderArray(signs,remappingidxGreyToTabel);
+
+        for(let i=0;i<8;i++){
+          if(signs[i])tableindex|=1<<i;
+        }
+      }
+
+
+      const activeedges=tables.EdgeMasks[tableindex];
+      if(activeedges===0)continue;
+
+      const interpolatedVertices = new Array(12).fill(undefined);
+
+      for (let edgeIndex = 0; edgeIndex < 12; edgeIndex++) {
+        if ((activeedges & (1 << edgeIndex)) === 0) continue;
+
+        const [vi0, vi1] = tables.EdgeVertexIndices[edgeIndex];
+        const idx0 = vertexIndicesTabel[vi0];
+        const idx1 = vertexIndicesTabel[vi1];
+
+        const pos0 = voxelvertices.getVertex(idx0); // vec3
+        const pos1 = voxelvertices.getVertex(idx1); // vec3
+
+        const val0 = evaluationresults[idx0 * 4+3]; // assumes scalar is at .x
+        const val1 = evaluationresults[idx1 * 4+3];
+
+        const t = Math.abs(val0) / (Math.abs(val0) + Math.abs(val1));
+        const interp = [
+          pos0[0] + t * (pos1[0] - pos0[0]),
+          pos0[1] + t * (pos1[1] - pos0[1]),
+          pos0[2] + t * (pos1[2] - pos0[2]),
+        ];
+
+        interpolatedVertices[edgeIndex] = interp;
+      }
+
+      const triEdges = tables.TriangleTable[tableindex];
+      let baseIndex = vertflat.length / 3;
+
+      for (let i = 0; i < triEdges.length; i += 3) {
+        const e0 = triEdges[i];
+        if (e0 === -1) break;
+
+        const e1 = triEdges[i + 1];
+        const e2 = triEdges[i + 2];
+
+        const v0 = interpolatedVertices[e0];
+        const v1 = interpolatedVertices[e1];
+        const v2 = interpolatedVertices[e2];
+
+        //if (!v0 || !v1 || !v2) continue; // skip incomplete triangle
+
+        vertflat.push(...v0, ...v1, ...v2);
+        triflat.push(baseIndex, baseIndex + 1, baseIndex + 2);
+        baseIndex += 3;
+      }
+
+
+
+
+
+
+
+
     }
 
-    return parentVoxels.flatMap(packedVoxel => [
-      packedVoxel,
-      packedVoxel + dx,
-      packedVoxel + dy,
-      packedVoxel + dz,
-      packedVoxel + dx + dy,
-      packedVoxel + dx + dz,
-      packedVoxel + dy + dz,
-      packedVoxel + dx + dy + dz,
-    ]);
+    return [vertflat,triflat];
   }
+
+
 
   isTilable(){return false;}
 }
