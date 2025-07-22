@@ -18,7 +18,7 @@ import { PackedVoxelGridFilter } from "./Voxelrenderer.js";
  * @param {number} [epsilon=1e-10] - Tolerance for near-zero check.
  * @returns {boolean} True if vector length is less than epsilon.
  */
-function isVec3NearZero([x, y, z], epsilon = 0) {
+function isVec3NearZero([x, y, z], epsilon = 1e-10) {
   return x * x + y * y + z * z <= epsilon * epsilon;
 }
 
@@ -342,11 +342,16 @@ export class MarchingCubesRenderer extends LazyRenderingPipeline{
 
 
     let hasnegative=false;
-    for(let i=3;i<evaluationresults.length;i+=4)
+    let haspositive=false;
+    for(let i=3;i<evaluationresults.length&&!(hasnegative && haspositive);i+=4){
       if(evaluationresults[i]<0){
         hasnegative=true;
-        break;
       }
+      if(evaluationresults[i]>0){
+        haspositive=true;
+      }
+    }
+    const hasposneg=hasnegative && haspositive;
     const vertflat=[];
     const triflat=[];
     for(const vertexIndices of voxelvertices.getVoxels()){
@@ -354,7 +359,7 @@ export class MarchingCubesRenderer extends LazyRenderingPipeline{
       const vertexIndicesTabel=reorderArray(vertexIndicesGrey,remappingidxGreyToTabel);
 
       let tableindex=0;
-      if(hasnegative){
+      if(hasposneg){
         const values=vertexIndicesTabel.map(idx=>{
           const base=idx*4;
           return evaluationresults[base+3];
