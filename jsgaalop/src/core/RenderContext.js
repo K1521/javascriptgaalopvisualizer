@@ -77,12 +77,49 @@ export class RenderContext {
   }
 
 
+  static RESERVED_PARAMS = new Set(["_V_X", "_V_Y", "_V_Z"]);
 
-  paramsChanged(newparams=undefined){
-    this.params=newparams??this.params;
-    this.nodecache=new Map(this.params);
+  /**
+   * Registers a list of parameter names. Reserved names are rejected by default.
+   * 
+   * @param {Iterable<string>} newParams - Parameter names to register.
+   * @param {Object} [options] - Optional settings.
+   * @param {boolean} [options.ignoreReserved=false] - If true, reserved names are silently skipped.
+   * @throws Will throw an error if a reserved name is encountered and not ignored.
+   */
+  registerParams(newParams, { ignoreReserved = false } = {}) {
+    for (const p of newParams) {
+      if (RenderContext.RESERVED_PARAMS.has(p)) {
+        if (!ignoreReserved)
+          throw new Error(`Cannot register reserved parameter: ${p}`);
+        continue;
+      }
+      if (!this.params.has(p))
+        this.params.set(p, 0);
+    }
+  }
+
+  /**
+   * Merges new parameter values into the current parameter set.
+   * Only registered parameters may be changed.
+   * Reserved parameters are always rejected.
+   * 
+   * @param {Map<string, number>} newParams - Map of parameter names and new values.
+   * @throws Will throw if any key is unregistered or reserved.
+   */
+  paramsChanged(newParams = new Map()) {
+    for (const [k, v] of newParams) {
+      if (RenderContext.RESERVED_PARAMS.has(k))
+        throw new Error(`Cannot change reserved parameter: ${k}`);
+      if (this.params.has(k)) {
+        this.params.set(k, v);
+      } else {
+        throw new Error(`Unregistered parameter: ${k}`);
+      }
+    }
+    this.nodecache = new Map(this.params);
     this.paramsversion = (this.paramsversion + 1) % Number.MAX_SAFE_INTEGER;//the modulo is useless because it wont overflow for years if you call this thousends of times per seccond
-    
+    this.requestRender();
   }
 
   updateParams(){

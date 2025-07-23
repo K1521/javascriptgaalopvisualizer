@@ -9,31 +9,49 @@ export class MultiResBuffer3 extends MultiresBase {
     this.framebufferLow = new textureFramebuffer(ctx.gl, 100, 100);
     this.framebuffer = new textureFramebuffer(ctx.gl, 100, 100);
 
-    this.sceduler = null;
-    this.resetSceduler();
+    this.scheduler = null;
+    this.resetscheduler();
   }
 
-  resetSceduler() {
-    this.sceduler = this.tileScheduler();
+  resetscheduler() {
+    this.scheduler = this.tileScheduler();
   }
 
   update() {
     if (this.ctx.changed) {
-      this.resetSceduler();
+      this.resetscheduler();
     }
 
-    if (this.sceduler!=null) {
+    if (this.scheduler!=null) {
       this.ctx.requestRender();
     }
   }
 
   render() {
-    if (this.sceduler==null) return;
-    const result = this.sceduler.next();
+    if (this.scheduler==null) return;
+    const result = this.scheduler.next();
     if (result.done) {
-      this.sceduler = null;
+      this.scheduler = null;
     }
   }
+ /*render() {
+  if (this.scheduler == null) return;
+
+  const timeBudget = 4.0; // in milliseconds — experiment with this value
+  const startTime = performance.now();
+  let renderedonce=false;
+  while (!renderedonce || performance.now() - startTime < timeBudget) {
+    renderedonce=true;
+    this.ctx.gl.finish();
+    const result = this.scheduler.next();
+    if (result.done) {
+      this.scheduler = null;
+      break;
+    }
+    // (optional) you could process `result.value` here if needed
+  }
+}*/
+
 
   resize(){
     const canvas=this.ctx.canvas;
@@ -46,7 +64,7 @@ export class MultiResBuffer3 extends MultiresBase {
       this.framebufferLow.resize(Math.floor(width * 0.2),Math.floor(height * 0.2));
       this.framebuffer.resize(width,height);
 
-      this.resetSceduler();
+      this.resetscheduler();
   }
 
 
