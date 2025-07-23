@@ -332,35 +332,23 @@ async function load(url) {
 
 
 
-
+let context;
 async function main(){
 
     //let gajson=await load("./jsonexport.json");
     //let gajson=await load("./torus.json");
     let gajson=await load("./assets/torus_intersect.json");
+    //let gajson=await load("./assets/torus_intersect_p.json");
+    //let gajson=await load("./assets/jsonexport.json");
+    //let gajson=await load("./assets/torus.json");
     const graph=new GaalopGraph();
     graph.fromjson(gajson);
+    console.log(graph.inputScalars);
     //console.log(graph);
 
 
-    const shaderpath="./src/shadersource/";
 
-  //const fragmentShaderSource =await load("./frag3.glsl"); 
-  //const fragmentShaderSource =await load("./frag_aberth.glsl"); 
-  const frag_aberth_template_glsl =await load(shaderpath+"frag_aberth_generated.glsl"); 
-  const frag_Dual_gauss_template_glsl =await load(shaderpath+"frag_generated_Dual.glsl"); 
-  //const fragmentShaderSourceTemplate =await load("./frag_aberth_generated_vander.glsl"); 
-  //const fragmentShaderSourceTemplate =await load("./frag_generated_xyzDual.glsl"); 
-  //console.log(fragmentShaderSource);
-
-  const axis_aligned_glsl =await load(shaderpath+"frag_aberth_generated_axis_aligned.glsl"); 
-  const frag_aberth_matrix_glsl =await load(shaderpath+"frag_aberth_matrix_dcga.glsl"); 
-  const vert_voxel_generated_glsl =await load(shaderpath+"vert_voxel_generated.glsl"); 
-  const vert_voxel_bool_generated_glsl =await load(shaderpath+"vert_voxel_bool_generated.glsl");
-  //const shader =new Shader(gl, shaderSources.vertRaycastFullscreen,fragmentShaderSource );
-  //shader.use();
-  //const camera=new Cameracontroll(mainCanvas,gl);
-  const context=new RenderContext(mainCanvas,gl);
+  context=new RenderContext(mainCanvas,gl);
   window.context =context;
   
   //let funmat=new Matrix([[-3.2,0., 0., 0., 0.,-3.2,0., 0., 0., 0., 0., 0., 1.5125, -5.225,   4.5125]]);
@@ -368,15 +356,14 @@ async function main(){
   //let renderer=new renderingpipeline_coeffxyz(camera,shader);
   //renderer.coefficientsxyz(funmat);
 
+  context.registerParams(graph.inputScalars.keys(),{ignoreReserved:true});
 
-  let shaders=[];
-
-  context.paramsChanged(new Map([
+  /*context.paramsChanged([
     ["a1", 0], ["a2", 0], ["a3", 0],
     ["b1", 0], ["b2", 0.4], ["b3", 0],
     ["c1", 0], ["c2", 0.45], ["c3", 0.2],
     ["d14", 0.5], ["d24", 0.4], ["d34", 0.3],
-  ]));
+  ]);*/
 
   const object_visualization_controls = document.getElementById('object-visualization-controls');
 

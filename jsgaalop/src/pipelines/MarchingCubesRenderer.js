@@ -10,7 +10,7 @@ import { TransformFeedbackWrapper } from "../glwrapper/TransformFeedbackWrapper.
 import { VoxelVertexMapper } from "../voxelutil/VoxelVertexMapper.js";
 
 import * as tables from "../voxelutil/mctabel.js";
-import { PackedVoxelGridFilter } from "./Voxelrenderer.js";
+import { PackedVoxelGridFilter } from "../voxelutil/PackedVoxelGridFilter.js";
 
 /**
  * Checks if a 3D vector is near zero in magnitude.
@@ -248,8 +248,10 @@ export class MarchingCubesRenderer extends LazyRenderingPipeline{
       this.visgraph=visgraph;
       this.gl = gl;
       //vertexshader=testvoxelshader;
+
+
   
-      this.voxelfilter=new PackedVoxelGridFilter(gl,vertexshaderfilter,visgraph);   
+      this.voxelfilter=new PackedVoxelGridFilter(gl, visgraph.gencode(vertexshaderfilter),visgraph);   
       this.voxelfilter.maxvoxel=10000;
 
       this.gaussnewton=new SingleInputTransformFeedback(gl,visgraph.gencode(vertexshadergaussnewton),"position",["result"],3);
@@ -303,7 +305,11 @@ export class MarchingCubesRenderer extends LazyRenderingPipeline{
     const gl = this.gl;
     //voxel to points
     const voxelGrid=new PackedVoxelGrid([[-this.scale,this.scale],[-this.scale,this.scale],[-this.scale,this.scale]]);
+    
+    this.voxelfilter.useshader();
+    this.visgraph.setuniforms(ctx.nodecache, this.voxelfilter.shader);
     this.voxelfilter.apply(voxelGrid,ctx);
+    
     const voxelvertices=new VoxelVertexMapper(voxelGrid);
 
 
@@ -315,7 +321,7 @@ export class MarchingCubesRenderer extends LazyRenderingPipeline{
     return;*/
 
     this.gaussnewton.useshader();
-    this.visgraph.setuniforms(ctx,this.gaussnewton.shader);
+    this.visgraph.setuniforms(ctx.nodecache,this.gaussnewton.shader);
     const [evaluationresults]=this.gaussnewton.transform(voxelvertices.getVertices());
     const [vertflat,triflat]=this.marchingcubes(voxelvertices,evaluationresults);
     this.count=vertflat.length/3;

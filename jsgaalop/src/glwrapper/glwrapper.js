@@ -208,6 +208,30 @@ export class Shader{
   
   constructor(gl,vertexShaderSource,fragmentShaderSource,varyings=undefined,buffermode=undefined){
     //this.programm=Shader.createProgram(gl, vertexShaderSource,fragmentShaderSource );
+
+    if (typeof vertexShaderSource !== "string") {
+      throw new TypeError("vertexShaderSource must be a string");
+    }
+
+    if (typeof fragmentShaderSource !== "string" && fragmentShaderSource !== null) {
+      throw new TypeError("fragmentShaderSource must be a string or null");
+    }
+
+    // optional: check `gl` is a WebGL2 context
+    if (!(gl instanceof WebGL2RenderingContext)) {
+      throw new TypeError("gl must be a WebGL2RenderingContext");
+    }
+
+    // optional: varyings should be an array of strings if defined
+    if (varyings !== undefined && !Array.isArray(varyings)) {
+      throw new TypeError("varyings must be an array if provided");
+    }
+
+    // optional: buffermode should be gl.INTERLEAVED_ATTRIBS or gl.SEPARATE_ATTRIBS if defined
+    if (buffermode !== undefined && buffermode !== gl.INTERLEAVED_ATTRIBS && buffermode !== gl.SEPARATE_ATTRIBS) {
+      throw new TypeError("buffermode must be gl.INTERLEAVED_ATTRIBS or gl.SEPARATE_ATTRIBS if provided");
+    }
+
     this.gl=gl;
     buffermode??=gl.INTERLEAVED_ATTRIBS; //cant be a default arg because gl doesnt exist
 
