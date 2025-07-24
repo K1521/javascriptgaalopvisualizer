@@ -44,11 +44,6 @@
 
 <body>
 
-    <!--<div class="slideritem">
-        <label for="slider1">a3:</label>
-        <input id="slider1" type="range" min="0" max="1" step="0.01" value="0.5" class="slider" />
-        <span class="value" id="value1">0.50</span>
-    </div>-->
     <div id="sliderPanel">
         <template id="sliderTemplate">
             <div class="slideritem" draggable="true">
@@ -58,99 +53,13 @@
             </div>
         </template>
     </div>
-    <div id="sliderPanel2">
-
-    </div>
 
     <script>
         const sliderPanel = document.getElementById("sliderPanel");
         const sliderinfos = [{ name: "a1", min: 0, max: 1, value: 1 }, { name: "a2", min: 0, max: 1, value: 0.5 }];
         
         for(let i=3;i<10;i++)sliderinfos.push({ name: "a"+i, min: 0, max: 1, value: 1 });
-        createSliderPanel(sliderinfos,sliderPanel);
-
-        const sliderPanel2 = document.getElementById("sliderPanel2");
-        const sliderinfos2 = [];
-        
-        for(let i=3;i<10;i++)sliderinfos2.push({ name: "b"+i, min: 0, max: 1, value: 1 });
-        createSliderPanel(sliderinfos2,sliderPanel2);
-
-
-        function createSliderPanel(sliderinfos,sliderPanel){
-        const sliders=sliderinfos.map(createSliderHTML);
-        sliders.forEach((s)=>{
-            sliderPanel.appendChild(s);
-            s.addEventListener("dragstart",()=>{
-                setTimeout(()=>s.classList.add("dragging"),0);
-            });
-            s.addEventListener("dragend",()=>s.classList.remove("dragging"));
-        });
-        sliderPanel.addEventListener("dragover",(e)=>{
-            e.preventDefault();
-
-
-            
-
-
-            //const otheritems2= [...sliderPanel.children].filter(child => child.classList.contains("slideritem") );
-            const movingelement=sliderPanel.querySelector(".slideritem.dragging");
-            if(!movingelement)return;
-            /*const otheritems=[...sliderPanel.querySelectorAll(".slideritem:not(.dragging)")];
-            //console.log(otheritems,otheritems2)
-            const prev=otheritems.find((s)=>{
-                const bound=s.getBoundingClientRect();
-                return e.clientY<=bound.top+bound.height/2;
-            });*/
-
-            
-            for(const prev of sliderPanel.querySelectorAll(".slideritem:not(.dragging)")){
-                const bound=prev.getBoundingClientRect();
-                if(e.clientY<=bound.top+bound.height/2){
-                    sliderPanel.insertBefore(movingelement,prev);
-                    return;
-                }
-            }
-            //sliderPanel.insertBefore(movingelement,null);
-            sliderPanel.appendChild(movingelement);
-            
-            
-            //console.log(prev?.querySelector("label").textContent);
-            //todo get last if prev is undefined
-            //if(!prev)return;
-            //sliderPanel.insertBefore(movingelement,prev);
-            //prev.style.outline = "2px solid red";
-            //console.log(e.offsetY);
-            //console.log(e);
-        });
-    }
-
-      
-        
-
-
-
-        function createSliderHTML({ name, min, max, value }) {
-            const template = document.createElement("template");
-            template.innerHTML = `
-    <div class="slideritem" draggable="true">
-      <label>${name}:</label>
-      <input type="range" class="slider" min="${min}" max="${max}" step="0.01" value="${value}">
-      <span class="value">${value.toFixed(2)}</span>
-    </div>
-  `.trim();
-
-            const item = template.content.firstChild;
-
-            const slider = item.querySelector(".slider");
-            const valueSpan = item.querySelector(".value");
-
-            slider.addEventListener("input", () => {
-                valueSpan.textContent = Number(slider.value).toFixed(2);
-            });
-
-            return item;
-        }
-
+        createSliderPanelTemplate(sliderinfos,sliderPanel);
 
         function createSliderPanelTemplate(sliderinfos,sliderPanel){
             let template=sliderPanel.querySelector("template");;
@@ -177,20 +86,8 @@
         sliderPanel.addEventListener("dragover",(e)=>{
             e.preventDefault();
 
-
-            
-
-
-            //const otheritems2= [...sliderPanel.children].filter(child => child.classList.contains("slideritem") );
             const movingelement=sliderPanel.querySelector(".slideritem.dragging");
             if(!movingelement)return;
-            /*const otheritems=[...sliderPanel.querySelectorAll(".slideritem:not(.dragging)")];
-            //console.log(otheritems,otheritems2)
-            const prev=otheritems.find((s)=>{
-                const bound=s.getBoundingClientRect();
-                return e.clientY<=bound.top+bound.height/2;
-            });*/
-
             
             for(const prev of sliderPanel.querySelectorAll(".slideritem:not(.dragging)")){
                 const bound=prev.getBoundingClientRect();
@@ -199,15 +96,8 @@
                     return;
                 }
             }
+            sliderPanel.appendChild(movingelement);
             
-            
-            //console.log(prev?.querySelector("label").textContent);
-            //todo get last if prev is undefined
-            //if(!prev)return;
-            //sliderPanel.insertBefore(movingelement,prev);
-            //prev.style.outline = "2px solid red";
-            //console.log(e.offsetY);
-            //console.log(e);
         });
     }
 
