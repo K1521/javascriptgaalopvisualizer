@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Standalone Slider</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background: #fafafa;
+        }
+
+        .slideritem {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 6px;
+            max-width: 500px;
+        }
+
+        .slideritem label {
+            min-width: 50px;
+            font-weight: bold;
+        }
+
+        .slideritem .slider {
+            flex: 1;
+        }
+
+        .slideritem .value {
+            width: 50px;
+            text-align: right;
+            font-family: monospace;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="slideritem">
+        <label for="slider1">a3:</label>
+        <input id="slider1" type="range" min="0" max="1" step="0.01" value="0.5" class="slider" />
+        <span class="value" id="value1">0.50</span>
+    </div>
+    <div id="sliderPanel">
+
+    </div>
+
+    <script>
+        const sliderPanel = document.getElementById("sliderPanel");
+        const sliders = [{ name: "a1", min: 0, max: 1, value: 1 }, { name: "a2", min: 0, max: 1, value: 0.5 }];
+
+        for (const sliderinfo of sliders) {
+            sliderPanel.appendChild(createSliderHTML(sliderinfo));
+        }
+        function createSliderHTML({ name, min, max, value }) {
+            const template = document.createElement("template");
+            template.innerHTML = `
+    <div class="slideritem">
+      <label>${name}:</label>
+      <input type="range" class="slider" min="${min}" max="${max}" step="0.01" value="${value}">
+      <span class="value">${value.toFixed(2)}</span>
+    </div>
+  `.trim();
+
+            const item = template.content.firstChild;
+
+            const slider = item.querySelector(".slider");
+            const valueSpan = item.querySelector(".value");
+
+            slider.addEventListener("input", () => {
+                valueSpan.textContent = Number(slider.value).toFixed(2);
+            });
+
+            return item;
+        }
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,103 @@
+<style>
+  .slideritem {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f0f0f0;
+    padding: 10px;
+    border-radius: 6px;
+    max-width: 500px;
+    margin-bottom: 10px;
+    cursor: move;
+  }
+
+  .drag-over {
+    outline: 2px dashed #888;
+  }
+</style>
+
+<div id="sliderPanel"></div>
+
+<script>
+const sliders = [
+  { name: "a1", min: 0, max: 1, value: 1 },
+  { name: "a2", min: 0, max: 1, value: 0.5 },
+  { name: "a3", min: 0, max: 1, value: 0.3 },
+  { name: "a4", min: 0, max: 1, value: 0.3 },
+  { name: "a5", min: 0, max: 1, value: 0.3 },
+  { name: "a6", min: 0, max: 1, value: 0.3 }
+];
+
+function createSliderHTML({ name, min, max, value }) {
+  const template = document.createElement("template");
+  template.innerHTML = `
+    <div class="slideritem" draggable="true">
+      <label>${name}:</label>
+      <input type="range" class="slider" min="${min}" max="${max}" step="0.01" value="${value}">
+      <span class="value">${Number(value).toFixed(2)}</span>
+    </div>
+  `.trim();
+
+  const item = template.content.firstChild;
+
+  const slider = item.querySelector(".slider");
+  const valueSpan = item.querySelector(".value");
+
+  slider.addEventListener("input", () => {
+    valueSpan.textContent = Number(slider.value).toFixed(2);
+  });
+
+  return item;
+}
+
+const sliderPanel = document.getElementById("sliderPanel");
+
+for (const info of sliders) {
+  const sliderItem = createSliderHTML(info);
+  addDragHandlers(sliderItem);
+  sliderPanel.appendChild(sliderItem);
+}
+
+let draggedItem = null;
+
+function addDragHandlers(item) {
+  item.addEventListener("dragstart", () => {
+    draggedItem = item;
+    item.classList.add("dragging");
+  });
+
+  item.addEventListener("dragend", () => {
+    draggedItem = null;
+    item.classList.remove("dragging");
+    document.querySelectorAll(".drag-over").forEach(el => el.classList.remove("drag-over"));
+  });
+
+  item.addEventListener("dragover", (e) => {
+    e.preventDefault(); // Required to allow dropping
+    if (item !== draggedItem) {
+      item.classList.add("drag-over");
+    }
+  });
+
+  item.addEventListener("dragleave", () => {
+    item.classList.remove("drag-over");
+  });
+
+  item.addEventListener("drop", (e) => {
+    e.preventDefault();
+    item.classList.remove("drag-over");
+
+    if (draggedItem && draggedItem !== item) {
+      const siblings = Array.from(sliderPanel.children);
+      const draggedIndex = siblings.indexOf(draggedItem);
+      const targetIndex = siblings.indexOf(item);
+
+      if (draggedIndex < targetIndex) {
+        sliderPanel.insertBefore(draggedItem, item.nextSibling);
+      } else {
+        sliderPanel.insertBefore(draggedItem, item);
+      }
+    }
+  });
+}
+</script>
