@@ -19,7 +19,7 @@ import { Voxelrenderer } from "../pipelines/Voxelrenderer.js";
 import { addPipelineSelectorForObject } from "../ui/PipelineSelector.js";
 import { MarchingCubesRenderer } from "../pipelines/MarchingCubesRenderer.js";
 
-
+import { makeSlider,ReorderableList } from "../ui/sliders.js";
 
 
 
@@ -337,9 +337,9 @@ async function main(){
 
     //let gajson=await load("./jsonexport.json");
     //let gajson=await load("./torus.json");
-    let gajson=await load("./assets/torus_intersect.json");
+    //let gajson=await load("./assets/torus_intersect.json");
     //let gajson=await load("./assets/torus_intersect_p.json");
-    //let gajson=await load("./assets/jsonexport.json");
+    let gajson=await load("./assets/jsonexport.json");
     //let gajson=await load("./assets/torus.json");
     const graph=new GaalopGraph();
     graph.fromjson(gajson);
@@ -357,6 +357,27 @@ async function main(){
   //renderer.coefficientsxyz(funmat);
 
   context.registerParams(graph.inputScalars.keys(),{ignoreReserved:true});
+
+ const sliderPanel = new ReorderableList(document.getElementById("sliderPanel"));
+
+
+//for (let i = 3; i < 30; i++)sliderinfos.push({ name: "a" + i, min: 0, max: 1, value: 1 });
+//createSliderPanelTemplate(sliderinfos, sliderPanel);
+const template = sliderPanel.getTemplate("slider");
+for(const name of graph.inputScalars.keys()){
+  if(!RenderContext.RESERVED_PARAMS.has(name)){
+
+      sliderPanel.addItem(makeSlider(template, name, (value)=>{context.paramsChanged([[name,value]]);}, { min: -1, max: 1, value: 0 }));
+   }
+}
+
+for(let i=0;i<100;i++){
+  sliderPanel.addItem(makeSlider(template,i));
+}
+
+
+
+
 
   /*context.paramsChanged([
     ["a1", 0], ["a2", 0], ["a3", 0],
