@@ -6,10 +6,32 @@
   <title>Geometric Algebra</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <link rel="stylesheet" href="src/styles/main.css">
+  <link rel="stylesheet" href="src/styles/sliders.css">
+
 </head>
 <body>
+
+
   <canvas id="mainCanvas"></canvas>
-  <div id="fpsCounter">FPS: 0</div>
+
+
+
+<div id="uiContainerLeft"> 
+    <div id="fpsCounter">FPS: 0</div>
+
+  <div id="sliderscroll">
+    <div id="sliderPanel">
+        <template data-type="slider">
+            <div class="slideritem">
+                <label>placeholderlabel</label>
+                <input type="range" class="ReorderableListNoDrag" min="0" max="1" step="0.01" value="0.5">
+                <span>placeholdervalue</span>
+            </div>
+        </template>
+    </div>
+  </div>
+
+  </div>
 
   <div id="diagramPanel">
     <div id="plotlyDiagram"></div>

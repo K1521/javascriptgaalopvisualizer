@@ -1,0 +1,75 @@
+
+
+#sliderscroll {
+    max-height: auto;
+    /*calc(100vh - 40px);*/
+    /*margin: 20px;*/
+    padding: 20px;
+    border-radius: 12px;
+    overflow-y: auto;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
+    background-color: rgba(25, 25, 25, 0.5);
+    color: white;
+
+    width: fit-content;
+    box-sizing: border-box;
+}
+
+#sliderPanel {
+    display: table;
+
+    border-spacing: 20px 8px;
+    /* horizontal and vertical spacing */
+}
+
+/* Let each .slideritem act as transparent wrapper */
+.slideritem {
+    display: table-row;
+    /* *makes children participate in parent's grid* */
+}
+
+
+.slideritem label,
+.slideritem input[type="range"],
+.slideritem span {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.slideritem label {
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /*padding-right: 10px;*/
+}
+
+.slideritem input[type="range"] {
+    width: 100%;
+}
+
+.slideritem span {
+    font-family: monospace;
+    text-align: right;
+    white-space: nowrap;
+    /*padding-left: 10px;*/
+}
+
+.ReorderableListItem.ReorderableListDragging {
+    opacity: 0.1;
+}
+
+/* Optional: style scrollbar */
+#sliderPanel::-webkit-scrollbar {
+    width: 8px;
+}
+
+#sliderPanel::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+}
+
+#sliderPanel::-webkit-scrollbar-track {
+    background: transparent;
+}
