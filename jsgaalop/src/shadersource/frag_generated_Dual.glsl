@@ -5,9 +5,10 @@ precision mediump float;
 
 
 
-uniform float[?] args;//gets replaced
-//#define numoutputs ?
-const int numoutputs=?;
+
+#include "./shaderlibv1/common/utilfrag.glsl"
+#include "./shaderlibv1/common/util.glsl"
+#include "./shaderlibv1/common/generated_functions.glsl"
 
 out vec4 color;
 
@@ -19,21 +20,9 @@ uniform mat3 cameraMatrix;
 uniform vec4 incolor;//only rgb are used currently (not alpha)
 
 
-const float FOV=120.;
-const float FOVfactor=1./tan(radians(FOV) * 0.5);
-const int ABERTH_MAXITER = 40;
-const float ABERTH_THRESHOLD = 1e-3;
-const float ROOT_ZERRO_THRESHOLD = 1e-1;
-const int POLYDEGREE=4;
-//remember to sqare the ROOT_ZERRO_THRESHOLD 
-//#define USE_DOUBLEROOTS 1
-//#define USE_VANDER 0
-//#define USE_DUALCOMPLEX 1
 
-const float nan=sqrt(-1.);
-const float inf=pow(999.,999.);
-const float pi=3.14159265359;
-const float goldenangle = (3.0 - sqrt(5.0)) * pi;
+
+
 
 
 vec3 overwritecol=vec3(0.);
@@ -43,45 +32,8 @@ void debugcolor(vec3 c){//just for debug
     overwritecol=c;
 }
 
-vec3 normaltocol(vec3 normal){
-    return normal*vec2(1,-1).xxy/.2+0.5;
-}
 
 
-
-
-float sum(vec3 v) {
-    return v.x+v.y+v.z;
-}
-int sum(ivec3 v) {
-    return v.x+v.y+v.z;
-}
-float vmax(vec3 v) {
-    return max(max(v.x, v.y), v.z);
-}
-
-
-#define Dual vec2
-
-Dual DualMul(Dual a, Dual b) {
-    return Dual(a.x * b.x, a.x * b.y + a.y * b.x);
-}
-
-Dual DualSquare(Dual a) {
-    return Dual(a.x * a.x, 2.0 * a.x * a.y);
-}
-
-Dual DualSqrt(Dual a) {
-    float sqrtf = sqrt(a.x);
-    return Dual(sqrtf, a.y / (2.0 * sqrtf));
-}
-
-Dual DualAbs(Dual a) {
-    return Dual(abs(a.x), a.y * sign(a.x));
-}
-
-//const int numoutputs=?;
-void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {?}
 
 
 
@@ -313,7 +265,7 @@ void main() {
     gl_FragDepth = x/1000.;
 
     // Checkerboard pattern
-    float pattern = 0.5 + 0.5 * mod(sum(floor(p * 4.0)), 2.0); // Alternates between 0.5 and 1.0
+    float pattern = 0.5 + 0.5 * mod(vsum(floor(p * 4.0)), 2.0); // Alternates between 0.5 and 1.0
     // Isolinien
     //float pattern=0.5 + 0.5 * ((fract(p.x * 4.0)<0.1)||(fract(p.y * 4.0)<0.1)||fract(p.z * 4.0)<0.1?1.:0.);
     //float pattern=1.;

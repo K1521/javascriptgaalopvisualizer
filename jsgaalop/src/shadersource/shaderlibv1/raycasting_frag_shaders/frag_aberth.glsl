@@ -150,10 +150,10 @@ void main() {
     gl_FragDepth = x/1000.;
 
     // Checkerboard pattern
-    float checker = 0.5 + 0.5 * mod(vsum(floor(p * 4.0)), 2.0); // Alternates between 0.5 and 1.0
+    float pattern = checker(p,4.0)?1.0:0.5;
     
     
-    vec3 col=incolor.rgb*checker;
+    vec3 col=incolor.rgb*pattern;
 
 
 

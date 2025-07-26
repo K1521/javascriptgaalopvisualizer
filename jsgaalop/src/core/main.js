@@ -323,6 +323,30 @@ async function load(url) {
 }
 
 
+  
+
+function init_sliders_and_parameters(context,graph) {
+  context.registerParams(graph.inputScalars.keys(), { ignoreReserved: true });
+  const sliderPanel = new ReorderableList(document.getElementById("sliderPanel"));
+
+  const template = sliderPanel.getTemplate("slider");
+  for (const name of graph.inputScalars.keys()) {
+    if (!RenderContext.RESERVED_PARAMS.has(name)) {
+      sliderPanel.addItem(makeSlider(template, name, (value) => { context.paramsChanged([[name, value]]); }, { min: -1, max: 1, value: 0 }));
+    }
+  }
+
+  /*for (let i = 0; i < 100; i++) {
+    sliderPanel.addItem(makeSlider(template, i));
+  }*/
+
+  if (!sliderPanel.ListElement.querySelector(`.${ReorderableList.ITEM_CLASS}`)) {
+    //if the slider box is empty dont display the box
+    document.getElementById("sliderscroll").style.display = "none";
+  }
+  context.paramsChanged();//populate the cache
+}
+
 
 
 
@@ -356,26 +380,7 @@ async function main(){
   //let renderer=new renderingpipeline_coeffxyz(camera,shader);
   //renderer.coefficientsxyz(funmat);
 
-  context.registerParams(graph.inputScalars.keys(),{ignoreReserved:true});
-
- const sliderPanel = new ReorderableList(document.getElementById("sliderPanel"));
-
-
-//for (let i = 3; i < 30; i++)sliderinfos.push({ name: "a" + i, min: 0, max: 1, value: 1 });
-//createSliderPanelTemplate(sliderinfos, sliderPanel);
-const template = sliderPanel.getTemplate("slider");
-for(const name of graph.inputScalars.keys()){
-  if(!RenderContext.RESERVED_PARAMS.has(name)){
-
-      sliderPanel.addItem(makeSlider(template, name, (value)=>{context.paramsChanged([[name,value]]);}, { min: -1, max: 1, value: 0 }));
-   }
-}
-
-for(let i=0;i<100;i++){
-  sliderPanel.addItem(makeSlider(template,i));
-}
-
-
+  init_sliders_and_parameters(context,graph);
 
 
 

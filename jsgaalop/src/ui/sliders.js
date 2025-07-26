@@ -54,9 +54,6 @@ export class ReorderableList {
         return document.querySelector(`template[data-type="${type}"]`);
     }
 
-    clear() {
-        this.getItems().forEach(el => el.remove());
-    }
 }
 
 
