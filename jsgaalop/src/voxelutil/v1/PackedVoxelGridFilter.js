@@ -1,4 +1,4 @@
-import { Shader } from "../glwrapper/glwrapper.js";
+import { Shader } from "../../glwrapper/glwrapper.js";
 
 
 

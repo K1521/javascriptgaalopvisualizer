@@ -181,7 +181,7 @@ async function loadWithIncludes(entryUrl) {
 };*/
 export const shaderSources  = {
   fragTemplateAberth: "shaderlibv1/raycasting_frag_shaders/frag_aberth.glsl",//raycasting using aberth
-  fragTemplateDualGauss: "frag_generated_Dual.glsl",//raycasting using Gauss
+  fragTemplateDualGauss: "shaderlibv1/raycasting_frag_shaders/frag_gauss.glsl",//raycasting using Gauss
   fragTemplateAxisAligned: "frag_aberth_generated_axis_aligned.glsl",//orthographic , outputs roots for each ray 
   fragTemplateAberthMatrix: "frag_aberth_matrix_dcga.glsl",//raycasting using aberth with matrix
   vertTemplateVoxel: "vert_voxel_generated.glsl",//compute shader for voxels, bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {?}

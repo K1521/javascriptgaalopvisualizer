@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>3D Grid Hash Benchmark</title>
+</head>
+<body>
+  <h1>Check console for timing results</h1>
+  <script>
+    const gridSize = 1024;
+    const count = 1_000_000;
+
+    // Generate data once
+    const data = new Array(count);
+    for (let i = 0; i < count; i++) {
+      const x = Math.floor(Math.random() * gridSize);
+      const y = Math.floor(Math.random() * gridSize);
+      const z = Math.floor(Math.random() * gridSize);
+      data[i] = [x, y, z];
+    }
+
+    // Method 1: String key
+    function keyString(x, y, z) {
+      return `${x},${y},${z}`;
+    }
+
+    // Method 2: Packed integer key
+    function keyPacked(x, y, z) {
+      return x + y * gridSize + z * gridSize * gridSize;
+    }
+
+    // Method 3: FNV hash
+    function keyFNV(x, y, z) {
+      let h = 2166136261 >>> 0;
+      h ^= x; h = Math.imul(h, 16777619);
+      h ^= y; h = Math.imul(h, 16777619);
+      h ^= z; h = Math.imul(h, 16777619);
+      return h >>> 0;
+    }
+
+    function benchmark(name, keyFunc) {
+      const set = new Set();
+      let found = 0;
+
+      console.time(`${name} Insert`);
+      for (const [x, y, z] of data) {
+        keyFunc(x, y, z);
+      }
+      console.timeEnd(`${name} Insert`);
+
+      console.time(`${name} Lookup`);
+      for (const [x, y, z] of data) {
+        keyFunc(x, y, z); found++;
+      }
+      console.timeEnd(`${name} Lookup`);
+
+      console.log(`${name}: Found ${found} of ${count}\n`);
+    }
+
+    // Run all benchmarks
+
+    for(let i=0;i<3;i++){
+        benchmark("String", keyString);
+        benchmark("Packed", keyPacked);
+        benchmark("FNV", keyFNV);
+    }
+  </script>
+</body>
+</html>
