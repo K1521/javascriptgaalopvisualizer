@@ -136,10 +136,15 @@ export class textureFramebuffer{
     );
 
     gl.bindTexture(gl.TEXTURE_2D, this.texture_depth);
-    gl.texImage2D(
+    /*gl.texImage2D(
       gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT16,
       width, height, 0,
       gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null
+    );*/
+    gl.texImage2D(
+      gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT24,
+      width, height, 0,
+      gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null
     );
   }
 

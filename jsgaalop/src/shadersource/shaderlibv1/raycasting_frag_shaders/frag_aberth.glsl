@@ -85,7 +85,7 @@ void initial_roots(out Complex[NUM_ROOTS] roots,Complex center) {
     }
 }
 
-void DualComplexRaymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float x) {
+void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float x) {
     
     Complex[NUM_ROOTS] roots;
     initial_roots(roots,Complex(1.0,0.0));
@@ -108,73 +108,5 @@ void DualComplexRaymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float x
 }
 
 
-vec3 overwritecol=vec3(0.);
-bool overrideactive=false;
-void debugcolor(vec3 c){//just for debug
-    overrideactive=true;
-    overwritecol=c;
-}
 
-
-in vec2 v_rayDirXY;
-//in vec2 v_screen;
-void main() {
-    vec3 rayOrigin = cameraPos;
-    vec3 raydirLocal=normalize(vec3(v_rayDirXY, 1.));
-    vec3 rayDir =cameraMatrix*raydirLocal;//cam to view
-
-
-
-
-    
-    float error,x;
-    DualComplexRaymarch(rayDir,rayOrigin,error,x);
-    vec3 p=rayOrigin+x*rayDir;
-    x*=raydirLocal.z;//undo normalization. This means x is the z in view space
-
-
-    
-    //debug
-    if(overrideactive){
-        gl_FragDepth=0.;
-        color=vec4(overwritecol,1.);return;
-    }
-    
-    //if x is to big we ignore it
-    if(x>1000.){
-        gl_FragDepth=1.;
-        return;
-    }
-
-    //set debth
-    gl_FragDepth = x/1000.;
-
-    // Checkerboard pattern
-    float pattern = checker(p,4.0)?1.0:0.5;
-    
-    
-    vec3 col=incolor.rgb*pattern;
-
-
-
-    //col=vec3(1);
-    col*=1.;//normaltocol(transpose(cameraMatrix)*getNormal(p));
-    //col=getlight(p,rayDir,col);
-
-    /*
-    if(any(isnan(col))){
-        col=vec3(1.,1.,0.);//nan is yellow
-    }
-    if(any(isinf(vec3(p))) || abs(p.x)>10E10||abs(p.y)>10E10||abs(p.z)>10E10){
-        col=vec3(0.,0.,0.5);//blue
-    }*/
-
-
-
-    
-
-    color= vec4(col,1.);
-}
-
-
-//cutoff
+#include "../common/raycastingmain.glsl"

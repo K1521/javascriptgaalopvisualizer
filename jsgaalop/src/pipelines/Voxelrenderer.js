@@ -4,8 +4,8 @@ import { shaderSources } from "../glwrapper/shaderimporter.js";
 import { pointshaderfactory } from "./pointcloudrenderer.js";
 
 
-import { PackedVoxelGrid } from "../voxelutil/PackedVoxelGrid.js";
-import { PackedVoxelGridFilter } from "../voxelutil/PackedVoxelGridFilter.js";
+import { PackedVoxelGrid } from "../voxelutil/v1/PackedVoxelGrid.js";
+import { PackedVoxelGridFilter } from "../voxelutil/v1/PackedVoxelGridFilter.js";
 
 
 

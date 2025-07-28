@@ -5,11 +5,13 @@ uniform float[?] args;
 
 #define POLYDEGREE ? //degree of polynomial
 #define USE_DOUBLEROOTS ? //if the poly is a sum of squares
+
 #if USE_DOUBLEROOTS
     #define NUM_ROOTS (POLYDEGREE / 2)
 #else
     #define NUM_ROOTS POLYDEGREE
 #endif
+
 const int numoutputs=?;
 
 

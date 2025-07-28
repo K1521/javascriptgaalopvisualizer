@@ -5,12 +5,12 @@ import { shaderSources } from "../glwrapper/shaderimporter.js";
 import { pointshaderfactory } from "./pointcloudrenderer.js";
 
 
-import { PackedVoxelGrid } from "../voxelutil/PackedVoxelGrid.js";
+import { PackedVoxelGrid } from "../voxelutil/v1/PackedVoxelGrid.js";
 import { TransformFeedbackWrapper } from "../glwrapper/TransformFeedbackWrapper.js";
-import { VoxelVertexMapper } from "../voxelutil/VoxelVertexMapper.js";
+import { VoxelVertexMapper } from "../voxelutil/v1/VoxelVertexMapper.js";
 
 import * as tables from "../voxelutil/mctabel.js";
-import { PackedVoxelGridFilter } from "../voxelutil/PackedVoxelGridFilter.js";
+import { PackedVoxelGridFilter } from "../voxelutil/v1/PackedVoxelGridFilter.js";
 
 /**
  * Checks if a 3D vector is near zero in magnitude.
