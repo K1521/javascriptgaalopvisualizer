@@ -20,6 +20,7 @@ import { addPipelineSelectorForObject } from "../ui/PipelineSelector.js";
 import { MarchingCubesRenderer } from "../pipelines/MarchingCubesRenderer.js";
 
 import { makeSlider,ReorderableList } from "../ui/sliders.js";
+import { MarchingCubesRenderer2 } from "../pipelines/MarchingCubesRenderer2.js";
 
 
 
@@ -430,10 +431,12 @@ async function main(){
     obj.addPipeline("lines",new linegridrenderer(gl,visgraph,shaderSources.fragTemplateAxisAligned,color));
     obj.addPipeline("aberth",new simplerenderer(context,gl,visgraph,shaderSources.fragTemplateAberth,color));
     obj.addPipeline("gauss",new simplerenderer(context,gl,visgraph,shaderSources.fragTemplateDualGauss,color));
+    obj.addPipeline("sphere",new simplerenderer(context,gl,visgraph,shaderSources.fragTemplateSphere,color));
     obj.addPipeline("aberth_matrix",new matrixrenderer(context,gl,visgraph,matex,shaderSources.fragTemplateAberthMatrix,color));
     obj.addPipeline("voxelpoint",new Voxelrenderer(gl,visgraph,shaderSources.vertTemplateVoxel,color));
     obj.addPipeline("voxelpoint2",new Voxelrenderer(gl,visgraph,shaderSources.vertTemplateVoxelBool,color));
     obj.addPipeline("marching_cubes",new MarchingCubesRenderer(gl,visgraph,shaderSources.vertTemplateVoxelBool,shaderSources.computeTemplatexyzDual,color));
+    obj.addPipeline("marching_cubes2",new MarchingCubesRenderer2(gl,visgraph,shaderSources.vertTemplateVoxelBig,shaderSources.computeTemplatexyzDual,color));
 
     //obj.setActivePipeline("voxelpoint2");
     //context.updateParams();
