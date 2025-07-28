@@ -129,12 +129,18 @@ export class TransformFeedbackWrapper {
       const outArray = new arrayConstructor(elementsPerVertexTotal * vertexcount);
       gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, buffer); //set buffer size
       gl.getBufferSubData(gl.TRANSFORM_FEEDBACK_BUFFER, 0, outArray);
-      gl.bufferData(gl.ARRAY_BUFFER, 0, gl.STATIC_DRAW);
       results.push(outArray);
     }
     gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, null);
 
     return results;
 
+  }
+  clearbuffers(){
+    const gl=this.gl;
+    for (const { buffer } of this.buffers) {
+      gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, buffer); //set buffer size
+      gl.bufferData(gl.ARRAY_BUFFER, 0, gl.STATIC_DRAW);
+    }
   }
 }
