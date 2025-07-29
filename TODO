@@ -1,3 +1,8 @@
 Camera Perspective hinzufügen
 Koordinatensystem hinzufügen
 calc updates only when params for the specific pipeline change.
+
+/*sliderPanel.addItem(makeSlider(template, name, context.deferToRender((value) => context.paramsChanged([[name, value]])), { min: -1, max: 1, value: 0 }));
+->need to make sure that params doesnt get changed multiple times per render*/
+
+desmos like lights

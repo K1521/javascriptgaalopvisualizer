@@ -12,7 +12,7 @@ export class RenderContext {
   constructor(canvas, gl, camera=undefined) {
     this.requestRender = this.requestRender.bind(this);
     this.camMoved = this.camMoved.bind(this);
-
+    this.deferToRender = this.deferToRender.bind(this);
 
 
     this.canvas = canvas;
@@ -23,26 +23,34 @@ export class RenderContext {
     this.nodecache= new Map(); 
     this.paramsversion=0;
 
-    this.objects=new Map();;//list of RenderObjects
+    this.objects=new Map();//list of RenderObjects
 
     this.multires=new MultiResBuffer3(this);//new MultiResBuffer2(this);
 
 
-
-    window.addEventListener("resize", ()=>{
-      this.multires.resize();
-      this.requestRender();
-    });
-    window.dispatchEvent(new Event("resize"));
-
-
-    
+    this.scheduledfunctions=[];
 
 
     this.changed=true;
     this.moved=true;//moved is not used i belive?
     this.camera.onChange=this.camMoved;
+
+
+    window.addEventListener("resize", this.deferToRender(()=>{
+      this.multires.resize();
+      this.requestRender();
+      console.log("resize");
+    }));
+    window.dispatchEvent(new Event("resize"));
   }
+
+  scheduleOnRender(fn){this.scheduledfunctions.push(fn);}
+  deferToRender(fn) {
+    return (...args) => {
+      this.scheduleOnRender(() => fn(...args));
+    };
+  }
+
 
   addObject(obj){
     obj.ctx=this;
@@ -64,6 +72,11 @@ export class RenderContext {
   
 
   render(deltatime,force=false){
+    //run all the scheduled functions
+    for(const fn of this.scheduledfunctions)fn();
+    this.scheduledfunctions=[]
+
+
     console.log("render",this.changed)
     this.camera.update(deltatime);
     this.multires.update();
