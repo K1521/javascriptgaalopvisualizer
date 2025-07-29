@@ -333,7 +333,7 @@ function init_sliders_and_parameters(context,graph) {
   const template = sliderPanel.getTemplate("slider");
   for (const name of graph.inputScalars.keys()) {
     if (!RenderContext.RESERVED_PARAMS.has(name)) {
-      sliderPanel.addItem(makeSlider(template, name, (value) => { context.paramsChanged([[name, value]]); }, { min: -1, max: 1, value: 0 }));
+      sliderPanel.addItem(makeSlider(template, name, (value) => context.paramsChanged([[name, value]]), { min: -1, max: 1, value: 0 }));
     }
   }
 

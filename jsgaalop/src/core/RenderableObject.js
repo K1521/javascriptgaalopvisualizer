@@ -1,4 +1,5 @@
 
+import { LazyRenderingPipeline } from "../pipelines/LazyRenderingPipeline.js";
 import { RenderContext } from "./RenderContext.js";
 
 export class RenderableObject {
@@ -18,6 +19,10 @@ export class RenderableObject {
     pipeline.setRenderableObject(this);
   }
 
+
+  /**
+   * @type {LazyRenderingPipeline}
+   */
   get activePipeline() {
     return this.pipelines.get(this.activePipelineName);
   }
@@ -34,15 +39,17 @@ export class RenderableObject {
     }
     if(this.activePipelineName==name)return;
     this.activePipelineName = name;
-    this.activePipeline?.init();//inits the lazy pipeline
+    context.scheduleOnRender(()=>this.activePipeline?.init());//inits the lazy pipeline but defers it to render to avoid conflicts
     this.ctx.requestRender();
   }
 
 updateParams() {
+  this.activePipeline?.init();
   this.activePipeline?.updateParams(this.ctx);
 }
 
 render() {
+  this.activePipeline?.init();
   this.activePipeline?.render(this.ctx);
 }
 
