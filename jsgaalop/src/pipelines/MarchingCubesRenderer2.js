@@ -241,7 +241,7 @@ out vec4 fragColor;
 
 const float zMax = 1000.0; // same as your normalization factor
 
-flat in vec3 v_color;
+flat in vec3 v_color;//pseudo random color based on vertex pos of one of the triangles
 
 void main() {
     if (v_viewPos.z <= 0.0) {
@@ -256,8 +256,8 @@ void main() {
     //fragColor = vec4(incolor.rgb, 1.0);
     //fragColor = vec4(v_color, 1.0);
     float pattern = 0.5 + 0.5 * mod(floor(v_worldPos.x * 4.0) + floor(v_worldPos.y * 4.0) + floor(v_worldPos.z * 4.0), 2.0);
-    //fragColor = vec4(incolor.rgb*pattern, 1.0);
-    fragColor = vec4(v_color, 1.0);
+    fragColor = vec4(incolor.rgb*pattern, 1.0);
+    //fragColor = vec4(v_color, 1.0);
  
 }`;
 

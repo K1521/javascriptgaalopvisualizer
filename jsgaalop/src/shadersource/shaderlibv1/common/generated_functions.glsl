@@ -101,7 +101,9 @@ float Summofsquares(vec3 rayDir, vec3 rayOrigin,float a){?}
 
 xyzDual xyzDualSummofsquares(vec3 pos) {?}
 
-void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {?}
+/*void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {?}
+*/
+void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {}
 
 
 

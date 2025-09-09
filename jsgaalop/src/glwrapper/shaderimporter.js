@@ -179,7 +179,7 @@ async function loadWithIncludes(entryUrl) {
   vertTemplateVoxelBool: "vert_voxel_bool_generated.glsl",//compute shader for voxels, Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {?}
   vertRaycastFullscreen:"vertRaycastFullscreen.glsl",
 };*/
-export const shaderSources  = {
+export const shaderSources  = {//path gets replaced with content
   fragTemplateAberth: "shaderlibv1/raycasting_frag_shaders/frag_aberth.glsl",//raycasting using aberth
   fragTemplateDualGauss: "shaderlibv1/raycasting_frag_shaders/frag_gauss.glsl",//raycasting using Gauss
   fragTemplateSphere: "shaderlibv1/raycasting_frag_shaders/frag_sphereaprox.glsl",//raycasting using Gauss
