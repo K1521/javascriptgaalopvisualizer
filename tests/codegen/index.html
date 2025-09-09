@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Empty Page</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 1em;
+    }
+    #output {
+      white-space: pre-wrap; /* allows multiline text */
+      border: 1px solid #ccc;
+      padding: 0.5em;
+      border-radius: 5px;
+      background: #f9f9f9;
+    }
+  </style>
+  
+</head>
+<body>
+  <canvas id="plot" width="400" height="300" style="border:1px solid #ccc"></canvas>
+  <h1>Output</h1>
+  <div id="output"></div>
+
+  <script>
+// Example: write multiple lines of text
+const output = document.getElementById("output");
+
+output.textContent = "Hello!\nThis is line two.\nAnd this is line three.";
+
+// ============================
+// Type Enums
+// ============================
+const NodeTypes = Object.freeze({
+  UNKNOWN: 'unknown',
+  SCALAR: 'scalar',
+  DUAL: 'dual',
+  DUALXYZ: 'dualXYZ',
+  //prob COMPLEX and COMPLEXDUAL later
+  COMPLEX:"complex",
+  COMPLEXDUAL:"complexdual",
+  UNTYPED:"UNTYPED" //for nodes like assignement nodes
+});
+
+//possible upcasting rules
+//scalar -> all
+//complex->complexdual
+//and maybe dual->complexdual. i willjust include it
+const upcastMap = {
+  [NodeTypes.SCALAR]: new Set([NodeTypes.SCALAR, NodeTypes.DUAL, NodeTypes.DUALXYZ, NodeTypes.COMPLEX, NodeTypes.COMPLEXDUAL]),
+  [NodeTypes.DUAL]: new Set([NodeTypes.DUAL, NodeTypes.COMPLEXDUAL]),
+  [NodeTypes.DUALXYZ]: new Set([NodeTypes.DUALXYZ]),
+  [NodeTypes.COMPLEX]: new Set([NodeTypes.COMPLEX, NodeTypes.COMPLEXDUAL]),
+  [NodeTypes.COMPLEXDUAL]: new Set([NodeTypes.COMPLEXDUAL]),
+  [NodeTypes.UNKNOWN]: new Set(), // unknown cant be present at type propagation time at leaf nodes
+  [NodeTypes.UNKNOWN]: new Set([NodeTypes.UNTYPED]),//untyped nodes stay untyped
+};
+
+
+function setIntersect(...sets){
+  //for some reason js has no intersect for sets and i have to make one myself
+  return new Set(sets.reduce(
+    (seta,setb)=>[...seta].filter(elemenofa=>setb.has(elemenofa))
+  ));
+}
+
+function first(arrorset){//doesnt currently 
+  const {done,value}= arrorset.values().next();
+  if(done)throw new Error("empty sequence has no first element");
+  return value;
+
+
+}
+
+function arrayEquals(a, b) {
+  if (a === b) return true;        // same reference
+  if (!a || !b) return false;      // one is null/undefined
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+function findLowestCommonType(types){
+  const possibletypes=new Set(types);
+  if(possibletypes.size==1)return first(possibletypes);//fast return
+  const commontypes=setIntersect(...[...possibletypes].map(t=>upcastMap[t]));
+  
+  const priority = [
+    NodeTypes.SCALAR,
+    NodeTypes.DUAL,
+    NodeTypes.DUALXYZ,
+    NodeTypes.COMPLEX,
+    NodeTypes.COMPLEXDUAL
+  ];
+
+  for (let t of priority) {
+    if (commontypes.has(t)) return t;
+  }
+  throw new Error("type not available");
+}
+
+
+class Dual {
+  constructor(val, der = 0) {
+    this.val = val;
+    this.der = der;
+  }
+
+  toString() {
+    return `${this.val} + ${this.der}ε`; // nice symbolic form
+  }
+}
+
+class DualXYZ {
+  constructor(val, dx = 0, dy = 0, dz = 0) {
+    this.val = val;
+    this.dx = dx;
+    this.dy = dy;
+    this.dz = dz;
+  }
+
+  toString() {
+    return `${this.val} + ${this.dx}εx + ${this.dy}εy + ${this.dz}εz`;
+  }
+}
+
+
+// ============================
+// Base Node
+// ============================
+class Node {
+  static globalId = 0;
+
+  constructor(type = NodeTypes.UNKNOWN, parents = []) {
+    this.id = Node.globalId++;
+    this.type = type;
+    this.parents = parents;
+  }
+
+  topologicalsort(){
+
+    const stack=new Set();
+    //this it named stack because i use it as a stack. i need a set for the O(1) lookup if a node is already on it
+    //with a list it would also work but slower
+
+    const onpath=new Set();//this is needed for cycle detection only
+
+    function visit(node){
+      if(stack.has(node))return;
+      if(onpath.has(node))throw new Error("oh no, the graph has a cycle. fix it!! because a expression should never have cycles");
+      onpath.add(node);
+  
+      for(let parent of node.parents){
+        visit(parent);
+      }
+
+      onpath.delete(node);
+      stack.add(node);
+    }
+    visit(this);
+    return [...stack];
+
+
+  }
+
+  //evaluates nodes
+  eval(variables=null,cache=new Map()){
+    if(cache.has(this))return cache.get(this);
+    const parentresults=this.parents.map(parent=>parent.eval(variables,cache));
+    const result=this._eval(parentresults,variables,cache);
+    cache.set(this,result);
+    return result;
+  }
+
+  // subclasses must override
+  _eval(parentresults,variables,cache) {
+    throw new Error('Not implemented');
+  }
+
+  // cloning logic //clones all nodes up to this node and returns it
+  copyGraph(replaceFn=(()=>undefined),mapping=new Map()) {
+    if (mapping.has(this)) return mapping.get(this);
+
+    let newNode=replaceFn(this);
+
+    if(!newNode){//if replaceFn is falsy we copy otherwise we use the replacement
+      const clonedParents = this.parents.map(p => p.copyGraph(replaceFn,mapping));
+      newNode = this._cloneWithNewParents(clonedParents);
+    }
+
+    mapping.set(this, newNode);
+    return newNode;
+  }
+
+  // subclasses must override
+  _cloneWithNewParents(parents) {
+    throw new Error('Not implemented');
+  }
+
+  promoteTypes(visited=new Set()){
+    if (visited.has(this)) return;
+    for(let parent of this.parents)parent.promoteTypes(visited);
+    this._promoteType(visited);//maybe i should add a flag if i care about unknown type
+    visited.add(this);
+  }
+
+  _promoteType(visited){
+    //subclasses need to implement and validate
+    //this default behavior casts all parents to the same common type and sets this typealso as the return type
+    const targettype=findLowestCommonType(this.parents.map(p=>p.type));
+    this.parents=this.parents.map(p=>castNode(p,targettype));
+    this.parents.forEach(p => p.promoteTypes(visited));//this is here to promote newly created cast nodes mainly for savety checks
+    this.type=targettype;
+  }
+
+
+  codegenGLSL(){
+    const parentresults=this.parents.map(parent=>parent.codegenGLSL());
+    const result=this._codegenGLSL(parentresults);
+    return result;
+  }
+
+  _codegenGLSL(parents) {
+    throw new Error('Not implemented');
+  }
+}
+
+// ============================
+// Leaf Nodes
+// ============================
+class ConstNode extends Node {
+  constructor(value, type = NodeTypes.SCALAR) {
+    super(type, []);
+    this.value = value;
+  }
+  
+
+  _eval(parentresults,variables,cache) {
+    return this.value;
+  }
+
+  _cloneWithNewParents(_) {
+    return new ConstNode(this.value, this.type);
+  }
+  _promoteType(){}
+
+
+
+  _codegenGLSL(){
+    function flotify(x){
+      const s=x.toString();
+      if (s.includes('.') || s.includes('e') || s.includes('E')) return s;
+      return s+".0";
+    }
+
+    if(this.type==NodeTypes.SCALAR){
+      return flotify(this.value);
+    }else if(this.type==NodeTypes.DUAL){
+      return `Dual(${this.value.val},${this.value.der})`;
+    }else if(this.type==NodeTypes.DUALXYZ){
+      return `Dual(${this.value.dx},${this.value.dy},${this.value.dz}${this.value.val})`;//val is last here ecause dualxyz is just a vec4 under the hood and that way i dx=vec.x
+    }
+  }
+}
+
+class VarNode extends Node {
+  constructor(name, type = NodeTypes.UNKNOWN) {
+    super(type, []);
+    this.name = name;
+  }
+
+  _eval(parentresults,variables,cache) {
+    return variables.get(this.name);
+  }
+
+  _cloneWithNewParents(_) {
+    return new VarNode(this.name, this.type);
+  }
+  _promoteType(){}
+
+  _codegenGLSL(){
+    return this.name;
+  }
+}
+
+// ============================
+// Cast Nodes
+// ============================
+class CastToDualNode extends Node {
+  constructor(parent) {
+    super(NodeTypes.DUAL, [parent]);
+  }
+
+  _eval(parentresults,variables,cache) {
+    return new Dual(parentresults[0]);
+  }
+
+  _cloneWithNewParents(parents) {
+    return new CastToDualNode(parents[0]);
+  }
+
+  _promoteType(){
+    const parenttype=this.parents[0].type;
+    if(parenttype!=NodeTypes.SCALAR)new Error(`casting ${parenttype} to Dual is not implemented/sensible`);
+  }
+
+  _codegenGLSL(parentresults){
+    return `Dual(${parentresults[0]},0.0)`;
+  }
+}
+
+class CastToDualXYZNode extends Node {
+  constructor(parent) {
+    super(NodeTypes.DUALXYZ, [parent]);
+  }
+
+  _eval(parentresults,variables,cache) {
+    return new DualXYZ(parentresults[0]);
+  }
+
+  _cloneWithNewParents(parents) {
+    return new CastToDualXYZNode(parents[0]);
+  }
+
+  _promoteType(){
+    const parenttype=this.parents[0].type;
+    if(parenttype!=NodeTypes.SCALAR)new Error(`casting ${parenttype} to Dual is not implemented/sensible`);
+  }
+
+  _codegenGLSL(parentresults){
+    return `DualXYZ(0.0,0.0,0.0,${parentresults[0]})`;
+  }
+}
+function castNode(node,targettype){
+  if(node.type==targettype)return node;
+  if(targettype==NodeTypes.DUAL)return new CastToDualNode(node);
+  if(targettype==NodeTypes.DUALXYZ)return new CastToDualXYZNode(node);
+  throw new Error("cast not implemented yet");
+}
+// ============================
+// Operation Nodes
+// ============================
+class AddNode extends Node {
+  constructor(a, b, type = NodeTypes.UNKNOWN) {
+    super(type, [a, b]);
+  }
+
+  _eval(parentresults,variables,cache) {
+    const [a,b]=parentresults;
+    if(this.type==NodeTypes.SCALAR)return a+b;
+    if(this.type==NodeTypes.DUAL)return new Dual(a.val+b.val,a.der+b.der);
+    if(this.type==NodeTypes.DUALXYZ)return new Dual(a.val+b.val,a.dx+b.dx,a.dy+b.dy,a.dz+b.dz);
+    throw new Error("unknown type");
+  }
+
+  _cloneWithNewParents(parents) {
+    return new AddNode(parents[0], parents[1], this.type);
+  }
+
+  _promoteType(visited){
+    //not sure how to implement it. maybei can let me think
+    const targettype=findLowestCommonType(this.parents.map(p=>p.type));
+    this.parents=this.parents.map(p=>castNode(p,targettype));
+    this.parents.forEach(p => p.promoteTypes(visited));//this is here to promote newly created cast nodes mainly for savety cheks
+    this.type=targettype;
+  }
+  _codegenGLSL(parentresults){
+    return `(${parentresults[0]}+${parentresults[1]})`;
+  }
+}
+
+class SubNode extends Node {
+  constructor(a, b, type = NodeTypes.UNKNOWN) {
+    super(type, [a, b]);
+  }
+
+  _eval(parentresults,variables,cache) {
+    const [a,b]=parentresults;
+    if(this.type==NodeTypes.SCALAR)return a-b;
+    if(this.type==NodeTypes.DUAL)return new Dual(a.val-b.val,a.der-b.der);
+    if(this.type==NodeTypes.DUALXYZ)return new Dual(a.val-b.val,a.dx-b.dx,a.dy-b.dy,a.dz-b.dz);
+    throw new Error("unknown type");
+  }
+
+  _cloneWithNewParents(parents) {
+    return new SubNode(parents[0], parents[1], this.type);
+  }
+
+  _codegenGLSL(parentresults){
+    return `(${parentresults[0]}-${parentresults[1]})`;
+  }
+}
+
+class MulNode extends Node {
+  constructor(a, b, type = NodeTypes.UNKNOWN) {
+    super(type, [a, b]);
+  }
+
+  _eval(parentresults,variables,cache) {
+    //similar to add but i also need to implement mul for scalar and dual because that is possible (so more complex then add)
+    throw Error("not implemented yet")
+  }
+
+  _cloneWithNewParents(parents) {
+    return new MulNode(parents[0], parents[1], this.type);
+  }
+
+  static typesignatures=[
+    {in:[NodeTypes.SCALAR,NodeTypes.SCALAR],out:NodeTypes.SCALAR},
+    {in:[NodeTypes.SCALAR,NodeTypes.DUAL],out:NodeTypes.DUAL},
+    {in:[NodeTypes.DUAL,NodeTypes.SCALAR],out:NodeTypes.DUAL},
+    {in:[NodeTypes.DUAL,NodeTypes.DUAL],out:NodeTypes.DUAL}
+
+  ];
+
+  _promoteType(visited){
+    const parenttypes=this.parents.map(p=>p.type);
+    let sig = MulNode.typesignatures.find(sig =>arrayEquals(sig.in,parenttypes));
+
+    if (sig) {
+      this.type = sig.out;
+      return;
+    }
+    throw new Error("no signature found");
+    
+  }
+
+  _eval(parentresults, variables, cache) {
+    const [a, b] = parentresults;
+    const [typeA, typeB] = this.parents.map(p => p.type);
+
+    // Scalar * Scalar
+    if (typeA === NodeTypes.SCALAR && typeB === NodeTypes.SCALAR) {
+      return a * b;
+    }
+
+    // Dual or Scalar × Dual combinations
+    if (typeA === NodeTypes.DUAL || typeB === NodeTypes.DUAL) {
+      let [valA, derA] = typeA === NodeTypes.DUAL ? [a.val, a.der] : [a, 0];
+      let [valB, derB] = typeB === NodeTypes.DUAL ? [b.val, b.der] : [b, 0];
+      return new Dual(valA * valB, valA * derB + derA * valB);
+    }
+
+    // DualXYZ or Scalar × DualXYZ combinations
+    if (typeA === NodeTypes.DUALXYZ || typeB === NodeTypes.DUALXYZ) {
+      let [valA, dxA, dyA, dzA] = typeA === NodeTypes.DUALXYZ ? [a.val, a.dx, a.dy, a.dz] : [a, 0, 0, 0];
+      let [valB, dxB, dyB, dzB] = typeB === NodeTypes.DUALXYZ ? [b.val, b.dx, b.dy, b.dz] : [b, 0, 0, 0];
+
+      return new DualXYZ(
+        valA * valB,
+        valA * dxB + dxA * valB,
+        valA * dyB + dyA * valB,
+        valA * dzB + dzA * valB
+      );
+    }
+
+    throw new Error(`MulNode: unsupported type combination ${typeA} * ${typeB}`);
+  }
+
+  _codegenGLSL(parentresults){
+    return `(${parentresults[0]}*${parentresults[1]})`;
+  }
+
+}
+
+class DivNode extends Node {
+  constructor(a, b, type = NodeTypes.UNKNOWN) {
+    super(type, [a, b]);
+  }
+
+
+  _cloneWithNewParents(parents) {
+    return new DivNode(parents[0], parents[1], this.type);
+  }
+
+  static typesignatures=[
+    {in:[NodeTypes.SCALAR,NodeTypes.SCALAR],out:NodeTypes.SCALAR},
+    {in:[NodeTypes.SCALAR,NodeTypes.DUAL],out:NodeTypes.DUAL},
+    {in:[NodeTypes.DUAL,NodeTypes.SCALAR],out:NodeTypes.DUAL},
+    {in:[NodeTypes.DUAL,NodeTypes.DUAL],out:NodeTypes.DUAL}
+
+  ];
+
+  _promoteType(visited){
+    const parenttypes=this.parents.map(p=>p.type);
+    let sig = MulNode.typesignatures.find(sig =>arrayEquals(sig.in,parenttypes));
+
+    if (sig) {
+      this.type = sig.out;
+
+
+      if(sig.in[0]==NodeTypes.SCALAR && sig.in[1]==NodeTypes.DUAL){
+        this.parents[0]=castNode(this.parents[0],NodeTypes.DUAL);
+        this.parents[0].promoteTypes(visited);//this is here to promote newly created cast nodes mainly for savety checks
+        
+      }  
+
+      return;
+    }
+    throw new Error("no signature found");
+    
+  }
+  _eval(parentresults, variables, cache) {
+    const [a, b] = parentresults;
+    const [typeA, typeB] = this.parents.map(p => p.type);
+
+    // Scalar / Scalar
+    if (typeA === NodeTypes.SCALAR && typeB === NodeTypes.SCALAR) {
+      return a / b;
+    }
+
+    // Dual or Scalar × Dual combinations
+    if (typeA === NodeTypes.DUAL || typeB === NodeTypes.DUAL) {
+      let [valA, derA] = typeA === NodeTypes.DUAL ? [a.val, a.der] : [a, 0];
+      let [valB, derB] = typeB === NodeTypes.DUAL ? [b.val, b.der] : [b, 0];
+
+      const val = valA / valB;
+      const der = (derA * valB - valA * derB) / (valB * valB);
+      return new Dual(val, der);
+    }
+
+    // DualXYZ or Scalar × DualXYZ combinations
+    if (typeA === NodeTypes.DUALXYZ || typeB === NodeTypes.DUALXYZ) {
+      let [valA, dxA, dyA, dzA] = typeA === NodeTypes.DUALXYZ ? [a.val, a.dx, a.dy, a.dz] : [a, 0, 0, 0];
+      let [valB, dxB, dyB, dzB] = typeB === NodeTypes.DUALXYZ ? [b.val, b.dx, b.dy, b.dz] : [b, 0, 0, 0];
+
+      const val = valA / valB;
+      const dx = (dxA * valB - valA * dxB) / (valB * valB);
+      const dy = (dyA * valB - valA * dyB) / (valB * valB);
+      const dz = (dzA * valB - valA * dzB) / (valB * valB);
+
+      return new DualXYZ(val, dx, dy, dz);
+    }
+
+    throw new Error(`DivNode: unsupported type combination ${typeA} / ${typeB}`);
+  }  
+  _codegenGLSL(parentresults){
+    if(this.parents[1]==NodeTypes.SCALAR)
+      return `(${parentresults[0]}/${parentresults[1]})`;
+    if(this.parents[0]==NodeTypes.DUAL && this.parents[1]==NodeTypes.DUAL)
+      return `DualDiv(${parentresults[0]},${parentresults[1]})`;
+  }
+}
+
+
+class AssignementNode extends Node {
+  constructor(variable, expression) {
+    super(NodeTypes.UNTYPED, [variable,expression]);
+  }
+
+
+  _cloneWithNewParents(parents) {
+    return new AssignementNode(parents[0], parents[1]);
+  }
+
+  _promoteType(visited){
+
+
+
+    if(!parents[0]instanceof VarNode)throw new Error("can only assign variable nodes");
+
+    this.parents[1]=castNode(this.parents[1],parents[0].type);//try to cast expression node to type of variable node
+    if(parents[0].type!=parents[1].type)
+      throw new Error("cant assign nodes of different types");
+    
+  }
+    
+  _codegenGLSL(parentresults) {
+  const types = {
+    [NodeTypes.SCALAR]: "float",
+    [NodeTypes.DUAL]: "Dual",
+    [NodeTypes.DUALXYZ]: "DualXYZ",
+  };
+
+  const [variable, expression] = this.parents;
+  const [variableString, expressionString] = parentresults;
+
+  const isConst = expression instanceof ConstNode;
+  const qualifier = isConst ? "const " : "";
+
+  return `${qualifier}${types[variable.type]} ${variableString} = ${expressionString};`;
+}
+
+}
+class ReturnNode extends Node {
+  constructor( expression,returntype) {
+    super(NodeTypes.UNTYPED, [expression]);
+    this.returntype=returntype;
+  }
+
+
+  _cloneWithNewParents(parents) {
+    return new ReturnNode(parents[0], this.returntype);
+  }
+
+  _promoteType(visited){
+    this.parents[0]=castNode(this.parents[0],this.returntype);    
+  }
+    
+  _codegenGLSL(parentresults){
+    return `return ${parentresults[0]};`;
+  }
+}
+
+
+
+
+
+function makeAssignementGraph(root, inlineConstants = true) {
+  // roots with more than one child need to be assignments
+  // constants may be removed from this
+  // n1 = 0.5
+  // n2 = n1 * x
+  // n3 = n1 * y
+  // vs with constant inlining
+  // n2 = 0.5 * x
+  // n3 = 0.5 * y
+
+  const nodes = root.topologicalsort();
+
+  // count how many children each node has
+  const numberOfChildren = new Map();
+  for (const node of nodes) {
+    //numberOfChildren.set(node,0);//at this point numberOfChildren.get(node) isnt initialized
+    for (const parent of node.parents) {
+      numberOfChildren.set(parent, (numberOfChildren.get(parent) ?? 0) + 1);
+    }
+  }
+
+
+
+  const nodeToVariable = new Map();
+  function replaceWithVariables(node) {
+    return node.copyGraph(currentNode => nodeToVariable.get(currentNode));
+  }
+
+  let variablecounter=0;
+
+  return nodes.map(node => {
+    if(node.type==NodeTypes.UNTYPED)return replaceWithVariables(node);
+    if (node instanceof VarNode) return;// Variable nodes don’t need to be assigned a new name
+    if (inlineConstants && node instanceof ConstNode) return; // optionally skip consts
+    if ((numberOfChildren.get(node) ?? 0) == 0) throw new Error("typed node without children. use a return or assignement node to get output");//or u could implement a custom untyped node for that     
+    if ((numberOfChildren.get(node) ?? 0) <= 1) return;       // we only want to assign nodes which have 2 or more children
+
+    const variable = new VarNode(`_generatednode${variablecounter++}`, node.type);
+    
+    // copy the graph, replacing other assigned nodes with their variables
+    const expression = replaceWithVariables(node);
+    
+    nodeToVariable.set(node,variable);//this indecates all occurences of node will be replaced by variable
+    return new AssignementNode(variable,expression);
+    
+  }).filter(x=>x!=undefined);
+}
+
+/*
+function makeAssignmentGraph(root) {
+  const assignmentNodes = computeTopSortedAssignmentNodes(root);
+
+  // this variable maps the node to a new variable
+  const nodeToVariable = new Map(
+    assignmentNodes.map((n, i) => [n, new VarNode(`_generatednode${i}`, n.type)])
+  );
+
+  const assignments = assignmentNodes.map(assignmentNode => {
+    const variable = nodeToVariable.get(assignmentNode);
+
+    // copy the graph, replacing other assignment nodes with their variables
+    const expression = assignmentNode.copyGraph(currentNode => {
+      if (currentNode === assignmentNode) return undefined; // don’t replace the node itself
+      return nodeToVariable.get(currentNode);
+    });
+
+    return new AssignementNode(variable,expression);
+  });
+
+  return assignments;
+}
+*/
+
+
+
+
+
+function gencodeGLSL(node){
+  const assignments=makeAssignementGraph(node);
+  return assignments.map(node=>
+    node.codegenGLSL()
+  ).join("\n");
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// --------------------
+// Test nodes
+// --------------------
+const c1 = new ConstNode(2, NodeTypes.SCALAR);
+const c2 = new ConstNode(new Dual(1,2), NodeTypes.DUAL);
+const c3 = new ConstNode(4, NodeTypes.SCALAR);
+
+// create combinations
+const nodes = [
+];
+
+for (let Op of [AddNode, SubNode, MulNode, DivNode]) {
+  for (let a of [c1,c2]) {
+    for (let b of [c1,c2]) {
+      nodes.push(new Op(a, b));
+    }
+  }
+}
+// promote types
+nodes.forEach(n => n.promoteTypes());
+
+// print results
+output.textContent = "";
+nodes.forEach((n, i) => {
+  const ptypes = n.parents.map(p => p.type).join(", ");
+  output.textContent += `${n.constructor.name} ${i + 1}: parents=[${ptypes}] → type=${n.type} ${n.eval()}\n`;
+});
+
+
+
+
+
+
+
+
+
+
+const canvas = document.getElementById("plot");
+canvas.width = 400;
+canvas.height = 300;
+const ctx = canvas.getContext("2d");
+
+// Function f(x) = x^2
+//const xNode = new VarNode("x", NodeTypes.DUAL);
+//const expr = new MulNode(xNode, xNode);
+
+const x = new VarNode("x", NodeTypes.UNKNOWN);
+const expr = new AddNode(
+  new SubNode(
+    new MulNode(new ConstNode(3), new MulNode(x, new MulNode(x, x))),   // 3*x^3
+    new MulNode(new ConstNode(2), new MulNode(x, x))                     // -2*x^2
+  ),
+  x                                                                    // + x
+);
+
+
+
+x.type=NodeTypes.DUAL;
+expr.promoteTypes();
+console.log(gencodeGLSL(new ReturnNode(expr)));
+
+let dualfun=x=>expr.eval(new Map([["x", new Dual(x, 1)]]))
+
+
+let f=(x)=>dualfun(x).val;
+let g=(x)=>dualfun(x).der;
+
+
+plotFunction(ctx,f);
+plotFunction(ctx,g);
+
+function plotFunction(ctx, f, {
+  xMin=-5, xMax=5,
+  yMin=-5, yMax=5,
+  color="blue"
+}={}) {
+  const W = ctx.canvas.width;
+  const H = ctx.canvas.height;
+
+  ctx.beginPath();
+  for (let px=0; px<W; px++) {
+    const x = xMin + (xMax-xMin)*px/W;
+    const y = f(x);
+
+    // map (x,y) to canvas coords
+    //const py = H - ( (y-yMin)/(yMax-yMin) * H );
+    const py = H - (y - yMin) / (yMax - yMin) * H;  // <-- flip y
+    //console.log(y,py);
+
+    if (px === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.strokeStyle = color;
+  ctx.stroke();
+}
+
+function runCodegenTestsWithDAGs() {
+  const tests = [];
+
+  // shared subexpression: (x + 1) used twice
+  const x = new VarNode("x", NodeTypes.SCALAR);
+  const one = new ConstNode(1, NodeTypes.SCALAR);
+  const subexpr = new AddNode(x, one);
+
+  const expr1 = new MulNode(subexpr, subexpr); // (x+1)*(x+1)
+  tests.push({ name: "shared subexpr (square)", node: new ReturnNode(expr1, NodeTypes.SCALAR) });
+
+  // more complex DAG: (x+1)^2 + (x+1)^3
+  const expr2 = new AddNode(
+    new MulNode(subexpr, subexpr),                 // (x+1)^2
+    new MulNode(subexpr, new MulNode(subexpr, subexpr)) // (x+1)^3
+  );
+  tests.push({ name: "shared subexpr (poly)", node: new ReturnNode(expr2, NodeTypes.SCALAR) });
+
+  // shared polynomial piece: let p = (3*x^2 - 2*x)
+  const polyPiece = new SubNode(
+    new MulNode(new ConstNode(3), new MulNode(x, x)),
+    new MulNode(new ConstNode(2), x)
+  );
+  const expr3 = new AddNode(
+    new MulNode(polyPiece, polyPiece), // p^2
+    new MulNode(polyPiece, x)          // p*x
+  );
+  tests.push({ name: "shared subexpr (polyPiece)", node: new ReturnNode(expr3, NodeTypes.SCALAR) });
+
+  console.log("==== GLSL Codegen DAG Tests ====");
+  for (let t of tests) {
+    try {
+      t.node.promoteTypes();
+      console.log(`\n${t.name}:`);
+      console.log(gencodeGLSL(t.node));
+    } catch (err) {
+      console.error(`Error in test '${t.name}':`, err);
+    }
+  }
+}
+
+runCodegenTestsWithDAGs();
+
+function runCodegenTestsWithDAGs() {
+
+  const output = document.getElementById("output");
+  output.textContent += "\n==== GLSL Codegen DAG Tests ====\n";
+
+  function logTest(name, expr) {
+    output.textContent += `\n${name}:\n`;
+    output.textContent += gencodeGLSL(new ReturnNode(expr)) + "\n";
+  }
+
+  // 1. Simple shared subexpression (x+1)^2
+  let x = new VarNode("x", NodeTypes.SCALAR);
+  let a = new AddNode(x, new ConstNode(1));
+  let expr = new MulNode(a, a);
+  logTest("shared subexpr (square)", expr);
+
+  // 2. Shared subexpression in polynomial
+  x = new VarNode("x", NodeTypes.SCALAR);
+  a = new AddNode(x, new ConstNode(1));
+  let b = new MulNode(a, a);
+  let c = new MulNode(a, b);
+  expr = new AddNode(b, c);
+  logTest("shared subexpr (poly)", expr);
+
+  // 3. Nested reuse (triangle-shaped DAG)
+  x = new VarNode("x", NodeTypes.SCALAR);
+  a = new AddNode(x, new ConstNode(1));
+  let b2 = new AddNode(x, new ConstNode(2));
+  let c2 = new MulNode(a, a);
+  let d2 = new MulNode(a, b2);
+  expr = new AddNode(c2, d2);
+  logTest("nested DAG (triangle)", expr);
+
+  // 4. Multiple ReturnNodes sharing subexpressions
+  x = new VarNode("x", NodeTypes.SCALAR);
+  a = new AddNode(x, new ConstNode(1));
+  b = new AddNode(x, new ConstNode(2));
+  let f1 = new MulNode(a, a);
+  let f2 = new MulNode(a, b);
+  logTest("shared subexpr multiple returns f1", f1);
+  logTest("shared subexpr multiple returns f2", f2);
+
+  // 5. Higher-degree polynomial reuse
+  x = new VarNode("x", NodeTypes.SCALAR);
+  a = new AddNode(x, new ConstNode(1));
+  b = new MulNode(a, a); // a^2
+  c = new MulNode(a, b); // a^3
+  let d = new AddNode(b, c); // a^2 + a^3
+  expr = new MulNode(d, new AddNode(x, new ConstNode(2)));
+  logTest("high-degree polynomial DAG", expr);
+
+  // 6. Reuse in mixed additions and multiplications
+  x = new VarNode("x", NodeTypes.SCALAR);
+  const p = new AddNode(x, new ConstNode(1));
+  const q = new AddNode(x, new ConstNode(2));
+  const r = new MulNode(p, q);
+  const s = new AddNode(p, r);
+  const t = new MulNode(s, p); // reuses p multiple times
+  logTest("mixed reuse DAG", t);
+
+  // 7. Deep nested reuse
+  x = new VarNode("x", NodeTypes.SCALAR);
+  const n1 = new AddNode(x, new ConstNode(1));
+  const n2 = new MulNode(n1, n1);       // n1^2
+  const n3 = new MulNode(n2, n1);       // n1^3
+  const n4 = new MulNode(n3, n2);       // n1^5
+  expr = new AddNode(n4, n3);           // n1^5 + n1^3
+  logTest("deep nested reuse", expr);
+}
+
+runCodegenTestsWithDAGs();
+
+
+  </script>
+</body>
+</html>

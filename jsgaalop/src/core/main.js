@@ -364,8 +364,10 @@ async function main(){
     //let gajson=await load("./torus.json");
     //let gajson=await load("./assets/torus_intersect.json");
     //let gajson=await load("./assets/torus_intersect_p.json");
-    let gajson=await load("./assets/jsonexport.json");
+    //let gajson=await load("./assets/jsonexport.json");
     //let gajson=await load("./assets/torus.json");
+    //let gajson=await load("./assets/torustorusintersect.json");
+    let gajson=await load("./assets/torus_plane_intersect.json");
     const graph=new GaalopGraph();
     graph.fromjson(gajson);
     console.log(graph.inputScalars);

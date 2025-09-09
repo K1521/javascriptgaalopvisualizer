@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Empty Page</title>
+  <style>
+    body {
+      font-family: monospace;
+      padding: 1em;
+    }
+    #output {
+      white-space: pre-wrap; /* allows multiline text */
+      border: 1px solid #ccc;
+      padding: 0.5em;
+      border-radius: 5px;
+      background: #f9f9f9;
+    }
+  </style>
+  
+</head>
+<body>
+  <canvas id="plot" width="400" height="300" style="border:1px solid #ccc"></canvas>
+  <h1>Output</h1>
+  <div id="output"></div>
+
+  <script>
+// Example: write multiple lines of text
+const output = document.getElementById("output");
+
+output.textContent = "Hello!\nThis is line two.\nAnd this is line three.";
+
+let f=(x)=>0;
+
+
+const canvas = document.getElementById("plot");
+const ctx = canvas.getContext("2d");
+plotFunction(ctx,f);
+
+function plotFunction(ctx, f, {
+  xMin=-5, xMax=5,
+  yMin=-5, yMax=5,
+  color="blue"
+}={}) {
+  const W = ctx.canvas.width;
+  const H = ctx.canvas.height;
+
+  ctx.beginPath();
+  for (let px=0; px<W; px++) {
+    const x = xMin + (xMax-xMin)*px/W;
+    const y = f(x);
+
+    // map (x,y) to canvas coords
+    //const py = H - ( (y-yMin)/(yMax-yMin) * H );
+    const py = H - (y - yMin) / (yMax - yMin) * H;  // <-- flip y
+    console.log(y,py);
+
+    if (px === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.fillRect(100, 150, 5, 5);
+  ctx.strokeStyle = color;
+  ctx.stroke();
+}
+
+
+  </script>
+</body>
+</html>
