@@ -1,33 +1,197 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Empty Page</title>
-  <style>
-    body {
-      font-family: monospace;
-      padding: 1em;
-    }
-    #output {
-      white-space: pre-wrap; /* allows multiline text */
-      border: 1px solid #ccc;
-      padding: 0.5em;
-      border-radius: 5px;
-      background: #f9f9f9;
-    }
-  </style>
-  
-</head>
-<body>
-  <canvas id="plot" width="400" height="300" style="border:1px solid #ccc"></canvas>
-  <h1>Output</h1>
-  <div id="output"></div>
 
-  <script>
-// Example: write multiple lines of text
-const output = document.getElementById("output");
 
-output.textContent = "Hello!\nThis is line two.\nAnd this is line three.";
+
+class visualizationtargetnode{ 
+    constructor(nodes,name,color){
+        this.color=color;
+        this.nodes=nodes,
+        this.name=name;
+    }
+}
+
+
+export class GaalopGraph {
+    constructor() {
+        this.name = undefined;
+        this.inputScalars = new Map(); // variablename->variable
+        this.outputMultivectors = new Map(); // name -> Multivector of nodes
+        this.allMultivectors=undefined;
+        this.objectcolormap = new Map(); //name (of output node) -> color
+
+        /** 
+         * maps the name of the innerProductResult to the output Multivector Name
+         * for example 
+         * _V_PRODUCT0 => S1
+         * _V_PRODUCT1 => S2
+         * _V_PRODUCT2 => S3
+         * @type {Map<string,string>} 
+         * 
+        */
+        this.renderingExpression = new Map(); //name (of inner product result) -> expression (name of multivector)
+    }
+
+
+
+    static fromjson(jsonstring){
+        const graph=new GaalopGraph();
+        const json=JSON.parse(jsonstring);
+        graph.name=json.name;
+    
+        const Multivectors=new Map(); // name -> Multivector of nodes
+        const scalars=new Map(); // name -> node
+    
+        for(const [index, inputScalar] of json.inputScalars.entries()){
+            let node;
+            if(new Set(["_V_X", "_V_Y", "_V_Z"]).has(inputScalar))node=new VarNode(inputScalar);
+            else node=new VarNode(inputScalar,NodeTypes.SCALAR);
+            
+            graph.inputScalars.set(inputScalar, node);
+            scalars.set(inputScalar, node);
+            scalars.set("inputsVector["+index+"]", node);//gapp behaves weirdly and uses inputsVector[index] instead of name
+        }
+    
+        for (const renderingExpression of json.renderingExpressions) {
+            const name = renderingExpression.name;
+            const expression = renderingExpression.expression;
+            graph.renderingExpression.set(name, expression);
+        }
+        //const inputsVector = json.inputScalars;
+    
+    
+        function parseExpression(node) {
+            switch(node.type){
+                case "Mul":
+                    return new MulNode(parseExpression(node.left), parseExpression(node.right));
+                case "Add":
+                    return new AddNode(parseExpression(node.left), parseExpression(node.right));
+                case "Sub":
+                    return new SubNode(parseExpression(node.left), parseExpression(node.right));
+                case "Div":
+                    return new DivNode(parseExpression(node.left), parseExpression(node.right));
+                case "Const":
+                    return new ConstNode(node.value);
+                case "Negation":
+                    return new NegNode(parseExpression(node.operand));
+                case "MathFunctionCall":
+                    const func = node.function;
+                    const operand = parseExpression(node.operand);
+                    if (func === "abs") {
+                        //return new GraphNode(AbsOperand.instance,[operand]);
+                        throw new Error(`i havent implementedthis node yet`);
+                    } else if (func === "sqrt") {
+                        //return new GraphNode(SqrtOperand.instance,[operand]);
+                        throw new Error(`i havent implementedthis node yet`);
+                    } else {
+                        throw new Error(`Unknown function: ${func}`);
+                    }
+                case "MultivectorVariable":
+                    //TODO bladindex should be integer. how do i cast it to int?
+                    if (node.name.startsWith("inputsVector[") && node.name.endsWith("]")) {
+                    return scalars.get(node.name);// Return the corresponding input vector
+                    }
+        
+                    return Multivectors.get(node.name).get(node.bladeIndex);
+                case "Variable":
+                    return scalars.get(node.name);
+                default:
+                    throw new Error(`Unknown node type: ${node.type}`);
+            }
+        }
+    
+        var activeColor=new Color(0,0,0,1);
+        for (const node of json.nodes){
+            if(node.type==="AssignmentNode"){
+                const expression=parseExpression(node.expression);
+                const variablejson=node.variable;
+                if(variablejson.type==="Variable"){
+                    scalars.set(variablejson.name,expression);
+                } else if(variablejson.type==="MultivectorVariable"){
+                    const name=variablejson.name;
+                    const bladeIndex=variablejson.bladeIndex;
+                    if(!Multivectors.has(name)){
+                        Multivectors.set(name,new Map());
+                    }
+                    //TODO handle reasigning of multivector variables
+                    Multivectors.get(name).set(bladeIndex,expression);
+                } else{
+                    throw new Error(`Unknown variable type: ${variablejson.type}`);
+                }
+            } else if(node.type==="ColorNode"){
+                activeColor=new Color(node.r,node.g,node.b,node.alpha);
+            } else if (node.type==="StoreResultNode"){
+    
+            } else if(node.type==="ExpressionStatement"){
+                if(node.expression.type!=="Variable"){
+                    throw new Error("ExpressionStatement must be a variable");
+                }
+                graph.objectcolormap.set(node.expression.name,activeColor);
+            } else {
+                throw new Error(`Unknown node type: ${node.type}`);
+            }
+            
+        }
+    
+        for (const name of json.outputMultivectors) {
+            graph.outputMultivectors.set(name, Multivectors.get(name));
+        }
+
+        graph.allMultivectors=Multivectors;
+        
+        return graph;
+    }
+
+    
+    /**
+     * 
+     * @returns {VisualisationGraph[]} list of visualisation graphs
+     */
+    createVisualisationgraphs1() {
+
+        const VisualisationGraphs=[];
+        const xyz=[..."XYZ"].map((cord)=>this.inputScalars.get("_V_"+cord));
+        const inputnodes=new Map(xyz.map((node)=>[node,node]));
+        for (const [innerProductResultName,outputMultivectorName] of this.renderingExpression.entries()) {
+        const innerProductResult=this.outputMultivectors.get(innerProductResultName);
+        const innerProductInput=this.outputMultivectors.get(outputMultivectorName);
+        const newinnerProductInput=new Multivector();
+
+
+        let args=0;
+        for (const [index, value] of innerProductInput.entries()) {
+            const node = new GraphNode(new VarOperand("args["+(args++)+"]"));
+            newinnerProductInput.set(index, node);
+            inputnodes.set(value, node);
+        }
+        const outputnodes=subgraph(inputnodes,innerProductResult.values());
+
+
+        const newinnerProductResult=innerProductResult.map((value) => outputnodes.get(value));
+        /*for (const [index, value] of innerProductResult.values.entries()) {
+            newinnerProductResult.set(index, outputnodes.get(value));
+        }*/
+        //this code creates a input variable for each blade of the multivector to visualize (newinnerProductInput)
+        //and a new multivector for each output node (newinnerProductResult)
+        VisualisationGraphs.push(new VisualisationGraph(newinnerProductInput, newinnerProductResult,innerProductInput,outputMultivectorName));
+        }
+        return VisualisationGraphs;
+    }
+
+    createVisualisationgraphs2(){
+        const VisualisationGraphs=[];
+        for (const [innerProductResultName,outputMultivectorName] of this.renderingExpression.entries()) {
+            const innerProductResultNodes=[...this.outputMultivectors.get(innerProductResultName).values()];
+
+            VisualisationGraphs.push(new VisualisationGraph2(innerProductResultNodes,outputMultivectorName));
+        }
+        return VisualisationGraphs;
+    }
+
+    
+}
+
+
+
+
 
 // ============================
 // Type Enums
@@ -228,8 +392,30 @@ class Node {
     throw new Error('Not implemented');
   }
 
-  commonsubexpressionelimination(signaturemap=new Map(),replacementmap=new Map()){
-    if(replacementmap.has(sig))return replacementmap.get(sig);
+  visitnodesrec(visitorfn,resultscache=new Map()){ 
+    function visit(node){
+        if(resultscache.has(node))return resultscache.get(node);
+        const parentresults=node.parents.map(p=>visit(p));
+        const result=visitorfn(node,parentresults,resultscache);
+        resultscache.set(node,result);
+        return result;
+    }
+    return visit(this);
+  }
+
+  commonsubexpressionelimination(){
+    const signaturemap=new Map();
+    return this.visitnodesrec((node,parentresults)=>{
+        const sig=node.nodesignature(parentresults.map(parent=>`[${parent.id}]`),parentresults);
+        if(signaturemap.has(sig))return signaturemap.get(sig);
+        const newnode=node._cloneWithNewParents(parentresults);
+        signaturemap.set(sig,newnode);
+        return newnode;
+    });
+  }
+
+  /*commonsubexpressionelimination(signaturemap=new Map(),replacementmap=new Map()){
+    if(replacementmap.has(this))return replacementmap.get(this);
     const sig=this.nodesignature(this.parents.map(x=>replacementmap.get(x)));
     if(signaturemap.has(sig))return signaturemap.get(sig);
     
@@ -237,9 +423,9 @@ class Node {
     signaturemap.set(sig,newnode);
     replacementmap.set(this,newnode);
     return newnode;
-  }
-  nodesignature(parents){
-    return this._codegenGLSL(parents.map(x=>`[${x.id}]`));
+  }*/
+  nodesignature(parentids,parents){
+    return this._codegenGLSL(parentids);
   }
 }
 
@@ -408,6 +594,29 @@ class SubNode extends Node {
     return `(${parentresults[0]}-${parentresults[1]})`;
   }
 }
+
+class NegNode extends Node {
+  constructor(a, type = NodeTypes.UNKNOWN) {
+    super(type, [a]);
+  }
+
+  _eval(parentresults,variables,cache) {
+    const [a]=parentresults;
+    if(this.type==NodeTypes.SCALAR)return -a;
+    if(this.type==NodeTypes.DUAL)return new Dual(-a.val,-a.der);
+    if(this.type==NodeTypes.DUALXYZ)return new Dual(a.val,-a.dx,-a.dy,-a.dz);
+    throw new Error("unknown type");
+  }
+
+  _cloneWithNewParents(parents) {
+    return new NegNode(parents[0], this.type);
+  }
+
+  _codegenGLSL(parentresults){
+    return `(-${parentresults[0]})`;
+  }
+}
+
 
 class MulNode extends Node {
   constructor(a, b, type = NodeTypes.UNKNOWN) {
@@ -752,228 +961,3 @@ class RootNode extends Node {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-// --------------------
-// Test nodes
-// --------------------
-const c1 = new ConstNode(2, NodeTypes.SCALAR);
-const c2 = new ConstNode(new Dual(1,2), NodeTypes.DUAL);
-const c3 = new ConstNode(4, NodeTypes.SCALAR);
-
-// create combinations
-const nodes = [
-];
-
-for (let Op of [AddNode, SubNode, MulNode, DivNode]) {
-  for (let a of [c1,c2]) {
-    for (let b of [c1,c2]) {
-      nodes.push(new Op(a, b));
-    }
-  }
-}
-// promote types
-nodes.forEach(n => n.promoteTypes());
-
-// print results
-output.textContent = "";
-nodes.forEach((n, i) => {
-  const ptypes = n.parents.map(p => p.type).join(", ");
-  output.textContent += `${n.constructor.name} ${i + 1}: parents=[${ptypes}] → type=${n.type} ${n.eval()}\n`;
-});
-
-
-
-
-
-
-
-
-
-
-const canvas = document.getElementById("plot");
-canvas.width = 400;
-canvas.height = 300;
-const ctx = canvas.getContext("2d");
-
-// Function f(x) = x^2
-//const xNode = new VarNode("x", NodeTypes.DUAL);
-//const expr = new MulNode(xNode, xNode);
-
-const x = new VarNode("x", NodeTypes.UNKNOWN);
-const expr = new AddNode(
-  new SubNode(
-    new MulNode(new ConstNode(3), new MulNode(x, new MulNode(x, x))),   // 3*x^3
-    new MulNode(new ConstNode(2), new MulNode(x, x))                     // -2*x^2
-  ),
-  x                                                                    // + x
-);
-
-
-
-x.type=NodeTypes.DUAL;
-expr.promoteTypes();
-console.log(gencodeGLSL(new ReturnNode(expr)));
-
-let dualfun=x=>expr.eval(new Map([["x", new Dual(x, 1)]]))
-
-
-let f=(x)=>dualfun(x).val;
-let g=(x)=>dualfun(x).der;
-
-
-plotFunction(ctx,f);
-plotFunction(ctx,g);
-
-function plotFunction(ctx, f, {
-  xMin=-5, xMax=5,
-  yMin=-5, yMax=5,
-  color="blue"
-}={}) {
-  const W = ctx.canvas.width;
-  const H = ctx.canvas.height;
-
-  ctx.beginPath();
-  for (let px=0; px<W; px++) {
-    const x = xMin + (xMax-xMin)*px/W;
-    const y = f(x);
-
-    // map (x,y) to canvas coords
-    //const py = H - ( (y-yMin)/(yMax-yMin) * H );
-    const py = H - (y - yMin) / (yMax - yMin) * H;  // <-- flip y
-    //console.log(y,py);
-
-    if (px === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-  }
-  ctx.strokeStyle = color;
-  ctx.stroke();
-}
-
-function runCodegenTestsWithDAGs() {
-  const tests = [];
-
-  // shared subexpression: (x + 1) used twice
-  const x = new VarNode("x", NodeTypes.SCALAR);
-  const one = new ConstNode(1, NodeTypes.SCALAR);
-  const subexpr = new AddNode(x, one);
-
-  const expr1 = new MulNode(subexpr, subexpr); // (x+1)*(x+1)
-  tests.push({ name: "shared subexpr (square)", node: new ReturnNode(expr1, NodeTypes.SCALAR) });
-
-  // more complex DAG: (x+1)^2 + (x+1)^3
-  const expr2 = new AddNode(
-    new MulNode(subexpr, subexpr),                 // (x+1)^2
-    new MulNode(subexpr, new MulNode(subexpr, subexpr)) // (x+1)^3
-  );
-  tests.push({ name: "shared subexpr (poly)", node: new ReturnNode(expr2, NodeTypes.SCALAR) });
-
-  // shared polynomial piece: let p = (3*x^2 - 2*x)
-  const polyPiece = new SubNode(
-    new MulNode(new ConstNode(3), new MulNode(x, x)),
-    new MulNode(new ConstNode(2), x)
-  );
-  const expr3 = new AddNode(
-    new MulNode(polyPiece, polyPiece), // p^2
-    new MulNode(polyPiece, x)          // p*x
-  );
-  tests.push({ name: "shared subexpr (polyPiece)", node: new ReturnNode(expr3, NodeTypes.SCALAR) });
-
-  console.log("==== GLSL Codegen DAG Tests ====");
-  for (let t of tests) {
-    try {
-      t.node.promoteTypes();
-      console.log(`\n${t.name}:`);
-      console.log(gencodeGLSL(t.node));
-    } catch (err) {
-      console.error(`Error in test '${t.name}':`, err);
-    }
-  }
-}
-
-runCodegenTestsWithDAGs();
-
-function runCodegenTestsWithDAGs() {
-
-  const output = document.getElementById("output");
-  output.textContent += "\n==== GLSL Codegen DAG Tests ====\n";
-
-  function logTest(name, expr) {
-    output.textContent += `\n${name}:\n`;
-    output.textContent += gencodeGLSL(new ReturnNode(expr)) + "\n";
-  }
-
-  // 1. Simple shared subexpression (x+1)^2
-  let x = new VarNode("x", NodeTypes.SCALAR);
-  let a = new AddNode(x, new ConstNode(1));
-  let expr = new MulNode(a, a);
-  logTest("shared subexpr (square)", expr);
-
-  // 2. Shared subexpression in polynomial
-  x = new VarNode("x", NodeTypes.SCALAR);
-  a = new AddNode(x, new ConstNode(1));
-  let b = new MulNode(a, a);
-  let c = new MulNode(a, b);
-  expr = new AddNode(b, c);
-  logTest("shared subexpr (poly)", expr);
-
-  // 3. Nested reuse (triangle-shaped DAG)
-  x = new VarNode("x", NodeTypes.SCALAR);
-  a = new AddNode(x, new ConstNode(1));
-  let b2 = new AddNode(x, new ConstNode(2));
-  let c2 = new MulNode(a, a);
-  let d2 = new MulNode(a, b2);
-  expr = new AddNode(c2, d2);
-  logTest("nested DAG (triangle)", expr);
-
-  // 4. Multiple ReturnNodes sharing subexpressions
-  x = new VarNode("x", NodeTypes.SCALAR);
-  a = new AddNode(x, new ConstNode(1));
-  b = new AddNode(x, new ConstNode(2));
-  let f1 = new MulNode(a, a);
-  let f2 = new MulNode(a, b);
-  logTest("shared subexpr multiple returns f1", f1);
-  logTest("shared subexpr multiple returns f2", f2);
-
-  // 5. Higher-degree polynomial reuse
-  x = new VarNode("x", NodeTypes.SCALAR);
-  a = new AddNode(x, new ConstNode(1));
-  b = new MulNode(a, a); // a^2
-  c = new MulNode(a, b); // a^3
-  let d = new AddNode(b, c); // a^2 + a^3
-  expr = new MulNode(d, new AddNode(x, new ConstNode(2)));
-  logTest("high-degree polynomial DAG", expr);
-
-  // 6. Reuse in mixed additions and multiplications
-  x = new VarNode("x", NodeTypes.SCALAR);
-  const p = new AddNode(x, new ConstNode(1));
-  const q = new AddNode(x, new ConstNode(2));
-  const r = new MulNode(p, q);
-  const s = new AddNode(p, r);
-  const t = new MulNode(s, p); // reuses p multiple times
-  logTest("mixed reuse DAG", t);
-
-  // 7. Deep nested reuse
-  x = new VarNode("x", NodeTypes.SCALAR);
-  const n1 = new AddNode(x, new ConstNode(1));
-  const n2 = new MulNode(n1, n1);       // n1^2
-  const n3 = new MulNode(n2, n1);       // n1^3
-  const n4 = new MulNode(n3, n2);       // n1^5
-  expr = new AddNode(n4, n3);           // n1^5 + n1^3
-  logTest("deep nested reuse", expr);
-}
-
-runCodegenTestsWithDAGs();
-
-
-  </script>
-</body>
-</html>
