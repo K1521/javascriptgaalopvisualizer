@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>test</title>
+</head>
+<body>
+<script type="module">
+import { GaalopGraph ,Bundlenode,VarNode,NodeTypes,AddNode,MulNode,visualizationtargetnode,LabelNode,FunctionbodyNode,ReturnNode} from "./src/core/codegenv3.js";
+
+async function load(url) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    console.error('Failed to load:', url);
+    return '';
+  }
+  return await response.text();
+}
+
+function setxyzType(root, nodetype) {
+  const xyznames = new Set(["_V_X", "_V_Y", "_V_Z"]);
+  root.topologicalsort().forEach(n => {
+    if (n instanceof VarNode && xyznames.has(n.name)) {
+      n.type = nodetype;
+    }
+  });
+}
+
+let gajson=await load("./assets/torus_plane_intersect.json");
+const gagraph=GaalopGraph.fromjson(gajson);
+window.gagraph = gagraph;
+
+const vistargets=new Bundlenode(gagraph.vistargets());
+const vistargetsoptimized=new Bundlenode(gagraph.getoptimizedvistargets());
+
+
+
+console.log(vistargets.graphnodecounts());
+console.log(vistargetsoptimized.graphnodecounts());
+function getvarnodenames(root){
+    return new Set(root.topologicalsort().filter((n)=>n instanceof VarNode).map(n=>n.name));
+}
+console.log(getvarnodenames(vistargets));
+console.log(getvarnodenames(vistargetsoptimized));
+console.log(gagraph);
+
+function summofsquares(nodes){
+    return nodes.map(n=>new MulNode(n,n)).reduce((prev,curr)=>new AddNode(prev,curr));
+}
+
+
+
+console.log(getvarnodenames(vistargets));
+console.log(getvarnodenames(vistargetsoptimized));
+
+const viscopy=vistargetsoptimized.copyGraph();
+
+
+function constructsummofsquarestargets(root,type=NodeTypes.SCALAR){
+    const susgraph=root.copyGraph((orig,lazyClone)=>{
+        if(orig instanceof visualizationtargetnode){
+            const copy=lazyClone();
+            const sus=summofsquares(copy.parents);
+            return new LabelNode(sus,orig.name);
+        }
+    })
+
+    setxyzType(susgraph,type);
+    susgraph.promoteTypes();
+    return susgraph;
+}
+
+
+
+
+function evalLabels(root, variables = {}) {
+    const cache = new Map();
+    const labels = root.getLabelNodes(); // Map<label, LabelNode>
+    
+    const results = new Map();
+    for (const [label, node] of labels) {
+        results.set(label, node.eval(variables, cache));
+    }
+    
+    return results;
+}
+
+function randomVariablesTyped(graph, range = [-1, 1], xyztype = NodeTypes.SCALAR) {
+    const vars = new Map();
+    const random = () => Math.random() * (range[1] - range[0]) + range[0];
+
+    // All non-XYZ inputs are scalars
+    for (const [name, node] of graph.inputScalars) {
+        if (!["_V_X", "_V_Y", "_V_Z"].includes(name)) {
+            vars.set(name, random());
+        }
+    }
+
+    if (xyztype === NodeTypes.DUALXYZ) {
+        // Standard basis along x, y, z
+        vars.set("_V_X", new DualXYZ(random(), 1, 0, 0));
+        vars.set("_V_Y", new DualXYZ(random(), 0, 1, 0));
+        vars.set("_V_Z", new DualXYZ(random(), 0, 0, 1));
+    } else if (xyztype === NodeTypes.DUAL) {
+        // Random unit vector for derivatives
+        let dx = random(), dy = random(), dz = random();
+        const len = Math.hypot(dx, dy, dz);
+        dx /= len; dy /= len; dz /= len;
+
+        vars.set("_V_X", new Dual(random(), dx));
+        vars.set("_V_Y", new Dual(random(), dy));
+        vars.set("_V_Z", new Dual(random(), dz));
+    } else {
+        // Scalars
+        vars.set("_V_X", random());
+        vars.set("_V_Y", random());
+        vars.set("_V_Z", random());
+    }
+
+    return vars;
+}
+
+
+const type=NodeTypes.SCALAR;
+const sus=constructsummofsquarestargets(vistargets,type);
+const suso=constructsummofsquarestargets(vistargetsoptimized,type);
+
+
+function almostEqual(a, b, eps = 1e-12) {
+    if (typeof a === "number" && typeof b === "number") return Math.abs(a - b) < eps;
+
+    if (a instanceof Dual && b instanceof Dual) {
+        return Math.abs(a.val - b.val) < eps && Math.abs(a.der - b.der) < eps;
+    }
+
+    if (a instanceof DualXYZ && b instanceof DualXYZ) {
+        return Math.abs(a.val - b.val) < eps &&
+               Math.abs(a.dx - b.dx) < eps &&
+               Math.abs(a.dy - b.dy) < eps &&
+               Math.abs(a.dz - b.dz) < eps;
+    }
+
+    return false; // fallback
+}
+
+// Usage in your loop
+let good = 0, bad = 0;
+for (let i = 0; i < 100; i++) {
+    const vars = randomVariablesTyped(gagraph, [-1, 1], type);
+    const originalResults = evalLabels(sus, vars);
+    const optimizedResults = evalLabels(suso, vars);
+
+    for (const [label, origVal] of originalResults) {
+        const optVal = optimizedResults.get(label);
+        if (almostEqual(origVal, optVal)) {
+            good++;
+        } else {
+            bad++;
+        }
+    }
+}
+console.log("good", good);
+console.log("bad", bad);
+
+
+const fsuso=new FunctionbodyNode([new ReturnNode(suso.getLabelNodes().values().next().value,type)]);
+fsuso.promoteTypes();
+
+
+console.log(fsuso.codegenGLSL());
+
+
+
+const r=viscopy.parents[0].makecodeorsmth();
+console.log(r);
+
+
+
+
+
+
+</script>    
+</body>
+</html>
