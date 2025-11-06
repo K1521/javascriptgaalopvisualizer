@@ -5,8 +5,14 @@
     <title>test</title>
 </head>
 <body>
+    <canvas id="mainCanvas" tabindex="0" style="border-style: solid;"></canvas>
 <script type="module">
 import { GaalopGraph ,Bundlenode,VarNode,NodeTypes,AddNode,MulNode,visualizationtargetnode,LabelNode,FunctionbodyNode,ReturnNode} from "./src/core/codegenv3.js";
+
+const mainCanvas = document.getElementById('mainCanvas');
+//const diagramCanvas = document.getElementById('diagramCanvas');
+const gl = mainCanvas.getContext('webgl2',{preserveDrawingBuffer: true,antialias: false});
+
 
 async function load(url) {
   const response = await fetch(url);
@@ -171,7 +177,7 @@ console.log(fsuso.codegenGLSL());
 
 
 
-const r=viscopy.parents[0].makecodeorsmth();
+const r=viscopy.parents[0].generatefunctionbodys();
 console.log(r);
 
 
@@ -179,6 +185,6 @@ console.log(r);
 
 
 
-</script>    
+</script>     
 </body>
 </html>
