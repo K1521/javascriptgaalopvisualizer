@@ -196,9 +196,9 @@ export const NodeTypes = Object.freeze({
   SCALAR: 'scalar',
   DUAL: 'dual',
   DUALXYZ: 'dualXYZ',
-  //prob COMPLEX and COMPLEXDUAL later
+  //prob COMPLEX and DUALCOMPLEX later
   COMPLEX:"complex",
-  COMPLEXDUAL:"complexdual",
+  DUALCOMPLEX:"complexdual",
   UNTYPED:"UNTYPED" //for nodes like assignement nodes
 });
 
@@ -207,11 +207,11 @@ export const NodeTypes = Object.freeze({
 //complex->complexdual
 //and maybe dual->complexdual. i willjust include it
 const upcastMap = {
-  [NodeTypes.SCALAR]: new Set([NodeTypes.SCALAR, NodeTypes.DUAL, NodeTypes.DUALXYZ, NodeTypes.COMPLEX, NodeTypes.COMPLEXDUAL]),
-  [NodeTypes.DUAL]: new Set([NodeTypes.DUAL, NodeTypes.COMPLEXDUAL]),
+  [NodeTypes.SCALAR]: new Set([NodeTypes.SCALAR, NodeTypes.DUAL, NodeTypes.DUALXYZ, NodeTypes.COMPLEX, NodeTypes.DUALCOMPLEX]),
+  [NodeTypes.DUAL]: new Set([NodeTypes.DUAL, NodeTypes.DUALCOMPLEX]),
   [NodeTypes.DUALXYZ]: new Set([NodeTypes.DUALXYZ]),
-  [NodeTypes.COMPLEX]: new Set([NodeTypes.COMPLEX, NodeTypes.COMPLEXDUAL]),
-  [NodeTypes.COMPLEXDUAL]: new Set([NodeTypes.COMPLEXDUAL]),
+  [NodeTypes.COMPLEX]: new Set([NodeTypes.COMPLEX, NodeTypes.DUALCOMPLEX]),
+  [NodeTypes.DUALCOMPLEX]: new Set([NodeTypes.DUALCOMPLEX]),
   [NodeTypes.UNKNOWN]: new Set(), // unknown cant be present at type propagation time at leaf nodes
   [NodeTypes.UNTYPED]: new Set([NodeTypes.UNTYPED]),//untyped nodes stay untyped
 };
@@ -250,7 +250,7 @@ function findLowestCommonType(types){
     NodeTypes.DUAL,
     NodeTypes.DUALXYZ,
     NodeTypes.COMPLEX,
-    NodeTypes.COMPLEXDUAL
+    NodeTypes.DUALCOMPLEX
   ];
 
   for (let t of priority) {
@@ -293,9 +293,18 @@ class Complex {
   toString() {
     return `${this.x} + ${this.i}i`;
   }
+
+  static add = (A, B) => new Complex(A.x + B.x, A.i + B.i);
+  static sub = (A, B) => new Complex(A.x - B.x, A.i - B.i);
+  static mul = (A, B) => new Complex(A.x * B.x - A.i * B.i, A.x * B.i + A.i * B.x);
+  static div = (A, B) => {
+    const det = B.x * B.x + B.i * B.i;
+    return new Complex((A.x * B.x + A.i * B.i) / det, (A.i * B.x - A.x * B.i) / det);
+  };
+
 }
 
-class ComplexDual {
+class DualComplex {
   constructor(x, i = 0, dx = 0, di = 0) {
     this.x = x;
     this.i = i;
@@ -313,7 +322,7 @@ function getValueType(value){
   else if (value instanceof Dual) return NodeTypes.DUAL;
   else if (value instanceof DualXYZ) return NodeTypes.DUALXYZ;
   else if (value instanceof Complex) return NodeTypes.COMPLEX;
-  else if (value instanceof ComplexDual) return NodeTypes.COMPLEXDUAL; 
+  else if (value instanceof DualComplex) return NodeTypes.DUALCOMPLEX; 
   throw new Error("unknown type");
 }
 
@@ -351,6 +360,7 @@ class Node {
 
   constructor(type = NodeTypes.UNKNOWN, parents = []) {
     if(!Array.isArray(parents))throw new Error("parents must be a array");
+    if(type==undefined)throw new Error("this shouldnt be undefined");
     this.id = Node.globalId++;
     this.type = type;
     this.parents = parents;
@@ -678,7 +688,7 @@ export class visualizationtargetnode extends Node{
       return this.splitgraph;
     }
 
-   makecodeorsmth(){//rename
+   generatefunctionbodys(){//rename
     function summofsquares(nodes){
       return nodes.map(n=>new MulNode(n,n)).reduce((prev,curr)=>new AddNode(prev,curr));
     }
@@ -696,19 +706,43 @@ export class visualizationtargetnode extends Node{
     const splitgraph=Splitgraph.splitxyz(this);
     const vistarget=splitgraph.subgraph.copyGraph();
     
-    let singularoutput;
-    if(vistarget.parents.length==1)singularoutput=first(vistarget.parents);
-    else singularoutput=summofsquares(vistarget);
+    let singularoutput,USE_DOUBLEROOTS;
+    if(vistarget.parents.length==1){
+      singularoutput=first(vistarget.parents);
+      USE_DOUBLEROOTS=false;
+    }else{
+      singularoutput=summofsquares(vistarget);
+      USE_DOUBLEROOTS=true;
+    }
+
+    const POLYDEGREE=singularoutput.visitnodesrec(
+      (node,parentresults)=>{
+        if(node instanceof VarNode){
+          if(["_V_X","_V_Y","_V_Z"].includes(node.name))return 1;
+          else return 0;
+        }else if(node instanceof AddNode||node instanceof SubNode||node instanceof NegNode){
+          return parentresults.reduce((a,b)=>a>b?a:b);//max
+        }else if(node instanceof MulNode){
+          return parentresults.reduce((a,b)=>a+b);
+        }else if(node instanceof ConstNode){
+          return 0;
+        }else if(node instanceof DivNode){
+          if(parentresults[1]!=0)throw new Error("polynomial deree only for constant divisor in DivNode");
+          else return parentresults[0];
+        }
+        throw new Error("unknown nodetype for polydegree calc");
+      }
+    );
 
     const evaltargets=[];
 
     //DualComplexSummofsquares
-    let a=new AddNode(new VarNode("a",NodeTypes.COMPLEX),new ConstNode(new ComplexDual(0,1)));
+    let a=new AddNode(new VarNode("a",NodeTypes.COMPLEX),new ConstNode(new DualComplex(0,0,1,0)));
     let x=new AddNode(new VarNode("rayOrigin.x",NodeTypes.SCALAR),new MulNode(a,new VarNode("rayDir.x",NodeTypes.SCALAR)));
     let y=new AddNode(new VarNode("rayOrigin.y",NodeTypes.SCALAR),new MulNode(a,new VarNode("rayDir.y",NodeTypes.SCALAR)));
     let z=new AddNode(new VarNode("rayOrigin.z",NodeTypes.SCALAR),new MulNode(a,new VarNode("rayDir.z",NodeTypes.SCALAR)));
     let subgraph=replacexyz(singularoutput,x,y,z);
-    const func=new FunctionbodyNode([new ReturnNode(subgraph,NodeTypes.COMPLEXDUAL)]);
+    let func=new FunctionbodyNode([new ReturnNode(subgraph,NodeTypes.DUALCOMPLEX)]);
     func.promoteTypes();
 
     let body="\n"+func.codegenGLSL()+"\n";
@@ -736,7 +770,7 @@ export class visualizationtargetnode extends Node{
     y=new AddNode(new VarNode("pos.y",NodeTypes.SCALAR),new ConstNode(new DualXYZ(0,0,1,0)));
     z=new AddNode(new VarNode("pos.z",NodeTypes.SCALAR),new ConstNode(new DualXYZ(0,0,0,1)));
     subgraph=replacexyz(singularoutput,x,y,z);
-     FunctionbodyNode(new ReturnNode(subgraph,NodeTypes.DualXYZ));
+    func =new FunctionbodyNode([new ReturnNode(subgraph,NodeTypes.DUALXYZ)]);
     func.promoteTypes();
 
      body="\n"+func.codegenGLSL()+"\n";
@@ -752,7 +786,7 @@ export class visualizationtargetnode extends Node{
     z=new AddNode(new VarNode("rayOrigin.z",NodeTypes.SCALAR),new MulNode(a,new VarNode("rayDir.z",NodeTypes.SCALAR)));
     subgraph=replacexyz(vistarget,x,y,z);
     func=new FunctionbodyNode(subgraph.parents.map((node,idx)=>{
-      new AssignementNode(new VarNode(`result[${idx}]`,NodeTypes.DUAL),node);
+      return new AssignementNode(new VarNode(`result[${idx}]`,NodeTypes.DUAL),node);
     }));
     func.promoteTypes();
 
@@ -761,8 +795,32 @@ export class visualizationtargetnode extends Node{
      evaltarget=new Splitgraph(splitgraph.parents,splitgraph.subgraphvarnames,subgraph);
     evaltargets.push([header,header.replace("?",body),evaltarget]);
 
-return evaltarget;
+    header="const int numoutputs=?;";
+    evaltargets.push([header,header.replace("?",this.parents.length)]);
+
+    header="uniform float[?] args;";
+    evaltargets.push([header,header.replace("?",splitgraph.subgraphvarnames.length)]);
+    
+    header="#define USE_DOUBLEROOTS ?";
+    evaltargets.push([header,header.replace("?",+USE_DOUBLEROOTS)]);//+ converts bool to 0,1
+    
+    header="#define POLYDEGREE ?";
+    evaltargets.push([header,header.replace("?",POLYDEGREE)]);
+    
+
+    return evaltargets;
   } 
+
+  makecodegenerator(){
+    const evaltargets=this.generatefunctionbodys();
+
+    return (code)=>{
+      for(let [headertemplate,generated,_] of evaltargets){
+        code=code.replace(headertemplate,generated);
+      }
+      return code;
+    };
+  }
 
 
 
@@ -788,7 +846,7 @@ class Splitgraph extends Node{
     const splitnodes=new Set();//these nodes are the gpu inputs which are precomputed on cpu
         graph.visitnodesrec((node,parentresults)=>{
             if(node instanceof VarNode){
-                if(["V_X_","V_Y_","V_Z_"].includes(node.name))return {dependsonxyz :true,dependsonvariables:false};
+                if(["_V_X","_V_Y","_V_Z"].includes(node.name))return {dependsonxyz :true,dependsonvariables:false};
                 else return {dependsonxyz :false,dependsonvariables:true};
             }else{
                 const dependsonxyz=parentresults.some(item => item.dependsonxyz);//reduce((a,b)=> a||b.dependsonxyz,false);
@@ -813,7 +871,8 @@ class Splitgraph extends Node{
         //const splitmap=new Map();
         const graphcopy=graph.copyGraph((node,lazyclone)=>{
           if(splitnodes.has(node)){
-            const newvar=new VarNode(`_input${variablecounter++}`, node.type);
+            if(![NodeTypes.SCALAR,NodeTypes.UNKNOWN].includes(node.type))throw new Error("input var type must be scalar");
+              const newvar=new VarNode(`args[${variablecounter++}]`, NodeTypes.SCALAR);
             //splitmap.set(newvar,node);
             varnames.push(newvar.name);
             correspondingnode.push(node);
@@ -823,6 +882,12 @@ class Splitgraph extends Node{
         return new Splitgraph(correspondingnode,varnames,graphcopy);
   }
 
+  /**
+   * 
+   * @param {Node[]} nodes - parrent nodes
+   * @param {string[]} subgraphvarnames - variable name for the parent node replacement in the subgraph
+   * @param {Node} subgraph - root node of the subgraph
+   */
   constructor(nodes,subgraphvarnames,subgraph){
     //variables node->variable of subgraph
     super(subgraph.type,nodes);
@@ -892,6 +957,10 @@ class ConstNode extends Node {
     } else if (this.type === NodeTypes.DUALXYZ) {
       return `xyzDual(${flotify(this.value.dx)}, ${flotify(this.value.dy)}, ${flotify(this.value.dz)}, ${flotify(this.value.val)})`;
       // val is last here because DualXYZ maps to vec4 under the hood: dx=vec.x, dy=vec.y, dz=vec.z, val=vec.w
+    } else if (this.type === NodeTypes.DUALCOMPLEX) {
+      return `DualComplex(${flotify(this.value.x)}, ${flotify(this.value.i)}, ${flotify(this.value.dx)}, ${flotify(this.value.di)})`;
+    }else if (this.type === NodeTypes.COMPLEX) {
+      return `Complex(${flotify(this.value.x)}, ${flotify(this.value.i)})`;
     }
     super._codegenGLSL();//throws
   }
@@ -971,7 +1040,7 @@ class CastToDualXYZNode extends Node {
   }
 
   _codegenGLSL(parentresults){
-    return `DualXYZ(0.0,0.0,0.0,${parentresults[0]})`;
+    return `xyzDual(0.0,0.0,0.0,${parentresults[0]})`;
   }
 }
 
@@ -1000,30 +1069,36 @@ class CastToComplex extends Node {
 }
 
 
-class CastToComplexDual extends Node {
+class CastToDualComplex extends Node {
   constructor(parent) {
-    super(NodeTypes.COMPLEXDUAL, [parent]);
+    super(NodeTypes.DUALCOMPLEX, [parent]);
   }
 
   _eval(parentresults,variables,cache) {
-    return new ComplexDual(parentresults[0]);
+    return new DualComplex(parentresults[0]);
   }
 
   _cloneWithNewParents(parents) {
-    return new CastToComplex(parents[0]);
+    return new CastToDualComplex(parents[0]);
   }
 
   _promoteType(){
     const parenttype=this.parents[0].type;
-    if(parenttype==NodeTypes.SCALAR||parenttype==NodeTypes.DUAL)return;
-    new Error(`casting ${parenttype} to ComplexDual is not implemented/sensible`);
+    if(parenttype==NodeTypes.SCALAR||parenttype==NodeTypes.COMPLEX)return;
+    if(parenttype==NodeTypes.DUAL){
+      this.parentreferencemultiplicity=2;
+      return;
+    }
+    throw new Error(`casting ${parenttype} to DualComplex is not implemented/sensible`);
   }
 
   _codegenGLSL(parentresults){
-    if(this.type==NodeTypes.SCALAR)
-      return `ComplexDual(${parentresults[0]},0.0,0.0,0.0)`;
-    if(this.type==NodeTypes.COMPLEX)
-      return `ComplexDual(${parentresults[0]},0.0,0.0)`;
+    if(this.parents[0].type ==NodeTypes.SCALAR)
+      return `DualComplex(${parentresults[0]},0.0,0.0,0.0)`;
+    if(this.parents[0].type ==NodeTypes.COMPLEX)
+      return `DualComplex(${parentresults[0]},0.0,0.0)`;
+    if(this.parents[0].type ==NodeTypes.DUAL)
+      return `DualComplex((${parentresults[0]}).x,0.0,(${parentresults[0]}).y,0.0)`;
     throw new Error("invallid node type");
   }
 }
@@ -1031,7 +1106,7 @@ function castNode(node,targettype){
   if(node.type==targettype)return node;
   if(targettype==NodeTypes.DUAL)return new CastToDualNode(node);
   if(targettype==NodeTypes.DUALXYZ)return new CastToDualXYZNode(node);
-  if(targettype==NodeTypes.COMPLEXDUAL)return new CastToComplexDual(node);
+  if(targettype==NodeTypes.DUALCOMPLEX)return new CastToDualComplex(node);
   if(targettype==NodeTypes.COMPLEX)return new CastToComplex(node);
   throw new Error("cast not implemented yet");
 }
@@ -1222,19 +1297,28 @@ export class MulNode extends Node {
     {in:[NodeTypes.SCALAR,NodeTypes.SCALAR],out:NodeTypes.SCALAR},
     {in:[NodeTypes.SCALAR,NodeTypes.DUAL],out:NodeTypes.DUAL},
     {in:[NodeTypes.DUAL,NodeTypes.SCALAR],out:NodeTypes.DUAL},
-    {in:[NodeTypes.DUAL,NodeTypes.DUAL],out:NodeTypes.DUAL}
+    {in:[NodeTypes.DUAL,NodeTypes.DUAL],out:NodeTypes.DUAL},
+    {in:[NodeTypes.DUALXYZ,NodeTypes.SCALAR],out:NodeTypes.DUALXYZ},
+    {in:[NodeTypes.SCALAR,NodeTypes.DUALXYZ],out:NodeTypes.DUALXYZ},
+    {in:[NodeTypes.DUALXYZ,NodeTypes.DUALXYZ],out:NodeTypes.DUALXYZ},
+    {in:[NodeTypes.SCALAR,NodeTypes.COMPLEX],out:NodeTypes.COMPLEX},
+    {in:[NodeTypes.COMPLEX,NodeTypes.SCALAR],out:NodeTypes.COMPLEX},
+    {in:[NodeTypes.COMPLEX,NodeTypes.COMPLEX],out:NodeTypes.COMPLEX},
+    {in:[NodeTypes.DUALCOMPLEX,NodeTypes.DUALCOMPLEX],out:NodeTypes.DUALCOMPLEX},
 
   ];
 
   _promoteType(visited){
     const parenttypes=this.parents.map(p=>p.type);
-    let sig = MulNode.typesignatures.find(sig =>arrayEquals(sig.in,parenttypes));
+    //let sig = MulNode.typesignatures.find(sig =>arrayEquals(sig.in,parenttypes));
+    let sig=MulNode.typesignatures.find((sig)=>sig.in.every((type,i)=>upcastMap[parenttypes[i]].has(type)));
 
     if (sig) {
       this.type = sig.out;
+      this.parents=this.parents.map((x,i)=>castNode(x,sig.in[i]));
       return;
     }
-    throw new Error("no signature found");
+    throw new Error("no signature found for types:"+parenttypes);
     
   }
 
@@ -1267,6 +1351,28 @@ export class MulNode extends Node {
       );
     }
 
+    // DualXYZ or Scalar × DualXYZ combinations
+    if (typeA === NodeTypes.COMPLEX || typeB === NodeTypes.COMPLEX) {
+      let [xA,iA] = typeA === NodeTypes.COMPLEX ? [a.x,a.i] : [a, 0];
+      let [xB,iB] = typeB === NodeTypes.COMPLEX ? [b.x,b.i] : [b, 0];;
+
+      return new Complex(xA*xB-iA*iB,xA*iB+xB*iA);
+    }
+
+    
+    // DualXYZ or Scalar × DualXYZ combinations
+    if (typeA === NodeTypes.DUALCOMPLEX || typeB === NodeTypes.DUALCOMPLEX) {
+      let [xA,iA,dxA,diA] = typeA === NodeTypes.DUALCOMPLEX ? [a.x,a.i,a.dx,a.di] : [a, 0,0,0];
+      let [xB,iB,dxB,diB] = typeB === NodeTypes.DUALCOMPLEX ? [b.x,b.i,b.dx,b.di] : [b, 0,0,0];;
+
+      return new DualComplex(
+        xA * xB - iA * iB,                      // real part
+        xA * iB + xB * iA,                      // imaginary part
+        dxA * xB + xA * dxB - diA * iB - iA * diB, // dual-real part
+        dxA * iB + xA * diB + diA * xB + iA * dxB  // dual-imaginary part
+      );
+    }
+
     throw new Error(`MulNode: unsupported type combination ${typeA} * ${typeB}`);
   }
 
@@ -1286,7 +1392,19 @@ export class MulNode extends Node {
   
     // DualXYZ × DualXYZ → xyzDualMul / xyzDualSquare
     if (typeA === NodeTypes.DUALXYZ && typeB === NodeTypes.DUALXYZ) {
-      return a === b ? `xyzDualSquare(${a})` : `xyzDualMul(${a},${b})`;
+      //return a === b ? `xyzDualSquare(${a})` : `xyzDualMul(${a},${b})`;
+      return `xyzDualMul(${a},${b})`;
+    }
+
+    if (typeA === NodeTypes.COMPLEX && typeB === NodeTypes.COMPLEX) {
+      //return a === b ? `xyzDualSquare(${a})` : `xyzDualMul(${a},${b})`;
+      return `ComplexMul(${a},${b})`;
+    }
+
+    
+    if (typeA === NodeTypes.DUALCOMPLEX && typeB === NodeTypes.DUALCOMPLEX) {
+      //return a === b ? `xyzDualSquare(${a})` : `xyzDualMul(${a},${b})`;
+      return `DualComplexMul(${a},${b})`;
     }
   
     // All other combinations are unsupported
@@ -1310,60 +1428,84 @@ class DivNode extends Node {
     {in:[NodeTypes.SCALAR,NodeTypes.SCALAR],out:NodeTypes.SCALAR},
     {in:[NodeTypes.SCALAR,NodeTypes.DUAL],out:NodeTypes.DUAL},
     {in:[NodeTypes.DUAL,NodeTypes.SCALAR],out:NodeTypes.DUAL},
-    {in:[NodeTypes.DUAL,NodeTypes.DUAL],out:NodeTypes.DUAL}
+    {in:[NodeTypes.DUAL,NodeTypes.DUAL],out:NodeTypes.DUAL},
+    {in:[NodeTypes.COMPLEX,NodeTypes.SCALAR],out:NodeTypes.COMPLEX},
+    {in:[NodeTypes.COMPLEX,NodeTypes.COMPLEX],out:NodeTypes.COMPLEX},
+    {in:[NodeTypes.DUALCOMPLEX,NodeTypes.SCALAR],out:NodeTypes.DUALCOMPLEX},
+    {in:[NodeTypes.DUALXYZ,NodeTypes.SCALAR],out:NodeTypes.DUALXYZ},
+    //{in:[NodeTypes.DUALCOMPLEX,NodeTypes.DUALCOMPLEX],out:NodeTypes.DUALCOMPLEX}
 
   ];
 
+  /*{in:[NodeTypes.COMPLEX,NodeTypes.SCALAR],out:NodeTypes.COMPLEX},
+    {in:[NodeTypes.COMPLEX,NodeTypes.COMPLEX],out:NodeTypes.COMPLEX},
+    {in:[NodeTypes.DUALCOMPLEX,NodeTypes.DUALCOMPLEX],out:NodeTypes.DUALCOMPLEX},
+*/
+
   _promoteType(visited){
     const parenttypes=this.parents.map(p=>p.type);
-    let sig = MulNode.typesignatures.find(sig =>arrayEquals(sig.in,parenttypes));
+    //let sig = MulNode.typesignatures.find(sig =>arrayEquals(sig.in,parenttypes));
+    let sig=DivNode.typesignatures.find((sig)=>sig.in.every((type,i)=>upcastMap[parenttypes[i]].has(type)));
 
     if (sig) {
       this.type = sig.out;
-
-
-      if(sig.in[0]==NodeTypes.SCALAR && sig.in[1]==NodeTypes.DUAL){
-        this.parents[0]=castNode(this.parents[0],NodeTypes.DUAL);
-        this.parents[0].promoteTypes(visited);//this is here to promote newly created cast nodes mainly for savety checks        
-      }  
-
+      this.parents=this.parents.map((x,i)=>castNode(x,sig.in[i]));
+      //console.log(sig.in,parenttypes);
       return;
     }
-    throw new Error("no signature found");
+    throw new Error("no signature found for types:"+parenttypes);
     
   }
-_eval(parentResults, variables, cache) {
-  const A = castValue(parentResults[0], this.type);
-  const B = castValue(parentResults[1], this.type);
+  _eval(parentResults, variables, cache) {
+    const A = castValue(parentResults[0], this.type);
+    const B = castValue(parentResults[1], this.type);
 
-  switch (this.type) {
-    case NodeTypes.SCALAR:
-      return A / B;
+    switch (this.type) {
+      case NodeTypes.SCALAR:
+        return A / B;
 
-    case NodeTypes.DUAL: {
-      const val = A.val / B.val;
-      const der = (A.der * B.val - A.val * B.der) / (B.val * B.val);
-      return new Dual(val, der);
+      case NodeTypes.DUAL: {
+        const val = A.val / B.val;
+        const der = (A.der * B.val - A.val * B.der) / (B.val * B.val);
+        return new Dual(val, der);
+      }
+
+      case NodeTypes.DUALXYZ: {
+        const val = A.val / B.val;
+        const dx = (A.dx * B.val - A.val * B.dx) / (B.val * B.val);
+        const dy = (A.dy * B.val - A.val * B.dy) / (B.val * B.val);
+        const dz = (A.dz * B.val - A.val * B.dz) / (B.val * B.val);
+        return new DualXYZ(val, dx, dy, dz);
+      }
+
+      case NodeTypes.COMPLEX:{
+        //a/b=a*b_/b*b_
+        return Complex.div(A,B);
+      }
+
+      case NodeTypes.DUALCOMPLEX:{
+        const val= Complex.div(A,B);
+        const der = Complex.div(
+          Complex.sub(Complex.mul(A.der , B.val) , Complex.mul(A.val , B.der)) ,
+          Complex.mul(B.val , B.val)
+        );
+        //return new Dual(val, der);
+        return DualComplex(val.x,val.i,der.x,der.i);
+      }
+
+      default:
+        throw new Error(`DivNode: unsupported output type ${this.type}`);
     }
-
-    case NodeTypes.DUALXYZ: {
-      const val = A.val / B.val;
-      const dx = (A.dx * B.val - A.val * B.dx) / (B.val * B.val);
-      const dy = (A.dy * B.val - A.val * B.dy) / (B.val * B.val);
-      const dz = (A.dz * B.val - A.val * B.dz) / (B.val * B.val);
-      return new DualXYZ(val, dx, dy, dz);
-    }
-
-    default:
-      throw new Error(`DivNode: unsupported output type ${this.type}`);
   }
-}
   
   _codegenGLSL(parentresults){
     if(this.parents[1].type==NodeTypes.SCALAR)
       return `(${parentresults[0]}/${parentresults[1]})`;
     if(this.parents[0].type==NodeTypes.DUAL && this.parents[1].type==NodeTypes.DUAL)
       return `DualDiv(${parentresults[0]},${parentresults[1]})`;
+    if(this.parents[0].type==NodeTypes.DUALCOMPLEX && this.parents[1].type==NodeTypes.DUALCOMPLEX)
+      return `DualComplexDiv(${parentresults[0]},${parentresults[1]})`;
+    console.log(this.parents.map(x=>x.type));
     super._codegenGLSL();//throws
   }
 }
@@ -1447,7 +1589,8 @@ class AssignementNode extends Node {
   const types = {
     [NodeTypes.SCALAR]: "float",
     [NodeTypes.DUAL]: "Dual",
-    [NodeTypes.DUALXYZ]: "DualXYZ",
+    [NodeTypes.DUALXYZ]: "xyzDual",
+    [NodeTypes.DUALCOMPLEX]: "DualComplex",
   };
 
   const [variable, expression] = this.parents;
@@ -1456,6 +1599,7 @@ class AssignementNode extends Node {
   const isConst = expression instanceof ConstNode;
   const qualifier = isConst ? "const " : "";
 
+  if(types[variable.type]==undefined)throw new Error(`type ${variable.type} not found`);
   return `${qualifier}${types[variable.type]} ${variableString} = ${expressionString};`;
 }
 
@@ -1564,6 +1708,8 @@ export class FunctionbodyNode extends Node {
         numberOfChildren.set(parent, (numberOfChildren.get(parent) ?? 0) + node.parentreferencemultiplicity);
       }
     }
+
+    for(let n of nodes)if(n.type==undefined)throw new Error(`pls use promote types`);
 
 
 

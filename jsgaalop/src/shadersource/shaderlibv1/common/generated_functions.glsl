@@ -3,7 +3,7 @@
 uniform float[?] args;
 
 
-#define POLYDEGREE ? //degree of polynomial
+#define POLYDEGREE ? //degree of polynomial (for the sum of squares)
 #define USE_DOUBLEROOTS ? //if the poly is a sum of squares
 
 #if USE_DOUBLEROOTS

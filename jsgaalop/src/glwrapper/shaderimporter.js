@@ -112,20 +112,25 @@ function* extractIncludes(shaderCode) {
  * the combined shader source as a single string.
  *
  * @param {string} entryUrl - URL or relative path to the initial shader file.
+ * @param {string} shadersource - optional, this makes it possible to load a shader string directly without it beeing in a file. entry url becomes the relative url from which imports are made
  * @returns {Promise<string>} - Promise resolving to the combined shader source code.
  * @throws {Error} Throws if include cycles are detected or fetch fails.
  */
-async function loadWithIncludes(entryUrl) {
+export async function loadWithIncludes(entryUrl,shadersource=undefined) {
   const visited = new Set();
   const onStack = new Set();
   const chunks = [];
+
+  if(shadersource && !entryUrl.endsWith("/")){
+    throw new Error("if shadersource is supplied entryUrl must be a folder");
+  }
 
   /**
    * Internal recursive function to load a shader file and its includes.
    *
    * @param {string} url - URL of the shader file to load.
    */
-  async function loadRec(url) {
+  async function loadRec(url,shadersource) {
     const resolvedUrl = new URL(url, location.href).toString();//normalizes the url
 
     if (onStack.has(resolvedUrl)) {
@@ -136,8 +141,16 @@ async function loadWithIncludes(entryUrl) {
     }
     onStack.add(resolvedUrl);
 
-    const code = await loadCached(resolvedUrl);
-    const baseUrl = new URL('.', resolvedUrl).toString();
+    let code,baseUrl;
+    if(!shadersource){
+      code = await loadCached(resolvedUrl);
+      baseUrl=new URL('.', resolvedUrl).toString();
+    }else{
+      code=shadersource;
+      baseUrl=resolvedUrl;
+    }
+
+    //const baseUrl = new URL('.', resolvedUrl).toString();
 
     // Recursively load all includes first, resolving relative paths
     for (const item of extractIncludes(code)) {
@@ -163,7 +176,7 @@ async function loadWithIncludes(entryUrl) {
     onStack.delete(resolvedUrl);
   }
 
-  await loadRec(entryUrl);
+  await loadRec(entryUrl,shadersource);
   return chunks.join('\n');
 }
 
