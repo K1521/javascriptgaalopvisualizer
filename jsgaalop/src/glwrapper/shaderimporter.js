@@ -204,9 +204,9 @@ export const shaderSources  = {//path gets replaced with content
   computeTemplatexyzDual:"shaderlibv1/computeshaders/dualxyz.glsl",
   vertTemplateVoxelBig:"vert_voxel_bool_generated_big.glsl",
 };
-const basePath = "./src/shadersource/";//relative to index
 
-
+const src = new URL('../', import.meta.url);
+const basePath = new URL("./shadersource/",src);//relative to index
 await Promise.all(
   Object.entries(shaderSources).map(async ([name, path]) => {
     const source = await loadWithIncludes(basePath + path);
