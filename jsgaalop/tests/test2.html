@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <title>test</title>
+    <!--<base href="/jsgaalop/">-->
 </head>
 <body>
     <canvas id="mainCanvas" tabindex="0" style="border-style: solid;"></canvas>
 <script type="module">
-import { GaalopGraph ,Bundlenode,VarNode,NodeTypes,AddNode,MulNode,visualizationtargetnode,LabelNode,FunctionbodyNode,ReturnNode} from "./src/core/codegenv3.js";
+import { GaalopGraph ,Bundlenode,VarNode,NodeTypes,AddNode,MulNode,visualizationtargetnode,LabelNode,FunctionbodyNode,ReturnNode} from "../src/core/codegenv3.js";
 
 const mainCanvas = document.getElementById('mainCanvas');
 //const diagramCanvas = document.getElementById('diagramCanvas');
@@ -24,7 +25,7 @@ async function load(url) {
   return await response.text();
 }
 
-let gajson=await load("./assets/torus_plane_intersect.json");
+let gajson=await load("../assets/torus_plane_intersect.json");
 const gagraph=GaalopGraph.fromjson(gajson);
 window.gagraph = gagraph;
 
@@ -35,12 +36,12 @@ const viscopy=vistargetsoptimized.copyGraph();
 const r=viscopy.parents[0].generatefunctionbodys();
 console.log(r);
 
-import { TransformFeedbackWrapper } from "./src/glwrapper/TransformFeedbackWrapper.js";
-import { shaderSources,loadWithIncludes } from "./src/glwrapper/shaderimporter.js";
-import { Shader } from "./src/glwrapper/glwrapper.js";
+import { TransformFeedbackWrapper } from "../src/glwrapper/TransformFeedbackWrapper.js";
+import { shaderSources,loadWithIncludes } from "../src/glwrapper/shaderimporter.js";
+import { Shader } from "../src/glwrapper/glwrapper.js";
 
 async function loadshaderdource(generator,template){
-    return generator(await loadWithIncludes("./src/shadersource/shaderlibv1/",template))
+    return generator(await loadWithIncludes("../src/shadersource/shaderlibv1/",template))
     .replace("Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {?}","")
     .replace("bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {?}","");
 }
