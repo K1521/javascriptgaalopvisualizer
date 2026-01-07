@@ -364,6 +364,12 @@ export class Shader{
     this.gl.uniform4fv(loc, value);
   }
 
+  setuniform1fs(kvmap){
+    for([k,v]of kvmap.entries()){
+      this.uniform1f(k,v);
+    }
+  }
+
 
 }
 

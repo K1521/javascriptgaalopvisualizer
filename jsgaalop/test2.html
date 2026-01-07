@@ -45,7 +45,7 @@ async function loadshaderdource(generator,template){
     .replace("bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {?}","");
 }
 
-const gen=viscopy.parents[0].makecodegenerator();
+const gen=viscopy.parents[0].makecodegenerator2();
 
 let vertexshader;
 vertexshader=await loadshaderdource(gen,

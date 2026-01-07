@@ -99,6 +99,12 @@ export class TransformFeedbackWrapper {
   useshader() {
     this.shader.use();
   }
+
+  /**
+   * 
+   * @param {Number} vertexcount 
+   * @returns {(Int32Array|Uint32Array|Float32Array)[]}
+   */
   run(vertexcount) {
     const gl = this.gl;
     this.shader.use();
