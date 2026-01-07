@@ -34,6 +34,16 @@ export class MultiResBuffer3 extends MultiresBase {
       this.scheduler = null;
     }
   }
+
+  *tileScheduler(tileSize = 256) {
+    this.renderNormal(); // Optional low-res fallback render
+    yield;
+
+    for (const { tileX, tileY, w, h } of this.generateTilesCircular2(tileSize)) {
+      this.renderTile(tileX, tileY, w, h);
+      yield;
+    }
+  }
  /*render() {
   if (this.scheduler == null) return;
 
@@ -61,7 +71,7 @@ export class MultiResBuffer3 extends MultiresBase {
       canvas.width = width;
       canvas.height = height;
       //console.log(width,height);
-      this.framebufferLow.resize(Math.floor(width * 0.2),Math.floor(height * 0.2));
+      this.framebufferLow.resize(Math.ceil(width * 0.2),Math.ceil(height * 0.2));
       this.framebuffer.resize(width,height);
 
       this.resetscheduler();
@@ -84,7 +94,7 @@ export class MultiResBuffer3 extends MultiresBase {
     this.framebufferLow.clear();
     this.framebuffer.clear();
 
-   
+   /*
     for(const object of this.ctx.objects.values()){
 
       let targetbuffer;
@@ -98,7 +108,27 @@ export class MultiResBuffer3 extends MultiresBase {
        targetbuffer.updateViewport();
        targetbuffer.bind();
       object.render(this.ctx);
+    }*/
+
+
+    this.framebufferLow.updateViewport();
+    this.framebufferLow.bind();
+    for(const object of this.ctx.objects.values()){
+      if(object.isTilable()){
+        object.render(this.ctx);
+      }
     }
+
+    this.framebuffer.updateViewport();
+    this.framebuffer.bind();
+    for(const object of this.ctx.objects.values()){
+      if(!object.isTilable()){
+        object.render(this.ctx);
+      }
+    }
+
+
+
 
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -107,11 +137,10 @@ export class MultiResBuffer3 extends MultiresBase {
     //gl.finish();
   
 
-    //
-     gl.depthFunc(gl.LESS);
+    gl.depthFunc(gl.LESS);
     gl.enable(gl.DEPTH_TEST);
     this.framebufferLow.upscale();
-     this.framebuffer.upscale();
+    this.framebuffer.upscale();
   }
 
   renderTile(x, y, w, h) {
@@ -137,51 +166,90 @@ export class MultiResBuffer3 extends MultiresBase {
     gl.disable(gl.SCISSOR_TEST);
   }
 
-  *tileScheduler(tileSize = 256) {
-    this.renderNormal(); // Optional low-res fallback render
-    yield;
 
+
+
+  generateTilesCircular(tileSize) {
     const ctx = this.ctx;
     const canvas = ctx.canvas;
     const width = canvas.width;
     const height = canvas.height;
 
-    /*for (let tileY = 0; tileY < height; tileY += tileSize) {
-      for (let tileX = 0; tileX < width; tileX += tileSize) {
-        const w = Math.min(tileSize, width - tileX);
-        const h = Math.min(tileSize, height - tileY);
+    const centerX = width / 2;
+    const centerY = height / 2;
 
-        this.renderTile(tileX, tileY, w, h);
-        yield;
+    const tiles = [];
+
+    for (let tileY = 0; tileY < height; tileY += tileSize) {
+      for (let tileX = 0; tileX < width; tileX += tileSize) {
+        const cx = tileX + tileSize / 2;
+        const cy = tileY + tileSize / 2;
+        const distSq = (cx - centerX) ** 2 + (cy - centerY) ** 2;
+
+        tiles.push({
+          tileX,
+          tileY,
+          w: Math.min(tileSize, width - tileX),
+          h: Math.min(tileSize, height - tileY),
+          distSq
+        });
       }
-    }*/
-   const centerX = width / 2;
-  const centerY = height / 2;
-
-  const tiles = [];
-
-  for (let tileY = 0; tileY < height; tileY += tileSize) {
-      for (let tileX = 0; tileX < width; tileX += tileSize) {
-      const cx = tileX + tileSize / 2;
-      const cy = tileY + tileSize / 2;
-      const distSq = (cx - centerX) ** 2 + (cy - centerY) ** 2;
-
-      tiles.push({
-        tileX,
-        tileY,
-        w: Math.min(tileSize, width - tileX),
-        h: Math.min(tileSize, height - tileY),
-        distSq
-      });
     }
+
+    tiles.sort((a, b) => a.distSq - b.distSq); //i wantet a sort of circular pattern
+    return tiles;
   }
 
-  tiles.sort((a, b) => a.distSq - b.distSq);//i wantet a sort of circular pattern
+  generateTilesCircular2(tileSize) {
+    //same as generate tiles circular but all tiles are nearly same size (some are 1 larger) instead of cutting at the edge
+    const ctx = this.ctx;
+    const canvas = ctx.canvas;
+    const width = canvas.width;
+    const height = canvas.height;
 
-  for (const { tileX, tileY, w, h } of tiles) {
-    this.renderTile(tileX, tileY, w, h);
-    yield;
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    const tiles = [];
+
+
+    function roundHalfEven(x) {
+      //you could also just use round but this makes the pattern more symetrically (in praxis you wont be able to see this i think but iwill leave it in)
+      //this is also called bankers round
+      //i prototyped this in python which uses bankers round
+      const floor = Math.floor(x);
+      const diff = x - floor;
+      if (diff < 0.5) return floor;
+      if (diff > 0.5) return floor + 1;
+      return (floor % 2 === 0) ? floor : floor + 1;
+    }
+
+    function subdivide(totwidth, numberOfintervalls) {
+      //this is the best method i could find for interleaving a intervall eavenly
+      
+      const result = [];
+      for (let i = 0; i < numberOfintervalls; i++) {
+          const start = roundHalfEven(totwidth *    i    / numberOfintervalls);
+          const end   = roundHalfEven(totwidth * (i + 1) / numberOfintervalls);
+          result.push([start,end - start]);//start,width
+      }
+      return result;
+    }
+
+    const xw=subdivide(width,Math.ceil(width/tileSize))
+    const yh=subdivide(height,Math.ceil(height/tileSize))
+
+    for (let [tileY,h] of yh) {
+      for (let [tileX,w] of xw) {
+        const cx = tileX + w / 2;
+        const cy = tileY + h / 2;
+        const distSq = (cx - centerX) ** 2 + (cy - centerY) ** 2;
+
+        tiles.push({tileX,tileY,w,h,distSq});
+      }
+    }
+
+    tiles.sort((a, b) => a.distSq - b.distSq); //i wantet a sort of circular pattern
+    return tiles;
   }
-}
-
 }

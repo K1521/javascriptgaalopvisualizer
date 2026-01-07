@@ -367,6 +367,9 @@ class Node {
     this.parentreferencemultiplicity=1;//if a node references a parent multiple times this will be set >1
   }
 
+  /**
+   * @returns {Node[]} - sorted nodes with root at the end
+   */
   topologicalsort(){
 
     const stack=new Set();
@@ -584,6 +587,51 @@ class Node {
     }
     return result;
   }
+
+  
+  backpropergation(variablesonly=false){
+
+    function add(a,b){
+      if(!a)return b;
+      if(!b)return a;
+      return new AddNode(a,b);
+    }
+
+
+    const one=new ConstNode(1);
+    function mul(a,b){
+      if(a==one)return b;
+      if(b==one)return a;
+      return new MulNode(a,b);
+    }
+
+    const allnodes=this.topologicalsort().reverse();//this=root at start
+
+    const derivs=new Map([[this,one]]);
+    const variables=new Set();
+    
+    allnodes.forEach((node)=>{
+      const parentderivs=node.edgederiv();
+      const nodederiv=derivs.get(node);
+      parentderivs.forEach((parentderiv,i)=>{
+        const parent=node.parents[i];
+        derivs.set(parent,add(derivs.get(parent),mul(parentderiv,nodederiv)));
+        //derivs[parent]+=parentderiv*nodederiv
+      });
+      if(node instanceof VarNode){
+        variables.add(node);
+      }
+    });
+
+    if(variablesonly)return new Map([...variables].map((x)=>[x,derivs.get(x)]));;
+    
+    return derivs;
+
+  }
+
+
+
+
 }
 
 class FunctionSignature {
@@ -688,7 +736,7 @@ export class visualizationtargetnode extends Node{
       return this.splitgraph;
     }
 
-   generatefunctionbodys(){//rename
+  generatefunctionbodys(){//rename
     function summofsquares(nodes){
       return nodes.map(n=>new MulNode(n,n)).reduce((prev,curr)=>new AddNode(prev,curr));
     }
@@ -800,7 +848,7 @@ export class visualizationtargetnode extends Node{
 
     header="uniform float[?] args;";
     evaltargets.push([header,header.replace("?",splitgraph.subgraphvarnames.length)]);
-    
+
     header="#define USE_DOUBLEROOTS ?";
     evaltargets.push([header,header.replace("?",+USE_DOUBLEROOTS)]);//+ converts bool to 0,1
     
@@ -820,6 +868,159 @@ export class visualizationtargetnode extends Node{
       }
       return code;
     };
+  }
+
+
+  generatefunctionbodys2(){//rename
+    function summofsquares(nodes){
+      return nodes.map(n=>new MulNode(n,n)).reduce((prev,curr)=>new AddNode(prev,curr));
+    }
+
+    /**
+     * 
+     * @param {Node} root 
+     * @param {Node} x 
+     * @param {Node} y 
+     * @param {Node} z 
+     * @returns {Node} graph copy with x,y,z relaced
+     */
+    function replacexyz(root,x,y,z){
+      return root.copyGraph((original,lazyClone)=>{
+      if(original instanceof VarNode){
+        if(original.name=="_V_X"){return x;}
+        if(original.name=="_V_Y"){return y;}
+        if(original.name=="_V_Z"){return z;}
+      }
+    });
+    }
+
+    const splitgraph=Splitgraph.splitxyz(this);
+    const vistarget=splitgraph.subgraph.copyGraph();
+    
+    let singularoutput,USE_DOUBLEROOTS;
+    if(vistarget.parents.length==1){
+      singularoutput=first(vistarget.parents);
+      USE_DOUBLEROOTS=false;
+    }else{
+      singularoutput=summofsquares(vistarget);
+      USE_DOUBLEROOTS=true;
+    }
+
+    const POLYDEGREE=singularoutput.visitnodesrec(
+      (node,parentresults)=>{
+        if(node instanceof VarNode){
+          if(["_V_X","_V_Y","_V_Z"].includes(node.name))return 1;
+          else return 0;
+        }else if(node instanceof AddNode||node instanceof SubNode||node instanceof NegNode){
+          return parentresults.reduce((a,b)=>a>b?a:b);//max
+        }else if(node instanceof MulNode){
+          return parentresults.reduce((a,b)=>a+b);
+        }else if(node instanceof ConstNode){
+          return 0;
+        }else if(node instanceof DivNode){
+          if(parentresults[1]!=0)throw new Error("polynomial deree only for constant divisor in DivNode");
+          else return parentresults[0];
+        }
+        throw new Error("unknown nodetype for polydegree calc");
+      }
+    );
+
+    const evaltargets=[];
+
+    //DualComplexSummofsquares
+    let a=new AddNode(new VarNode("a",NodeTypes.COMPLEX),new ConstNode(new DualComplex(0,0,1,0)));
+    let x=new AddNode(new VarNode("rayOrigin.x",NodeTypes.SCALAR),new MulNode(a,new VarNode("rayDir.x",NodeTypes.SCALAR)));
+    let y=new AddNode(new VarNode("rayOrigin.y",NodeTypes.SCALAR),new MulNode(a,new VarNode("rayDir.y",NodeTypes.SCALAR)));
+    let z=new AddNode(new VarNode("rayOrigin.z",NodeTypes.SCALAR),new MulNode(a,new VarNode("rayDir.z",NodeTypes.SCALAR)));
+    let subgraph=replacexyz(singularoutput,x,y,z);
+    let func=new FunctionbodyNode([new ReturnNode(subgraph,NodeTypes.DUALCOMPLEX)]);
+    func.promoteTypes();
+
+    let body="\n"+func.codegenGLSL()+"\n";
+    let header="DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){?}";
+    let evaltarget=new Splitgraph(splitgraph.parents,splitgraph.subgraphvarnames,subgraph);
+    evaltargets.push([header,header.replace("?",body),evaltarget])
+
+    //Sumofsquares
+    a=new VarNode("a",NodeTypes.SCALAR);
+    x=new AddNode(new VarNode("rayOrigin.x",NodeTypes.SCALAR),new MulNode(a,new VarNode("rayDir.x",NodeTypes.SCALAR)));
+    y=new AddNode(new VarNode("rayOrigin.y",NodeTypes.SCALAR),new MulNode(a,new VarNode("rayDir.y",NodeTypes.SCALAR)));
+    z=new AddNode(new VarNode("rayOrigin.z",NodeTypes.SCALAR),new MulNode(a,new VarNode("rayDir.z",NodeTypes.SCALAR)));
+    subgraph=replacexyz(singularoutput,x,y,z);
+    func=new FunctionbodyNode([new ReturnNode(subgraph,NodeTypes.SCALAR)]);
+    func.promoteTypes();
+
+     body="\n"+func.codegenGLSL()+"\n";
+     header="float Summofsquares(vec3 rayDir, vec3 rayOrigin,float a){?}";
+     evaltarget=new Splitgraph(splitgraph.parents,splitgraph.subgraphvarnames,subgraph);
+    evaltargets.push([header,header.replace("?",body),evaltarget]);
+
+
+    //xyzDualSummofsquares
+
+
+    x=new VarNode("pos.x",NodeTypes.SCALAR);
+    y=new VarNode("pos.y",NodeTypes.SCALAR);
+    z=new VarNode("pos.z",NodeTypes.SCALAR);
+    subgraph=replacexyz(singularoutput,x,y,z);
+    let bp=subgraph.backpropergation();
+    let dx=bp.get(x);
+    let dy=bp.get(y);
+    let dz=bp.get(z);
+    func =new FunctionbodyNode([new ReturnNode(new CastToDualXYZNode(subgraph,dx,dy,dz),NodeTypes.DUALXYZ)]);
+    func.promoteTypes();
+
+     body="\n"+func.codegenGLSL()+"\n";
+     header="xyzDual xyzDualSummofsquares(vec3 pos) {?}";
+     evaltarget=new Splitgraph(splitgraph.parents,splitgraph.subgraphvarnames,subgraph);
+    evaltargets.push([header,header.replace("?",body),evaltarget]);
+
+
+        //DualF
+    a=new AddNode(new VarNode("a",NodeTypes.COMPLEX),new ConstNode(new Dual(0,1)));
+    x=new AddNode(new VarNode("rayOrigin.x",NodeTypes.SCALAR),new MulNode(a,new VarNode("rayDir.x",NodeTypes.SCALAR)));
+    y=new AddNode(new VarNode("rayOrigin.y",NodeTypes.SCALAR),new MulNode(a,new VarNode("rayDir.y",NodeTypes.SCALAR)));
+    z=new AddNode(new VarNode("rayOrigin.z",NodeTypes.SCALAR),new MulNode(a,new VarNode("rayDir.z",NodeTypes.SCALAR)));
+    subgraph=replacexyz(vistarget,x,y,z);
+    func=new FunctionbodyNode(subgraph.parents.map((node,idx)=>{
+      return new AssignementNode(new VarNode(`result[${idx}]`,NodeTypes.DUAL),node);
+    }));
+    func.promoteTypes();
+
+     body="\n"+func.codegenGLSL()+"\n";
+     header="void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {?}";
+     evaltarget=new Splitgraph(splitgraph.parents,splitgraph.subgraphvarnames,subgraph);
+    evaltargets.push([header,header.replace("?",body),evaltarget]);
+
+    header="const int numoutputs=?;";
+    evaltargets.push([header,header.replace("?",this.parents.length)]);
+
+    header="uniform float[?] args;";
+    evaltargets.push([header,header.replace("?",splitgraph.subgraphvarnames.length)]);
+
+    header="#define USE_DOUBLEROOTS ?";
+    evaltargets.push([header,header.replace("?",+USE_DOUBLEROOTS)]);//+ converts bool to 0,1
+    
+    header="#define POLYDEGREE ?";
+    evaltargets.push([header,header.replace("?",POLYDEGREE)]);
+    
+
+    return evaltargets;
+  } 
+
+  makecodegenerator2(){
+    const evaltargets=this.generatefunctionbodys2();
+
+    return (code)=>{
+      for(let [headertemplate,generated,_] of evaltargets){
+        code=code.replace(headertemplate,generated);
+      }
+      return code;
+    };
+  }
+
+  evalsplit(variables=null,cache=new Map()) {
+    return this.splitgraph.evalsplit(variables,cache);
   }
 
 
@@ -915,6 +1116,14 @@ class Splitgraph extends Node{
     //throw new Error("not implemented yet");
   }
 
+
+  evalsplit(variables=null,cache=new Map()){
+    return new Map(this.subgraphvarnames.map((varname,i)=>{
+      return [varname,this.parents[i].eval(variables,cache)];
+    }))
+  }
+
+
 }
 
 
@@ -968,7 +1177,7 @@ class ConstNode extends Node {
     _signatureExtras(){
         return this._codegenGLSL();
     }
-
+    edgederiv(){return[];}
 }
 
 export class VarNode extends Node {
@@ -992,6 +1201,9 @@ export class VarNode extends Node {
 
   _signatureExtras(){
     return this.name;
+  }
+  edgederiv(){
+    return [];
   }
 }
 
@@ -1022,25 +1234,29 @@ class CastToDualNode extends Node {
 }
 
 class CastToDualXYZNode extends Node {
-  constructor(parent) {
-    super(NodeTypes.DUALXYZ, [parent]);
+  constructor(f,dx,dy,dz) {
+    const zero=new ConstNode(0);
+    dx??=zero;
+    dy??=zero;
+    dz??=zero;
+    super(NodeTypes.DUALXYZ, [f,dx,dy,dz]);
   }
 
   _eval(parentresults,variables,cache) {
-    return new DualXYZ(parentresults[0]);
+    return new DualXYZ(...parentresults);
   }
 
   _cloneWithNewParents(parents) {
-    return new CastToDualXYZNode(parents[0]);
+    return new CastToDualXYZNode(...parents);
   }
 
   _promoteType(){
     const parenttype=this.parents[0].type;
-    if(parenttype!=NodeTypes.SCALAR)new Error(`casting ${parenttype} to Dual is not implemented/sensible`);
+    if(!this.parents.every(x=>x.type==NodeTypes.SCALAR))new Error(`casting ${parenttype} to Dual is not implemented/sensible`);
   }
 
   _codegenGLSL(parentresults){
-    return `xyzDual(0.0,0.0,0.0,${parentresults[0]})`;
+    return `xyzDual(${parentresults[1]},${parentresults[2]},${parentresults[3]},${parentresults[0]})`;
   }
 }
 
@@ -1138,6 +1354,10 @@ export class AddNode extends Node {
   _codegenGLSL(parentresults){
     return `(${parentresults[0]}+${parentresults[1]})`;
   }
+
+  edgederiv(){
+    return Array(this.parents.length).fill(new ConstNode(1));
+  }
 }
 
 class SubNode extends Node {
@@ -1161,6 +1381,9 @@ class SubNode extends Node {
   _codegenGLSL(parentresults){
     return `(${parentresults[0]}-${parentresults[1]})`;
   }
+  edgederiv(){
+    return [new ConstNode(1),Array(this.parents.length-1).fill(new ConstNode(-1))];
+  }
 }
 
 class NegNode extends Node {
@@ -1182,6 +1405,10 @@ class NegNode extends Node {
 
   _codegenGLSL(parentresults){
     return `(-${parentresults[0]})`;
+  }
+
+  edgederiv(){
+    return [new ConstNode(-1)];
   }
 }
 
@@ -1410,7 +1637,46 @@ export class MulNode extends Node {
     // All other combinations are unsupported
     throw new Error(`MulNode GLSL codegen: unsupported type combination ${typeA} * ${typeB}`);
   }
+  edgederiv(){
+    /*const  leftmul=new Array(this.parents.length);
+    leftmul[0]=this.parents[0];
+    for(let i=1;i<this.parents.length-1;i++){
+      leftmul[i]=new MulNode(leftmul[i-1],this.parents[i]);
+    }
 
+    const  rightmul=new Array(this.parents.length);
+    rightmul[this.parents.length-1]=this.parents[this.parents.length-1];
+    for(let i=this.parents.length-2;i>=1;i++){
+      rightmul[i]=new MulNode(rightmul[i+1],this.parents[i]);
+    }
+
+   
+    return this.parents.map((_,i)=>{
+      if(i==0)return rightmul[i+1];
+      if(i==this.parents.length-1)return leftmul[i-1];
+      return new MulNode(leftmul[i-1],rightmul[i+1]);
+    })*/
+    function mul(a, b) {
+      if (a === null) return b;
+      if (b === null) return a;
+      return new MulNode(a, b);
+    }
+    
+    const  leftmul=new Array(this.parents.length);
+    this.parents.reduce((acc,parent,i)=>{
+      leftmul[i]=acc;
+      return mul(acc,parent);
+    },null);
+    
+    const  rightmul=new Array(this.parents.length);
+    this.parents.reduceRight((acc,parent,i)=>{
+      rightmul[i]=acc;
+      return mul(acc,parent);
+    },null);
+
+    return this.parents.map((_,i)=>mul(leftmul[i],rightmul[i]));
+
+  }
 
 }
 
@@ -1507,6 +1773,13 @@ class DivNode extends Node {
       return `DualComplexDiv(${parentresults[0]},${parentresults[1]})`;
     console.log(this.parents.map(x=>x.type));
     super._codegenGLSL();//throws
+  }
+
+  edgederiv(){
+    const [numerator,denominator]=this.parents;
+    const dfdnum=new DivNode(new ConstNode(1),denominator);
+    const dfddenom=(new NegNode(new DivNode(numerator,new MulNode(denominator,denominator))));
+    return [dfdnum,dfddenom];
   }
 }
 

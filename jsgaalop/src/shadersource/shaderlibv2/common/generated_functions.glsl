@@ -24,10 +24,6 @@ Complex ComplexAdd(Complex a, Complex b) {return a+b;}
 Complex ComplexAdd(float a, Complex b) {return Complex(a + b.x,b.y);}
 Complex ComplexAdd(Complex a, float b) {return ComplexAdd(b,a);}
 
-Complex ComplexSub(Complex a, Complex b) {return a-b;}
-Complex ComplexSub(float a, Complex b) {return Complex(a - b.x,b.y);}
-Complex ComplexSub(Complex a, float b) {return Complex(a.x -b ,a.y);}
-
 Complex ComplexMul(Complex a, Complex b) {
     // Complex multiplication: (a.x + i*a.y) * (b.x + i*b.y)
     return Complex(

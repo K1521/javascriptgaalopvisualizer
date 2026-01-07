@@ -364,9 +364,12 @@ export class GaalopGraph {
                 } else {
                     throw new Error(`Unknown function: ${func}`);
                 }
-            }
-            
-            else if (node.type === "MultivectorVariable") {
+            }else if(node.type=="Pow"){
+                    const exponent=evaluatenode(parseExpression(node.right));
+                    const left=parseExpression(node.left);
+                    return Array(exponent).fill(left).reduce((a,b)=>new GraphNode( MulOperand.instance,[a, b]));
+                    //return new MulNode(...); 
+            }else if (node.type === "MultivectorVariable") {
                 //TODO bladindex should be integer. how do i cast it to int?
                 if (node.name.startsWith("inputsVector[") && node.name.endsWith("]")) {
                    return scalars.get(node.name);// Return the corresponding input vector

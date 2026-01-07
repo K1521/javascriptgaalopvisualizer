@@ -1,0 +1,614 @@
+  1: #version 300 es
+  2: precision mediump float;
+  3: 
+  4: //#include "../common/utilfrag.glsl"
+  5: //#include "../common/util.glsl"
+  6: 
+  7: // from http://127.0.0.1:5508/jsgaalop/src/shadersource/shaderlibv1/common/generated_functions.glsl @ line 1
+  8: 
+  9: 
+ 10: uniform float[undefined] args;
+ 11: 
+ 12: 
+ 13: #define POLYDEGREE 0 //degree of polynomial (for the sum of squares)
+ 14: #define USE_DOUBLEROOTS 0 //if the poly is a sum of squares
+ 15: 
+ 16: #if USE_DOUBLEROOTS
+ 17:     #define NUM_ROOTS (POLYDEGREE / 2)
+ 18: #else
+ 19:     #define NUM_ROOTS POLYDEGREE
+ 20: #endif
+ 21: 
+ 22: const int numoutputs=1;
+ 23: 
+ 24: 
+ 25: 
+ 26: 
+ 27: 
+ 28: 
+ 29: #define Complex vec2
+ 30: Complex ComplexAdd(Complex a, Complex b) {return a+b;}
+ 31: Complex ComplexAdd(float a, Complex b) {return Complex(a + b.x,b.y);}
+ 32: Complex ComplexAdd(Complex a, float b) {return ComplexAdd(b,a);}
+ 33: 
+ 34: Complex ComplexMul(Complex a, Complex b) {
+ 35:     // Complex multiplication: (a.x + i*a.y) * (b.x + i*b.y)
+ 36:     return Complex(
+ 37:         a.x * b.x - a.y * b.y, // Real part
+ 38:         a.x * b.y + a.y * b.x  // Imaginary part
+ 39:     );
+ 40: }
+ 41: Complex ComplexMul(Complex a, float b) {return a*b;}
+ 42: Complex ComplexMul(float a, Complex b) {return a*b;}
+ 43: Complex ComplexSquare(Complex a) {
+ 44:     // Complex multiplication: (a.x + i*a.y) * (b.x + i*b.y)
+ 45:     return Complex(
+ 46:         a.x * a.x - a.y * a.y, // Real part
+ 47:         2.0 * a.x * a.y  // Imaginary part
+ 48:     );
+ 49: }
+ 50: Complex ComplexDiv(Complex a, Complex b) {
+ 51:     // Complex division: (a.x + i*a.y) / (b.x + i*b.y)
+ 52:     return Complex(
+ 53:         (a.x * b.x + a.y * b.y) ,
+ 54:         (a.y * b.x - a.x * b.y)
+ 55:     ) / dot(b,b);
+ 56: }
+ 57: Complex ComplexInv(Complex a) {
+ 58:     // Complex division: 1 / (a.x + i*a.y)
+ 59:     return a*Complex(1,-1) / dot(a,a);
+ 60: }
+ 61: Complex ComplexConjugate(Complex a) {
+ 62:     // Complex division: 1 / (a.x + i*a.y)
+ 63:     return a*Complex(1,-1);
+ 64: }
+ 65: 
+ 66: 
+ 67: #define DualComplex vec4
+ 68: DualComplex DualComplexMul(DualComplex a,DualComplex b){
+ 69:     return DualComplex(ComplexMul(a.xy,b.xy),ComplexMul(a.xy,b.zw)+ComplexMul(a.zw,b.xy));
+ 70: }
+ 71: DualComplex DualComplexSqare(DualComplex a){
+ 72:     return DualComplex(ComplexSquare(a.xy),2.0*ComplexMul(a.xy,a.zw));
+ 73: }
+ 74: DualComplex DualComplexAdd(DualComplex a,float b){
+ 75:     return DualComplex(a.x+b, a.yzw);
+ 76: }
+ 77: 
+ 78: 
+ 79: #define xyzDual vec4
+ 80: xyzDual xyzDualMul(xyzDual a,xyzDual b){
+ 81:     return xyzDual(a.w*b.xyz+b.w*a.xyz,a.w*b.w);
+ 82: }
+ 83: xyzDual xyzDualSqare(xyzDual a){
+ 84:     return xyzDual(2.*a.w*a.xyz,a.w*a.w);
+ 85: }
+ 86: xyzDual xyzDualSqrt(xyzDual a){
+ 87:     float sqrtf=sqrt(a.w);
+ 88:     return xyzDual(a.xyz/(2.*sqrtf),sqrtf);
+ 89: }
+ 90: xyzDual xyzDualAbs(xyzDual a) {
+ 91:     return xyzDual(a.xyz*sign(a.w),abs(a.w));
+ 92: }
+ 93: 
+ 94: 
+ 95: #define Dual vec2
+ 96: Dual DualMul(Dual a, Dual b) {
+ 97:     return Dual(a.x * b.x, a.x * b.y + a.y * b.x);
+ 98: }
+ 99: Dual DualSquare(Dual a) {
+100:     return Dual(a.x * a.x, 2.0 * a.x * a.y);
+101: }
+102: Dual DualSqrt(Dual a) {
+103:     float sqrtf = sqrt(a.x);
+104:     return Dual(sqrtf, a.y / (2.0 * sqrtf));
+105: }
+106: Dual DualAbs(Dual a) {
+107:     return Dual(abs(a.x), a.y * sign(a.x));
+108: }
+109: 
+110: 
+111: DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){
+112: Complex _generatednode0 = ComplexAdd(rayOrigin.x,ComplexMul(a,rayDir.x));
+113: Complex _generatednode1 = ComplexSquare(_generatednode0);
+114: Complex _generatednode2 = ComplexAdd(rayOrigin.y,ComplexMul(a,rayDir.y));
+115: Complex _generatednode3 = ComplexSquare(_generatednode2);
+116: Complex _generatednode4 = ComplexAdd(rayOrigin.z,ComplexMul(a,rayDir.z));
+117: Complex _generatednode5 = ComplexMul(ComplexAdd(ComplexAdd(_generatednode1,_generatednode3),ComplexSquare(_generatednode4)),0.5);
+118: Complex _generatednode6 = ComplexMul(args[1],_generatednode5);
+119: Complex _generatednode7 = ComplexSub(args[2],ComplexAdd(ComplexAdd(ComplexAdd(ComplexAdd(ComplexMul(args[0],_generatednode1),ComplexMul(args[0],_generatednode3)),ComplexMul(ComplexSquare(_generatednode5),-4.0)),_generatednode6),_generatednode6));
+120: Complex _generatednode8 = ComplexAdd(_generatednode7,_generatednode7);
+121: Complex _generatednode9 = ComplexMul(_generatednode5,ComplexMul((-_generatednode8),-4.0));
+122: Complex _generatednode10 = ComplexMul(ComplexAdd(ComplexAdd(ComplexAdd(ComplexMul(args[1],(-_generatednode8)),ComplexMul(args[1],(-_generatednode8))),_generatednode9),_generatednode9),0.5);
+123: Complex _generatednode11 = ComplexMul(_generatednode4,_generatednode10);
+124: Complex _generatednode12 = ComplexMul(args[0],(-_generatednode8));
+125: Complex _generatednode13 = ComplexMul(_generatednode2,ComplexAdd(_generatednode10,_generatednode12));
+126: Complex _generatednode14 = ComplexMul(_generatednode0,_generatednode10);
+127: Complex _generatednode15 = ComplexMul(_generatednode0,_generatednode12);
+128: return vec4(ComplexSquare(_generatednode7),ComplexAdd(ComplexAdd(ComplexMul(rayDir.z,ComplexAdd(_generatednode11,_generatednode11)),ComplexMul(rayDir.y,ComplexAdd(_generatednode13,_generatednode13))),ComplexMul(rayDir.x,ComplexAdd(ComplexAdd(ComplexAdd(_generatednode14,_generatednode14),_generatednode15),_generatednode15))));
+129: } //gets replaced
+130: 
+
+
+float Summofsquares(vec3 rayDir, vec3 rayOrigin,float a) {
+    float _V_X=rayDir.x*a+rayOrigin.x;
+    float _V_Y=rayDir.y*a+rayOrigin.y;
+    float _V_Z=rayDir.z*a+rayOrigin.z;
+    float _node0 = (_V_Y*_V_Y);
+    float _node1 = ((((_V_X*_V_X)+_node0)+(_V_Z*_V_Z))/2.0);
+    float _node2 = ((((((-(args[0]*(_V_X*_V_X)))+(-(args[0]*_node0)))+(-(-4.0*(_node1*_node1))))+(-(args[1]*_node1)))+(-(args[1]*_node1)))+args[2]);
+    return _node2;
+}
+
+
+131: float Summofsquares(vec3 rayDir, vec3 rayOrigin,float a){
+132: float _generatednode0 = (rayOrigin.x+(a*rayDir.x));
+133: float _generatednode1 = (_generatednode0*_generatednode0);
+134: float _generatednode2 = (rayOrigin.y+(a*rayDir.y));
+135: float _generatednode3 = (_generatednode2*_generatednode2);
+136: float _generatednode4 = (rayOrigin.z+(a*rayDir.z));
+137: float _generatednode5 = (((_generatednode1+_generatednode3)+(_generatednode4*_generatednode4))*0.5);
+138: float _generatednode6 = (args[1]*_generatednode5);
+139: float _generatednode7 = (args[2]-(((((args[0]*_generatednode1)+(args[0]*_generatednode3))+((_generatednode5*_generatednode5)*-4.0))+_generatednode6)+_generatednode6));
+140: return (_generatednode7*_generatednode7);
+141: }
+142: 
+
+143: xyzDual xyzDualSummofsquares(vec3 pos) {
+144: float _generatednode0 = (_V_X*_V_X);
+145: float _generatednode1 = (_V_Y*_V_Y);
+146: float _generatednode2 = (((_generatednode0+_generatednode1)+(_V_Z*_V_Z))*0.5);
+147: float _generatednode3 = (args[1]*_generatednode2);
+148: float _generatednode4 = (args[2]-(((((args[0]*_generatednode0)+(args[0]*_generatednode1))+((_generatednode2*_generatednode2)*-4.0))+_generatednode3)+_generatednode3));
+149: float _generatednode5 = (_generatednode4+_generatednode4);
+150: float _generatednode6 = (_generatednode2*((-_generatednode5)*-4.0));
+151: float _generatednode7 = (((((args[1]*(-_generatednode5))+(args[1]*(-_generatednode5)))+_generatednode6)+_generatednode6)*0.5);
+152: float _generatednode8 = (_V_X*_generatednode7);
+153: float _generatednode9 = (args[0]*(-_generatednode5));
+154: float _generatednode10 = (_V_X*_generatednode9);
+155: float _generatednode11 = (_V_Y*(_generatednode7+_generatednode9));
+156: float _generatednode12 = (_V_Z*_generatednode7);
+157: return vec4((((_generatednode8+_generatednode8)+_generatednode10)+_generatednode10),(_generatednode11+_generatednode11),(_generatednode12+_generatednode12),(_generatednode4*_generatednode4));
+158: }
+159: 
+160: /*void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {
+161: float _generatednode0 = (rayOrigin.x+(a*rayDir.x));
+162: float _generatednode1 = (_generatednode0*_generatednode0);
+163: float _generatednode2 = (rayOrigin.y+(a*rayDir.y));
+164: float _generatednode3 = (_generatednode2*_generatednode2);
+165: float _generatednode4 = (rayOrigin.z+(a*rayDir.z));
+166: float _generatednode5 = (((_generatednode1+_generatednode3)+(_generatednode4*_generatednode4))*0.5);
+167: float _generatednode6 = (args[1]*_generatednode5);
+168: float _generatednode7 = (rayDir.x*_generatednode0);
+169: float _generatednode8 = (_generatednode7+_generatednode7);
+170: float _generatednode9 = (rayDir.y*_generatednode2);
+171: float _generatednode10 = (_generatednode9+_generatednode9);
+172: float _generatednode11 = (rayDir.z*_generatednode4);
+173: float _generatednode12 = (((_generatednode10+_generatednode8)+(_generatednode11+_generatednode11))*0.5);
+174: float _generatednode13 = (_generatednode12*_generatednode5);
+175: float _generatednode14 = (_generatednode12*args[1]);
+176: result[0]=vec2((args[2]-(((((args[0]*_generatednode1)+(args[0]*_generatednode3))+((_generatednode5*_generatednode5)*-4.0))+_generatednode6)+_generatednode6)),(-(((((_generatednode8*args[0])+(_generatednode10*args[0]))+((_generatednode13+_generatednode13)*-4.0))+_generatednode14)+_generatednode14)));
+177: }
+178: */
+179: void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {}
+180: 
+181: 
+182: 
+183: 
+184: 
+185: 
+186: 
+187: #define Intervall vec2 // Interval type: [min, max]
+188: // Interval addition
+189: Intervall IntervallAdd(Intervall a, Intervall b) {
+190:     return Intervall(a.x + b.x, a.y + b.y);
+191: }
+192: Intervall IntervallAdd(float a, Intervall b) {return a+b;}
+193: Intervall IntervallAdd(Intervall a, float b) {return a+b;}
+194: 
+195: // Interval subtraction
+196: Intervall IntervallSub(Intervall a, Intervall b) {
+197:     return Intervall(a.x - b.y, a.y - b.x);
+198: }
+199: Intervall IntervallSub(float a, Intervall b) {return Intervall(a - b.y, a - b.x);}
+200: Intervall IntervallSub(Intervall a, float b) {return a-b;}
+201: 
+202: // Interval multiplication
+203: Intervall IntervallMul(Intervall a, Intervall b) {
+204:     float ll = a.x * b.x;
+205:     float lh = a.x * b.y;
+206:     float hl = a.y * b.x;
+207:     float hh = a.y * b.y;
+208:     float lo = min(min(ll, lh), min(hl, hh));
+209:     float hi = max(max(ll, lh), max(hl, hh));
+210:     return Intervall(lo, hi);
+211: }
+212: Intervall IntervallMul(float a, Intervall b) {
+213:     float l = a * b.x;
+214:     float h = a * b.y;
+215:     return Intervall(min(l, h), max(l, h));
+216: }
+217: Intervall IntervallMul(Intervall a, float b) {return IntervallMul(b,a);}
+218: 
+219: /*// Interval division
+220: Intervall IntervallDiv(Intervall a, Intervall b) {
+221:     if (b.x <= 0.0 && b.y >= 0.0) {
+222:         // Division by interval containing zero is undefined
+223:         return Intervall(-INFINITY, INFINITY);
+224:     }
+225:     float ll = a.x / b.x;
+226:     float lh = a.x / b.y;
+227:     float hl = a.y / b.x;
+228:     float hh = a.y / b.y;
+229:     float lo = min(min(ll, lh), min(hl, hh));
+230:     float hi = max(max(ll, lh), max(hl, hh));
+231:     return Intervall(lo, hi);
+232: }*/
+233: 
+234: // Interval square
+235: Intervall IntervallSquare(Intervall a) {
+236:     if (a.x >= 0.0) return Intervall(a.x * a.x, a.y * a.y);
+237:     if (a.y <= 0.0) return Intervall(a.y * a.y, a.x * a.x);
+238:     float hi = max(a.x * a.x, a.y * a.y);
+239:     return Intervall(0.0, hi);
+240: }
+241: 
+242: // Interval negation
+243: Intervall IntervallNeg(Intervall a) {
+244:     return Intervall(-a.y, -a.x);
+245: }
+246: 
+247: bool IntervallContains(Intervall a, float value) {
+248:     return value >= a.x && value <= a.y;
+249: }
+250: 
+251: // Interval width
+252: float IntervallWidth(Intervall a) {
+253:     return a.y - a.x;
+254: }
+255: 
+256: // Interval midpoint
+257: float IntervallMidpoint(Intervall a) {
+258:     return (a.x + a.y) * 0.5;
+259: }
+260: 
+261: 
+262: 
+263: 
+264: // from http://127.0.0.1:5508/jsgaalop/src/shadersource/shaderlibv1/ @ line 8
+265: 
+266: in vec3 position;
+267: out vec4 result;
+268: 
+269: void main(){
+270:     result=xyzDualSummofsquares(position);
+271: }
+272: 
+
+
+
+
+
+#version 300 es
+precision mediump float;
+
+//#include "../common/utilfrag.glsl"
+//#include "../common/util.glsl"
+
+// from http://127.0.0.1:5508/jsgaalop/src/shadersource/shaderlibv1/common/generated_functions.glsl @ line 1
+
+
+uniform float[3] args;
+
+
+#define POLYDEGREE 4 //degree of polynomial (for the sum of squares)
+#define USE_DOUBLEROOTS 0 //if the poly is a sum of squares
+
+#if USE_DOUBLEROOTS
+    #define NUM_ROOTS (POLYDEGREE / 2)
+#else
+    #define NUM_ROOTS POLYDEGREE
+#endif
+
+const int numoutputs=1;
+
+
+
+
+
+
+#define Complex vec2
+Complex ComplexAdd(Complex a, Complex b) {return a+b;}
+Complex ComplexAdd(float a, Complex b) {return Complex(a + b.x,b.y);}
+Complex ComplexAdd(Complex a, float b) {return ComplexAdd(b,a);}
+
+Complex ComplexSub(Complex a, Complex b) {return a-b;}
+Complex ComplexSub(float a, Complex b) {return Complex(a - b.x,b.y);}
+Complex ComplexSub(Complex a, float b) {return Complex(a.x -b ,a.y);}
+
+Complex ComplexMul(Complex a, Complex b) {
+    // Complex multiplication: (a.x + i*a.y) * (b.x + i*b.y)
+    return Complex(
+        a.x * b.x - a.y * b.y, // Real part
+        a.x * b.y + a.y * b.x  // Imaginary part
+    );
+}
+Complex ComplexMul(Complex a, float b) {return a*b;}
+Complex ComplexMul(float a, Complex b) {return a*b;}
+Complex ComplexSquare(Complex a) {
+    // Complex multiplication: (a.x + i*a.y) * (b.x + i*b.y)
+    return Complex(
+        a.x * a.x - a.y * a.y, // Real part
+        2.0 * a.x * a.y  // Imaginary part
+    );
+}
+Complex ComplexDiv(Complex a, Complex b) {
+    // Complex division: (a.x + i*a.y) / (b.x + i*b.y)
+    return Complex(
+        (a.x * b.x + a.y * b.y) ,
+        (a.y * b.x - a.x * b.y)
+    ) / dot(b,b);
+}
+Complex ComplexInv(Complex a) {
+    // Complex division: 1 / (a.x + i*a.y)
+    return a*Complex(1,-1) / dot(a,a);
+}
+Complex ComplexConjugate(Complex a) {
+    // Complex division: 1 / (a.x + i*a.y)
+    return a*Complex(1,-1);
+}
+
+
+#define DualComplex vec4
+DualComplex DualComplexMul(DualComplex a,DualComplex b){
+    return DualComplex(ComplexMul(a.xy,b.xy),ComplexMul(a.xy,b.zw)+ComplexMul(a.zw,b.xy));
+}
+DualComplex DualComplexSqare(DualComplex a){
+    return DualComplex(ComplexSquare(a.xy),2.0*ComplexMul(a.xy,a.zw));
+}
+DualComplex DualComplexAdd(DualComplex a,float b){
+    return DualComplex(a.x+b, a.yzw);
+}
+
+
+#define xyzDual vec4
+xyzDual xyzDualMul(xyzDual a,xyzDual b){
+    return xyzDual(a.w*b.xyz+b.w*a.xyz,a.w*b.w);
+}
+xyzDual xyzDualSqare(xyzDual a){
+    return xyzDual(2.*a.w*a.xyz,a.w*a.w);
+}
+xyzDual xyzDualSqrt(xyzDual a){
+    float sqrtf=sqrt(a.w);
+    return xyzDual(a.xyz/(2.*sqrtf),sqrtf);
+}
+xyzDual xyzDualAbs(xyzDual a) {
+    return xyzDual(a.xyz*sign(a.w),abs(a.w));
+}
+
+
+#define Dual vec2
+Dual DualMul(Dual a, Dual b) {
+    return Dual(a.x * b.x, a.x * b.y + a.y * b.x);
+}
+Dual DualSquare(Dual a) {
+    return Dual(a.x * a.x, 2.0 * a.x * a.y);
+}
+Dual DualSqrt(Dual a) {
+    float sqrtf = sqrt(a.x);
+    return Dual(sqrtf, a.y / (2.0 * sqrtf));
+}
+Dual DualAbs(Dual a) {
+    return Dual(abs(a.x), a.y * sign(a.x));
+}
+
+
+DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a) {
+    DualComplex _V_X=DualComplex(ComplexMul(Complex(rayDir.x,0.),a)+Complex(rayOrigin.x,0.),rayDir.x,0.);
+    DualComplex _V_Y=DualComplex(ComplexMul(Complex(rayDir.y,0.),a)+Complex(rayOrigin.y,0.),rayDir.y,0.);
+    DualComplex _V_Z=DualComplex(ComplexMul(Complex(rayDir.z,0.),a)+Complex(rayOrigin.z,0.),rayDir.z,0.);
+    DualComplex _node0 = DualComplexSqare(_V_Y);
+    DualComplex _node1 = (((DualComplexSqare(_V_X)+_node0)+DualComplexSqare(_V_Z))/2.0);
+    DualComplex _node2 = ((((((-(args[0]*DualComplexSqare(_V_X)))+(-(args[0]*_node0)))+(-(-4.0*DualComplexSqare(_node1))))+(-(args[1]*_node1)))+(-(args[1]*_node1)))+DualComplex(args[2],0.,0.,0.));
+    return _node2;
+}
+ //gets replaced
+
+float Summofsquares(vec3 rayDir, vec3 rayOrigin,float a) {
+    float _V_X=rayDir.x*a+rayOrigin.x;
+    float _V_Y=rayDir.y*a+rayOrigin.y;
+    float _V_Z=rayDir.z*a+rayOrigin.z;
+    float _node0 = (_V_Y*_V_Y);
+    float _node1 = ((((_V_X*_V_X)+_node0)+(_V_Z*_V_Z))/2.0);
+    float _node2 = ((((((-(args[0]*(_V_X*_V_X)))+(-(args[0]*_node0)))+(-(-4.0*(_node1*_node1))))+(-(args[1]*_node1)))+(-(args[1]*_node1)))+args[2]);
+    return _node2;
+}
+
+
+xyzDual xyzDualSummofsquares(vec3 pos) {
+    xyzDual _V_X=xyzDual(1.,0.,0.,pos.x);
+    xyzDual _V_Y=xyzDual(0.,1.,0.,pos.y);
+    xyzDual _V_Z=xyzDual(0.,0.,1.,pos.z);
+    xyzDual _node0 = xyzDualSqare(_V_Y);
+    xyzDual _node1 = (((xyzDualSqare(_V_X)+_node0)+xyzDualSqare(_V_Z))/2.0);
+    xyzDual _node2 = ((((((-(args[0]*xyzDualSqare(_V_X)))+(-(args[0]*_node0)))+(-(-4.0*xyzDualSqare(_node1))))+(-(args[1]*_node1)))+(-(args[1]*_node1)))+xyzDual(0.,0.,0.,args[2]));
+    return _node2;
+}
+
+
+/*void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {
+    Dual _V_X=Dual(rayDir.x*a+rayOrigin.x,rayDir.x);
+    Dual _V_Y=Dual(rayDir.y*a+rayOrigin.y,rayDir.y);
+    Dual _V_Z=Dual(rayDir.z*a+rayOrigin.z,rayDir.z);
+    Dual _node0 = DualSquare(_V_Y);
+    Dual _node1 = (((DualSquare(_V_X)+_node0)+DualSquare(_V_Z))/2.0);
+    Dual _node2 = ((((((-(args[0]*DualSquare(_V_X)))+(-(args[0]*_node0)))+(-(-4.0*DualSquare(_node1))))+(-(args[1]*_node1)))+(-(args[1]*_node1)))+Dual(args[2],0.));
+    result[0]=_node2;
+    }
+
+*/
+void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {}
+
+
+
+
+
+
+
+#define Intervall vec2 // Interval type: [min, max]
+// Interval addition
+Intervall IntervallAdd(Intervall a, Intervall b) {
+    return Intervall(a.x + b.x, a.y + b.y);
+}
+Intervall IntervallAdd(float a, Intervall b) {return a+b;}
+Intervall IntervallAdd(Intervall a, float b) {return a+b;}
+
+// Interval subtraction
+Intervall IntervallSub(Intervall a, Intervall b) {
+    return Intervall(a.x - b.y, a.y - b.x);
+}
+Intervall IntervallSub(float a, Intervall b) {return Intervall(a - b.y, a - b.x);}
+Intervall IntervallSub(Intervall a, float b) {return a-b;}
+
+// Interval multiplication
+Intervall IntervallMul(Intervall a, Intervall b) {
+    float ll = a.x * b.x;
+    float lh = a.x * b.y;
+    float hl = a.y * b.x;
+    float hh = a.y * b.y;
+    float lo = min(min(ll, lh), min(hl, hh));
+    float hi = max(max(ll, lh), max(hl, hh));
+    return Intervall(lo, hi);
+}
+Intervall IntervallMul(float a, Intervall b) {
+    float l = a * b.x;
+    float h = a * b.y;
+    return Intervall(min(l, h), max(l, h));
+}
+Intervall IntervallMul(Intervall a, float b) {return IntervallMul(b,a);}
+
+/*// Interval division
+Intervall IntervallDiv(Intervall a, Intervall b) {
+    if (b.x <= 0.0 && b.y >= 0.0) {
+        // Division by interval containing zero is undefined
+        return Intervall(-INFINITY, INFINITY);
+    }
+    float ll = a.x / b.x;
+    float lh = a.x / b.y;
+    float hl = a.y / b.x;
+    float hh = a.y / b.y;
+    float lo = min(min(ll, lh), min(hl, hh));
+    float hi = max(max(ll, lh), max(hl, hh));
+    return Intervall(lo, hi);
+}*/
+
+// Interval square
+Intervall IntervallSquare(Intervall a) {
+    if (a.x >= 0.0) return Intervall(a.x * a.x, a.y * a.y);
+    if (a.y <= 0.0) return Intervall(a.y * a.y, a.x * a.x);
+    float hi = max(a.x * a.x, a.y * a.y);
+    return Intervall(0.0, hi);
+}
+
+// Interval negation
+Intervall IntervallNeg(Intervall a) {
+    return Intervall(-a.y, -a.x);
+}
+
+bool IntervallContains(Intervall a, float value) {
+    return value >= a.x && value <= a.y;
+}
+
+// Interval width
+float IntervallWidth(Intervall a) {
+    return a.y - a.x;
+}
+
+// Interval midpoint
+float IntervallMidpoint(Intervall a) {
+    return (a.x + a.y) * 0.5;
+}
+
+Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {
+    Intervall _node0 = IntervallSquare(_V_Y);
+    Intervall _node1 = IntervallMul(((IntervallSquare(_V_X)+_node0)+IntervallSquare(_V_Z)),Intervall(1./2.0));
+    Intervall _node2 = (((((IntervallNeg(IntervallMul(Intervall(args[0]),IntervallSquare(_V_X)))+IntervallNeg(IntervallMul(Intervall(args[0]),_node0)))+IntervallNeg(IntervallMul(Intervall(-4.0),IntervallSquare(_node1))))+IntervallNeg(IntervallMul(Intervall(args[1]),_node1)))+IntervallNeg(IntervallMul(Intervall(args[1]),_node1)))+Intervall(args[2]));
+    return _node2;
+}
+
+
+bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {
+    float _V_X=(x.x+x.y)/2.;
+    float _V_Y=(y.x+y.y)/2.;
+    float _V_Z=(z.x+z.y)/2.;
+    float delta=(x.y-x.x)/2.;
+    float _node0 = -1.0;
+    float _node1 = (1.0*delta);
+    float _node2 = (_node1*_node1);
+    float _node3 = (_node0*(args[0]*_node2));
+    float _node4 = -4.0;
+    float _node5 = 2.0;
+    float _node6 = (_node2/_node5);
+    float _node7 = (_V_X*_V_X);
+    float _node8 = (_V_Y*_V_Y);
+    float _node9 = (((_node7+_node8)+(_V_Z*_V_Z))/_node5);
+    float _node10 = (_node6*_node9);
+    float _node11 = (_node1*_V_X);
+    float _node12 = (_node11+_node11);
+    float _node13 = (_node12/_node5);
+    float _node14 = (_node0*(args[1]*_node6));
+    float _node15 = (((_node3+(_node0*(_node4*((_node10+(_node13*_node13))+_node10))))+_node14)+_node14);
+    float _node16 = 0.0;
+    float _node17 = (_node13*_node9);
+    float _node18 = (_node0*(args[1]*_node13));
+    float _node19 = abs(((((_node0*(args[0]*_node12))+(_node0*(_node4*(_node17+_node17))))+_node18)+_node18));
+    float _node20 = (_node0*(args[1]*_node9));
+    float _node21 = ((((((_node0*(args[0]*_node7))+(_node0*(args[0]*_node8)))+(_node0*(_node4*(_node9*_node9))))+_node20)+_node20)+args[2]);
+    float _node22 = (_node10+_node10);
+    float _node23 = (_node1*_V_Y);
+    float _node24 = (_node23+_node23);
+    float _node25 = (_node24/_node5);
+    float _node26 = (((_node3+(_node0*(_node4*(_node22+(_node25*_node25)))))+_node14)+_node14);
+    float _node27 = (_node9*_node25);
+    float _node28 = (_node0*(args[1]*_node25));
+    float _node29 = abs(((((_node0*(args[0]*_node24))+(_node0*(_node4*(_node27+_node27))))+_node28)+_node28));
+    float _node30 = (_node6*_node6);
+    float _node31 = (_node0*(_node4*_node30));
+    float _node32 = min(_node31,_node16);
+    float _node33 = (_node6*_node13);
+    float _node34 = abs((_node0*(_node4*(_node33+_node33))));
+    float _node35 = (-_node34);
+    float _node36 = (_node0*(_node4*(_node30+_node30)));
+    float _node37 = min(_node36,_node16);
+    float _node38 = (_node6*_node25);
+    float _node39 = abs((_node0*(_node4*(_node38+_node38))));
+    float _node40 = (-_node39);
+    float _node41 = (_node1*_V_Z);
+    float _node42 = ((_node41+_node41)/_node5);
+    float _node43 = (_node6*_node42);
+    float _node44 = abs((_node0*(_node4*(_node43+_node43))));
+    float _node45 = (-_node44);
+    float _node46 = (_node13*_node25);
+    float _node47 = abs((_node0*(_node4*(_node46+_node46))));
+    float _node48 = (_node13*_node42);
+    float _node49 = abs((_node0*(_node4*(_node48+_node48))));
+    float _node50 = (((_node0*(_node4*(_node22+(_node42*_node42))))+_node14)+_node14);
+    float _node51 = (_node9*_node42);
+    float _node52 = (_node0*(args[1]*_node42));
+    float _node53 = abs((((_node0*(_node4*(_node51+_node51)))+_node52)+_node52));
+    float _node54 = (_node25*_node42);
+    float _node55 = abs((_node0*(_node4*(_node54+_node54))));
+    float _node56 = max(_node31,_node16);
+    float _node57 = max(_node36,_node16);
+if (!(((((((((((((((((((((((((min(_node15,_node16)+(-_node19))+_node21)+min(_node26,_node16))+(-_node29))+_node32)+_node35)+_node37)+_node40)+_node37)+_node45)+_node35)+(-_node47))+_node35)+(-_node49))+min(_node50,_node16))+(-_node53))+_node32)+_node40)+_node37)+_node45)+_node40)+(-_node55))+_node32)+_node45) <= 0. && 0. <= ((((((((((((((((((((((((max(_node15,_node16)+_node19)+_node21)+max(_node26,_node16))+_node29)+_node56)+_node34)+_node57)+_node39)+_node57)+_node44)+_node34)+_node47)+_node34)+_node49)+max(_node50,_node16))+_node53)+_node56)+_node39)+_node57)+_node44)+_node39)+_node55)+_node56)+_node44))) return false;
+    return true;
+}
+
+// from http://127.0.0.1:5508/jsgaalop/src/shadersource/shaderlibv1/ @ line 8
+
+in vec3 position;
+out vec4 result;
+
+void main(){
+    result=xyzDualSummofsquares(position);
+}

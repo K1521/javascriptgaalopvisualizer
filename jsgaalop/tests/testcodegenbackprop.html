@@ -8,7 +8,7 @@
 <body>
     <canvas id="mainCanvas" tabindex="0" style="border-style: solid;"></canvas>
 <script type="module">
-import { GaalopGraph ,Bundlenode,VarNode,NodeTypes,AddNode,MulNode,visualizationtargetnode,LabelNode,FunctionbodyNode,ReturnNode} from "../src/core/codegenv3.js";
+import { GaalopGraph } from "../src/core/codegenv4/codegenBackpropergation2.js";
 
 const mainCanvas = document.getElementById('mainCanvas');
 //const diagramCanvas = document.getElementById('diagramCanvas');
@@ -45,7 +45,9 @@ async function load(url) {
   return await response.text();
 }
 
-let gajson=await load("../assets/torus_plane_intersect.json");
+let gajson=await load("../assets/torustorusintersect.json");
+//let gajson=await load("../assets/torus_plane_intersect.json");
+//let gajson=await load("../assets/torus_plane_intersect.json");
 const gagraph=GaalopGraph.fromjson(gajson);
 
 import {GaalopGraph as GaalopGraph2} from "../src/core/graph2.js";
@@ -53,29 +55,37 @@ const graph2=new GaalopGraph2();
 graph2.fromjson(gajson);
 //window.gagraph = gagraph;
 
-const vistargets=new Bundlenode(gagraph.vistargets());
-const vistargetsoptimized=new Bundlenode(gagraph.getoptimizedvistargets());
+const vistargets=gagraph.vistargets();
+//const vistargetsoptimized=new Bundlenode(gagraph.getoptimizedvistargets());
 
-const viscopy=vistargetsoptimized.copyGraph();
-const r=viscopy.parents[0].generatefunctionbodys();
-console.log(r);
+//const viscopy=vistargetsoptimized.copyGraph();
+//const r=viscopy.parents[0].generatefunctionbodys();
+console.log(vistargets[0].generatecode2());
 
 import { TransformFeedbackWrapper } from "../src/glwrapper/TransformFeedbackWrapper.js";
 import { shaderSources,loadWithIncludes } from "../src/glwrapper/shaderimporter.js";
 import { Shader } from "../src/glwrapper/glwrapper.js";
 
 async function loadshaderdource(generator,template){
+    let code=(await loadWithIncludes("../src/shadersource/shaderlibv1/",template))
+    .replace("Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {?}","")
+    .replace("bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {?}","");
+
+    for(const [k,v]of generator.entries())code=code.replace(k,v);
+    return code;
+}
+
+async function loadshaderdource3(generator,template){
     return generator(await loadWithIncludes("../src/shadersource/shaderlibv1/",template))
     .replace("Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {?}","")
     .replace("bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {?}","");
 }
 
-
 async function loadshaderdource2(generator,template){
     return generator.gencode(await loadWithIncludes("../src/shadersource/shaderlibv1/",template));
 }
 
-const gen=viscopy.parents[0].makecodegenerator2();
+const gen=vistargets[0].generatecode2();
 const gen2=graph2.createVisualisationgraphs2()[0];
 let vertexshader;
 vertexshader=
@@ -92,12 +102,19 @@ in vec3 position;
 out vec4 result;
 
 void main(){
-    result=xyzDualSummofsquares(position);
+    //result=xyzDualSummofsquares(position);
+    result=vec4(0.);
+    for(int i=0;i<1000+(1.>result.x?1:0);i++)
+    //result+=vec4(Summofsquares(position,position.zxy,position.z));
+    result+=xyzDualSummofsquares(position);
 }
 `;
+
+function log(x){console.log(x);return x;}
+
 const arraylength=100000;
-let transformfeedback=new TransformFeedbackWrapper(gl, await loadshaderdource(gen,vertexshader), ["result"]);
-let transformfeedback2=new TransformFeedbackWrapper(gl, await loadshaderdource2(gen2,vertexshader), ["result"]);
+let transformfeedback=new TransformFeedbackWrapper(gl, log(await loadshaderdource(gen,vertexshader)), ["result"]);
+let transformfeedback2=new TransformFeedbackWrapper(gl, log(await loadshaderdource2(gen2,vertexshader)), ["result"]);
 
 //console.log(transformfeedback.shader.getAttribLocation("position"));
 const data = Array.from({ length: arraylength*3 }, () => Math.random());
@@ -157,6 +174,7 @@ times[1].push(t2-t1);
 console.log(stats(times[0]));
 console.log(stats(times[1]));
 
+console.log(transformfeedback,transformfeedback2);
 
 </script>     
 </body>
