@@ -183,7 +183,7 @@ class Node {
         /** @type {Node[]} */
         this.parents = parents;
         if(! (parents instanceof Array))throw new Error("parents isnt aa Array");
-        for(const p of parents)if(! (p instanceof Node))throw new Error("parent isnt a node");
+        for(const p of parents)if(! (p instanceof Node)||p==undefined)throw new Error("parent isnt a node");
     }
     clonewithnewparents(newparents) {
         throw new Error("not implemented");
@@ -465,7 +465,7 @@ class AddNode extends ExpressionNode {
             let code;
             if(type==NodeTypes.SCALAR)code=`(${acc.code}+${x.code})`;
             else if(type==NodeTypes.COMPLEX)code=`ComplexAdd(${acc.code},${x.code})`;
-            else if(type==NodeTypes.INTERVALL)code=`((${acc.code}+${x.code})`;
+            else if(type==NodeTypes.INTERVALL)code=`(${acc.code}+${x.code})`;
             else throw Error("unknown mul codegen case");
             return {type,code};
         });
@@ -539,13 +539,46 @@ class DivNode extends ExpressionNode {
         if(a.type==NodeTypes.SCALAR && b.type==NodeTypes.SCALAR)
             return {type:NodeTypes.SCALAR,code:`(${a.code}/${b.code})`};
 
-
         throw Error("unknown div codegen case");// i didnt implement this because div should be removed in optimization
-        
-        
     }
 }
 
+class MaxNode extends ExpressionNode {
+    constructor(a, b) {
+        super([a, b]);
+    }
+    clonewithnewparents(newparents) {
+        return new this.constructor(...newparents);
+    }
+    compute(parentresults, variables) {
+        return Math.max(parentresults);
+    }
+    codegenGLSL(parentResults) {
+        const [a,b]=parentResults;
+        if(a.type==NodeTypes.SCALAR && b.type==NodeTypes.SCALAR)
+            return {type:NodeTypes.SCALAR,code:`max(${a.code},${b.code})`};
+
+        throw Error("unknown max codegen case");
+    }
+}
+class MinNode extends ExpressionNode {
+    constructor(a, b) {
+        super([a, b]);
+    }
+    clonewithnewparents(newparents) {
+        return new this.constructor(...newparents);
+    }
+    compute(parentresults, variables) {
+        return Math.min(parentresults);
+    }
+    codegenGLSL(parentResults) {
+        const [a,b]=parentResults;
+        if(a.type==NodeTypes.SCALAR && b.type==NodeTypes.SCALAR)
+            return {type:NodeTypes.SCALAR,code:`min(${a.code},${b.code})`};
+
+        throw Error("unknown min codegen case");
+    }
+}
 class SubNode extends ExpressionNode {
     constructor(a, b) {
         super([a, b]);
@@ -640,6 +673,12 @@ class AbsNode extends ExpressionNode {
     }
     compute(parentresults, variables) {
         return Math.abs(parentresults[0]);
+    }
+    codegenGLSL(parentResults) {
+        // parentResults: [{ code, type }]
+        const [a]=parentResults;
+        if(a.type==NodeTypes.SCALAR){return{type:NodeTypes.SCALAR,code:`abs(${a.code})`};}
+        throw Error("unknown sub codegen case");
     }
 }
 
@@ -1245,6 +1284,37 @@ const int numoutputs=?;
             replacements.set(header,generateFunctionCode(header,body));
         }
 
+        
+        {
+            const subgraphraysus=rayify(subgraphxyzsus,NodeTypes.COMPLEX);
+            //Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {?}
+
+            const replaced = replacexyz(
+                subgraphxyzsus,
+                new VarNode("_V_X", NodeTypes.INTERVALL),
+                new VarNode("_V_Y", NodeTypes.INTERVALL),
+                new VarNode("_V_Z", NodeTypes.INTERVALL)
+            );
+            const casted = new CastNode(replaced, NodeTypes.INTERVALL);
+            const body = new custumStatementNode([casted],r => `return ${r};`);
+
+            const header="Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {?}";
+            replacements.set(header,generateFunctionCode(header,body));
+        }
+
+
+        {
+            const transformed=[...inter3d.transformgraph(subgraphxyz).parents];
+            transformed.unshift(new custumStatementNode([],()=>
+                `    float _V_X=(x.x+x.y)/2.;\n`+//Voxel mitte
+                `    float _V_Y=(y.x+y.y)/2.;\n`+
+                `    float _V_Z=(z.x+z.y)/2.;\n`+
+                `    float delta=(x.y-x.x)/2.;\n`)
+            )
+            const body=new BundlenodeNode(transformed);
+            const header="bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {?}";
+            replacements.set(header,generateFunctionCode(header,body));
+        }
 
 
         {
@@ -1441,7 +1511,7 @@ function codegenGLSLTyped(root, inlineConstants = true) {
     root.visitnodesrec((node, parentResults) => {
 
         const { code, type } = node.codegenGLSL(parentResults);
-        if(code && code.includes("Object"))throw new Error("Bad codegen");
+        if((code && code.includes("Object"))||!type in NodeTypes)throw new Error("Bad codegen");
 
         if (type===NodeTypes.STATEMENT) {//syntesythe statements directly
             if(code) lines.push(code);
@@ -1586,4 +1656,223 @@ function replacetyped(replacements,nodes){
         if (original instanceof NegNode) return parenttype.neg(...promoted);
         throw new Error("unknown nodetype for replacetyped")
     },cache));
+}
+
+class inter3d {
+    //converted using chatgpt from python code and then rewridden again
+    /**
+     * coeffs: { keyString: GraphNode }
+     * keyString is something like "1,0,0" representing exponents (ix^1 * iy^0 * iz^0)
+     */
+    constructor(coeffs = {}) {
+        this.coeffs = coeffs;
+    }
+
+    static ix = new inter3d({ '1,0,0': ConstNode.one });
+    static iy = new inter3d({ '0,1,0': ConstNode.one });
+    static iz = new inter3d({ '0,0,1': ConstNode.one });
+  
+    /** 
+     * Convert various types to inter3d:
+     * - inter3d instance: return as is
+     * - number 0: return empty polynomial
+     * - other number: return constant polynomial with that number wrapped as GraphNode
+     * @returns {inter3d}
+     */
+    static convert(x) {
+        if (x instanceof inter3d) return x;
+        if (typeof x === 'number') {
+            if (x === 0) return new inter3d();
+            return new inter3d({ '0,0,0': new ConstNode(x) });
+        }
+        if(x instanceof Node){
+            return new inter3d({ '0,0,0': x });
+        }
+        throw new Error("Cannot convert to inter3d: " + x);
+    }
+
+    /**
+     * Utility: parse key string "x,y,z" to array of integers
+     * @returns {number[]}
+     */
+    static keyToArray(key) {
+        return key.split(',').map(Number);
+    }
+
+    /**
+     * Utility: add two keys element-wise: "1,0,0" + "0,2,1" -> "1,2,1"
+     */
+    static addKeys(a, b) {
+        const arrA = inter3d.keyToArray(a);
+        const arrB = inter3d.keyToArray(b);
+        return arrA.map((v, i) => v + arrB[i]).join(',');
+    }
+
+    /*static subKeys(a, b) {
+        const arrA = inter3d.keyToArray(a);
+        const arrB = inter3d.keyToArray(b);
+        return arrA.map((v, i) => v - arrB[i]).join(',');
+    }*/
+  
+    /**
+     * Add two inter3d polynomials symbolically.
+     * The coefficients are GraphNodes and addition creates AddOperand nodes.
+     */
+    add(other) {
+        other = inter3d.convert(other);
+        const resultCoeffs = {};
+    
+        const keys = new Set([...Object.keys(this.coeffs), ...Object.keys(other.coeffs)]);
+        for (const k of keys) {
+            const a = this.coeffs[k];
+            const b = other.coeffs[k];
+            resultCoeffs[k] =(a !== undefined && b !== undefined) ? new AddNode(a, b) : a ?? b;
+        }
+        return new inter3d(resultCoeffs);
+    }
+
+    sub(other) {
+        other = inter3d.convert(other);
+        const resultCoeffs = {};
+    
+        const keys = new Set([...Object.keys(this.coeffs), ...Object.keys(other.coeffs)]);
+        for (const k of keys) {
+            const a = this.coeffs[k];
+            const b = other.coeffs[k];
+            if (a && b) {
+                resultCoeffs[k] = new SubNode(a, b);
+            } else if(a){
+                resultCoeffs[k] = a;
+            } else{//if b
+                resultCoeffs[k] = new NegNode(b);
+            }
+        }
+        return new inter3d(resultCoeffs);
+    }
+  
+    /**
+     * Multiply two inter3d polynomials symbolically.
+     * Coefficients are GraphNodes, multiplication creates MulOperand nodes,
+     * addition of same exponent terms creates AddOperand nodes.
+     */
+    mul(other) {
+        other = inter3d.convert(other);
+        const resultCoeffs = {};
+    
+        for (const [ka, va] of Object.entries(this.coeffs)) {
+            for (const [kb, vb] of Object.entries(other.coeffs)) {
+                const e = inter3d.addKeys(ka, kb);
+                const mulNode = new MulNode(va, vb);
+                const existing = resultCoeffs[e];
+                if (existing) {
+                    resultCoeffs[e] = new AddNode(existing, mulNode);
+                } else {
+                    resultCoeffs[e] = mulNode;
+                }
+            }
+        }
+        return new inter3d(resultCoeffs);
+    }
+
+    /**
+     * 
+     */
+    div(other) {
+        other = inter3d.convert(other);
+    
+        const keys = Object.keys(other.coeffs);
+        if (keys.length !== 1) {
+            throw new Error("Only monomial division is supported.");
+        }
+    
+        const monomKey = keys[0];
+        const divisorExponents = monomKey.split(",").map(Number);
+        const divisorNode = other.coeffs[monomKey];
+        if(divisorNode==undefined)throw new Error("divisorNode is undefined");
+    
+        const result = {};
+    
+        for (const [dividendKey,dividendValue] of Object.entries(this.coeffs)) {
+            if(dividendValue==undefined)throw new Error("dividendValue is undefined");
+            const dividendExponents = inter3d.keyToArray(dividendKey);
+            const resultExponents = dividendExponents.map((dividendExponent,i)=>dividendExponent-divisorExponents[i]);
+            const resultKey = resultExponents.join(",");
+            result[resultKey] = new DivNode(dividendValue, divisorNode);
+        }
+    
+        return new inter3d(result);
+    }
+
+    neg() {
+        const result = {};
+        for (const [key, value] of Object.entries(this.coeffs)) {
+            result[key] = new NegNode(value);
+        }
+        return new inter3d(result);
+    }
+    
+    static transformgraph(subgraphxyz) {
+
+        const cache = new Map();
+        const delta=inter3d.convert(new VarNode("delta"));
+    
+        const outputs=subgraphxyz.parents.map(x=>x.visitnodesrec((node, parentResults) => {
+            if (node instanceof NegNode) return parentResults[0].neg();
+            if (node instanceof MulNode) return parentResults.reduce((acc, cur) => acc.mul(cur));
+            if (node instanceof AddNode) return parentResults.reduce((acc, cur) => acc.add(cur));
+            if (node instanceof SubNode) return parentResults.reduce((acc, cur) => acc.sub(cur));
+            if (node instanceof DivNode) return parentResults[0].div(parentResults[1]);
+            if (node instanceof VarNode && node.varname.startsWith("_V_")) {
+                switch (node.varname) {
+                    case "_V_X": return inter3d.ix.mul(delta).add(node);//Ix*delta+x0
+                    case "_V_Y": return inter3d.iy.mul(delta).add(node);//Iy*delta+y0
+                    case "_V_Z": return inter3d.iz.mul(delta).add(node);//Iz*delta+z0
+                    default: throw new Error("Unknown symbolic variable: " + node.varname);
+                }
+            }
+            if (node.parents.length === 0) return inter3d.convert(node);
+            throw new Error("Unhandled node type in transformgraph: " + node.constructor.name);
+        },cache));
+
+
+        const ReturnIfIntervallDoesntContainZero_Statements=[];
+        for(const intervallpoly of outputs){
+            let low=[];
+            let high=[];
+
+            for (const [k, coeff] of Object.entries(intervallpoly.coeffs)) {
+                const exponents=inter3d.keyToArray(k);
+
+                if(exponents.every(x=>x===0)){
+                    low.push(coeff);
+                    high.push(coeff);
+                }else if(exponents.every(x=>x%2==0)){//even exponents are >=0
+                    //if coeff <0 i want the intervall is [c,0]
+                    //else it is [0,c]
+                    //so [min(c,0),max(c,0)]
+                    low.push(new MinNode(coeff,ConstNode.zero));
+                    high.push(new MaxNode(coeff,ConstNode.zero));
+                }else{//odd exponents
+                    //low -=abs(coeffs)
+                    //high +=abs(coeffs)
+                    const abs=new AbsNode(coeff);
+                    low.push(abs);
+                    high.push(new NegNode(abs));
+                }
+            }
+            ReturnIfIntervallDoesntContainZero_Statements.push(
+                new custumStatementNode(
+                    [new AddNode(...low),new AddNode(...high)],
+                    (low, high)=>`if (!(${low} <= 0. && 0. <= ${high})) return false;`
+                )
+            );
+        }
+        ReturnIfIntervallDoesntContainZero_Statements.push(
+            new custumStatementNode([],()=> "return true;")
+        );
+        return new BundlenodeNode(ReturnIfIntervallDoesntContainZero_Statements);
+    
+    }
+  
+
 }
