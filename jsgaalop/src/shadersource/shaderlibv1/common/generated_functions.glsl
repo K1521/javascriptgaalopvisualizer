@@ -20,6 +20,13 @@ const int numoutputs=?;
 
 
 #define Complex vec2
+Complex ComplexInv(Complex a) {
+    // Complex division: 1 / (a.x + i*a.y)
+    return a*Complex(1,-1) / dot(a,a);
+}
+Complex ComplexConjugate(Complex a) {
+    return a*Complex(1,-1);
+}
 Complex ComplexAdd(Complex a, Complex b) {return a+b;}
 Complex ComplexAdd(float a, Complex b) {return Complex(a + b.x,b.y);}
 Complex ComplexAdd(Complex a, float b) {return ComplexAdd(b,a);}
@@ -51,14 +58,9 @@ Complex ComplexDiv(Complex a, Complex b) {
         (a.y * b.x - a.x * b.y)
     ) / dot(b,b);
 }
-Complex ComplexInv(Complex a) {
-    // Complex division: 1 / (a.x + i*a.y)
-    return a*Complex(1,-1) / dot(a,a);
-}
-Complex ComplexConjugate(Complex a) {
-    // Complex division: 1 / (a.x + i*a.y)
-    return a*Complex(1,-1);
-}
+Complex ComplexDiv(Complex a, float b){return a/b;}
+Complex ComplexDiv(float a, Complex b){ return a*ComplexInv(b);}
+
 
 
 #define DualComplex vec4
@@ -111,9 +113,9 @@ float Summofsquares(vec3 rayDir, vec3 rayOrigin,float a){?}
 
 xyzDual xyzDualSummofsquares(vec3 pos) {?}
 
-/*void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {?}
-*/
-void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {}
+void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {?}
+
+//void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {}
 
 
 
@@ -147,9 +149,11 @@ Intervall IntervallMul(Intervall a, Intervall b) {
     return Intervall(lo, hi);
 }
 Intervall IntervallMul(float a, Intervall b) {
-    float l = a * b.x;
+    /*float l = a * b.x;
     float h = a * b.y;
-    return Intervall(min(l, h), max(l, h));
+    return Intervall(min(l, h), max(l, h));*/
+    return a*(a>0.?b:b.yx);//i left the other because this looks incomprehensible
+
 }
 Intervall IntervallMul(Intervall a, float b) {return IntervallMul(b,a);}
 
@@ -167,6 +171,7 @@ Intervall IntervallDiv(Intervall a, Intervall b) {
     float hi = max(max(ll, lh), max(hl, hh));
     return Intervall(lo, hi);
 }*/
+Intervall IntervallDiv(Intervall a, float b){return IntervallMul(a,1./b);}
 
 // Interval square
 Intervall IntervallSquare(Intervall a) {

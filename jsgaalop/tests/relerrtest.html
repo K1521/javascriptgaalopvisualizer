@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>test</title>
+    <!--<base href="/jsgaalop/">-->
+</head>
+<body>
+<script type="module">
+
+function relerr(a, b, eps = 1e-12) {
+  return Math.abs(a - b) / Math.max(Math.abs(a), Math.abs(b), eps);
+}
+
+function maxRelErrExact(L, eps = 1e-12) {
+  let maxErr = 0;
+  for (let i = 0; i < L.length; i++) {
+    for (let j = i + 1; j < L.length; j++) {
+      maxErr = Math.max(maxErr, relerr(L[i], L[j], eps));
+    }
+  }
+  return maxErr;
+}
+
+function maxRelErr(L, eps = 1e-12) {
+  if (L.length < 2) return 0;
+
+  const m = Math.min(...L);
+  const M = Math.max(...L);
+
+  let maxErr = 0;
+  for (const x of L) {
+    const relMin = Math.abs(x - m) / Math.max(Math.abs(x), Math.abs(m), eps);
+    const relMax = Math.abs(x - M) / Math.max(Math.abs(x), Math.abs(M), eps);
+    maxErr = Math.max(maxErr, relMin, relMax);
+  }
+  return maxErr;
+}
+
+function maxRelErrAprox(L, eps = 1e-12) {
+  const m = Math.min(...L);
+  const M = Math.max(...L);
+  return Math.abs(M - m) / Math.max(Math.abs(m), Math.abs(M), eps);
+}
+
+// Monte Carlo test
+const rtol = 0.2;
+//const N = 1_000_000;
+
+let failures=0;
+
+
+for(let a=-5;a<5;a+=0.01){
+for(let b=-5;b<5;b+=0.01)
+for(let c=-5;c<5;c+=0.01) {
+  const L = [a, b, c];
+
+  const exact = maxRelErrExact(L);
+  const mid = maxRelErr(L);
+  const approx = maxRelErrAprox(L);
+  if(Math.abs(mid - exact)>1e-12)failures++;
+  if((approx<1 || exact<1)  && Math.abs(approx - exact)>1e-12)failures++;
+  //if(approx>1 && exact<1)failures++;
+
+  
+}
+console.log(a,failures);
+}
+console.log("done, failures =", failures);//test passed ;) 0 errors
+</script>     
+</body>
+</html>

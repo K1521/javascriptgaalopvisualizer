@@ -1,0 +1,140 @@
+compare pls
+
+old
+bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {
+    float _V_X=(x.x+x.y)/2.;
+    float _V_Y=(y.x+y.y)/2.;
+    float _V_Z=(z.x+z.y)/2.;
+    float delta=(x.y-x.x)/2.;
+    float _node0 = -1.0;
+    float _node1 = (1.0*delta);
+    float _node2 = (_node1*_node1);
+    float _node3 = (_node0*(args[0]*_node2));
+    float _node4 = -4.0;
+    float _node5 = 2.0;
+    float _node6 = (_node2/_node5);
+    float _node7 = (_V_X*_V_X);
+    float _node8 = (_V_Y*_V_Y);
+    float _node9 = (((_node7+_node8)+(_V_Z*_V_Z))/_node5);
+    float _node10 = (_node6*_node9);
+    float _node11 = (_node1*_V_X);
+    float _node12 = (_node11+_node11);
+    float _node13 = (_node12/_node5);
+    float _node14 = (_node0*(args[1]*_node6));
+    float _node15 = (((_node3+(_node0*(_node4*((_node10+(_node13*_node13))+_node10))))+_node14)+_node14);
+    float _node16 = 0.0;
+    float _node17 = (_node13*_node9);
+    float _node18 = (_node0*(args[1]*_node13));
+    float _node19 = abs(((((_node0*(args[0]*_node12))+(_node0*(_node4*(_node17+_node17))))+_node18)+_node18));
+    float _node20 = (_node0*(args[1]*_node9));
+    float _node21 = ((((((_node0*(args[0]*_node7))+(_node0*(args[0]*_node8)))+(_node0*(_node4*(_node9*_node9))))+_node20)+_node20)+args[2]);
+    float _node22 = (_node10+_node10);
+    float _node23 = (_node1*_V_Y);
+    float _node24 = (_node23+_node23);
+    float _node25 = (_node24/_node5);
+    float _node26 = (((_node3+(_node0*(_node4*(_node22+(_node25*_node25)))))+_node14)+_node14);
+    float _node27 = (_node9*_node25);
+    float _node28 = (_node0*(args[1]*_node25));
+    float _node29 = abs(((((_node0*(args[0]*_node24))+(_node0*(_node4*(_node27+_node27))))+_node28)+_node28));
+    float _node30 = (_node6*_node6);
+    float _node31 = (_node0*(_node4*_node30));
+    float _node32 = min(_node31,_node16);
+    float _node33 = (_node6*_node13);
+    float _node34 = abs((_node0*(_node4*(_node33+_node33))));
+    float _node35 = (-_node34);
+    float _node36 = (_node0*(_node4*(_node30+_node30)));
+    float _node37 = min(_node36,_node16);
+    float _node38 = (_node6*_node25);
+    float _node39 = abs((_node0*(_node4*(_node38+_node38))));
+    float _node40 = (-_node39);
+    float _node41 = (_node1*_V_Z);
+    float _node42 = ((_node41+_node41)/_node5);
+    float _node43 = (_node6*_node42);
+    float _node44 = abs((_node0*(_node4*(_node43+_node43))));
+    float _node45 = (-_node44);
+    float _node46 = (_node13*_node25);
+    float _node47 = abs((_node0*(_node4*(_node46+_node46))));
+    float _node48 = (_node13*_node42);
+    float _node49 = abs((_node0*(_node4*(_node48+_node48))));
+    float _node50 = (((_node0*(_node4*(_node22+(_node42*_node42))))+_node14)+_node14);
+    float _node51 = (_node9*_node42);
+    float _node52 = (_node0*(args[1]*_node42));
+    float _node53 = abs((((_node0*(_node4*(_node51+_node51)))+_node52)+_node52));
+    float _node54 = (_node25*_node42);
+    float _node55 = abs((_node0*(_node4*(_node54+_node54))));
+    float _node56 = max(_node31,_node16);
+    float _node57 = max(_node36,_node16);
+if (!(
+    ((((((((((((((((((((((((min(_node15,_node16)+(-_node19))+_node21)+min(_node26,_node16))+(-_node29))+_node32)+_node35)+_node37)+_node40)+_node37)+_node45)+_node35)+(-_node47))+_node35)+(-_node49))+min(_node50,_node16))+(-_node53))+_node32)+_node40)+_node37)+_node45)+_node40)+(-_node55))+_node32)+_node45)
+     <= 0. && 0. <= 
+     ((((((((((((((((((((((((max(_node15,_node16)+_node19)+_node21)+max(_node26,_node16))+_node29)+_node56)+_node34)+_node57)+_node39)+_node57)+_node44)+_node34)+_node47)+_node34)+_node49)+max(_node50,_node16))+_node53)+_node56)+_node39)+_node57)+_node44)+_node39)+_node55)+_node56)+_node44)
+     )) return false;
+    return true;
+}
+
+
+new
+bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {
+    float _V_X=(x.x+x.y)/2.;
+    float _V_Y=(y.x+y.y)/2.;
+    float _V_Z=(z.x+z.y)/2.;
+    float delta=(x.y-x.x)/2.;
+
+float _node2 = (delta*delta);//_generatednode0
+float _generatednode1 = (args[0]*_node2);
+float _generatednode2 = (_node2*0.5);
+float _node7 = (_V_X*_V_X);//_generatednode3
+float _generatednode4 = (_V_Y*_V_Y);
+float _generatednode5 = (((_node7+_generatednode4)+(_V_Z*_V_Z))*0.5);
+float _generatednode6 = (_generatednode2*_generatednode5);
+float _generatednode7 = (delta*_V_X);
+float _generatednode8 = (_generatednode7+_generatednode7);
+float _generatednode9 = (_generatednode8*0.5);
+float _generatednode10 = (args[1]*_generatednode2);
+float _generatednode11 = (-(((_generatednode1+(((_generatednode6+(_generatednode9*_generatednode9))+_generatednode6)*-4.0))+_generatednode10)+_generatednode10));
+float _generatednode12 = (_generatednode9*_generatednode5);
+float _generatednode13 = (args[1]*_generatednode9);
+float _generatednode14 = abs((-((((args[0]*_generatednode8)+((_generatednode12+_generatednode12)*-4.0))+_generatednode13)+_generatednode13)));
+float _generatednode15 = (args[1]*_generatednode5);
+float _generatednode16 = (args[2]-(((((args[0]*_node7)+(args[0]*_generatednode4))+((_generatednode5*_generatednode5)*-4.0))+_generatednode15)+_generatednode15));
+float _generatednode17 = (_generatednode6+_generatednode6);
+float _generatednode18 = (delta*_V_Y);
+float _generatednode19 = (_generatednode18+_generatednode18);
+float _generatednode20 = (_generatednode19*0.5);
+float _generatednode21 = (-(((_generatednode1+((_generatednode17+(_generatednode20*_generatednode20))*-4.0))+_generatednode10)+_generatednode10));
+float _generatednode22 = (_generatednode5*_generatednode20);
+float _generatednode23 = (args[1]*_generatednode20);
+float _generatednode24 = abs((-((((args[0]*_generatednode19)+((_generatednode22+_generatednode22)*-4.0))+_generatednode23)+_generatednode23)));
+float _generatednode25 = (_generatednode2*_generatednode2);
+float _generatednode26 = (-(_generatednode25*-4.0));
+float _generatednode27 = min(_generatednode26,0.0);
+float _generatednode28 = (_generatednode2*_generatednode9);
+float _generatednode29 = abs((-((_generatednode28+_generatednode28)*-4.0)));
+float _generatednode30 = (-((_generatednode25+_generatednode25)*-4.0));
+float _generatednode31 = min(_generatednode30,0.0);
+float _generatednode32 = (_generatednode2*_generatednode20);
+float _generatednode33 = abs((-((_generatednode32+_generatednode32)*-4.0)));
+float _generatednode34 = (delta*_V_Z);
+float _generatednode35 = ((_generatednode34+_generatednode34)*0.5);
+float _generatednode36 = (_generatednode2*_generatednode35);
+float _generatednode37 = abs((-((_generatednode36+_generatednode36)*-4.0)));
+float _generatednode38 = (_generatednode9*_generatednode20);
+float _generatednode39 = abs((-((_generatednode38+_generatednode38)*-4.0)));
+float _generatednode40 = (_generatednode9*_generatednode35);
+float _generatednode41 = abs((-((_generatednode40+_generatednode40)*-4.0)));
+float _generatednode42 = (-((((_generatednode17+(_generatednode35*_generatednode35))*-4.0)+_generatednode10)+_generatednode10));
+float _generatednode43 = (_generatednode5*_generatednode35);
+float _generatednode44 = (args[1]*_generatednode35);
+float _generatednode45 = abs((-((((_generatednode43+_generatednode43)*-4.0)+_generatednode44)+_generatednode44)));
+float _generatednode46 = (_generatednode20*_generatednode35);
+float _generatednode47 = abs((-((_generatednode46+_generatednode46)*-4.0)));//_node 57 prob
+float _generatednode48 = max(_generatednode26,0.0);
+float _generatednode49 = max(_generatednode30,0.0);
+if (!(
+    (min(_generatednode11,0.0)+_generatednode14+_generatednode16+min(_generatednode21,0.0)+_generatednode24+_generatednode27+_generatednode29+_generatednode31+_generatednode33+_generatednode31+_generatednode37+_generatednode29+_generatednode39+_generatednode29+_generatednode41+min(_generatednode42,0.0)+_generatednode45+_generatednode27+_generatednode33+_generatednode31+_generatednode37+_generatednode33+_generatednode47+_generatednode27+_generatednode37)
+     <= 0. && 0. <= 
+     ((max(_generatednode11,0.0)+_generatednode16+max(_generatednode21,0.0)+_generatednode48+_generatednode49+_generatednode49+max(_generatednode42,0.0)+_generatednode48+_generatednode49+_generatednode48)-(_generatednode14+_generatednode24+_generatednode29+_generatednode33+_generatednode37+_generatednode29+_generatednode39+_generatednode29+_generatednode41+_generatednode45+_generatednode33+_generatednode37+_generatednode33+_generatednode47+_generatednode37))
+     )) return false;
+return true;
+}
+

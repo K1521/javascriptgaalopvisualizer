@@ -887,7 +887,7 @@ class GraphToCodeGLSLVis_abstract_Dual extends GraphToCode {
             } 
             if(node.operand instanceof ConstOperand)return "float";
             if(node.operand instanceof NegOperand)return parentresults[0];
-            if(node.operand instanceof MulOperand || node.operand instanceof DivOperand || node.operand instanceof AddOperand) { 
+            if(node.operand instanceof MulOperand || node.operand instanceof DivOperand || node.operand instanceof AddOperand || node.operand instanceof SubOperand) { 
                 if(node.parents.length!==2) throw new Error(`${node.operand.constructor.name} must have 2 parents`);
                 const left=parentresults[0];
                 const right=parentresults[1];
@@ -2240,7 +2240,7 @@ class VisualisationGraph2 {
             `#define USE_DOUBLEROOTS ${this.issquared?1:0}`
         );*/
 
-        console.log(template);
+        //console.log(template);
 
         return template;
     }

@@ -123,7 +123,6 @@ export class matrixextractor{
     /**@type {Poly[]} */
     const outputpolys=this.visgraph.outputnodes.map(node=>nodecache.get(node));//list of polynoms
     for(const poly of outputpolys){console.log(poly,poly.toString());}
-    const xyzstrings=new Set(["_V_X","_V_Y","_V_Z"]);
     /** {Map<string,Poly>[]} */
     /**@type {Map<string,number[]>[]} */
     const outputpolyspervarperrow=outputpolys.map((poly)=>{
@@ -131,7 +130,7 @@ export class matrixextractor{
       const polymap=new Map();
       for(let [monom, value] of poly.entries()){
         /**@type {String[]} */
-        const variables=Object.keys(monom).filter(v => !xyzstrings.has(v));
+        const variables=Object.keys(monom).filter(v => !["_V_X","_V_Y","_V_Z"].includes(v));
         if(variables.length>1)throw new Error("transformation is not linear but it should be :(");
         let varname;
         if(variables.length==1){

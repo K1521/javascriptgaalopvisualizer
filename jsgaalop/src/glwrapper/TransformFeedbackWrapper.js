@@ -123,12 +123,25 @@ export class TransformFeedbackWrapper {
     gl.drawArrays(gl.POINTS, 0, vertexcount);
     gl.endTransformFeedback();
 
-    gl.finish();
+
+    
+
+    /*const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+    gl.flush(); // ensure commands are sent
+    // Wait (blocking version)
+    let status;
+    do { 
+      status = gl.clientWaitSync(sync, 0, 10); 
+    } while (status !== gl.CONDITION_SATISFIED && status !== gl.ALREADY_SIGNALED);
+    gl.deleteSync(sync);*/
 
     gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
     gl.disable(gl.RASTERIZER_DISCARD);
     //gl.bindVertexArray(null);
     // Read back results
+
+    gl.finish();
+
     const results = [];
     for (const { elementsPerVertexTotal, arrayConstructor, buffer } of this.buffers) {
       //const {by,arrayConstructor}=this.buffers[i];
@@ -148,5 +161,30 @@ export class TransformFeedbackWrapper {
       gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, buffer); //set buffer size
       gl.bufferData(gl.ARRAY_BUFFER, 0, gl.STATIC_DRAW);
     }
+  }
+  dispose() {
+    const gl = this.gl;
+
+    // Delete transform feedback object
+    if (this.tf) {
+      gl.deleteTransformFeedback(this.tf);
+      this.tf = null;
+    }
+
+    // Delete buffers
+    if (this.buffers) {
+      for (const { buffer } of this.buffers) {
+        if (buffer) gl.deleteBuffer(buffer);
+      }
+      this.buffers = null;
+    }
+
+    // Delete shader
+    if (this.shader?.dispose) {
+      this.shader.dispose();
+    }
+
+    this.shader = null;
+    this.gl = null;
   }
 }

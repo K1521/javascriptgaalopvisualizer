@@ -1,0 +1,1261 @@
+#version 300 es
+precision mediump float;
+
+layout(location = 0) in vec4 inputPosition;   // xyz = position
+layout(location = 1) in vec3 inputOffsetAndA; // xyz = offset + a
+
+out vec4 result;
+
+
+// from http://127.0.0.1:5508/jsgaalop/src/shadersource/shaderlibv1/common/generated_functions.glsl @ line 1
+
+
+uniform float[64] args;
+
+
+#define POLYDEGREE 8 //degree of polynomial (for the sum of squares)
+#define USE_DOUBLEROOTS 1 //if the poly is a sum of squares
+
+#if USE_DOUBLEROOTS
+    #define NUM_ROOTS (POLYDEGREE / 2)
+#else
+    #define NUM_ROOTS POLYDEGREE
+#endif
+
+const int numoutputs=25;
+
+
+
+
+
+
+#define Complex vec2
+Complex ComplexInv(Complex a) {
+    // Complex division: 1 / (a.x + i*a.y)
+    return a*Complex(1,-1) / dot(a,a);
+}
+Complex ComplexConjugate(Complex a) {
+    return a*Complex(1,-1);
+}
+Complex ComplexAdd(Complex a, Complex b) {return a+b;}
+Complex ComplexAdd(float a, Complex b) {return Complex(a + b.x,b.y);}
+Complex ComplexAdd(Complex a, float b) {return ComplexAdd(b,a);}
+
+Complex ComplexSub(Complex a, Complex b) {return a-b;}
+Complex ComplexSub(float a, Complex b) {return Complex(a - b.x,b.y);}
+Complex ComplexSub(Complex a, float b) {return Complex(a.x -b ,a.y);}
+
+Complex ComplexMul(Complex a, Complex b) {
+    // Complex multiplication: (a.x + i*a.y) * (b.x + i*b.y)
+    return Complex(
+        a.x * b.x - a.y * b.y, // Real part
+        a.x * b.y + a.y * b.x  // Imaginary part
+    );
+}
+Complex ComplexMul(Complex a, float b) {return a*b;}
+Complex ComplexMul(float a, Complex b) {return a*b;}
+Complex ComplexSquare(Complex a) {
+    // Complex multiplication: (a.x + i*a.y) * (b.x + i*b.y)
+    return Complex(
+        a.x * a.x - a.y * a.y, // Real part
+        2.0 * a.x * a.y  // Imaginary part
+    );
+}
+Complex ComplexDiv(Complex a, Complex b) {
+    // Complex division: (a.x + i*a.y) / (b.x + i*b.y)
+    return Complex(
+        (a.x * b.x + a.y * b.y) ,
+        (a.y * b.x - a.x * b.y)
+    ) / dot(b,b);
+}
+Complex ComplexDiv(Complex a, float b){return a/b;}
+Complex ComplexDiv(float a, Complex b){ return a*ComplexInv(b);}
+
+
+
+#define DualComplex vec4
+DualComplex DualComplexMul(DualComplex a,DualComplex b){
+    return DualComplex(ComplexMul(a.xy,b.xy),ComplexMul(a.xy,b.zw)+ComplexMul(a.zw,b.xy));
+}
+DualComplex DualComplexSqare(DualComplex a){
+    return DualComplex(ComplexSquare(a.xy),2.0*ComplexMul(a.xy,a.zw));
+}
+DualComplex DualComplexAdd(DualComplex a,float b){
+    return DualComplex(a.x+b, a.yzw);
+}
+
+
+#define xyzDual vec4
+xyzDual xyzDualMul(xyzDual a,xyzDual b){
+    return xyzDual(a.w*b.xyz+b.w*a.xyz,a.w*b.w);
+}
+xyzDual xyzDualSqare(xyzDual a){
+    return xyzDual(2.*a.w*a.xyz,a.w*a.w);
+}
+xyzDual xyzDualSqrt(xyzDual a){
+    float sqrtf=sqrt(a.w);
+    return xyzDual(a.xyz/(2.*sqrtf),sqrtf);
+}
+xyzDual xyzDualAbs(xyzDual a) {
+    return xyzDual(a.xyz*sign(a.w),abs(a.w));
+}
+
+
+#define Dual vec2
+Dual DualMul(Dual a, Dual b) {
+    return Dual(a.x * b.x, a.x * b.y + a.y * b.x);
+}
+Dual DualSquare(Dual a) {
+    return Dual(a.x * a.x, 2.0 * a.x * a.y);
+}
+Dual DualSqrt(Dual a) {
+    float sqrtf = sqrt(a.x);
+    return Dual(sqrtf, a.y / (2.0 * sqrtf));
+}
+Dual DualAbs(Dual a) {
+    return Dual(abs(a.x), a.y * sign(a.x));
+}
+
+
+DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a) {
+    DualComplex _V_X=DualComplex(ComplexMul(Complex(rayDir.x,0.),a)+Complex(rayOrigin.x,0.),rayDir.x,0.);
+    DualComplex _V_Y=DualComplex(ComplexMul(Complex(rayDir.y,0.),a)+Complex(rayOrigin.y,0.),rayDir.y,0.);
+    DualComplex _V_Z=DualComplex(ComplexMul(Complex(rayDir.z,0.),a)+Complex(rayOrigin.z,0.),rayDir.z,0.);
+    DualComplex _node0 = DualComplexSqare(_V_Y);
+    DualComplex _node1 = DualComplexMul(_V_Y,_V_Z);
+    DualComplex _node2 = DualComplexMul(_V_Z,_V_Y);
+    DualComplex _node3 = DualComplexSqare(_V_Z);
+    DualComplex _node4 = (((DualComplexSqare(_V_X)+_node0)+_node3)/2.0);
+    DualComplex _node5 = DualComplexSqare(_node4);
+    DualComplex _node6 = ((((((((((((args[0]*_node0)+(args[1]*_node1))+(-(args[2]*_V_Y)))+(args[3]*_node2))+(args[4]*_node3))+(-(args[5]*_V_Z)))+(args[6]*_node5))+(args[7]*_node4))+(-(args[8]*_V_Y)))+(-(args[9]*_V_Z)))+(args[10]*_node4))+DualComplex(args[11],0.,0.,0.));
+    DualComplex _node7 = DualComplexMul(_V_Y,_V_X);
+    DualComplex _node8 = DualComplexMul(_V_Z,_V_X);
+    DualComplex _node9 = (((((((((-(args[0]*_node7))+(args[12]*_node1))+(-(args[13]*_V_Y)))+(-(args[3]*_node8)))+(args[14]*_node5))+(args[15]*_node4))+(args[8]*_V_X))+(args[16]*_node4))+DualComplex(args[17],0.,0.,0.));
+    DualComplex _node10 = ((((((((-(args[1]*_node7))+(-(args[12]*_node0)))+(-(args[4]*_node8)))+(args[18]*_node5))+(args[19]*_node4))+(args[9]*_V_X))+(args[20]*_node4))+DualComplex(args[21],0.,0.,0.));
+    DualComplex _node11 = DualComplexMul(_node4,_V_X);
+    DualComplex _node12 = DualComplexMul(_node4,_V_Y);
+    DualComplex _node13 = DualComplexMul(_node4,_V_Z);
+    DualComplex _node14 = ((((((((args[6]*_node11)+(args[14]*_node12))+(args[18]*_node13))+(args[22]*_node4))+(args[10]*_V_X))+(args[16]*_V_Y))+(args[20]*_V_Z))+DualComplex(args[23],0.,0.,0.));
+    DualComplex _node15 = (args[11]*_V_X);
+    DualComplex _node16 = (((((((((((-(args[2]*_node7))+(-(args[13]*_node0)))+(-(args[5]*_node8)))+(args[7]*_node11))+(args[15]*_node12))+(args[19]*_node13))+(-(args[22]*_node5)))+_node15)+(args[17]*_V_Y))+(args[21]*_V_Z))+(-(args[23]*_node4)));
+    DualComplex _node17 = DualComplexMul(_V_X,_V_Y);
+    DualComplex _node18 = DualComplexMul(_V_X,_V_Z);
+    DualComplex _node19 = (((((((((-(args[0]*_node17))+(-(args[1]*_node18)))+(args[2]*_V_X))+(args[24]*_node2))+(args[25]*_node5))+(args[26]*_node4))+(-(args[27]*_V_Y)))+(args[28]*_node4))+DualComplex(args[29],0.,0.,0.));
+    DualComplex _node20 = DualComplexSqare(_V_X);
+    DualComplex _node21 = ((((((((((((args[0]*_node20)+(-(args[12]*_node18)))+(args[13]*_V_X))+(-(args[24]*_node8)))+(args[30]*_node3))+(-(args[31]*_V_Z)))+(args[32]*_node5))+(args[33]*_node4))+(args[27]*_V_X))+(-(args[34]*_V_Z)))+(args[35]*_node4))+DualComplex(args[36],0.,0.,0.));
+    DualComplex _node22 = ((((((((args[1]*_node20)+(args[12]*_node17))+(-(args[30]*_node2)))+(args[37]*_node5))+(args[38]*_node4))+(args[34]*_V_Y))+(args[39]*_node4))+DualComplex(args[40],0.,0.,0.));
+    DualComplex _node23 = ((((((((args[25]*_node11)+(args[32]*_node12))+(args[37]*_node13))+(args[41]*_node4))+(args[28]*_V_X))+(args[35]*_V_Y))+(args[39]*_V_Z))+DualComplex(args[42],0.,0.,0.));
+    DualComplex _node24 = (args[36]*_V_Y);
+    DualComplex _node25 = (((((((((((args[2]*_node20)+(args[13]*_node17))+(-(args[31]*_node2)))+(args[26]*_node11))+(args[33]*_node12))+(args[38]*_node13))+(-(args[41]*_node5)))+(args[29]*_V_X))+_node24)+(args[40]*_V_Z))+(-(args[42]*_node4)));
+    DualComplex _node26 = ((((((((-(args[3]*_node17))+(-(args[4]*_node18)))+(args[5]*_V_X))+(-(args[24]*_node0)))+(args[43]*_node5))+(args[44]*_node4))+(args[45]*_node4))+DualComplex(args[46],0.,0.,0.));
+    DualComplex _node27 = ((((((((args[3]*_node20)+(args[24]*_node7))+(-(args[30]*_node1)))+(args[31]*_V_Y))+(args[47]*_node5))+(args[48]*_node4))+(args[49]*_node4))+DualComplex(args[50],0.,0.,0.));
+    DualComplex _node28 = ((((((args[4]*_node20)+(args[30]*_node0))+(args[51]*_node5))+(args[52]*_node4))+(args[53]*_node4))+DualComplex(args[54],0.,0.,0.));
+    DualComplex _node29 = ((((((((args[43]*_node11)+(args[47]*_node12))+(args[51]*_node13))+(args[55]*_node4))+(args[45]*_V_X))+(args[49]*_V_Y))+(args[53]*_V_Z))+DualComplex(args[56],0.,0.,0.));
+    DualComplex _node30 = (args[54]*_V_Z);
+    DualComplex _node31 = ((((((((((args[5]*_node20)+(args[31]*_node0))+(args[44]*_node11))+(args[48]*_node12))+(args[52]*_node13))+(-(args[55]*_node5)))+(args[46]*_V_X))+(args[50]*_V_Y))+_node30)+(-(args[56]*_node4)));
+    DualComplex _node32 = DualComplexMul(_V_X,_node4);
+    DualComplex _node33 = DualComplexMul(_V_Y,_node4);
+    DualComplex _node34 = DualComplexMul(_V_Z,_node4);
+    DualComplex _node35 = ((((((((args[6]*_node32)+(args[7]*_V_X))+(args[25]*_node33))+(args[26]*_V_Y))+(args[43]*_node34))+(args[44]*_V_Z))+(args[57]*_node4))+DualComplex(args[58],0.,0.,0.));
+    DualComplex _node36 = ((((((((args[14]*_node32)+(args[15]*_V_X))+(args[32]*_node33))+(args[33]*_V_Y))+(args[47]*_node34))+(args[48]*_V_Z))+(args[59]*_node4))+DualComplex(args[60],0.,0.,0.));
+    DualComplex _node37 = ((((((((args[18]*_node32)+(args[19]*_V_X))+(args[37]*_node33))+(args[38]*_V_Y))+(args[51]*_node34))+(args[52]*_V_Z))+(args[61]*_node4))+DualComplex(args[62],0.,0.,0.));
+    DualComplex _node38 = ((((((((((((((((args[6]*_node20)+(args[14]*_node17))+(args[18]*_node18))+(args[22]*_V_X))+(args[25]*_node7))+(args[32]*_node0))+(args[37]*_node1))+(args[41]*_V_Y))+(args[43]*_node8))+(args[47]*_node2))+(args[51]*_node3))+(args[55]*_V_Z))+(args[57]*_V_X))+(args[59]*_V_Y))+(args[61]*_V_Z))+DualComplex(args[63],0.,0.,0.));
+    DualComplex _node39 = ((((((((((((((((args[7]*_node20)+(args[15]*_node17))+(args[19]*_node18))+(-(args[22]*_node32)))+(args[26]*_node7))+(args[33]*_node0))+(args[38]*_node1))+(-(args[41]*_node33)))+(args[44]*_node8))+(args[48]*_node2))+(args[52]*_node3))+(-(args[55]*_node34)))+(args[58]*_V_X))+(args[60]*_V_Y))+(args[62]*_V_Z))+(-(args[63]*_node4)));
+    DualComplex _node40 = (((((((((((-(args[8]*_node17))+(-(args[9]*_node18)))+(args[10]*_node32))+_node15)+(-(args[27]*_node0)))+(args[28]*_node33))+(args[29]*_V_Y))+(args[45]*_node34))+(args[46]*_V_Z))+(-(args[57]*_node5)))+(-(args[58]*_node4)));
+    DualComplex _node41 = (((((((((((args[8]*_node20)+(args[16]*_node32))+(args[17]*_V_X))+(args[27]*_node7))+(-(args[34]*_node1)))+(args[35]*_node33))+_node24)+(args[49]*_node34))+(args[50]*_V_Z))+(-(args[59]*_node5)))+(-(args[60]*_node4)));
+    DualComplex _node42 = ((((((((((args[9]*_node20)+(args[20]*_node32))+(args[21]*_V_X))+(args[34]*_node0))+(args[39]*_node33))+(args[40]*_V_Y))+(args[53]*_node34))+_node30)+(-(args[61]*_node5)))+(-(args[62]*_node4)));
+    DualComplex _node43 = ((((((((((((((((args[10]*_node20)+(args[16]*_node17))+(args[20]*_node18))+(args[23]*_V_X))+(args[28]*_node7))+(args[35]*_node0))+(args[39]*_node1))+(args[42]*_V_Y))+(args[45]*_node8))+(args[49]*_node2))+(args[53]*_node3))+(args[56]*_V_Z))+(-(args[57]*_node11)))+(-(args[59]*_node12)))+(-(args[61]*_node13)))+(-(args[63]*_node4)));
+    DualComplex _node44 = ((((((((((((((((args[11]*_node20)+(args[17]*_node17))+(args[21]*_node18))+(-(args[23]*_node32)))+(args[29]*_node7))+(args[36]*_node0))+(args[40]*_node1))+(-(args[42]*_node33)))+(args[46]*_node8))+(args[50]*_node2))+(args[54]*_node3))+(-(args[56]*_node34)))+(-(args[58]*_node11)))+(-(args[60]*_node12)))+(-(args[62]*_node13)))+(args[63]*_node5));
+    DualComplex _node45 = ((((((((((((((((((((((((DualComplexSqare(_node6)+DualComplexSqare(_node9))+DualComplexSqare(_node10))+DualComplexSqare(_node14))+DualComplexSqare(_node16))+DualComplexSqare(_node19))+DualComplexSqare(_node21))+DualComplexSqare(_node22))+DualComplexSqare(_node23))+DualComplexSqare(_node25))+DualComplexSqare(_node26))+DualComplexSqare(_node27))+DualComplexSqare(_node28))+DualComplexSqare(_node29))+DualComplexSqare(_node31))+DualComplexSqare(_node35))+DualComplexSqare(_node36))+DualComplexSqare(_node37))+DualComplexSqare(_node38))+DualComplexSqare(_node39))+DualComplexSqare(_node40))+DualComplexSqare(_node41))+DualComplexSqare(_node42))+DualComplexSqare(_node43))+DualComplexSqare(_node44));
+    return _node45;
+}
+ //gets replaced
+
+float Summofsquares(vec3 rayDir, vec3 rayOrigin,float a) {
+    float _V_X=rayDir.x*a+rayOrigin.x;
+    float _V_Y=rayDir.y*a+rayOrigin.y;
+    float _V_Z=rayDir.z*a+rayOrigin.z;
+    float _node0 = (_V_Y*_V_Y);
+    float _node1 = (_V_Y*_V_Z);
+    float _node2 = (_V_Z*_V_Y);
+    float _node3 = (_V_Z*_V_Z);
+    float _node4 = ((((_V_X*_V_X)+_node0)+_node3)/2.0);
+    float _node5 = (_node4*_node4);
+    float _node6 = ((((((((((((args[0]*_node0)+(args[1]*_node1))+(-(args[2]*_V_Y)))+(args[3]*_node2))+(args[4]*_node3))+(-(args[5]*_V_Z)))+(args[6]*_node5))+(args[7]*_node4))+(-(args[8]*_V_Y)))+(-(args[9]*_V_Z)))+(args[10]*_node4))+args[11]);
+    float _node7 = (_V_Y*_V_X);
+    float _node8 = (_V_Z*_V_X);
+    float _node9 = (((((((((-(args[0]*_node7))+(args[12]*_node1))+(-(args[13]*_V_Y)))+(-(args[3]*_node8)))+(args[14]*_node5))+(args[15]*_node4))+(args[8]*_V_X))+(args[16]*_node4))+args[17]);
+    float _node10 = ((((((((-(args[1]*_node7))+(-(args[12]*_node0)))+(-(args[4]*_node8)))+(args[18]*_node5))+(args[19]*_node4))+(args[9]*_V_X))+(args[20]*_node4))+args[21]);
+    float _node11 = (_node4*_V_X);
+    float _node12 = (_node4*_V_Y);
+    float _node13 = (_node4*_V_Z);
+    float _node14 = ((((((((args[6]*_node11)+(args[14]*_node12))+(args[18]*_node13))+(args[22]*_node4))+(args[10]*_V_X))+(args[16]*_V_Y))+(args[20]*_V_Z))+args[23]);
+    float _node15 = (args[11]*_V_X);
+    float _node16 = (((((((((((-(args[2]*_node7))+(-(args[13]*_node0)))+(-(args[5]*_node8)))+(args[7]*_node11))+(args[15]*_node12))+(args[19]*_node13))+(-(args[22]*_node5)))+_node15)+(args[17]*_V_Y))+(args[21]*_V_Z))+(-(args[23]*_node4)));
+    float _node17 = (_V_X*_V_Y);
+    float _node18 = (_V_X*_V_Z);
+    float _node19 = (((((((((-(args[0]*_node17))+(-(args[1]*_node18)))+(args[2]*_V_X))+(args[24]*_node2))+(args[25]*_node5))+(args[26]*_node4))+(-(args[27]*_V_Y)))+(args[28]*_node4))+args[29]);
+    float _node20 = (_V_X*_V_X);
+    float _node21 = ((((((((((((args[0]*_node20)+(-(args[12]*_node18)))+(args[13]*_V_X))+(-(args[24]*_node8)))+(args[30]*_node3))+(-(args[31]*_V_Z)))+(args[32]*_node5))+(args[33]*_node4))+(args[27]*_V_X))+(-(args[34]*_V_Z)))+(args[35]*_node4))+args[36]);
+    float _node22 = ((((((((args[1]*_node20)+(args[12]*_node17))+(-(args[30]*_node2)))+(args[37]*_node5))+(args[38]*_node4))+(args[34]*_V_Y))+(args[39]*_node4))+args[40]);
+    float _node23 = ((((((((args[25]*_node11)+(args[32]*_node12))+(args[37]*_node13))+(args[41]*_node4))+(args[28]*_V_X))+(args[35]*_V_Y))+(args[39]*_V_Z))+args[42]);
+    float _node24 = (args[36]*_V_Y);
+    float _node25 = (((((((((((args[2]*_node20)+(args[13]*_node17))+(-(args[31]*_node2)))+(args[26]*_node11))+(args[33]*_node12))+(args[38]*_node13))+(-(args[41]*_node5)))+(args[29]*_V_X))+_node24)+(args[40]*_V_Z))+(-(args[42]*_node4)));
+    float _node26 = ((((((((-(args[3]*_node17))+(-(args[4]*_node18)))+(args[5]*_V_X))+(-(args[24]*_node0)))+(args[43]*_node5))+(args[44]*_node4))+(args[45]*_node4))+args[46]);
+    float _node27 = ((((((((args[3]*_node20)+(args[24]*_node7))+(-(args[30]*_node1)))+(args[31]*_V_Y))+(args[47]*_node5))+(args[48]*_node4))+(args[49]*_node4))+args[50]);
+    float _node28 = ((((((args[4]*_node20)+(args[30]*_node0))+(args[51]*_node5))+(args[52]*_node4))+(args[53]*_node4))+args[54]);
+    float _node29 = ((((((((args[43]*_node11)+(args[47]*_node12))+(args[51]*_node13))+(args[55]*_node4))+(args[45]*_V_X))+(args[49]*_V_Y))+(args[53]*_V_Z))+args[56]);
+    float _node30 = (args[54]*_V_Z);
+    float _node31 = ((((((((((args[5]*_node20)+(args[31]*_node0))+(args[44]*_node11))+(args[48]*_node12))+(args[52]*_node13))+(-(args[55]*_node5)))+(args[46]*_V_X))+(args[50]*_V_Y))+_node30)+(-(args[56]*_node4)));
+    float _node32 = (_V_X*_node4);
+    float _node33 = (_V_Y*_node4);
+    float _node34 = (_V_Z*_node4);
+    float _node35 = ((((((((args[6]*_node32)+(args[7]*_V_X))+(args[25]*_node33))+(args[26]*_V_Y))+(args[43]*_node34))+(args[44]*_V_Z))+(args[57]*_node4))+args[58]);
+    float _node36 = ((((((((args[14]*_node32)+(args[15]*_V_X))+(args[32]*_node33))+(args[33]*_V_Y))+(args[47]*_node34))+(args[48]*_V_Z))+(args[59]*_node4))+args[60]);
+    float _node37 = ((((((((args[18]*_node32)+(args[19]*_V_X))+(args[37]*_node33))+(args[38]*_V_Y))+(args[51]*_node34))+(args[52]*_V_Z))+(args[61]*_node4))+args[62]);
+    float _node38 = ((((((((((((((((args[6]*_node20)+(args[14]*_node17))+(args[18]*_node18))+(args[22]*_V_X))+(args[25]*_node7))+(args[32]*_node0))+(args[37]*_node1))+(args[41]*_V_Y))+(args[43]*_node8))+(args[47]*_node2))+(args[51]*_node3))+(args[55]*_V_Z))+(args[57]*_V_X))+(args[59]*_V_Y))+(args[61]*_V_Z))+args[63]);
+    float _node39 = ((((((((((((((((args[7]*_node20)+(args[15]*_node17))+(args[19]*_node18))+(-(args[22]*_node32)))+(args[26]*_node7))+(args[33]*_node0))+(args[38]*_node1))+(-(args[41]*_node33)))+(args[44]*_node8))+(args[48]*_node2))+(args[52]*_node3))+(-(args[55]*_node34)))+(args[58]*_V_X))+(args[60]*_V_Y))+(args[62]*_V_Z))+(-(args[63]*_node4)));
+    float _node40 = (((((((((((-(args[8]*_node17))+(-(args[9]*_node18)))+(args[10]*_node32))+_node15)+(-(args[27]*_node0)))+(args[28]*_node33))+(args[29]*_V_Y))+(args[45]*_node34))+(args[46]*_V_Z))+(-(args[57]*_node5)))+(-(args[58]*_node4)));
+    float _node41 = (((((((((((args[8]*_node20)+(args[16]*_node32))+(args[17]*_V_X))+(args[27]*_node7))+(-(args[34]*_node1)))+(args[35]*_node33))+_node24)+(args[49]*_node34))+(args[50]*_V_Z))+(-(args[59]*_node5)))+(-(args[60]*_node4)));
+    float _node42 = ((((((((((args[9]*_node20)+(args[20]*_node32))+(args[21]*_V_X))+(args[34]*_node0))+(args[39]*_node33))+(args[40]*_V_Y))+(args[53]*_node34))+_node30)+(-(args[61]*_node5)))+(-(args[62]*_node4)));
+    float _node43 = ((((((((((((((((args[10]*_node20)+(args[16]*_node17))+(args[20]*_node18))+(args[23]*_V_X))+(args[28]*_node7))+(args[35]*_node0))+(args[39]*_node1))+(args[42]*_V_Y))+(args[45]*_node8))+(args[49]*_node2))+(args[53]*_node3))+(args[56]*_V_Z))+(-(args[57]*_node11)))+(-(args[59]*_node12)))+(-(args[61]*_node13)))+(-(args[63]*_node4)));
+    float _node44 = ((((((((((((((((args[11]*_node20)+(args[17]*_node17))+(args[21]*_node18))+(-(args[23]*_node32)))+(args[29]*_node7))+(args[36]*_node0))+(args[40]*_node1))+(-(args[42]*_node33)))+(args[46]*_node8))+(args[50]*_node2))+(args[54]*_node3))+(-(args[56]*_node34)))+(-(args[58]*_node11)))+(-(args[60]*_node12)))+(-(args[62]*_node13)))+(args[63]*_node5));
+    float _node45 = (((((((((((((((((((((((((_node6*_node6)+(_node9*_node9))+(_node10*_node10))+(_node14*_node14))+(_node16*_node16))+(_node19*_node19))+(_node21*_node21))+(_node22*_node22))+(_node23*_node23))+(_node25*_node25))+(_node26*_node26))+(_node27*_node27))+(_node28*_node28))+(_node29*_node29))+(_node31*_node31))+(_node35*_node35))+(_node36*_node36))+(_node37*_node37))+(_node38*_node38))+(_node39*_node39))+(_node40*_node40))+(_node41*_node41))+(_node42*_node42))+(_node43*_node43))+(_node44*_node44));
+    return _node45;
+}
+
+
+xyzDual xyzDualSummofsquares(vec3 pos) {
+    xyzDual _V_X=xyzDual(1.,0.,0.,pos.x);
+    xyzDual _V_Y=xyzDual(0.,1.,0.,pos.y);
+    xyzDual _V_Z=xyzDual(0.,0.,1.,pos.z);
+    xyzDual _node0 = xyzDualSqare(_V_Y);
+    xyzDual _node1 = xyzDualMul(_V_Y,_V_Z);
+    xyzDual _node2 = xyzDualMul(_V_Z,_V_Y);
+    xyzDual _node3 = xyzDualSqare(_V_Z);
+    xyzDual _node4 = (((xyzDualSqare(_V_X)+_node0)+_node3)/2.0);
+    xyzDual _node5 = xyzDualSqare(_node4);
+    xyzDual _node6 = ((((((((((((args[0]*_node0)+(args[1]*_node1))+(-(args[2]*_V_Y)))+(args[3]*_node2))+(args[4]*_node3))+(-(args[5]*_V_Z)))+(args[6]*_node5))+(args[7]*_node4))+(-(args[8]*_V_Y)))+(-(args[9]*_V_Z)))+(args[10]*_node4))+xyzDual(0.,0.,0.,args[11]));
+    xyzDual _node7 = xyzDualMul(_V_Y,_V_X);
+    xyzDual _node8 = xyzDualMul(_V_Z,_V_X);
+    xyzDual _node9 = (((((((((-(args[0]*_node7))+(args[12]*_node1))+(-(args[13]*_V_Y)))+(-(args[3]*_node8)))+(args[14]*_node5))+(args[15]*_node4))+(args[8]*_V_X))+(args[16]*_node4))+xyzDual(0.,0.,0.,args[17]));
+    xyzDual _node10 = ((((((((-(args[1]*_node7))+(-(args[12]*_node0)))+(-(args[4]*_node8)))+(args[18]*_node5))+(args[19]*_node4))+(args[9]*_V_X))+(args[20]*_node4))+xyzDual(0.,0.,0.,args[21]));
+    xyzDual _node11 = xyzDualMul(_node4,_V_X);
+    xyzDual _node12 = xyzDualMul(_node4,_V_Y);
+    xyzDual _node13 = xyzDualMul(_node4,_V_Z);
+    xyzDual _node14 = ((((((((args[6]*_node11)+(args[14]*_node12))+(args[18]*_node13))+(args[22]*_node4))+(args[10]*_V_X))+(args[16]*_V_Y))+(args[20]*_V_Z))+xyzDual(0.,0.,0.,args[23]));
+    xyzDual _node15 = (args[11]*_V_X);
+    xyzDual _node16 = (((((((((((-(args[2]*_node7))+(-(args[13]*_node0)))+(-(args[5]*_node8)))+(args[7]*_node11))+(args[15]*_node12))+(args[19]*_node13))+(-(args[22]*_node5)))+_node15)+(args[17]*_V_Y))+(args[21]*_V_Z))+(-(args[23]*_node4)));
+    xyzDual _node17 = xyzDualMul(_V_X,_V_Y);
+    xyzDual _node18 = xyzDualMul(_V_X,_V_Z);
+    xyzDual _node19 = (((((((((-(args[0]*_node17))+(-(args[1]*_node18)))+(args[2]*_V_X))+(args[24]*_node2))+(args[25]*_node5))+(args[26]*_node4))+(-(args[27]*_V_Y)))+(args[28]*_node4))+xyzDual(0.,0.,0.,args[29]));
+    xyzDual _node20 = xyzDualSqare(_V_X);
+    xyzDual _node21 = ((((((((((((args[0]*_node20)+(-(args[12]*_node18)))+(args[13]*_V_X))+(-(args[24]*_node8)))+(args[30]*_node3))+(-(args[31]*_V_Z)))+(args[32]*_node5))+(args[33]*_node4))+(args[27]*_V_X))+(-(args[34]*_V_Z)))+(args[35]*_node4))+xyzDual(0.,0.,0.,args[36]));
+    xyzDual _node22 = ((((((((args[1]*_node20)+(args[12]*_node17))+(-(args[30]*_node2)))+(args[37]*_node5))+(args[38]*_node4))+(args[34]*_V_Y))+(args[39]*_node4))+xyzDual(0.,0.,0.,args[40]));
+    xyzDual _node23 = ((((((((args[25]*_node11)+(args[32]*_node12))+(args[37]*_node13))+(args[41]*_node4))+(args[28]*_V_X))+(args[35]*_V_Y))+(args[39]*_V_Z))+xyzDual(0.,0.,0.,args[42]));
+    xyzDual _node24 = (args[36]*_V_Y);
+    xyzDual _node25 = (((((((((((args[2]*_node20)+(args[13]*_node17))+(-(args[31]*_node2)))+(args[26]*_node11))+(args[33]*_node12))+(args[38]*_node13))+(-(args[41]*_node5)))+(args[29]*_V_X))+_node24)+(args[40]*_V_Z))+(-(args[42]*_node4)));
+    xyzDual _node26 = ((((((((-(args[3]*_node17))+(-(args[4]*_node18)))+(args[5]*_V_X))+(-(args[24]*_node0)))+(args[43]*_node5))+(args[44]*_node4))+(args[45]*_node4))+xyzDual(0.,0.,0.,args[46]));
+    xyzDual _node27 = ((((((((args[3]*_node20)+(args[24]*_node7))+(-(args[30]*_node1)))+(args[31]*_V_Y))+(args[47]*_node5))+(args[48]*_node4))+(args[49]*_node4))+xyzDual(0.,0.,0.,args[50]));
+    xyzDual _node28 = ((((((args[4]*_node20)+(args[30]*_node0))+(args[51]*_node5))+(args[52]*_node4))+(args[53]*_node4))+xyzDual(0.,0.,0.,args[54]));
+    xyzDual _node29 = ((((((((args[43]*_node11)+(args[47]*_node12))+(args[51]*_node13))+(args[55]*_node4))+(args[45]*_V_X))+(args[49]*_V_Y))+(args[53]*_V_Z))+xyzDual(0.,0.,0.,args[56]));
+    xyzDual _node30 = (args[54]*_V_Z);
+    xyzDual _node31 = ((((((((((args[5]*_node20)+(args[31]*_node0))+(args[44]*_node11))+(args[48]*_node12))+(args[52]*_node13))+(-(args[55]*_node5)))+(args[46]*_V_X))+(args[50]*_V_Y))+_node30)+(-(args[56]*_node4)));
+    xyzDual _node32 = xyzDualMul(_V_X,_node4);
+    xyzDual _node33 = xyzDualMul(_V_Y,_node4);
+    xyzDual _node34 = xyzDualMul(_V_Z,_node4);
+    xyzDual _node35 = ((((((((args[6]*_node32)+(args[7]*_V_X))+(args[25]*_node33))+(args[26]*_V_Y))+(args[43]*_node34))+(args[44]*_V_Z))+(args[57]*_node4))+xyzDual(0.,0.,0.,args[58]));
+    xyzDual _node36 = ((((((((args[14]*_node32)+(args[15]*_V_X))+(args[32]*_node33))+(args[33]*_V_Y))+(args[47]*_node34))+(args[48]*_V_Z))+(args[59]*_node4))+xyzDual(0.,0.,0.,args[60]));
+    xyzDual _node37 = ((((((((args[18]*_node32)+(args[19]*_V_X))+(args[37]*_node33))+(args[38]*_V_Y))+(args[51]*_node34))+(args[52]*_V_Z))+(args[61]*_node4))+xyzDual(0.,0.,0.,args[62]));
+    xyzDual _node38 = ((((((((((((((((args[6]*_node20)+(args[14]*_node17))+(args[18]*_node18))+(args[22]*_V_X))+(args[25]*_node7))+(args[32]*_node0))+(args[37]*_node1))+(args[41]*_V_Y))+(args[43]*_node8))+(args[47]*_node2))+(args[51]*_node3))+(args[55]*_V_Z))+(args[57]*_V_X))+(args[59]*_V_Y))+(args[61]*_V_Z))+xyzDual(0.,0.,0.,args[63]));
+    xyzDual _node39 = ((((((((((((((((args[7]*_node20)+(args[15]*_node17))+(args[19]*_node18))+(-(args[22]*_node32)))+(args[26]*_node7))+(args[33]*_node0))+(args[38]*_node1))+(-(args[41]*_node33)))+(args[44]*_node8))+(args[48]*_node2))+(args[52]*_node3))+(-(args[55]*_node34)))+(args[58]*_V_X))+(args[60]*_V_Y))+(args[62]*_V_Z))+(-(args[63]*_node4)));
+    xyzDual _node40 = (((((((((((-(args[8]*_node17))+(-(args[9]*_node18)))+(args[10]*_node32))+_node15)+(-(args[27]*_node0)))+(args[28]*_node33))+(args[29]*_V_Y))+(args[45]*_node34))+(args[46]*_V_Z))+(-(args[57]*_node5)))+(-(args[58]*_node4)));
+    xyzDual _node41 = (((((((((((args[8]*_node20)+(args[16]*_node32))+(args[17]*_V_X))+(args[27]*_node7))+(-(args[34]*_node1)))+(args[35]*_node33))+_node24)+(args[49]*_node34))+(args[50]*_V_Z))+(-(args[59]*_node5)))+(-(args[60]*_node4)));
+    xyzDual _node42 = ((((((((((args[9]*_node20)+(args[20]*_node32))+(args[21]*_V_X))+(args[34]*_node0))+(args[39]*_node33))+(args[40]*_V_Y))+(args[53]*_node34))+_node30)+(-(args[61]*_node5)))+(-(args[62]*_node4)));
+    xyzDual _node43 = ((((((((((((((((args[10]*_node20)+(args[16]*_node17))+(args[20]*_node18))+(args[23]*_V_X))+(args[28]*_node7))+(args[35]*_node0))+(args[39]*_node1))+(args[42]*_V_Y))+(args[45]*_node8))+(args[49]*_node2))+(args[53]*_node3))+(args[56]*_V_Z))+(-(args[57]*_node11)))+(-(args[59]*_node12)))+(-(args[61]*_node13)))+(-(args[63]*_node4)));
+    xyzDual _node44 = ((((((((((((((((args[11]*_node20)+(args[17]*_node17))+(args[21]*_node18))+(-(args[23]*_node32)))+(args[29]*_node7))+(args[36]*_node0))+(args[40]*_node1))+(-(args[42]*_node33)))+(args[46]*_node8))+(args[50]*_node2))+(args[54]*_node3))+(-(args[56]*_node34)))+(-(args[58]*_node11)))+(-(args[60]*_node12)))+(-(args[62]*_node13)))+(args[63]*_node5));
+    xyzDual _node45 = ((((((((((((((((((((((((xyzDualSqare(_node6)+xyzDualSqare(_node9))+xyzDualSqare(_node10))+xyzDualSqare(_node14))+xyzDualSqare(_node16))+xyzDualSqare(_node19))+xyzDualSqare(_node21))+xyzDualSqare(_node22))+xyzDualSqare(_node23))+xyzDualSqare(_node25))+xyzDualSqare(_node26))+xyzDualSqare(_node27))+xyzDualSqare(_node28))+xyzDualSqare(_node29))+xyzDualSqare(_node31))+xyzDualSqare(_node35))+xyzDualSqare(_node36))+xyzDualSqare(_node37))+xyzDualSqare(_node38))+xyzDualSqare(_node39))+xyzDualSqare(_node40))+xyzDualSqare(_node41))+xyzDualSqare(_node42))+xyzDualSqare(_node43))+xyzDualSqare(_node44));
+    return _node45;
+}
+
+
+void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {
+    Dual _V_X=Dual(rayDir.x*a+rayOrigin.x,rayDir.x);
+    Dual _V_Y=Dual(rayDir.y*a+rayOrigin.y,rayDir.y);
+    Dual _V_Z=Dual(rayDir.z*a+rayOrigin.z,rayDir.z);
+    Dual _node0 = DualSquare(_V_Y);
+    Dual _node1 = DualMul(_V_Y,_V_Z);
+    Dual _node2 = DualMul(_V_Z,_V_Y);
+    Dual _node3 = DualSquare(_V_Z);
+    Dual _node4 = (((DualSquare(_V_X)+_node0)+_node3)/2.0);
+    Dual _node5 = DualSquare(_node4);
+    Dual _node6 = ((((((((((((args[0]*_node0)+(args[1]*_node1))+(-(args[2]*_V_Y)))+(args[3]*_node2))+(args[4]*_node3))+(-(args[5]*_V_Z)))+(args[6]*_node5))+(args[7]*_node4))+(-(args[8]*_V_Y)))+(-(args[9]*_V_Z)))+(args[10]*_node4))+Dual(args[11],0.));
+    Dual _node7 = DualMul(_V_Y,_V_X);
+    Dual _node8 = DualMul(_V_Z,_V_X);
+    Dual _node9 = (((((((((-(args[0]*_node7))+(args[12]*_node1))+(-(args[13]*_V_Y)))+(-(args[3]*_node8)))+(args[14]*_node5))+(args[15]*_node4))+(args[8]*_V_X))+(args[16]*_node4))+Dual(args[17],0.));
+    Dual _node10 = ((((((((-(args[1]*_node7))+(-(args[12]*_node0)))+(-(args[4]*_node8)))+(args[18]*_node5))+(args[19]*_node4))+(args[9]*_V_X))+(args[20]*_node4))+Dual(args[21],0.));
+    Dual _node11 = DualMul(_node4,_V_X);
+    Dual _node12 = DualMul(_node4,_V_Y);
+    Dual _node13 = DualMul(_node4,_V_Z);
+    Dual _node14 = ((((((((args[6]*_node11)+(args[14]*_node12))+(args[18]*_node13))+(args[22]*_node4))+(args[10]*_V_X))+(args[16]*_V_Y))+(args[20]*_V_Z))+Dual(args[23],0.));
+    Dual _node15 = (args[11]*_V_X);
+    Dual _node16 = (((((((((((-(args[2]*_node7))+(-(args[13]*_node0)))+(-(args[5]*_node8)))+(args[7]*_node11))+(args[15]*_node12))+(args[19]*_node13))+(-(args[22]*_node5)))+_node15)+(args[17]*_V_Y))+(args[21]*_V_Z))+(-(args[23]*_node4)));
+    Dual _node17 = DualMul(_V_X,_V_Y);
+    Dual _node18 = DualMul(_V_X,_V_Z);
+    Dual _node19 = (((((((((-(args[0]*_node17))+(-(args[1]*_node18)))+(args[2]*_V_X))+(args[24]*_node2))+(args[25]*_node5))+(args[26]*_node4))+(-(args[27]*_V_Y)))+(args[28]*_node4))+Dual(args[29],0.));
+    Dual _node20 = DualSquare(_V_X);
+    Dual _node21 = ((((((((((((args[0]*_node20)+(-(args[12]*_node18)))+(args[13]*_V_X))+(-(args[24]*_node8)))+(args[30]*_node3))+(-(args[31]*_V_Z)))+(args[32]*_node5))+(args[33]*_node4))+(args[27]*_V_X))+(-(args[34]*_V_Z)))+(args[35]*_node4))+Dual(args[36],0.));
+    Dual _node22 = ((((((((args[1]*_node20)+(args[12]*_node17))+(-(args[30]*_node2)))+(args[37]*_node5))+(args[38]*_node4))+(args[34]*_V_Y))+(args[39]*_node4))+Dual(args[40],0.));
+    Dual _node23 = ((((((((args[25]*_node11)+(args[32]*_node12))+(args[37]*_node13))+(args[41]*_node4))+(args[28]*_V_X))+(args[35]*_V_Y))+(args[39]*_V_Z))+Dual(args[42],0.));
+    Dual _node24 = (args[36]*_V_Y);
+    Dual _node25 = (((((((((((args[2]*_node20)+(args[13]*_node17))+(-(args[31]*_node2)))+(args[26]*_node11))+(args[33]*_node12))+(args[38]*_node13))+(-(args[41]*_node5)))+(args[29]*_V_X))+_node24)+(args[40]*_V_Z))+(-(args[42]*_node4)));
+    Dual _node26 = ((((((((-(args[3]*_node17))+(-(args[4]*_node18)))+(args[5]*_V_X))+(-(args[24]*_node0)))+(args[43]*_node5))+(args[44]*_node4))+(args[45]*_node4))+Dual(args[46],0.));
+    Dual _node27 = ((((((((args[3]*_node20)+(args[24]*_node7))+(-(args[30]*_node1)))+(args[31]*_V_Y))+(args[47]*_node5))+(args[48]*_node4))+(args[49]*_node4))+Dual(args[50],0.));
+    Dual _node28 = ((((((args[4]*_node20)+(args[30]*_node0))+(args[51]*_node5))+(args[52]*_node4))+(args[53]*_node4))+Dual(args[54],0.));
+    Dual _node29 = ((((((((args[43]*_node11)+(args[47]*_node12))+(args[51]*_node13))+(args[55]*_node4))+(args[45]*_V_X))+(args[49]*_V_Y))+(args[53]*_V_Z))+Dual(args[56],0.));
+    Dual _node30 = (args[54]*_V_Z);
+    Dual _node31 = ((((((((((args[5]*_node20)+(args[31]*_node0))+(args[44]*_node11))+(args[48]*_node12))+(args[52]*_node13))+(-(args[55]*_node5)))+(args[46]*_V_X))+(args[50]*_V_Y))+_node30)+(-(args[56]*_node4)));
+    Dual _node32 = DualMul(_V_X,_node4);
+    Dual _node33 = DualMul(_V_Y,_node4);
+    Dual _node34 = DualMul(_V_Z,_node4);
+    Dual _node35 = ((((((((args[6]*_node32)+(args[7]*_V_X))+(args[25]*_node33))+(args[26]*_V_Y))+(args[43]*_node34))+(args[44]*_V_Z))+(args[57]*_node4))+Dual(args[58],0.));
+    Dual _node36 = ((((((((args[14]*_node32)+(args[15]*_V_X))+(args[32]*_node33))+(args[33]*_V_Y))+(args[47]*_node34))+(args[48]*_V_Z))+(args[59]*_node4))+Dual(args[60],0.));
+    Dual _node37 = ((((((((args[18]*_node32)+(args[19]*_V_X))+(args[37]*_node33))+(args[38]*_V_Y))+(args[51]*_node34))+(args[52]*_V_Z))+(args[61]*_node4))+Dual(args[62],0.));
+    Dual _node38 = ((((((((((((((((args[6]*_node20)+(args[14]*_node17))+(args[18]*_node18))+(args[22]*_V_X))+(args[25]*_node7))+(args[32]*_node0))+(args[37]*_node1))+(args[41]*_V_Y))+(args[43]*_node8))+(args[47]*_node2))+(args[51]*_node3))+(args[55]*_V_Z))+(args[57]*_V_X))+(args[59]*_V_Y))+(args[61]*_V_Z))+Dual(args[63],0.));
+    Dual _node39 = ((((((((((((((((args[7]*_node20)+(args[15]*_node17))+(args[19]*_node18))+(-(args[22]*_node32)))+(args[26]*_node7))+(args[33]*_node0))+(args[38]*_node1))+(-(args[41]*_node33)))+(args[44]*_node8))+(args[48]*_node2))+(args[52]*_node3))+(-(args[55]*_node34)))+(args[58]*_V_X))+(args[60]*_V_Y))+(args[62]*_V_Z))+(-(args[63]*_node4)));
+    Dual _node40 = (((((((((((-(args[8]*_node17))+(-(args[9]*_node18)))+(args[10]*_node32))+_node15)+(-(args[27]*_node0)))+(args[28]*_node33))+(args[29]*_V_Y))+(args[45]*_node34))+(args[46]*_V_Z))+(-(args[57]*_node5)))+(-(args[58]*_node4)));
+    Dual _node41 = (((((((((((args[8]*_node20)+(args[16]*_node32))+(args[17]*_V_X))+(args[27]*_node7))+(-(args[34]*_node1)))+(args[35]*_node33))+_node24)+(args[49]*_node34))+(args[50]*_V_Z))+(-(args[59]*_node5)))+(-(args[60]*_node4)));
+    Dual _node42 = ((((((((((args[9]*_node20)+(args[20]*_node32))+(args[21]*_V_X))+(args[34]*_node0))+(args[39]*_node33))+(args[40]*_V_Y))+(args[53]*_node34))+_node30)+(-(args[61]*_node5)))+(-(args[62]*_node4)));
+    Dual _node43 = ((((((((((((((((args[10]*_node20)+(args[16]*_node17))+(args[20]*_node18))+(args[23]*_V_X))+(args[28]*_node7))+(args[35]*_node0))+(args[39]*_node1))+(args[42]*_V_Y))+(args[45]*_node8))+(args[49]*_node2))+(args[53]*_node3))+(args[56]*_V_Z))+(-(args[57]*_node11)))+(-(args[59]*_node12)))+(-(args[61]*_node13)))+(-(args[63]*_node4)));
+    Dual _node44 = ((((((((((((((((args[11]*_node20)+(args[17]*_node17))+(args[21]*_node18))+(-(args[23]*_node32)))+(args[29]*_node7))+(args[36]*_node0))+(args[40]*_node1))+(-(args[42]*_node33)))+(args[46]*_node8))+(args[50]*_node2))+(args[54]*_node3))+(-(args[56]*_node34)))+(-(args[58]*_node11)))+(-(args[60]*_node12)))+(-(args[62]*_node13)))+(args[63]*_node5));
+    result[0]=_node6;
+    result[1]=_node9;
+    result[2]=_node10;
+    result[3]=_node14;
+    result[4]=_node16;
+    result[5]=_node19;
+    result[6]=_node21;
+    result[7]=_node22;
+    result[8]=_node23;
+    result[9]=_node25;
+    result[10]=_node26;
+    result[11]=_node27;
+    result[12]=_node28;
+    result[13]=_node29;
+    result[14]=_node31;
+    result[15]=_node35;
+    result[16]=_node36;
+    result[17]=_node37;
+    result[18]=_node38;
+    result[19]=_node39;
+    result[20]=_node40;
+    result[21]=_node41;
+    result[22]=_node42;
+    result[23]=_node43;
+    result[24]=_node44;
+    }
+
+
+//void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {}
+
+
+
+
+
+
+
+#define Intervall vec2 // Interval type: [min, max]
+// Interval addition
+Intervall IntervallAdd(Intervall a, Intervall b) {
+    return Intervall(a.x + b.x, a.y + b.y);
+}
+Intervall IntervallAdd(float a, Intervall b) {return a+b;}
+Intervall IntervallAdd(Intervall a, float b) {return a+b;}
+
+// Interval subtraction
+Intervall IntervallSub(Intervall a, Intervall b) {
+    return Intervall(a.x - b.y, a.y - b.x);
+}
+Intervall IntervallSub(float a, Intervall b) {return Intervall(a - b.y, a - b.x);}
+Intervall IntervallSub(Intervall a, float b) {return a-b;}
+
+// Interval multiplication
+Intervall IntervallMul(Intervall a, Intervall b) {
+    float ll = a.x * b.x;
+    float lh = a.x * b.y;
+    float hl = a.y * b.x;
+    float hh = a.y * b.y;
+    float lo = min(min(ll, lh), min(hl, hh));
+    float hi = max(max(ll, lh), max(hl, hh));
+    return Intervall(lo, hi);
+}
+Intervall IntervallMul(float a, Intervall b) {
+    /*float l = a * b.x;
+    float h = a * b.y;
+    return Intervall(min(l, h), max(l, h));*/
+    return a*(a>0.?b:b.yx);//i left the other because this looks incomprehensible
+
+}
+Intervall IntervallMul(Intervall a, float b) {return IntervallMul(b,a);}
+
+/*// Interval division
+Intervall IntervallDiv(Intervall a, Intervall b) {
+    if (b.x <= 0.0 && b.y >= 0.0) {
+        // Division by interval containing zero is undefined
+        return Intervall(-INFINITY, INFINITY);
+    }
+    float ll = a.x / b.x;
+    float lh = a.x / b.y;
+    float hl = a.y / b.x;
+    float hh = a.y / b.y;
+    float lo = min(min(ll, lh), min(hl, hh));
+    float hi = max(max(ll, lh), max(hl, hh));
+    return Intervall(lo, hi);
+}*/
+Intervall IntervallDiv(Intervall a, float b){return IntervallMul(a,1./b);}
+
+// Interval square
+Intervall IntervallSquare(Intervall a) {
+    if (a.x >= 0.0) return Intervall(a.x * a.x, a.y * a.y);
+    if (a.y <= 0.0) return Intervall(a.y * a.y, a.x * a.x);
+    float hi = max(a.x * a.x, a.y * a.y);
+    return Intervall(0.0, hi);
+}
+
+// Interval negation
+Intervall IntervallNeg(Intervall a) {
+    return Intervall(-a.y, -a.x);
+}
+
+bool IntervallContains(Intervall a, float value) {
+    return value >= a.x && value <= a.y;
+}
+
+// Interval width
+float IntervallWidth(Intervall a) {
+    return a.y - a.x;
+}
+
+// Interval midpoint
+float IntervallMidpoint(Intervall a) {
+    return (a.x + a.y) * 0.5;
+}
+
+Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {
+    Intervall _node0 = IntervallSquare(_V_Y);
+    Intervall _node1 = IntervallMul(_V_Y,_V_Z);
+    Intervall _node2 = IntervallMul(_V_Z,_V_Y);
+    Intervall _node3 = IntervallSquare(_V_Z);
+    Intervall _node4 = IntervallMul(((IntervallSquare(_V_X)+_node0)+_node3),Intervall(1./2.0));
+    Intervall _node5 = IntervallSquare(_node4);
+    Intervall _node6 = (((((((((((IntervallMul(Intervall(args[0]),_node0)+IntervallMul(Intervall(args[1]),_node1))+IntervallNeg(IntervallMul(Intervall(args[2]),_V_Y)))+IntervallMul(Intervall(args[3]),_node2))+IntervallMul(Intervall(args[4]),_node3))+IntervallNeg(IntervallMul(Intervall(args[5]),_V_Z)))+IntervallMul(Intervall(args[6]),_node5))+IntervallMul(Intervall(args[7]),_node4))+IntervallNeg(IntervallMul(Intervall(args[8]),_V_Y)))+IntervallNeg(IntervallMul(Intervall(args[9]),_V_Z)))+IntervallMul(Intervall(args[10]),_node4))+Intervall(args[11]));
+    Intervall _node7 = IntervallMul(_V_Y,_V_X);
+    Intervall _node8 = IntervallMul(_V_Z,_V_X);
+    Intervall _node9 = ((((((((IntervallNeg(IntervallMul(Intervall(args[0]),_node7))+IntervallMul(Intervall(args[12]),_node1))+IntervallNeg(IntervallMul(Intervall(args[13]),_V_Y)))+IntervallNeg(IntervallMul(Intervall(args[3]),_node8)))+IntervallMul(Intervall(args[14]),_node5))+IntervallMul(Intervall(args[15]),_node4))+IntervallMul(Intervall(args[8]),_V_X))+IntervallMul(Intervall(args[16]),_node4))+Intervall(args[17]));
+    Intervall _node10 = (((((((IntervallNeg(IntervallMul(Intervall(args[1]),_node7))+IntervallNeg(IntervallMul(Intervall(args[12]),_node0)))+IntervallNeg(IntervallMul(Intervall(args[4]),_node8)))+IntervallMul(Intervall(args[18]),_node5))+IntervallMul(Intervall(args[19]),_node4))+IntervallMul(Intervall(args[9]),_V_X))+IntervallMul(Intervall(args[20]),_node4))+Intervall(args[21]));
+    Intervall _node11 = IntervallMul(_node4,_V_X);
+    Intervall _node12 = IntervallMul(_node4,_V_Y);
+    Intervall _node13 = IntervallMul(_node4,_V_Z);
+    Intervall _node14 = (((((((IntervallMul(Intervall(args[6]),_node11)+IntervallMul(Intervall(args[14]),_node12))+IntervallMul(Intervall(args[18]),_node13))+IntervallMul(Intervall(args[22]),_node4))+IntervallMul(Intervall(args[10]),_V_X))+IntervallMul(Intervall(args[16]),_V_Y))+IntervallMul(Intervall(args[20]),_V_Z))+Intervall(args[23]));
+    Intervall _node15 = IntervallMul(Intervall(args[11]),_V_X);
+    Intervall _node16 = ((((((((((IntervallNeg(IntervallMul(Intervall(args[2]),_node7))+IntervallNeg(IntervallMul(Intervall(args[13]),_node0)))+IntervallNeg(IntervallMul(Intervall(args[5]),_node8)))+IntervallMul(Intervall(args[7]),_node11))+IntervallMul(Intervall(args[15]),_node12))+IntervallMul(Intervall(args[19]),_node13))+IntervallNeg(IntervallMul(Intervall(args[22]),_node5)))+_node15)+IntervallMul(Intervall(args[17]),_V_Y))+IntervallMul(Intervall(args[21]),_V_Z))+IntervallNeg(IntervallMul(Intervall(args[23]),_node4)));
+    Intervall _node17 = IntervallMul(_V_X,_V_Y);
+    Intervall _node18 = IntervallMul(_V_X,_V_Z);
+    Intervall _node19 = ((((((((IntervallNeg(IntervallMul(Intervall(args[0]),_node17))+IntervallNeg(IntervallMul(Intervall(args[1]),_node18)))+IntervallMul(Intervall(args[2]),_V_X))+IntervallMul(Intervall(args[24]),_node2))+IntervallMul(Intervall(args[25]),_node5))+IntervallMul(Intervall(args[26]),_node4))+IntervallNeg(IntervallMul(Intervall(args[27]),_V_Y)))+IntervallMul(Intervall(args[28]),_node4))+Intervall(args[29]));
+    Intervall _node20 = IntervallSquare(_V_X);
+    Intervall _node21 = (((((((((((IntervallMul(Intervall(args[0]),_node20)+IntervallNeg(IntervallMul(Intervall(args[12]),_node18)))+IntervallMul(Intervall(args[13]),_V_X))+IntervallNeg(IntervallMul(Intervall(args[24]),_node8)))+IntervallMul(Intervall(args[30]),_node3))+IntervallNeg(IntervallMul(Intervall(args[31]),_V_Z)))+IntervallMul(Intervall(args[32]),_node5))+IntervallMul(Intervall(args[33]),_node4))+IntervallMul(Intervall(args[27]),_V_X))+IntervallNeg(IntervallMul(Intervall(args[34]),_V_Z)))+IntervallMul(Intervall(args[35]),_node4))+Intervall(args[36]));
+    Intervall _node22 = (((((((IntervallMul(Intervall(args[1]),_node20)+IntervallMul(Intervall(args[12]),_node17))+IntervallNeg(IntervallMul(Intervall(args[30]),_node2)))+IntervallMul(Intervall(args[37]),_node5))+IntervallMul(Intervall(args[38]),_node4))+IntervallMul(Intervall(args[34]),_V_Y))+IntervallMul(Intervall(args[39]),_node4))+Intervall(args[40]));
+    Intervall _node23 = (((((((IntervallMul(Intervall(args[25]),_node11)+IntervallMul(Intervall(args[32]),_node12))+IntervallMul(Intervall(args[37]),_node13))+IntervallMul(Intervall(args[41]),_node4))+IntervallMul(Intervall(args[28]),_V_X))+IntervallMul(Intervall(args[35]),_V_Y))+IntervallMul(Intervall(args[39]),_V_Z))+Intervall(args[42]));
+    Intervall _node24 = IntervallMul(Intervall(args[36]),_V_Y);
+    Intervall _node25 = ((((((((((IntervallMul(Intervall(args[2]),_node20)+IntervallMul(Intervall(args[13]),_node17))+IntervallNeg(IntervallMul(Intervall(args[31]),_node2)))+IntervallMul(Intervall(args[26]),_node11))+IntervallMul(Intervall(args[33]),_node12))+IntervallMul(Intervall(args[38]),_node13))+IntervallNeg(IntervallMul(Intervall(args[41]),_node5)))+IntervallMul(Intervall(args[29]),_V_X))+_node24)+IntervallMul(Intervall(args[40]),_V_Z))+IntervallNeg(IntervallMul(Intervall(args[42]),_node4)));
+    Intervall _node26 = (((((((IntervallNeg(IntervallMul(Intervall(args[3]),_node17))+IntervallNeg(IntervallMul(Intervall(args[4]),_node18)))+IntervallMul(Intervall(args[5]),_V_X))+IntervallNeg(IntervallMul(Intervall(args[24]),_node0)))+IntervallMul(Intervall(args[43]),_node5))+IntervallMul(Intervall(args[44]),_node4))+IntervallMul(Intervall(args[45]),_node4))+Intervall(args[46]));
+    Intervall _node27 = (((((((IntervallMul(Intervall(args[3]),_node20)+IntervallMul(Intervall(args[24]),_node7))+IntervallNeg(IntervallMul(Intervall(args[30]),_node1)))+IntervallMul(Intervall(args[31]),_V_Y))+IntervallMul(Intervall(args[47]),_node5))+IntervallMul(Intervall(args[48]),_node4))+IntervallMul(Intervall(args[49]),_node4))+Intervall(args[50]));
+    Intervall _node28 = (((((IntervallMul(Intervall(args[4]),_node20)+IntervallMul(Intervall(args[30]),_node0))+IntervallMul(Intervall(args[51]),_node5))+IntervallMul(Intervall(args[52]),_node4))+IntervallMul(Intervall(args[53]),_node4))+Intervall(args[54]));
+    Intervall _node29 = (((((((IntervallMul(Intervall(args[43]),_node11)+IntervallMul(Intervall(args[47]),_node12))+IntervallMul(Intervall(args[51]),_node13))+IntervallMul(Intervall(args[55]),_node4))+IntervallMul(Intervall(args[45]),_V_X))+IntervallMul(Intervall(args[49]),_V_Y))+IntervallMul(Intervall(args[53]),_V_Z))+Intervall(args[56]));
+    Intervall _node30 = IntervallMul(Intervall(args[54]),_V_Z);
+    Intervall _node31 = (((((((((IntervallMul(Intervall(args[5]),_node20)+IntervallMul(Intervall(args[31]),_node0))+IntervallMul(Intervall(args[44]),_node11))+IntervallMul(Intervall(args[48]),_node12))+IntervallMul(Intervall(args[52]),_node13))+IntervallNeg(IntervallMul(Intervall(args[55]),_node5)))+IntervallMul(Intervall(args[46]),_V_X))+IntervallMul(Intervall(args[50]),_V_Y))+_node30)+IntervallNeg(IntervallMul(Intervall(args[56]),_node4)));
+    Intervall _node32 = IntervallMul(_V_X,_node4);
+    Intervall _node33 = IntervallMul(_V_Y,_node4);
+    Intervall _node34 = IntervallMul(_V_Z,_node4);
+    Intervall _node35 = (((((((IntervallMul(Intervall(args[6]),_node32)+IntervallMul(Intervall(args[7]),_V_X))+IntervallMul(Intervall(args[25]),_node33))+IntervallMul(Intervall(args[26]),_V_Y))+IntervallMul(Intervall(args[43]),_node34))+IntervallMul(Intervall(args[44]),_V_Z))+IntervallMul(Intervall(args[57]),_node4))+Intervall(args[58]));
+    Intervall _node36 = (((((((IntervallMul(Intervall(args[14]),_node32)+IntervallMul(Intervall(args[15]),_V_X))+IntervallMul(Intervall(args[32]),_node33))+IntervallMul(Intervall(args[33]),_V_Y))+IntervallMul(Intervall(args[47]),_node34))+IntervallMul(Intervall(args[48]),_V_Z))+IntervallMul(Intervall(args[59]),_node4))+Intervall(args[60]));
+    Intervall _node37 = (((((((IntervallMul(Intervall(args[18]),_node32)+IntervallMul(Intervall(args[19]),_V_X))+IntervallMul(Intervall(args[37]),_node33))+IntervallMul(Intervall(args[38]),_V_Y))+IntervallMul(Intervall(args[51]),_node34))+IntervallMul(Intervall(args[52]),_V_Z))+IntervallMul(Intervall(args[61]),_node4))+Intervall(args[62]));
+    Intervall _node38 = (((((((((((((((IntervallMul(Intervall(args[6]),_node20)+IntervallMul(Intervall(args[14]),_node17))+IntervallMul(Intervall(args[18]),_node18))+IntervallMul(Intervall(args[22]),_V_X))+IntervallMul(Intervall(args[25]),_node7))+IntervallMul(Intervall(args[32]),_node0))+IntervallMul(Intervall(args[37]),_node1))+IntervallMul(Intervall(args[41]),_V_Y))+IntervallMul(Intervall(args[43]),_node8))+IntervallMul(Intervall(args[47]),_node2))+IntervallMul(Intervall(args[51]),_node3))+IntervallMul(Intervall(args[55]),_V_Z))+IntervallMul(Intervall(args[57]),_V_X))+IntervallMul(Intervall(args[59]),_V_Y))+IntervallMul(Intervall(args[61]),_V_Z))+Intervall(args[63]));
+    Intervall _node39 = (((((((((((((((IntervallMul(Intervall(args[7]),_node20)+IntervallMul(Intervall(args[15]),_node17))+IntervallMul(Intervall(args[19]),_node18))+IntervallNeg(IntervallMul(Intervall(args[22]),_node32)))+IntervallMul(Intervall(args[26]),_node7))+IntervallMul(Intervall(args[33]),_node0))+IntervallMul(Intervall(args[38]),_node1))+IntervallNeg(IntervallMul(Intervall(args[41]),_node33)))+IntervallMul(Intervall(args[44]),_node8))+IntervallMul(Intervall(args[48]),_node2))+IntervallMul(Intervall(args[52]),_node3))+IntervallNeg(IntervallMul(Intervall(args[55]),_node34)))+IntervallMul(Intervall(args[58]),_V_X))+IntervallMul(Intervall(args[60]),_V_Y))+IntervallMul(Intervall(args[62]),_V_Z))+IntervallNeg(IntervallMul(Intervall(args[63]),_node4)));
+    Intervall _node40 = ((((((((((IntervallNeg(IntervallMul(Intervall(args[8]),_node17))+IntervallNeg(IntervallMul(Intervall(args[9]),_node18)))+IntervallMul(Intervall(args[10]),_node32))+_node15)+IntervallNeg(IntervallMul(Intervall(args[27]),_node0)))+IntervallMul(Intervall(args[28]),_node33))+IntervallMul(Intervall(args[29]),_V_Y))+IntervallMul(Intervall(args[45]),_node34))+IntervallMul(Intervall(args[46]),_V_Z))+IntervallNeg(IntervallMul(Intervall(args[57]),_node5)))+IntervallNeg(IntervallMul(Intervall(args[58]),_node4)));
+    Intervall _node41 = ((((((((((IntervallMul(Intervall(args[8]),_node20)+IntervallMul(Intervall(args[16]),_node32))+IntervallMul(Intervall(args[17]),_V_X))+IntervallMul(Intervall(args[27]),_node7))+IntervallNeg(IntervallMul(Intervall(args[34]),_node1)))+IntervallMul(Intervall(args[35]),_node33))+_node24)+IntervallMul(Intervall(args[49]),_node34))+IntervallMul(Intervall(args[50]),_V_Z))+IntervallNeg(IntervallMul(Intervall(args[59]),_node5)))+IntervallNeg(IntervallMul(Intervall(args[60]),_node4)));
+    Intervall _node42 = (((((((((IntervallMul(Intervall(args[9]),_node20)+IntervallMul(Intervall(args[20]),_node32))+IntervallMul(Intervall(args[21]),_V_X))+IntervallMul(Intervall(args[34]),_node0))+IntervallMul(Intervall(args[39]),_node33))+IntervallMul(Intervall(args[40]),_V_Y))+IntervallMul(Intervall(args[53]),_node34))+_node30)+IntervallNeg(IntervallMul(Intervall(args[61]),_node5)))+IntervallNeg(IntervallMul(Intervall(args[62]),_node4)));
+    Intervall _node43 = (((((((((((((((IntervallMul(Intervall(args[10]),_node20)+IntervallMul(Intervall(args[16]),_node17))+IntervallMul(Intervall(args[20]),_node18))+IntervallMul(Intervall(args[23]),_V_X))+IntervallMul(Intervall(args[28]),_node7))+IntervallMul(Intervall(args[35]),_node0))+IntervallMul(Intervall(args[39]),_node1))+IntervallMul(Intervall(args[42]),_V_Y))+IntervallMul(Intervall(args[45]),_node8))+IntervallMul(Intervall(args[49]),_node2))+IntervallMul(Intervall(args[53]),_node3))+IntervallMul(Intervall(args[56]),_V_Z))+IntervallNeg(IntervallMul(Intervall(args[57]),_node11)))+IntervallNeg(IntervallMul(Intervall(args[59]),_node12)))+IntervallNeg(IntervallMul(Intervall(args[61]),_node13)))+IntervallNeg(IntervallMul(Intervall(args[63]),_node4)));
+    Intervall _node44 = (((((((((((((((IntervallMul(Intervall(args[11]),_node20)+IntervallMul(Intervall(args[17]),_node17))+IntervallMul(Intervall(args[21]),_node18))+IntervallNeg(IntervallMul(Intervall(args[23]),_node32)))+IntervallMul(Intervall(args[29]),_node7))+IntervallMul(Intervall(args[36]),_node0))+IntervallMul(Intervall(args[40]),_node1))+IntervallNeg(IntervallMul(Intervall(args[42]),_node33)))+IntervallMul(Intervall(args[46]),_node8))+IntervallMul(Intervall(args[50]),_node2))+IntervallMul(Intervall(args[54]),_node3))+IntervallNeg(IntervallMul(Intervall(args[56]),_node34)))+IntervallNeg(IntervallMul(Intervall(args[58]),_node11)))+IntervallNeg(IntervallMul(Intervall(args[60]),_node12)))+IntervallNeg(IntervallMul(Intervall(args[62]),_node13)))+IntervallMul(Intervall(args[63]),_node5));
+    Intervall _node45 = ((((((((((((((((((((((((IntervallSquare(_node6)+IntervallSquare(_node9))+IntervallSquare(_node10))+IntervallSquare(_node14))+IntervallSquare(_node16))+IntervallSquare(_node19))+IntervallSquare(_node21))+IntervallSquare(_node22))+IntervallSquare(_node23))+IntervallSquare(_node25))+IntervallSquare(_node26))+IntervallSquare(_node27))+IntervallSquare(_node28))+IntervallSquare(_node29))+IntervallSquare(_node31))+IntervallSquare(_node35))+IntervallSquare(_node36))+IntervallSquare(_node37))+IntervallSquare(_node38))+IntervallSquare(_node39))+IntervallSquare(_node40))+IntervallSquare(_node41))+IntervallSquare(_node42))+IntervallSquare(_node43))+IntervallSquare(_node44));
+    return _node45;
+}
+
+
+bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {
+    float _V_X=(x.x+x.y)/2.;
+    float _V_Y=(y.x+y.y)/2.;
+    float _V_Z=(z.x+z.y)/2.;
+    float delta=(x.y-x.x)/2.;
+    float _node0 = (1.0*delta);
+    float _node1 = (_node0*_node0);
+    float _node2 = (args[0]*_node1);
+    float _node3 = (_V_X*_V_X);
+    float _node4 = (_V_Y*_V_Y);
+    float _node5 = (_V_Z*_V_Z);
+    float _node6 = 2.0;
+    float _node7 = (((_node3+_node4)+_node5)/_node6);
+    float _node8 = (_node1/_node6);
+    float _node9 = (_node7*_node8);
+    float _node10 = (_node9+_node9);
+    float _node11 = (_node0*_V_Y);
+    float _node12 = (_node11+_node11);
+    float _node13 = (_node12/_node6);
+    float _node14 = (_node10+(_node13*_node13));
+    float _node15 = (args[7]*_node8);
+    float _node16 = (args[10]*_node8);
+    float _node17 = (((_node2+(args[6]*_node14))+_node15)+_node16);
+    float _node18 = 0.0;
+    float _node19 = (_node0*_V_Z);
+    float _node20 = (args[1]*_node19);
+    float _node21 = -1.0;
+    float _node22 = (args[2]*_node0);
+    float _node23 = (args[3]*_node19);
+    float _node24 = (_node7*_node13);
+    float _node25 = (_node24+_node24);
+    float _node26 = (args[8]*_node0);
+    float _node27 = abs(((((((((args[0]*_node12)+_node20)+(_node21*_node22))+_node23)+(args[6]*_node25))+(args[7]*_node13))+(_node21*_node26))+(args[10]*_node13)));
+    float _node28 = (_V_Y*_V_Z);
+    float _node29 = (_node7*_node7);
+    float _node30 = ((((((((((((args[0]*_node4)+(args[1]*_node28))+(_node21*(args[2]*_V_Y)))+(args[3]*_node28))+(args[4]*_node5))+(_node21*(args[5]*_V_Z)))+(args[6]*_node29))+(args[7]*_node7))+(_node21*(args[8]*_V_Y)))+(_node21*(args[9]*_V_Z)))+(args[10]*_node7))+args[11]);
+    float _node31 = (args[1]*_node1);
+    float _node32 = (args[3]*_node1);
+    float _node33 = (_node19+_node19);
+    float _node34 = (_node33/_node6);
+    float _node35 = (_node13*_node34);
+    float _node36 = (_node35+_node35);
+    float _node37 = abs(((_node31+_node32)+(args[6]*_node36)));
+    float _node38 = (args[1]*_node11);
+    float _node39 = (args[3]*_node11);
+    float _node40 = (args[5]*_node0);
+    float _node41 = (_node7*_node34);
+    float _node42 = (_node41+_node41);
+    float _node43 = (args[9]*_node0);
+    float _node44 = abs((((((((_node38+_node39)+(args[4]*_node33))+(_node21*_node40))+(args[6]*_node42))+(args[7]*_node34))+(_node21*_node43))+(args[10]*_node34)));
+    float _node45 = (args[4]*_node1);
+    float _node46 = (_node10+(_node34*_node34));
+    float _node47 = (((_node45+(args[6]*_node46))+_node15)+_node16);
+    float _node48 = (_node8*_node8);
+    float _node49 = (args[6]*_node48);
+    float _node50 = min(_node49,_node18);
+    float _node51 = (_node0*_V_X);
+    float _node52 = (_node51+_node51);
+    float _node53 = (_node52/_node6);
+    float _node54 = (_node8*_node53);
+    float _node55 = (_node54+_node54);
+    float _node56 = abs((args[6]*_node55));
+    float _node57 = (-_node56);
+    float _node58 = ((_node9+(_node53*_node53))+_node9);
+    float _node59 = (((args[6]*_node58)+_node15)+_node16);
+    float _node60 = (_node48+_node48);
+    float _node61 = (args[6]*_node60);
+    float _node62 = min(_node61,_node18);
+    float _node63 = (_node8*_node13);
+    float _node64 = (_node63+_node63);
+    float _node65 = abs((args[6]*_node64));
+    float _node66 = (-_node65);
+    float _node67 = (_node8*_node34);
+    float _node68 = (_node67+_node67);
+    float _node69 = abs((args[6]*_node68));
+    float _node70 = (-_node69);
+    float _node71 = (_node53*_node7);
+    float _node72 = (_node71+_node71);
+    float _node73 = abs((((args[6]*_node72)+(args[7]*_node53))+(args[10]*_node53)));
+    float _node74 = (_node53*_node13);
+    float _node75 = (_node74+_node74);
+    float _node76 = abs((args[6]*_node75));
+    float _node77 = (_node53*_node34);
+    float _node78 = (_node77+_node77);
+    float _node79 = abs((args[6]*_node78));
+    float _node80 = max(_node49,_node18);
+    float _node81 = max(_node61,_node18);
+if (!(((((((((((((((((((((((((min(_node17,_node18)+(-_node27))+_node30)+(-_node37))+(-_node44))+min(_node47,_node18))+_node50)+_node57)+min(_node59,_node18))+_node62)+_node66)+_node62)+_node70)+(-_node73))+_node57)+(-_node76))+_node57)+(-_node79))+_node50)+_node66)+_node62)+_node70)+_node66)+_node50)+_node70) <= 0. && 0. <= ((((((((((((((((((((((((max(_node17,_node18)+_node27)+_node30)+_node37)+_node44)+max(_node47,_node18))+_node80)+_node56)+max(_node59,_node18))+_node81)+_node65)+_node81)+_node69)+_node73)+_node56)+_node76)+_node56)+_node79)+_node80)+_node65)+_node81)+_node69)+_node65)+_node80)+_node69))) return false;
+    float _node83 = (_node21*_node2);
+    float _node84 = abs((_node83+(args[14]*_node75)));
+    float _node85 = (_node21*(args[0]*_node51));
+    float _node86 = (args[12]*_node19);
+    float _node87 = (args[13]*_node0);
+    float _node88 = abs((((((_node85+_node86)+(_node21*_node87))+(args[14]*_node25))+(args[15]*_node13))+(args[16]*_node13)));
+    float _node89 = (_node21*(args[0]*_node11));
+    float _node90 = abs((((((_node89+(_node21*_node23))+(args[14]*_node72))+(args[15]*_node53))+_node26)+(args[16]*_node53)));
+    float _node91 = (_V_Y*_V_X);
+    float _node92 = (_node21*(args[0]*_node91));
+    float _node93 = (_V_Z*_V_X);
+    float _node94 = ((((((((_node92+(args[12]*_node28))+(_node21*(args[13]*_V_Y)))+(_node21*(args[3]*_node93)))+(args[14]*_node29))+(args[15]*_node7))+(args[8]*_V_X))+(args[16]*_node7))+args[17]);
+    float _node95 = (args[12]*_node1);
+    float _node96 = abs((_node95+(args[14]*_node36)));
+    float _node97 = (args[12]*_node11);
+    float _node98 = (_node21*(args[3]*_node51));
+    float _node99 = abs(((((_node97+_node98)+(args[14]*_node42))+(args[15]*_node34))+(args[16]*_node34)));
+    float _node100 = (_node21*_node32);
+    float _node101 = abs((_node100+(args[14]*_node78)));
+    float _node102 = (args[14]*_node48);
+    float _node103 = min(_node102,_node18);
+    float _node104 = abs((args[14]*_node55));
+    float _node105 = (-_node104);
+    float _node106 = (args[15]*_node8);
+    float _node107 = (args[16]*_node8);
+    float _node108 = (((args[14]*_node58)+_node106)+_node107);
+    float _node109 = (args[14]*_node60);
+    float _node110 = min(_node109,_node18);
+    float _node111 = abs((args[14]*_node64));
+    float _node112 = (-_node111);
+    float _node113 = abs((args[14]*_node68));
+    float _node114 = (-_node113);
+    float _node115 = (((args[14]*_node14)+_node106)+_node107);
+    float _node116 = (((args[14]*_node46)+_node106)+_node107);
+    float _node117 = max(_node102,_node18);
+    float _node118 = max(_node109,_node18);
+if (!((((((((((((((((((((((((((-_node84)+(-_node88))+(-_node90))+_node94)+(-_node96))+(-_node99))+(-_node101))+_node103)+_node105)+min(_node108,_node18))+_node110)+_node112)+_node110)+_node114)+_node105)+_node105)+min(_node115,_node18))+min(_node116,_node18))+_node103)+_node112)+_node110)+_node114)+_node112)+_node103)+_node114) <= 0. && 0. <= ((((((((((((((((((((((((_node84+_node88)+_node90)+_node94)+_node96)+_node99)+_node101)+_node117)+_node104)+max(_node108,_node18))+_node118)+_node111)+_node118)+_node113)+_node104)+_node104)+max(_node115,_node18))+max(_node116,_node18))+_node117)+_node111)+_node118)+_node113)+_node111)+_node117)+_node113))) return false;
+    float _node120 = (_node21*_node31);
+    float _node121 = abs((_node120+(args[18]*_node75)));
+    float _node122 = (_node21*(args[1]*_node51));
+    float _node123 = abs(((((_node122+(_node21*(args[12]*_node12)))+(args[18]*_node25))+(args[19]*_node13))+(args[20]*_node13)));
+    float _node124 = (_node21*(args[4]*_node19));
+    float _node125 = abs(((((((_node21*_node38)+_node124)+(args[18]*_node72))+(args[19]*_node53))+_node43)+(args[20]*_node53)));
+    float _node126 = (_node21*(args[4]*_node93));
+    float _node127 = ((((((((_node21*(args[1]*_node91))+(_node21*(args[12]*_node4)))+_node126)+(args[18]*_node29))+(args[19]*_node7))+(args[9]*_V_X))+(args[20]*_node7))+args[21]);
+    float _node128 = (_node21*_node95);
+    float _node129 = (args[19]*_node8);
+    float _node130 = (args[20]*_node8);
+    float _node131 = (((_node128+(args[18]*_node14))+_node129)+_node130);
+    float _node132 = (_node21*_node45);
+    float _node133 = abs((_node132+(args[18]*_node78)));
+    float _node134 = (_node21*(args[4]*_node51));
+    float _node135 = abs((((_node134+(args[18]*_node42))+(args[19]*_node34))+(args[20]*_node34)));
+    float _node136 = (args[18]*_node48);
+    float _node137 = min(_node136,_node18);
+    float _node138 = abs((args[18]*_node55));
+    float _node139 = (-_node138);
+    float _node140 = (((args[18]*_node58)+_node129)+_node130);
+    float _node141 = (args[18]*_node60);
+    float _node142 = min(_node141,_node18);
+    float _node143 = abs((args[18]*_node64));
+    float _node144 = (-_node143);
+    float _node145 = abs((args[18]*_node68));
+    float _node146 = (-_node145);
+    float _node147 = (((args[18]*_node46)+_node129)+_node130);
+    float _node148 = abs((args[18]*_node36));
+    float _node149 = max(_node136,_node18);
+    float _node150 = max(_node141,_node18);
+if (!((((((((((((((((((((((((((-_node121)+(-_node123))+(-_node125))+_node127)+min(_node131,_node18))+(-_node133))+(-_node135))+_node137)+_node139)+min(_node140,_node18))+_node142)+_node144)+_node142)+_node146)+_node139)+_node139)+min(_node147,_node18))+_node137)+_node144)+_node142)+_node146)+_node144)+(-_node148))+_node137)+_node146) <= 0. && 0. <= ((((((((((((((((((((((((_node121+_node123)+_node125)+_node127)+max(_node131,_node18))+_node133)+_node135)+_node149)+_node138)+max(_node140,_node18))+_node150)+_node143)+_node150)+_node145)+_node138)+_node138)+max(_node147,_node18))+_node149)+_node143)+_node150)+_node145)+_node143)+_node148)+_node149)+_node145))) return false;
+    float _node152 = (_node8*_node0);
+    float _node153 = abs((args[6]*_node152));
+    float _node154 = (-_node153);
+    float _node155 = (_node8*_V_X);
+    float _node156 = (_node53*_node0);
+    float _node157 = (_node155+_node156);
+    float _node158 = (args[6]*_node157);
+    float _node159 = (_node8*_V_Y);
+    float _node160 = (args[14]*_node159);
+    float _node161 = (_node8*_V_Z);
+    float _node162 = (args[18]*_node161);
+    float _node163 = (args[22]*_node8);
+    float _node164 = (((_node158+_node160)+_node162)+_node163);
+    float _node165 = (_node7*_node0);
+    float _node166 = ((_node53*_V_X)+_node165);
+    float _node167 = (args[6]*_node166);
+    float _node168 = (_node53*_V_Y);
+    float _node169 = (_node53*_V_Z);
+    float _node170 = abs(((((_node167+(args[14]*_node168))+(args[18]*_node169))+(args[22]*_node53))+(args[10]*_node0)));
+    float _node171 = (_node7*_V_X);
+    float _node172 = (args[6]*_node171);
+    float _node173 = (_node7*_V_Y);
+    float _node174 = (_node7*_V_Z);
+    float _node175 = (((((((_node172+(args[14]*_node173))+(args[18]*_node174))+(args[22]*_node7))+(args[10]*_V_X))+(args[16]*_V_Y))+(args[20]*_V_Z))+args[23]);
+    float _node176 = (args[6]*_node155);
+    float _node177 = (_node13*_node0);
+    float _node178 = (_node159+_node177);
+    float _node179 = (((_node176+(args[14]*_node178))+_node162)+_node163);
+    float _node180 = (args[6]*_node177);
+    float _node181 = abs((_node180+(args[14]*_node156)));
+    float _node182 = (_node13*_V_X);
+    float _node183 = (args[6]*_node182);
+    float _node184 = (_node165+(_node13*_V_Y));
+    float _node185 = (_node13*_V_Z);
+    float _node186 = abs(((((_node183+(args[14]*_node184))+(args[18]*_node185))+(args[22]*_node13))+(args[16]*_node0)));
+    float _node187 = (_node34*_node0);
+    float _node188 = (_node161+_node187);
+    float _node189 = (((_node176+_node160)+(args[18]*_node188))+_node163);
+    float _node190 = (args[6]*_node187);
+    float _node191 = abs((_node190+(args[18]*_node156)));
+    float _node192 = (_node34*_V_X);
+    float _node193 = (args[6]*_node192);
+    float _node194 = (_node34*_V_Y);
+    float _node195 = (_node165+(_node34*_V_Z));
+    float _node196 = abs(((((_node193+(args[14]*_node194))+(args[18]*_node195))+(args[22]*_node34))+(args[20]*_node0)));
+    float _node197 = abs((args[14]*_node152));
+    float _node198 = (-_node197);
+    float _node199 = (args[14]*_node187);
+    float _node200 = (args[18]*_node177);
+    float _node201 = abs((_node199+_node200));
+    float _node202 = abs((args[18]*_node152));
+    float _node203 = (-_node202);
+if (!(((((((((((((((((((_node154+min(_node164,_node18))+(-_node170))+_node175)+_node154)+min(_node179,_node18))+(-_node181))+(-_node186))+_node154)+min(_node189,_node18))+(-_node191))+(-_node196))+_node198)+_node198)+_node198)+(-_node201))+_node203)+_node203)+_node203) <= 0. && 0. <= ((((((((((((((((((_node153+max(_node164,_node18))+_node170)+_node175)+_node153)+max(_node179,_node18))+_node181)+_node186)+_node153)+max(_node189,_node18))+_node191)+_node196)+_node197)+_node197)+_node197)+_node201)+_node202)+_node202)+_node202))) return false;
+    float _node205 = (args[2]*_node1);
+    float _node206 = abs(((((_node21*_node205)+(args[7]*_node177))+(args[15]*_node156))+(_node21*(args[22]*_node75))));
+    float _node207 = (args[17]*_node0);
+    float _node208 = abs(((((((((_node21*(args[2]*_node51))+(_node21*(args[13]*_node12)))+(args[7]*_node182))+(args[15]*_node184))+(args[19]*_node185))+(_node21*(args[22]*_node25)))+_node207)+(_node21*(args[23]*_node13))));
+    float _node209 = (args[11]*_node0);
+    float _node210 = abs(((((((((_node21*(args[2]*_node11))+(_node21*(args[5]*_node19)))+(args[7]*_node166))+(args[15]*_node168))+(args[19]*_node169))+(_node21*(args[22]*_node72)))+_node209)+(_node21*(args[23]*_node53))));
+    float _node211 = (args[11]*_V_X);
+    float _node212 = (((((((((((_node21*(args[2]*_node91))+(_node21*(args[13]*_node4)))+(_node21*(args[5]*_node93)))+(args[7]*_node171))+(args[15]*_node173))+(args[19]*_node174))+(_node21*(args[22]*_node29)))+_node211)+(args[17]*_V_Y))+(args[21]*_V_Z))+(_node21*(args[23]*_node7)));
+    float _node213 = (args[13]*_node1);
+    float _node214 = (args[7]*_node155);
+    float _node215 = (args[19]*_node161);
+    float _node216 = (_node21*(args[23]*_node8));
+    float _node217 = ((((((_node21*_node213)+_node214)+(args[15]*_node178))+_node215)+(_node21*(args[22]*_node14)))+_node216);
+    float _node218 = (args[5]*_node1);
+    float _node219 = abs(((((_node21*_node218)+(args[7]*_node187))+(args[19]*_node156))+(_node21*(args[22]*_node78))));
+    float _node220 = (args[21]*_node0);
+    float _node221 = abs((((((((_node21*(args[5]*_node51))+(args[7]*_node192))+(args[15]*_node194))+(args[19]*_node195))+(_node21*(args[22]*_node42)))+_node220)+(_node21*(args[23]*_node34))));
+    float _node222 = abs(((args[7]*_node152)+(_node21*(args[22]*_node55))));
+    float _node223 = (-_node222);
+    float _node224 = (args[15]*_node159);
+    float _node225 = (((((args[7]*_node157)+_node224)+_node215)+(_node21*(args[22]*_node58)))+_node216);
+    float _node226 = ((((_node214+_node224)+(args[19]*_node188))+(_node21*(args[22]*_node46)))+_node216);
+    float _node227 = abs(((args[15]*_node152)+(_node21*(args[22]*_node64))));
+    float _node228 = (-_node227);
+    float _node229 = abs((((args[15]*_node187)+(args[19]*_node177))+(_node21*(args[22]*_node36))));
+    float _node230 = abs(((args[19]*_node152)+(_node21*(args[22]*_node68))));
+    float _node231 = (-_node230);
+    float _node232 = (_node21*(args[22]*_node48));
+    float _node233 = min(_node232,_node18);
+    float _node234 = (_node21*(args[22]*_node60));
+    float _node235 = min(_node234,_node18);
+    float _node236 = max(_node232,_node18);
+    float _node237 = max(_node234,_node18);
+if (!((((((((((((((((((((((((((-_node206)+(-_node208))+(-_node210))+_node212)+min(_node217,_node18))+(-_node219))+(-_node221))+_node223)+min(_node225,_node18))+_node223)+_node223)+min(_node226,_node18))+_node228)+_node228)+_node228)+(-_node229))+_node231)+_node231)+_node231)+_node233)+_node235)+_node235)+_node233)+_node235)+_node233) <= 0. && 0. <= ((((((((((((((((((((((((_node206+_node208)+_node210)+_node212)+max(_node217,_node18))+_node219)+_node221)+_node222)+max(_node225,_node18))+_node222)+_node222)+max(_node226,_node18))+_node227)+_node227)+_node227)+_node229)+_node230)+_node230)+_node230)+_node236)+_node237)+_node237)+_node236)+_node237)+_node236))) return false;
+    float _node239 = abs((_node83+(args[25]*_node75)));
+    float _node240 = abs((((((_node89+(_node21*_node20))+_node22)+(args[25]*_node72))+(args[26]*_node53))+(args[28]*_node53)));
+    float _node241 = (args[24]*_node19);
+    float _node242 = (args[27]*_node0);
+    float _node243 = abs((((((_node85+_node241)+(args[25]*_node25))+(args[26]*_node13))+(_node21*_node242))+(args[28]*_node13)));
+    float _node244 = ((((((((_node92+(_node21*(args[1]*_node93)))+(args[2]*_V_X))+(args[24]*_node28))+(args[25]*_node29))+(args[26]*_node7))+(_node21*(args[27]*_V_Y)))+(args[28]*_node7))+args[29]);
+    float _node245 = abs((_node120+(args[25]*_node78)));
+    float _node246 = (args[24]*_node11);
+    float _node247 = abs(((((_node122+_node246)+(args[25]*_node42))+(args[26]*_node34))+(args[28]*_node34)));
+    float _node248 = (args[24]*_node1);
+    float _node249 = abs((_node248+(args[25]*_node36)));
+    float _node250 = (args[25]*_node48);
+    float _node251 = min(_node250,_node18);
+    float _node252 = abs((args[25]*_node55));
+    float _node253 = (-_node252);
+    float _node254 = (args[26]*_node8);
+    float _node255 = (args[28]*_node8);
+    float _node256 = (((args[25]*_node58)+_node254)+_node255);
+    float _node257 = (args[25]*_node60);
+    float _node258 = min(_node257,_node18);
+    float _node259 = abs((args[25]*_node64));
+    float _node260 = (-_node259);
+    float _node261 = abs((args[25]*_node68));
+    float _node262 = (-_node261);
+    float _node263 = (((args[25]*_node14)+_node254)+_node255);
+    float _node264 = (((args[25]*_node46)+_node254)+_node255);
+    float _node265 = max(_node250,_node18);
+    float _node266 = max(_node257,_node18);
+if (!((((((((((((((((((((((((((-_node239)+(-_node240))+(-_node243))+_node244)+(-_node245))+(-_node247))+(-_node249))+_node251)+_node253)+min(_node256,_node18))+_node258)+_node260)+_node258)+_node262)+_node253)+_node253)+min(_node263,_node18))+min(_node264,_node18))+_node251)+_node260)+_node258)+_node262)+_node260)+_node251)+_node262) <= 0. && 0. <= ((((((((((((((((((((((((_node239+_node240)+_node243)+_node244)+_node245)+_node247)+_node249)+_node265)+_node252)+max(_node256,_node18))+_node266)+_node259)+_node266)+_node261)+_node252)+_node252)+max(_node263,_node18))+max(_node264,_node18))+_node265)+_node259)+_node266)+_node261)+_node259)+_node265)+_node261))) return false;
+    float _node268 = (args[33]*_node8);
+    float _node269 = (args[35]*_node8);
+    float _node270 = (((_node2+(args[32]*_node58))+_node268)+_node269);
+    float _node271 = abs(((((((((args[0]*_node52)+(_node21*_node86))+_node87)+(_node21*_node241))+(args[32]*_node72))+(args[33]*_node53))+_node242)+(args[35]*_node53)));
+    float _node272 = ((((((((((((args[0]*_node3)+(_node21*(args[12]*_node93)))+(args[13]*_V_X))+(_node21*(args[24]*_node93)))+(args[30]*_node5))+(_node21*(args[31]*_V_Z)))+(args[32]*_node29))+(args[33]*_node7))+(args[27]*_V_X))+(_node21*(args[34]*_V_Z)))+(args[35]*_node7))+args[36]);
+    float _node273 = (_node21*_node248);
+    float _node274 = abs(((_node128+_node273)+(args[32]*_node78)));
+    float _node275 = (args[12]*_node51);
+    float _node276 = (args[24]*_node51);
+    float _node277 = (args[31]*_node0);
+    float _node278 = (args[34]*_node0);
+    float _node279 = abs(((((((((_node21*_node275)+(_node21*_node276))+(args[30]*_node33))+(_node21*_node277))+(args[32]*_node42))+(args[33]*_node34))+(_node21*_node278))+(args[35]*_node34)));
+    float _node280 = (args[30]*_node1);
+    float _node281 = (((_node280+(args[32]*_node46))+_node268)+_node269);
+    float _node282 = (args[32]*_node48);
+    float _node283 = min(_node282,_node18);
+    float _node284 = abs((args[32]*_node55));
+    float _node285 = (-_node284);
+    float _node286 = (args[32]*_node60);
+    float _node287 = min(_node286,_node18);
+    float _node288 = abs((args[32]*_node64));
+    float _node289 = (-_node288);
+    float _node290 = abs((args[32]*_node68));
+    float _node291 = (-_node290);
+    float _node292 = abs((args[32]*_node75));
+    float _node293 = (((args[32]*_node14)+_node268)+_node269);
+    float _node294 = abs((((args[32]*_node25)+(args[33]*_node13))+(args[35]*_node13)));
+    float _node295 = abs((args[32]*_node36));
+    float _node296 = max(_node282,_node18);
+    float _node297 = max(_node286,_node18);
+if (!(((((((((((((((((((((((((min(_node270,_node18)+(-_node271))+_node272)+(-_node274))+(-_node279))+min(_node281,_node18))+_node283)+_node285)+_node287)+_node289)+_node287)+_node291)+_node285)+(-_node292))+_node285)+min(_node293,_node18))+(-_node294))+_node283)+_node289)+_node287)+_node291)+_node289)+(-_node295))+_node283)+_node291) <= 0. && 0. <= ((((((((((((((((((((((((max(_node270,_node18)+_node271)+_node272)+_node274)+_node279)+max(_node281,_node18))+_node296)+_node284)+_node297)+_node288)+_node297)+_node290)+_node284)+_node292)+_node284)+max(_node293,_node18))+_node294)+_node296)+_node288)+_node297)+_node290)+_node288)+_node295)+_node296)+_node290))) return false;
+    float _node299 = (args[38]*_node8);
+    float _node300 = (args[39]*_node8);
+    float _node301 = (((_node31+(args[37]*_node58))+_node299)+_node300);
+    float _node302 = abs((((((args[1]*_node52)+_node97)+(args[37]*_node72))+(args[38]*_node53))+(args[39]*_node53)));
+    float _node303 = (_node21*(args[30]*_node28));
+    float _node304 = ((((((((args[1]*_node3)+(args[12]*_node91))+_node303)+(args[37]*_node29))+(args[38]*_node7))+(args[34]*_V_Y))+(args[39]*_node7))+args[40]);
+    float _node305 = abs((_node95+(args[37]*_node75)));
+    float _node306 = (_node21*(args[30]*_node19));
+    float _node307 = abs((((((_node275+_node306)+(args[37]*_node25))+(args[38]*_node13))+_node278)+(args[39]*_node13)));
+    float _node308 = (_node21*_node280);
+    float _node309 = abs((_node308+(args[37]*_node36)));
+    float _node310 = (_node21*(args[30]*_node11));
+    float _node311 = abs((((_node310+(args[37]*_node42))+(args[38]*_node34))+(args[39]*_node34)));
+    float _node312 = (args[37]*_node48);
+    float _node313 = min(_node312,_node18);
+    float _node314 = abs((args[37]*_node55));
+    float _node315 = (-_node314);
+    float _node316 = (args[37]*_node60);
+    float _node317 = min(_node316,_node18);
+    float _node318 = abs((args[37]*_node64));
+    float _node319 = (-_node318);
+    float _node320 = abs((args[37]*_node68));
+    float _node321 = (-_node320);
+    float _node322 = abs((args[37]*_node78));
+    float _node323 = (((args[37]*_node14)+_node299)+_node300);
+    float _node324 = (((args[37]*_node46)+_node299)+_node300);
+    float _node325 = max(_node312,_node18);
+    float _node326 = max(_node316,_node18);
+if (!(((((((((((((((((((((((((min(_node301,_node18)+(-_node302))+_node304)+(-_node305))+(-_node307))+(-_node309))+(-_node311))+_node313)+_node315)+_node317)+_node319)+_node317)+_node321)+_node315)+_node315)+(-_node322))+min(_node323,_node18))+min(_node324,_node18))+_node313)+_node319)+_node317)+_node321)+_node319)+_node313)+_node321) <= 0. && 0. <= ((((((((((((((((((((((((max(_node301,_node18)+_node302)+_node304)+_node305)+_node307)+_node309)+_node311)+_node325)+_node314)+_node326)+_node318)+_node326)+_node320)+_node314)+_node314)+_node322)+max(_node323,_node18))+max(_node324,_node18))+_node325)+_node318)+_node326)+_node320)+_node318)+_node325)+_node320))) return false;
+    float _node328 = abs((args[25]*_node152));
+    float _node329 = (-_node328);
+    float _node330 = (args[32]*_node159);
+    float _node331 = (args[37]*_node161);
+    float _node332 = (args[41]*_node8);
+    float _node333 = ((((args[25]*_node157)+_node330)+_node331)+_node332);
+    float _node334 = (args[32]*_node168);
+    float _node335 = abs((((((args[25]*_node166)+_node334)+(args[37]*_node169))+(args[41]*_node53))+(args[28]*_node0)));
+    float _node336 = (args[32]*_node173);
+    float _node337 = ((((((((args[25]*_node171)+_node336)+(args[37]*_node174))+(args[41]*_node7))+(args[28]*_V_X))+(args[35]*_V_Y))+(args[39]*_V_Z))+args[42]);
+    float _node338 = (args[25]*_node155);
+    float _node339 = (args[32]*_node178);
+    float _node340 = (((_node338+_node339)+_node331)+_node332);
+    float _node341 = (args[32]*_node156);
+    float _node342 = abs(((args[25]*_node177)+_node341));
+    float _node343 = (args[32]*_node184);
+    float _node344 = abs((((((args[25]*_node182)+_node343)+(args[37]*_node185))+(args[41]*_node13))+(args[35]*_node0)));
+    float _node345 = (((_node338+_node330)+(args[37]*_node188))+_node332);
+    float _node346 = (args[25]*_node187);
+    float _node347 = (args[37]*_node156);
+    float _node348 = abs((_node346+_node347));
+    float _node349 = (args[32]*_node194);
+    float _node350 = abs((((((args[25]*_node192)+_node349)+(args[37]*_node195))+(args[41]*_node34))+(args[39]*_node0)));
+    float _node351 = abs((args[32]*_node152));
+    float _node352 = (-_node351);
+    float _node353 = (args[32]*_node187);
+    float _node354 = abs((_node353+(args[37]*_node177)));
+    float _node355 = abs((args[37]*_node152));
+    float _node356 = (-_node355);
+if (!(((((((((((((((((((_node329+min(_node333,_node18))+(-_node335))+_node337)+_node329)+min(_node340,_node18))+(-_node342))+(-_node344))+_node329)+min(_node345,_node18))+(-_node348))+(-_node350))+_node352)+_node352)+_node352)+(-_node354))+_node356)+_node356)+_node356) <= 0. && 0. <= ((((((((((((((((((_node328+max(_node333,_node18))+_node335)+_node337)+_node328)+max(_node340,_node18))+_node342)+_node344)+_node328)+max(_node345,_node18))+_node348)+_node350)+_node351)+_node351)+_node351)+_node354)+_node355)+_node355)+_node355))) return false;
+    float _node358 = (args[33]*_node159);
+    float _node359 = (args[38]*_node161);
+    float _node360 = (_node21*(args[42]*_node8));
+    float _node361 = (((((_node205+(args[26]*_node157))+_node358)+_node359)+(_node21*(args[41]*_node58)))+_node360);
+    float _node362 = (args[29]*_node0);
+    float _node363 = abs(((((((((args[2]*_node52)+(args[13]*_node11))+(args[26]*_node166))+(args[33]*_node168))+(args[38]*_node169))+(_node21*(args[41]*_node72)))+_node362)+(_node21*(args[42]*_node53))));
+    float _node364 = (args[36]*_V_Y);
+    float _node365 = (((((((((((args[2]*_node3)+(args[13]*_node91))+(_node21*(args[31]*_node28)))+(args[26]*_node171))+(args[33]*_node173))+(args[38]*_node174))+(_node21*(args[41]*_node29)))+(args[29]*_V_X))+_node364)+(args[40]*_V_Z))+(_node21*(args[42]*_node7)));
+    float _node366 = abs((((_node213+(args[26]*_node177))+(args[33]*_node156))+(_node21*(args[41]*_node75))));
+    float _node367 = (args[36]*_node0);
+    float _node368 = abs(((((((((args[13]*_node51)+(_node21*(args[31]*_node19)))+(args[26]*_node182))+(args[33]*_node184))+(args[38]*_node185))+(_node21*(args[41]*_node25)))+_node367)+(_node21*(args[42]*_node13))));
+    float _node369 = (args[31]*_node1);
+    float _node370 = abs(((((_node21*_node369)+(args[33]*_node187))+(args[38]*_node177))+(_node21*(args[41]*_node36))));
+    float _node371 = (args[40]*_node0);
+    float _node372 = abs((((((((_node21*(args[31]*_node11))+(args[26]*_node192))+(args[33]*_node194))+(args[38]*_node195))+(_node21*(args[41]*_node42)))+_node371)+(_node21*(args[42]*_node34))));
+    float _node373 = abs(((args[26]*_node152)+(_node21*(args[41]*_node55))));
+    float _node374 = (-_node373);
+    float _node375 = (args[26]*_node155);
+    float _node376 = ((((_node375+(args[33]*_node178))+_node359)+(_node21*(args[41]*_node14)))+_node360);
+    float _node377 = ((((_node375+_node358)+(args[38]*_node188))+(_node21*(args[41]*_node46)))+_node360);
+    float _node378 = abs((((args[26]*_node187)+(args[38]*_node156))+(_node21*(args[41]*_node78))));
+    float _node379 = abs(((args[33]*_node152)+(_node21*(args[41]*_node64))));
+    float _node380 = (-_node379);
+    float _node381 = abs(((args[38]*_node152)+(_node21*(args[41]*_node68))));
+    float _node382 = (-_node381);
+    float _node383 = (_node21*(args[41]*_node48));
+    float _node384 = min(_node383,_node18);
+    float _node385 = (_node21*(args[41]*_node60));
+    float _node386 = min(_node385,_node18);
+    float _node387 = max(_node383,_node18);
+    float _node388 = max(_node385,_node18);
+if (!(((((((((((((((((((((((((min(_node361,_node18)+(-_node363))+_node365)+(-_node366))+(-_node368))+(-_node370))+(-_node372))+_node374)+_node374)+min(_node376,_node18))+_node374)+min(_node377,_node18))+(-_node378))+_node380)+_node380)+_node380)+_node382)+_node382)+_node382)+_node384)+_node386)+_node386)+_node384)+_node386)+_node384) <= 0. && 0. <= ((((((((((((((((((((((((max(_node361,_node18)+_node363)+_node365)+_node366)+_node368)+_node370)+_node372)+_node373)+_node373)+max(_node376,_node18))+_node373)+max(_node377,_node18))+_node378)+_node379)+_node379)+_node379)+_node381)+_node381)+_node381)+_node387)+_node388)+_node388)+_node387)+_node388)+_node387))) return false;
+    float _node390 = abs((_node100+(args[43]*_node75)));
+    float _node391 = abs(((((((_node21*_node39)+_node124)+_node40)+(args[43]*_node72))+(args[44]*_node53))+(args[45]*_node53)));
+    float _node392 = abs(((((_node98+(_node21*(args[24]*_node12)))+(args[43]*_node25))+(args[44]*_node13))+(args[45]*_node13)));
+    float _node393 = ((((((((_node21*(args[3]*_node91))+_node126)+(args[5]*_V_X))+(_node21*(args[24]*_node4)))+(args[43]*_node29))+(args[44]*_node7))+(args[45]*_node7))+args[46]);
+    float _node394 = abs((_node132+(args[43]*_node78)));
+    float _node395 = abs((((_node134+(args[43]*_node42))+(args[44]*_node34))+(args[45]*_node34)));
+    float _node396 = (args[44]*_node8);
+    float _node397 = (args[45]*_node8);
+    float _node398 = (((_node273+(args[43]*_node14))+_node396)+_node397);
+    float _node399 = (args[43]*_node48);
+    float _node400 = min(_node399,_node18);
+    float _node401 = abs((args[43]*_node55));
+    float _node402 = (-_node401);
+    float _node403 = (((args[43]*_node58)+_node396)+_node397);
+    float _node404 = (args[43]*_node60);
+    float _node405 = min(_node404,_node18);
+    float _node406 = abs((args[43]*_node64));
+    float _node407 = (-_node406);
+    float _node408 = abs((args[43]*_node68));
+    float _node409 = (-_node408);
+    float _node410 = (((args[43]*_node46)+_node396)+_node397);
+    float _node411 = abs((args[43]*_node36));
+    float _node412 = max(_node399,_node18);
+    float _node413 = max(_node404,_node18);
+if (!((((((((((((((((((((((((((-_node390)+(-_node391))+(-_node392))+_node393)+(-_node394))+(-_node395))+min(_node398,_node18))+_node400)+_node402)+min(_node403,_node18))+_node405)+_node407)+_node405)+_node409)+_node402)+_node402)+min(_node410,_node18))+_node400)+_node407)+_node405)+_node409)+_node407)+(-_node411))+_node400)+_node409) <= 0. && 0. <= ((((((((((((((((((((((((_node390+_node391)+_node392)+_node393)+_node394)+_node395)+max(_node398,_node18))+_node412)+_node401)+max(_node403,_node18))+_node413)+_node406)+_node413)+_node408)+_node401)+_node401)+max(_node410,_node18))+_node412)+_node406)+_node413)+_node408)+_node406)+_node411)+_node412)+_node408))) return false;
+    float _node415 = (args[48]*_node8);
+    float _node416 = (args[49]*_node8);
+    float _node417 = (((_node32+(args[47]*_node58))+_node415)+_node416);
+    float _node418 = abs((((((args[3]*_node52)+_node246)+(args[47]*_node72))+(args[48]*_node53))+(args[49]*_node53)));
+    float _node419 = ((((((((args[3]*_node3)+(args[24]*_node91))+_node303)+(args[31]*_V_Y))+(args[47]*_node29))+(args[48]*_node7))+(args[49]*_node7))+args[50]);
+    float _node420 = abs((_node248+(args[47]*_node75)));
+    float _node421 = abs((((((_node276+_node306)+_node277)+(args[47]*_node25))+(args[48]*_node13))+(args[49]*_node13)));
+    float _node422 = abs((_node308+(args[47]*_node36)));
+    float _node423 = abs((((_node310+(args[47]*_node42))+(args[48]*_node34))+(args[49]*_node34)));
+    float _node424 = (args[47]*_node48);
+    float _node425 = min(_node424,_node18);
+    float _node426 = abs((args[47]*_node55));
+    float _node427 = (-_node426);
+    float _node428 = (args[47]*_node60);
+    float _node429 = min(_node428,_node18);
+    float _node430 = abs((args[47]*_node64));
+    float _node431 = (-_node430);
+    float _node432 = abs((args[47]*_node68));
+    float _node433 = (-_node432);
+    float _node434 = abs((args[47]*_node78));
+    float _node435 = (((args[47]*_node14)+_node415)+_node416);
+    float _node436 = (((args[47]*_node46)+_node415)+_node416);
+    float _node437 = max(_node424,_node18);
+    float _node438 = max(_node428,_node18);
+if (!(((((((((((((((((((((((((min(_node417,_node18)+(-_node418))+_node419)+(-_node420))+(-_node421))+(-_node422))+(-_node423))+_node425)+_node427)+_node429)+_node431)+_node429)+_node433)+_node427)+_node427)+(-_node434))+min(_node435,_node18))+min(_node436,_node18))+_node425)+_node431)+_node429)+_node433)+_node431)+_node425)+_node433) <= 0. && 0. <= ((((((((((((((((((((((((max(_node417,_node18)+_node418)+_node419)+_node420)+_node421)+_node422)+_node423)+_node437)+_node426)+_node438)+_node430)+_node438)+_node432)+_node426)+_node426)+_node434)+max(_node435,_node18))+max(_node436,_node18))+_node437)+_node430)+_node438)+_node432)+_node430)+_node437)+_node432))) return false;
+    float _node440 = (args[52]*_node8);
+    float _node441 = (args[53]*_node8);
+    float _node442 = (((_node45+(args[51]*_node58))+_node440)+_node441);
+    float _node443 = abs(((((args[4]*_node52)+(args[51]*_node72))+(args[52]*_node53))+(args[53]*_node53)));
+    float _node444 = ((((((args[4]*_node3)+(args[30]*_node4))+(args[51]*_node29))+(args[52]*_node7))+(args[53]*_node7))+args[54]);
+    float _node445 = (((_node280+(args[51]*_node14))+_node440)+_node441);
+    float _node446 = abs(((((args[30]*_node12)+(args[51]*_node25))+(args[52]*_node13))+(args[53]*_node13)));
+    float _node447 = (args[51]*_node48);
+    float _node448 = min(_node447,_node18);
+    float _node449 = abs((args[51]*_node55));
+    float _node450 = (-_node449);
+    float _node451 = (args[51]*_node60);
+    float _node452 = min(_node451,_node18);
+    float _node453 = abs((args[51]*_node64));
+    float _node454 = (-_node453);
+    float _node455 = abs((args[51]*_node68));
+    float _node456 = (-_node455);
+    float _node457 = abs((args[51]*_node75));
+    float _node458 = abs((args[51]*_node78));
+    float _node459 = (((args[51]*_node46)+_node440)+_node441);
+    float _node460 = abs((((args[51]*_node42)+(args[52]*_node34))+(args[53]*_node34)));
+    float _node461 = abs((args[51]*_node36));
+    float _node462 = max(_node447,_node18);
+    float _node463 = max(_node451,_node18);
+if (!(((((((((((((((((((((((((min(_node442,_node18)+(-_node443))+_node444)+min(_node445,_node18))+(-_node446))+_node448)+_node450)+_node452)+_node454)+_node452)+_node456)+_node450)+(-_node457))+_node450)+(-_node458))+min(_node459,_node18))+(-_node460))+_node448)+_node454)+_node452)+_node456)+_node454)+(-_node461))+_node448)+_node456) <= 0. && 0. <= ((((((((((((((((((((((((max(_node442,_node18)+_node443)+_node444)+max(_node445,_node18))+_node446)+_node462)+_node449)+_node463)+_node453)+_node463)+_node455)+_node449)+_node457)+_node449)+_node458)+max(_node459,_node18))+_node460)+_node462)+_node453)+_node463)+_node455)+_node453)+_node461)+_node462)+_node455))) return false;
+    float _node465 = abs((args[43]*_node152));
+    float _node466 = (-_node465);
+    float _node467 = (args[47]*_node159);
+    float _node468 = (args[51]*_node161);
+    float _node469 = (args[55]*_node8);
+    float _node470 = ((((args[43]*_node157)+_node467)+_node468)+_node469);
+    float _node471 = (args[51]*_node169);
+    float _node472 = abs((((((args[43]*_node166)+(args[47]*_node168))+_node471)+(args[55]*_node53))+(args[45]*_node0)));
+    float _node473 = (args[51]*_node174);
+    float _node474 = ((((((((args[43]*_node171)+(args[47]*_node173))+_node473)+(args[55]*_node7))+(args[45]*_V_X))+(args[49]*_V_Y))+(args[53]*_V_Z))+args[56]);
+    float _node475 = (args[43]*_node155);
+    float _node476 = (((_node475+(args[47]*_node178))+_node468)+_node469);
+    float _node477 = (args[43]*_node177);
+    float _node478 = (args[47]*_node156);
+    float _node479 = abs((_node477+_node478));
+    float _node480 = (args[51]*_node185);
+    float _node481 = abs((((((args[43]*_node182)+(args[47]*_node184))+_node480)+(args[55]*_node13))+(args[49]*_node0)));
+    float _node482 = (args[51]*_node188);
+    float _node483 = (((_node475+_node467)+_node482)+_node469);
+    float _node484 = (args[51]*_node156);
+    float _node485 = abs(((args[43]*_node187)+_node484));
+    float _node486 = (args[51]*_node195);
+    float _node487 = abs((((((args[43]*_node192)+(args[47]*_node194))+_node486)+(args[55]*_node34))+(args[53]*_node0)));
+    float _node488 = abs((args[47]*_node152));
+    float _node489 = (-_node488);
+    float _node490 = (args[51]*_node177);
+    float _node491 = abs(((args[47]*_node187)+_node490));
+    float _node492 = abs((args[51]*_node152));
+    float _node493 = (-_node492);
+if (!(((((((((((((((((((_node466+min(_node470,_node18))+(-_node472))+_node474)+_node466)+min(_node476,_node18))+(-_node479))+(-_node481))+_node466)+min(_node483,_node18))+(-_node485))+(-_node487))+_node489)+_node489)+_node489)+(-_node491))+_node493)+_node493)+_node493) <= 0. && 0. <= ((((((((((((((((((_node465+max(_node470,_node18))+_node472)+_node474)+_node465)+max(_node476,_node18))+_node479)+_node481)+_node465)+max(_node483,_node18))+_node485)+_node487)+_node488)+_node488)+_node488)+_node491)+_node492)+_node492)+_node492))) return false;
+    float _node495 = (args[48]*_node159);
+    float _node496 = (args[52]*_node161);
+    float _node497 = (_node21*(args[56]*_node8));
+    float _node498 = (((((_node218+(args[44]*_node157))+_node495)+_node496)+(_node21*(args[55]*_node58)))+_node497);
+    float _node499 = (args[46]*_node0);
+    float _node500 = abs((((((((args[5]*_node52)+(args[44]*_node166))+(args[48]*_node168))+(args[52]*_node169))+(_node21*(args[55]*_node72)))+_node499)+(_node21*(args[56]*_node53))));
+    float _node501 = (args[54]*_V_Z);
+    float _node502 = ((((((((((args[5]*_node3)+(args[31]*_node4))+(args[44]*_node171))+(args[48]*_node173))+(args[52]*_node174))+(_node21*(args[55]*_node29)))+(args[46]*_V_X))+(args[50]*_V_Y))+_node501)+(_node21*(args[56]*_node7)));
+    float _node503 = (args[44]*_node155);
+    float _node504 = (((((_node369+_node503)+(args[48]*_node178))+_node496)+(_node21*(args[55]*_node14)))+_node497);
+    float _node505 = (args[50]*_node0);
+    float _node506 = abs((((((((args[31]*_node12)+(args[44]*_node182))+(args[48]*_node184))+(args[52]*_node185))+(_node21*(args[55]*_node25)))+_node505)+(_node21*(args[56]*_node13))));
+    float _node507 = abs(((args[44]*_node152)+(_node21*(args[55]*_node55))));
+    float _node508 = (-_node507);
+    float _node509 = abs((((args[44]*_node177)+(args[48]*_node156))+(_node21*(args[55]*_node75))));
+    float _node510 = ((((_node503+_node495)+(args[52]*_node188))+(_node21*(args[55]*_node46)))+_node497);
+    float _node511 = abs((((args[44]*_node187)+(args[52]*_node156))+(_node21*(args[55]*_node78))));
+    float _node512 = (args[54]*_node0);
+    float _node513 = abs(((((((args[44]*_node192)+(args[48]*_node194))+(args[52]*_node195))+(_node21*(args[55]*_node42)))+_node512)+(_node21*(args[56]*_node34))));
+    float _node514 = abs(((args[48]*_node152)+(_node21*(args[55]*_node64))));
+    float _node515 = (-_node514);
+    float _node516 = abs((((args[48]*_node187)+(args[52]*_node177))+(_node21*(args[55]*_node36))));
+    float _node517 = abs(((args[52]*_node152)+(_node21*(args[55]*_node68))));
+    float _node518 = (-_node517);
+    float _node519 = (_node21*(args[55]*_node48));
+    float _node520 = min(_node519,_node18);
+    float _node521 = (_node21*(args[55]*_node60));
+    float _node522 = min(_node521,_node18);
+    float _node523 = max(_node519,_node18);
+    float _node524 = max(_node521,_node18);
+if (!(((((((((((((((((((((((((min(_node498,_node18)+(-_node500))+_node502)+min(_node504,_node18))+(-_node506))+_node508)+_node508)+(-_node509))+_node508)+min(_node510,_node18))+(-_node511))+(-_node513))+_node515)+_node515)+_node515)+(-_node516))+_node518)+_node518)+_node518)+_node520)+_node522)+_node522)+_node520)+_node522)+_node520) <= 0. && 0. <= ((((((((((((((((((((((((max(_node498,_node18)+_node500)+_node502)+max(_node504,_node18))+_node506)+_node507)+_node507)+_node509)+_node507)+max(_node510,_node18))+_node511)+_node513)+_node514)+_node514)+_node514)+_node516)+_node517)+_node517)+_node517)+_node523)+_node524)+_node524)+_node523)+_node524)+_node523))) return false;
+    float _node526 = (args[25]*_node159);
+    float _node527 = (args[43]*_node161);
+    float _node528 = (args[57]*_node8);
+    float _node529 = (((_node158+_node526)+_node527)+_node528);
+    float _node530 = abs(((((_node167+(args[7]*_node0))+(args[25]*_node168))+(args[43]*_node169))+(args[57]*_node53)));
+    float _node531 = abs((_node180+(args[25]*_node156)));
+    float _node532 = abs((_node190+(args[43]*_node156)));
+    float _node533 = (((((((_node172+(args[7]*_V_X))+(args[25]*_node173))+(args[26]*_V_Y))+(args[43]*_node174))+(args[44]*_V_Z))+(args[57]*_node7))+args[58]);
+    float _node534 = (((_node176+(args[25]*_node178))+_node527)+_node528);
+    float _node535 = abs(((((_node183+(args[25]*_node184))+(args[26]*_node0))+(args[43]*_node185))+(args[57]*_node13)));
+    float _node536 = (((_node176+_node526)+(args[43]*_node188))+_node528);
+    float _node537 = abs(((((_node193+(args[25]*_node194))+(args[43]*_node195))+(args[44]*_node0))+(args[57]*_node34)));
+    float _node538 = abs((_node346+_node477));
+if (!(((((((((((((((((((_node154+min(_node529,_node18))+(-_node530))+_node154)+(-_node531))+_node154)+(-_node532))+_node533)+min(_node534,_node18))+(-_node535))+min(_node536,_node18))+(-_node537))+_node329)+_node329)+_node329)+(-_node538))+_node466)+_node466)+_node466) <= 0. && 0. <= ((((((((((((((((((_node153+max(_node529,_node18))+_node530)+_node153)+_node531)+_node153)+_node532)+_node533)+max(_node534,_node18))+_node535)+max(_node536,_node18))+_node537)+_node328)+_node328)+_node328)+_node538)+_node465)+_node465)+_node465))) return false;
+    float _node540 = (args[47]*_node161);
+    float _node541 = (args[59]*_node8);
+    float _node542 = ((((args[14]*_node157)+_node330)+_node540)+_node541);
+    float _node543 = abs((((((args[14]*_node166)+(args[15]*_node0))+_node334)+(args[47]*_node169))+(args[59]*_node53)));
+    float _node544 = abs(((args[14]*_node177)+_node341));
+    float _node545 = abs((_node199+_node478));
+    float _node546 = ((((((((args[14]*_node171)+(args[15]*_V_X))+_node336)+(args[33]*_V_Y))+(args[47]*_node174))+(args[48]*_V_Z))+(args[59]*_node7))+args[60]);
+    float _node547 = (args[14]*_node155);
+    float _node548 = (((_node547+_node339)+_node540)+_node541);
+    float _node549 = abs((((((args[14]*_node182)+_node343)+(args[33]*_node0))+(args[47]*_node185))+(args[59]*_node13)));
+    float _node550 = (((_node547+_node330)+(args[47]*_node188))+_node541);
+    float _node551 = abs((((((args[14]*_node192)+_node349)+(args[47]*_node195))+(args[48]*_node0))+(args[59]*_node34)));
+    float _node552 = abs((_node353+(args[47]*_node177)));
+if (!(((((((((((((((((((_node198+min(_node542,_node18))+(-_node543))+_node198)+(-_node544))+_node198)+(-_node545))+_node546)+min(_node548,_node18))+(-_node549))+min(_node550,_node18))+(-_node551))+_node352)+_node352)+_node352)+(-_node552))+_node489)+_node489)+_node489) <= 0. && 0. <= ((((((((((((((((((_node197+max(_node542,_node18))+_node543)+_node197)+_node544)+_node197)+_node545)+_node546)+max(_node548,_node18))+_node549)+max(_node550,_node18))+_node551)+_node351)+_node351)+_node351)+_node552)+_node488)+_node488)+_node488))) return false;
+    float _node554 = (args[37]*_node159);
+    float _node555 = (args[61]*_node8);
+    float _node556 = ((((args[18]*_node157)+_node554)+_node468)+_node555);
+    float _node557 = abs((((((args[18]*_node166)+(args[19]*_node0))+(args[37]*_node168))+_node471)+(args[61]*_node53)));
+    float _node558 = abs((_node200+_node347));
+    float _node559 = abs(((args[18]*_node187)+_node484));
+    float _node560 = ((((((((args[18]*_node171)+(args[19]*_V_X))+(args[37]*_node173))+(args[38]*_V_Y))+_node473)+(args[52]*_V_Z))+(args[61]*_node7))+args[62]);
+    float _node561 = (args[18]*_node155);
+    float _node562 = (((_node561+(args[37]*_node178))+_node468)+_node555);
+    float _node563 = abs((((((args[18]*_node182)+(args[37]*_node184))+(args[38]*_node0))+_node480)+(args[61]*_node13)));
+    float _node564 = (((_node561+_node554)+_node482)+_node555);
+    float _node565 = abs((((((args[18]*_node192)+(args[37]*_node194))+_node486)+(args[52]*_node0))+(args[61]*_node34)));
+    float _node566 = abs(((args[37]*_node187)+_node490));
+if (!(((((((((((((((((((_node203+min(_node556,_node18))+(-_node557))+_node203)+(-_node558))+_node203)+(-_node559))+_node560)+min(_node562,_node18))+(-_node563))+min(_node564,_node18))+(-_node565))+_node356)+_node356)+_node356)+(-_node566))+_node493)+_node493)+_node493) <= 0. && 0. <= ((((((((((((((((((_node202+max(_node556,_node18))+_node557)+_node202)+_node558)+_node202)+_node559)+_node560)+max(_node562,_node18))+_node563)+max(_node564,_node18))+_node565)+_node355)+_node355)+_node355)+_node566)+_node492)+_node492)+_node492))) return false;
+    float _node568 = (args[6]*_node1);
+    float _node569 = abs((((((((args[6]*_node52)+(args[14]*_node11))+(args[18]*_node19))+(args[22]*_node0))+(args[25]*_node11))+(args[43]*_node19))+(args[57]*_node0)));
+    float _node570 = ((((((((((((((((args[6]*_node3)+(args[14]*_node91))+(args[18]*_node93))+(args[22]*_V_X))+(args[25]*_node91))+(args[32]*_node4))+(args[37]*_node28))+(args[41]*_V_Y))+(args[43]*_node93))+(args[47]*_node28))+(args[51]*_node5))+(args[55]*_V_Z))+(args[57]*_V_X))+(args[59]*_V_Y))+(args[61]*_V_Z))+args[63]);
+    float _node571 = abs(((args[14]*_node1)+(args[25]*_node1)));
+    float _node572 = abs((((((((args[14]*_node51)+(args[25]*_node51))+(args[32]*_node12))+(args[37]*_node19))+(args[41]*_node0))+(args[47]*_node19))+(args[59]*_node0)));
+    float _node573 = abs(((args[18]*_node1)+(args[43]*_node1)));
+    float _node574 = abs((((((((args[18]*_node51)+(args[37]*_node11))+(args[43]*_node51))+(args[47]*_node11))+(args[51]*_node33))+(args[55]*_node0))+(args[61]*_node0)));
+    float _node575 = (args[32]*_node1);
+    float _node576 = abs(((args[37]*_node1)+(args[47]*_node1)));
+    float _node577 = (args[51]*_node1);
+if (!((((((((((min(_node568,_node18)+(-_node569))+_node570)+(-_node571))+(-_node572))+(-_node573))+(-_node574))+min(_node575,_node18))+(-_node576))+min(_node577,_node18)) <= 0. && 0. <= (((((((((max(_node568,_node18)+_node569)+_node570)+_node571)+_node572)+_node573)+_node574)+max(_node575,_node18))+_node576)+max(_node577,_node18)))) return false;
+    float _node579 = (_node21*(args[41]*_node159));
+    float _node580 = (_node21*(args[55]*_node161));
+    float _node581 = (_node21*(args[63]*_node8));
+    float _node582 = (((((args[7]*_node1)+(_node21*(args[22]*_node157)))+_node579)+_node580)+_node581);
+    float _node583 = (_node21*(args[63]*_node53));
+    float _node584 = abs(((((((((((args[7]*_node52)+(args[15]*_node11))+(args[19]*_node19))+(_node21*(args[22]*_node166)))+(args[26]*_node11))+(_node21*(args[41]*_node168)))+(args[44]*_node19))+(_node21*(args[55]*_node169)))+(args[58]*_node0))+_node583));
+    float _node585 = (_node21*(args[63]*_node7));
+    float _node586 = ((((((((((((((((args[7]*_node3)+(args[15]*_node91))+(args[19]*_node93))+(_node21*(args[22]*_node171)))+(args[26]*_node91))+(args[33]*_node4))+(args[38]*_node28))+(_node21*(args[41]*_node173)))+(args[44]*_node93))+(args[48]*_node28))+(args[52]*_node5))+(_node21*(args[55]*_node174)))+(args[58]*_V_X))+(args[60]*_V_Y))+(args[62]*_V_Z))+_node585);
+    float _node587 = abs(((((args[15]*_node1)+(_node21*(args[22]*_node177)))+(args[26]*_node1))+(_node21*(args[41]*_node156))));
+    float _node588 = (_node21*(args[63]*_node13));
+    float _node589 = abs(((((((((((args[15]*_node51)+(_node21*(args[22]*_node182)))+(args[26]*_node51))+(args[33]*_node12))+(args[38]*_node19))+(_node21*(args[41]*_node184)))+(args[48]*_node19))+(_node21*(args[55]*_node185)))+(args[60]*_node0))+_node588));
+    float _node590 = abs(((((args[19]*_node1)+(_node21*(args[22]*_node187)))+(args[44]*_node1))+(_node21*(args[55]*_node156))));
+    float _node591 = (_node21*(args[63]*_node34));
+    float _node592 = abs(((((((((((args[19]*_node51)+(_node21*(args[22]*_node192)))+(args[38]*_node11))+(_node21*(args[41]*_node194)))+(args[44]*_node51))+(args[48]*_node11))+(args[52]*_node33))+(_node21*(args[55]*_node195)))+(args[62]*_node0))+_node591));
+    float _node593 = abs((_node21*(args[22]*_node152)));
+    float _node594 = (-_node593);
+    float _node595 = (_node21*(args[22]*_node155));
+    float _node596 = ((((_node595+(args[33]*_node1))+(_node21*(args[41]*_node178)))+_node580)+_node581);
+    float _node597 = ((((_node595+_node579)+(args[52]*_node1))+(_node21*(args[55]*_node188)))+_node581);
+    float _node598 = abs(((((args[38]*_node1)+(_node21*(args[41]*_node187)))+(args[48]*_node1))+(_node21*(args[55]*_node177))));
+    float _node599 = abs((_node21*(args[41]*_node152)));
+    float _node600 = (-_node599);
+    float _node601 = abs((_node21*(args[55]*_node152)));
+    float _node602 = (-_node601);
+if (!(((((((((((((((((((min(_node582,_node18)+(-_node584))+_node586)+(-_node587))+(-_node589))+(-_node590))+(-_node592))+_node594)+_node594)+_node594)+min(_node596,_node18))+min(_node597,_node18))+(-_node598))+_node600)+_node600)+_node600)+_node602)+_node602)+_node602) <= 0. && 0. <= ((((((((((((((((((max(_node582,_node18)+_node584)+_node586)+_node587)+_node589)+_node590)+_node592)+_node593)+_node593)+_node593)+max(_node596,_node18))+max(_node597,_node18))+_node598)+_node599)+_node599)+_node599)+_node601)+_node601)+_node601))) return false;
+    float _node604 = (args[8]*_node1);
+    float _node605 = abs(((((_node21*_node604)+(args[10]*_node177))+(args[28]*_node156))+(_node21*(args[57]*_node75))));
+    float _node606 = abs(((((((((_node21*(args[8]*_node11))+(_node21*(args[9]*_node19)))+(args[10]*_node166))+_node209)+(args[28]*_node168))+(args[45]*_node169))+(_node21*(args[57]*_node72)))+(_node21*(args[58]*_node53))));
+    float _node607 = abs(((((((((_node21*(args[8]*_node51))+(args[10]*_node182))+(_node21*(args[27]*_node12)))+(args[28]*_node184))+_node362)+(args[45]*_node185))+(_node21*(args[57]*_node25)))+(_node21*(args[58]*_node13))));
+    float _node608 = (((((((((((_node21*(args[8]*_node91))+(_node21*(args[9]*_node93)))+(args[10]*_node171))+_node211)+(_node21*(args[27]*_node4)))+(args[28]*_node173))+(args[29]*_V_Y))+(args[45]*_node174))+(args[46]*_V_Z))+(_node21*(args[57]*_node29)))+(_node21*(args[58]*_node7)));
+    float _node609 = (args[9]*_node1);
+    float _node610 = abs(((((_node21*_node609)+(args[10]*_node187))+(args[45]*_node156))+(_node21*(args[57]*_node78))));
+    float _node611 = abs((((((((_node21*(args[9]*_node51))+(args[10]*_node192))+(args[28]*_node194))+(args[45]*_node195))+_node499)+(_node21*(args[57]*_node42)))+(_node21*(args[58]*_node34))));
+    float _node612 = abs(((args[10]*_node152)+(_node21*(args[57]*_node55))));
+    float _node613 = (-_node612);
+    float _node614 = (args[28]*_node159);
+    float _node615 = (args[45]*_node161);
+    float _node616 = (_node21*(args[58]*_node8));
+    float _node617 = (((((args[10]*_node157)+_node614)+_node615)+(_node21*(args[57]*_node58)))+_node616);
+    float _node618 = (args[10]*_node155);
+    float _node619 = (args[27]*_node1);
+    float _node620 = (((((_node618+(_node21*_node619))+(args[28]*_node178))+_node615)+(_node21*(args[57]*_node14)))+_node616);
+    float _node621 = ((((_node618+_node614)+(args[45]*_node188))+(_node21*(args[57]*_node46)))+_node616);
+    float _node622 = abs(((args[28]*_node152)+(_node21*(args[57]*_node64))));
+    float _node623 = (-_node622);
+    float _node624 = abs((((args[28]*_node187)+(args[45]*_node177))+(_node21*(args[57]*_node36))));
+    float _node625 = abs(((args[45]*_node152)+(_node21*(args[57]*_node68))));
+    float _node626 = (-_node625);
+    float _node627 = (_node21*(args[57]*_node48));
+    float _node628 = min(_node627,_node18);
+    float _node629 = (_node21*(args[57]*_node60));
+    float _node630 = min(_node629,_node18);
+    float _node631 = max(_node627,_node18);
+    float _node632 = max(_node629,_node18);
+if (!((((((((((((((((((((((((((-_node605)+(-_node606))+(-_node607))+_node608)+(-_node610))+(-_node611))+_node613)+min(_node617,_node18))+_node613)+_node613)+min(_node620,_node18))+min(_node621,_node18))+_node623)+_node623)+_node623)+(-_node624))+_node626)+_node626)+_node626)+_node628)+_node630)+_node630)+_node628)+_node630)+_node628) <= 0. && 0. <= ((((((((((((((((((((((((_node605+_node606)+_node607)+_node608)+_node610)+_node611)+_node612)+max(_node617,_node18))+_node612)+_node612)+max(_node620,_node18))+max(_node621,_node18))+_node622)+_node622)+_node622)+_node624)+_node625)+_node625)+_node625)+_node631)+_node632)+_node632)+_node631)+_node632)+_node631))) return false;
+    float _node634 = (args[35]*_node159);
+    float _node635 = (args[49]*_node161);
+    float _node636 = (_node21*(args[60]*_node8));
+    float _node637 = (((((_node604+(args[16]*_node157))+_node634)+_node635)+(_node21*(args[59]*_node58)))+_node636);
+    float _node638 = abs(((((((((args[8]*_node52)+(args[16]*_node166))+_node207)+(args[27]*_node11))+(args[35]*_node168))+(args[49]*_node169))+(_node21*(args[59]*_node72)))+(_node21*(args[60]*_node53))));
+    float _node639 = (((((((((((args[8]*_node3)+(args[16]*_node171))+(args[17]*_V_X))+(args[27]*_node91))+(_node21*(args[34]*_node28)))+(args[35]*_node173))+_node364)+(args[49]*_node174))+(args[50]*_V_Z))+(_node21*(args[59]*_node29)))+(_node21*(args[60]*_node7)));
+    float _node640 = abs(((args[16]*_node152)+(_node21*(args[59]*_node55))));
+    float _node641 = (-_node640);
+    float _node642 = abs(((((args[16]*_node177)+_node619)+(args[35]*_node156))+(_node21*(args[59]*_node75))));
+    float _node643 = abs((((args[16]*_node187)+(args[49]*_node156))+(_node21*(args[59]*_node78))));
+    float _node644 = (args[16]*_node155);
+    float _node645 = ((((_node644+(args[35]*_node178))+_node635)+(_node21*(args[59]*_node14)))+_node636);
+    float _node646 = abs(((((((((args[16]*_node182)+(args[27]*_node51))+(_node21*(args[34]*_node19)))+(args[35]*_node184))+_node367)+(args[49]*_node185))+(_node21*(args[59]*_node25)))+(_node21*(args[60]*_node13))));
+    float _node647 = ((((_node644+_node634)+(args[49]*_node188))+(_node21*(args[59]*_node46)))+_node636);
+    float _node648 = abs((((((((args[16]*_node192)+(_node21*(args[34]*_node11)))+(args[35]*_node194))+(args[49]*_node195))+_node505)+(_node21*(args[59]*_node42)))+(_node21*(args[60]*_node34))));
+    float _node649 = (args[34]*_node1);
+    float _node650 = abs(((((_node21*_node649)+(args[35]*_node187))+(args[49]*_node177))+(_node21*(args[59]*_node36))));
+    float _node651 = abs(((args[35]*_node152)+(_node21*(args[59]*_node64))));
+    float _node652 = (-_node651);
+    float _node653 = abs(((args[49]*_node152)+(_node21*(args[59]*_node68))));
+    float _node654 = (-_node653);
+    float _node655 = (_node21*(args[59]*_node48));
+    float _node656 = min(_node655,_node18);
+    float _node657 = (_node21*(args[59]*_node60));
+    float _node658 = min(_node657,_node18);
+    float _node659 = max(_node655,_node18);
+    float _node660 = max(_node657,_node18);
+if (!(((((((((((((((((((((((((min(_node637,_node18)+(-_node638))+_node639)+_node641)+_node641)+(-_node642))+_node641)+(-_node643))+min(_node645,_node18))+(-_node646))+min(_node647,_node18))+(-_node648))+(-_node650))+_node652)+_node652)+_node652)+_node654)+_node654)+_node654)+_node656)+_node658)+_node658)+_node656)+_node658)+_node656) <= 0. && 0. <= ((((((((((((((((((((((((max(_node637,_node18)+_node638)+_node639)+_node640)+_node640)+_node642)+_node640)+_node643)+max(_node645,_node18))+_node646)+max(_node647,_node18))+_node648)+_node650)+_node651)+_node651)+_node651)+_node653)+_node653)+_node653)+_node659)+_node660)+_node660)+_node659)+_node660)+_node659))) return false;
+    float _node662 = (args[39]*_node159);
+    float _node663 = (args[53]*_node161);
+    float _node664 = (_node21*(args[62]*_node8));
+    float _node665 = (((((_node609+(args[20]*_node157))+_node662)+_node663)+(_node21*(args[61]*_node58)))+_node664);
+    float _node666 = abs((((((((args[9]*_node52)+(args[20]*_node166))+_node220)+(args[39]*_node168))+(args[53]*_node169))+(_node21*(args[61]*_node72)))+(_node21*(args[62]*_node53))));
+    float _node667 = ((((((((((args[9]*_node3)+(args[20]*_node171))+(args[21]*_V_X))+(args[34]*_node4))+(args[39]*_node173))+(args[40]*_V_Y))+(args[53]*_node174))+_node501)+(_node21*(args[61]*_node29)))+(_node21*(args[62]*_node7)));
+    float _node668 = abs(((args[20]*_node152)+(_node21*(args[61]*_node55))));
+    float _node669 = (-_node668);
+    float _node670 = abs((((args[20]*_node177)+(args[39]*_node156))+(_node21*(args[61]*_node75))));
+    float _node671 = abs((((args[20]*_node187)+(args[53]*_node156))+(_node21*(args[61]*_node78))));
+    float _node672 = (args[20]*_node155);
+    float _node673 = (((((_node672+_node649)+(args[39]*_node178))+_node663)+(_node21*(args[61]*_node14)))+_node664);
+    float _node674 = abs((((((((args[20]*_node182)+(args[34]*_node12))+(args[39]*_node184))+_node371)+(args[53]*_node185))+(_node21*(args[61]*_node25)))+(_node21*(args[62]*_node13))));
+    float _node675 = ((((_node672+_node662)+(args[53]*_node188))+(_node21*(args[61]*_node46)))+_node664);
+    float _node676 = abs(((((((args[20]*_node192)+(args[39]*_node194))+(args[53]*_node195))+_node512)+(_node21*(args[61]*_node42)))+(_node21*(args[62]*_node34))));
+    float _node677 = abs(((args[39]*_node152)+(_node21*(args[61]*_node64))));
+    float _node678 = (-_node677);
+    float _node679 = abs((((args[39]*_node187)+(args[53]*_node177))+(_node21*(args[61]*_node36))));
+    float _node680 = abs(((args[53]*_node152)+(_node21*(args[61]*_node68))));
+    float _node681 = (-_node680);
+    float _node682 = (_node21*(args[61]*_node48));
+    float _node683 = min(_node682,_node18);
+    float _node684 = (_node21*(args[61]*_node60));
+    float _node685 = min(_node684,_node18);
+    float _node686 = max(_node682,_node18);
+    float _node687 = max(_node684,_node18);
+if (!(((((((((((((((((((((((((min(_node665,_node18)+(-_node666))+_node667)+_node669)+_node669)+(-_node670))+_node669)+(-_node671))+min(_node673,_node18))+(-_node674))+min(_node675,_node18))+(-_node676))+_node678)+_node678)+_node678)+(-_node679))+_node681)+_node681)+_node681)+_node683)+_node685)+_node685)+_node683)+_node685)+_node683) <= 0. && 0. <= ((((((((((((((((((((((((max(_node665,_node18)+_node666)+_node667)+_node668)+_node668)+_node670)+_node668)+_node671)+max(_node673,_node18))+_node674)+max(_node675,_node18))+_node676)+_node677)+_node677)+_node677)+_node679)+_node680)+_node680)+_node680)+_node686)+_node687)+_node687)+_node686)+_node687)+_node686))) return false;
+    float _node689 = (_node21*(args[59]*_node159));
+    float _node690 = (_node21*(args[61]*_node161));
+    float _node691 = (((((args[10]*_node1)+(_node21*(args[57]*_node157)))+_node689)+_node690)+_node581);
+    float _node692 = abs(((((((((((args[10]*_node52)+(args[16]*_node11))+(args[20]*_node19))+(args[23]*_node0))+(args[28]*_node11))+(args[45]*_node19))+(_node21*(args[57]*_node166)))+(_node21*(args[59]*_node168)))+(_node21*(args[61]*_node169)))+_node583));
+    float _node693 = ((((((((((((((((args[10]*_node3)+(args[16]*_node91))+(args[20]*_node93))+(args[23]*_V_X))+(args[28]*_node91))+(args[35]*_node4))+(args[39]*_node28))+(args[42]*_V_Y))+(args[45]*_node93))+(args[49]*_node28))+(args[53]*_node5))+(args[56]*_V_Z))+(_node21*(args[57]*_node171)))+(_node21*(args[59]*_node173)))+(_node21*(args[61]*_node174)))+_node585);
+    float _node694 = abs(((((args[16]*_node1)+(args[28]*_node1))+(_node21*(args[57]*_node177)))+(_node21*(args[59]*_node156))));
+    float _node695 = abs(((((((((((args[16]*_node51)+(args[28]*_node51))+(args[35]*_node12))+(args[39]*_node19))+(args[42]*_node0))+(args[49]*_node19))+(_node21*(args[57]*_node182)))+(_node21*(args[59]*_node184)))+(_node21*(args[61]*_node185)))+_node588));
+    float _node696 = abs(((((args[20]*_node1)+(args[45]*_node1))+(_node21*(args[57]*_node187)))+(_node21*(args[61]*_node156))));
+    float _node697 = abs(((((((((((args[20]*_node51)+(args[39]*_node11))+(args[45]*_node51))+(args[49]*_node11))+(args[53]*_node33))+(args[56]*_node0))+(_node21*(args[57]*_node192)))+(_node21*(args[59]*_node194)))+(_node21*(args[61]*_node195)))+_node591));
+    float _node698 = (_node21*(args[57]*_node155));
+    float _node699 = (((((args[35]*_node1)+_node698)+(_node21*(args[59]*_node178)))+_node690)+_node581);
+    float _node700 = abs(((((args[39]*_node1)+(args[49]*_node1))+(_node21*(args[59]*_node187)))+(_node21*(args[61]*_node177))));
+    float _node701 = (((((args[53]*_node1)+_node698)+_node689)+(_node21*(args[61]*_node188)))+_node581);
+    float _node702 = abs((_node21*(args[57]*_node152)));
+    float _node703 = (-_node702);
+    float _node704 = abs((_node21*(args[59]*_node152)));
+    float _node705 = (-_node704);
+    float _node706 = abs((_node21*(args[61]*_node152)));
+    float _node707 = (-_node706);
+if (!(((((((((((((((((((min(_node691,_node18)+(-_node692))+_node693)+(-_node694))+(-_node695))+(-_node696))+(-_node697))+min(_node699,_node18))+(-_node700))+min(_node701,_node18))+_node703)+_node703)+_node703)+_node705)+_node705)+_node705)+_node707)+_node707)+_node707) <= 0. && 0. <= ((((((((((((((((((max(_node691,_node18)+_node692)+_node693)+_node694)+_node695)+_node696)+_node697)+max(_node699,_node18))+_node700)+max(_node701,_node18))+_node702)+_node702)+_node702)+_node704)+_node704)+_node704)+_node706)+_node706)+_node706))) return false;
+    float _node709 = (_node21*(args[42]*_node159));
+    float _node710 = (_node21*(args[56]*_node161));
+    float _node711 = (_node21*(args[60]*_node159));
+    float _node712 = (_node21*(args[62]*_node161));
+    float _node713 = ((((((((args[11]*_node1)+(_node21*(args[23]*_node157)))+_node709)+_node710)+(_node21*(args[58]*_node157)))+_node711)+_node712)+(args[63]*_node58));
+    float _node714 = abs(((((((((((((args[11]*_node52)+(args[17]*_node11))+(args[21]*_node19))+(_node21*(args[23]*_node166)))+(args[29]*_node11))+(_node21*(args[42]*_node168)))+(args[46]*_node19))+(_node21*(args[56]*_node169)))+(_node21*(args[58]*_node166)))+(_node21*(args[60]*_node168)))+(_node21*(args[62]*_node169)))+(args[63]*_node72)));
+    float _node715 = ((((((((((((((((args[11]*_node3)+(args[17]*_node91))+(args[21]*_node93))+(_node21*(args[23]*_node171)))+(args[29]*_node91))+(args[36]*_node4))+(args[40]*_node28))+(_node21*(args[42]*_node173)))+(args[46]*_node93))+(args[50]*_node28))+(args[54]*_node5))+(_node21*(args[56]*_node174)))+(_node21*(args[58]*_node171)))+(_node21*(args[60]*_node173)))+(_node21*(args[62]*_node174)))+(args[63]*_node29));
+    float _node716 = abs((((((((args[17]*_node1)+(_node21*(args[23]*_node177)))+(args[29]*_node1))+(_node21*(args[42]*_node156)))+(_node21*(args[58]*_node177)))+(_node21*(args[60]*_node156)))+(args[63]*_node75)));
+    float _node717 = abs(((((((((((((args[17]*_node51)+(_node21*(args[23]*_node182)))+(args[29]*_node51))+(args[36]*_node12))+(args[40]*_node19))+(_node21*(args[42]*_node184)))+(args[50]*_node19))+(_node21*(args[56]*_node185)))+(_node21*(args[58]*_node182)))+(_node21*(args[60]*_node184)))+(_node21*(args[62]*_node185)))+(args[63]*_node25)));
+    float _node718 = abs((((((((args[21]*_node1)+(_node21*(args[23]*_node187)))+(args[46]*_node1))+(_node21*(args[56]*_node156)))+(_node21*(args[58]*_node187)))+(_node21*(args[62]*_node156)))+(args[63]*_node78)));
+    float _node719 = abs(((((((((((((args[21]*_node51)+(_node21*(args[23]*_node192)))+(args[40]*_node11))+(_node21*(args[42]*_node194)))+(args[46]*_node51))+(args[50]*_node11))+(args[54]*_node33))+(_node21*(args[56]*_node195)))+(_node21*(args[58]*_node192)))+(_node21*(args[60]*_node194)))+(_node21*(args[62]*_node195)))+(args[63]*_node42)));
+    float _node720 = abs((((_node21*(args[23]*_node152))+(_node21*(args[58]*_node152)))+(args[63]*_node55)));
+    float _node721 = (-_node720);
+    float _node722 = (_node21*(args[23]*_node155));
+    float _node723 = (_node21*(args[58]*_node155));
+    float _node724 = (((((((_node722+(args[36]*_node1))+(_node21*(args[42]*_node178)))+_node710)+_node723)+(_node21*(args[60]*_node178)))+_node712)+(args[63]*_node14));
+    float _node725 = (((((((_node722+_node709)+(args[54]*_node1))+(_node21*(args[56]*_node188)))+_node723)+_node711)+(_node21*(args[62]*_node188)))+(args[63]*_node46));
+    float _node726 = abs((((((((args[40]*_node1)+(_node21*(args[42]*_node187)))+(args[50]*_node1))+(_node21*(args[56]*_node177)))+(_node21*(args[60]*_node187)))+(_node21*(args[62]*_node177)))+(args[63]*_node36)));
+    float _node727 = abs((((_node21*(args[42]*_node152))+(_node21*(args[60]*_node152)))+(args[63]*_node64)));
+    float _node728 = (-_node727);
+    float _node729 = abs((((_node21*(args[56]*_node152))+(_node21*(args[62]*_node152)))+(args[63]*_node68)));
+    float _node730 = (-_node729);
+    float _node731 = (args[63]*_node48);
+    float _node732 = min(_node731,_node18);
+    float _node733 = (args[63]*_node60);
+    float _node734 = min(_node733,_node18);
+    float _node735 = max(_node731,_node18);
+    float _node736 = max(_node733,_node18);
+if (!(((((((((((((((((((((((((min(_node713,_node18)+(-_node714))+_node715)+(-_node716))+(-_node717))+(-_node718))+(-_node719))+_node721)+_node721)+_node721)+min(_node724,_node18))+min(_node725,_node18))+(-_node726))+_node728)+_node728)+_node728)+_node730)+_node730)+_node730)+_node732)+_node734)+_node734)+_node732)+_node734)+_node732) <= 0. && 0. <= ((((((((((((((((((((((((max(_node713,_node18)+_node714)+_node715)+_node716)+_node717)+_node718)+_node719)+_node720)+_node720)+_node720)+max(_node724,_node18))+max(_node725,_node18))+_node726)+_node727)+_node727)+_node727)+_node729)+_node729)+_node729)+_node735)+_node736)+_node736)+_node735)+_node736)+_node735))) return false;
+    return true;
+}
+
+// from http://127.0.0.1:5508/jsgaalop/src/shadersource/shaderlibv1/ @ line 11
+
+void main() {
+    vec3 position = inputPosition.xyz;
+    vec3 direction = inputOffsetAndA.xyz;
+    float a = inputOffsetAndA.z; // example: last component as a
+
+    result = vec4(0.0);
+
+
+    
+// IntervallSummofsquares
+for(int i = 0; i < 100; i++) {
+    Intervall X = position.x+direction.x*float(i)+Intervall(-1.0,1.0)*a;
+    Intervall Y = position.y+direction.y*float(i)+Intervall(-1.0,1.0)*a;
+    Intervall Z = position.z+direction.z*float(i)+Intervall(-1.0,1.0)*a;
+    result.xy += IntervallSummofsquares(X, Y, Z);
+}
+
+    
+}

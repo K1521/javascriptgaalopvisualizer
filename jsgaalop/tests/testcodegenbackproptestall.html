@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>test</title>
+    <!--<base href="/jsgaalop/">-->
+</head>
+<body>
+    <canvas id="mainCanvas" tabindex="0" style="border-style: solid;"></canvas>
+<script type="module">
+
+
+
+const tstart=performance.now();
+
+
+console.log(performance.now()-tstart,"imports and weggl context");
+
+import { GaalopGraph } from "../src/core/codegenv4/codegenBackpropergation2.js";//new
+import {GaalopGraph as GaalopGraph2} from "../src/core/graph2.js";
+import { TransformFeedbackWrapper } from "../src/glwrapper/TransformFeedbackWrapper.js";
+import { shaderSources,loadWithIncludes } from "../src/glwrapper/shaderimporter.js";
+import { Shader } from "../src/glwrapper/glwrapper.js";
+const mainCanvas = document.getElementById('mainCanvas');
+//const diagramCanvas = document.getElementById('diagramCanvas');
+/** @type{WebGL2RenderingContext}*/
+const gl = mainCanvas.getContext('webgl2',{preserveDrawingBuffer: true,antialias: false});
+
+function logComparisonTable() {
+    // sort first by functionName, then by targetName
+    comparisonResults.sort((a, b) => {
+        if (a.functionName < b.functionName) return -1;
+        if (a.functionName > b.functionName) return 1;
+        if (a.jsonpath < b.jsonpath) return -1;
+        if (a.jsonpath > b.jsonpath) return 1;
+        if (a.targetName < b.targetName) return -1;
+        if (a.targetName > b.targetName) return 1;
+        return 0;
+    });
+
+    console.log("Function                  | Target   | Old Min/Mean/Max/Median | New Min/Mean/Max/Median");
+    console.log("---------------------------------------------------------------------------------------");
+    for (const r of comparisonResults) {
+        console.log(
+            r.functionName.padEnd(30) + " | " +
+            r.jsonpath.padEnd(40) + " | " +
+            r.targetName.padEnd(10) + " | " +
+            formatStats(r.old).padEnd(30) + " | " +
+            formatStats(r.new)
+        );
+    }
+}
+
+
+
+function logsourcecollapsed(name,source,addlinenumbers=true){
+    if(addlinenumbers)  source = source
+        .split('\n')
+        .map((line, i) => `${(i + 1).toString().padStart(3, ' ')}: ${line}`)
+        .join('\n');
+
+      console.groupCollapsed(name);
+      console.log(source);
+      console.groupEnd();
+}
+
+
+/**
+ * python style range but returns a list instead of iterator
+*/
+function range(start,stop,step=1){
+  if(stop==undefined){
+    stop=start;
+    start=0;
+  }
+  if (step === 0) throw new Error("step cannot be 0");
+  const length=Math.ceil((stop-start)/step);
+  return Array.from({length},(_,i)=>start+step*i);
+}
+
+function zip(...arrs){
+  return range(
+    Math.min(...arrs.map(arr=>arr.length))
+  ).map(i=>arrs.map(arr=>arr[i])); 
+}
+
+async function load(url) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    console.error('Failed to load:', url);
+    return '';
+  }
+  return await response.text();
+}
+
+
+function setsEqual(a, b) {
+  if(!(a instanceof Set))a=new Set(a);
+  if(!(b instanceof Set))b=new Set(b);
+  if (a.size !== b.size) return false;
+  for (const v of a) {
+    if (!b.has(v)) return false;
+  }
+  return true;
+}
+
+function relErr(a, b, eps = 1e-12) {
+  return Math.abs(a - b) / Math.max(Math.abs(a), Math.abs(b), eps);
+}
+/**
+ * Compute the maximum relative error in a list of numbers.
+ * Works for any values, including mixed signs.
+ *
+ * @param {number[]} L - List of numbers
+ * @param {number} eps - Small epsilon to avoid division by zero (default 1e-12)
+ * @returns {number} Maximum relative error
+ */
+function maxRelErr(L, eps = 1e-12) {
+  if (L.length < 2) return 0;
+
+  const m = Math.min(...L);
+  const M = Math.max(...L);
+
+  let maxErr = 0;
+
+  for (const x of L) {
+    const relMin = Math.abs(x - m) / Math.max(Math.abs(x), Math.abs(m), eps);
+    const relMax = Math.abs(x - M) / Math.max(Math.abs(x), Math.abs(M), eps);
+    maxErr = Math.max(maxErr, relMin, relMax);
+  }
+
+  return maxErr;
+}
+function maxRelErrAprox(L, eps = 1e-12) {
+  if (L.length < 2) return 0;
+  const m = Math.min(...L);
+  const M = Math.max(...L);
+  return (M-m) / Math.max(Math.abs(m), Math.abs(m), eps)
+}
+function maxBy(arr, key) {
+  if (arr.length === 0) return undefined;
+  let best = arr[0];
+  let bestScore = key(best, 0);
+
+  for (let i = 1; i < arr.length; i++) {
+    const score = key(arr[i], i);
+    if (score > bestScore) {
+      bestScore = score;
+      best = arr[i];
+    }
+  }
+  return best;
+}
+function minBy(arr, key) {
+  if (arr.length === 0) return undefined;
+  let best = arr[0];
+  let bestScore = key(best, 0);
+
+  for (let i = 1; i < arr.length; i++) {
+    const score = key(arr[i], i);
+    if (score > bestScore) {
+      bestScore = score;
+      best = arr[i];
+    }
+  }
+  return best;
+}
+
+function stats(arr) {
+  const n = arr.length;
+  const sorted = [...arr].sort((a, b) => a - b);
+  const min = sorted[0];
+  const max = sorted[n - 1];
+  const mean = arr.reduce((a, b) => a + b, 0) / n;
+  const std = Math.sqrt(arr.reduce((s, x) => s + (x - mean) ** 2, 0) / n);
+  const median = n % 2 ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+  return { n, min, max, mean, median, std };
+}
+
+async function loadshaderdource2(generator,template){
+    return generator.gencode(await loadWithIncludes("../src/shadersource/shaderlibv1/",template));
+}
+
+//let gajson=await load("../assets/torustorusintersect.json");
+//let gajson=await load("../assets/torus_plane_intersect.json");
+//let gajson=await load("../assets/torus_plane_intersect.json");
+
+
+const targets=[];//json x vistarget x codegen
+for(const jsonpath of ["../assets/torus_plane_intersect.json","../assets/torustorusintersect.json"]){
+  const json=await load(jsonpath);
+  const graph1=GaalopGraph.fromjson(json);//new
+  const graph2=new GaalopGraph2();graph2.fromjson(json);
+
+  const vistargets=new Map();
+  const targets1=graph1.vistargets();
+  const targets2=graph2.createVisualisationgraphs2();
+  if(!setsEqual(targets1.map(t=>t.name),targets2.map(t=>t.name))){throw new Error("different");}
+  targets1.forEach(target1=>vistargets.set(target1.name,{name:target1.name,target1,graph1,graph2,jsonpath}));
+  targets2.forEach(target2=>vistargets.get(target2.name).target2=target2);
+
+  
+  targets.push(...vistargets.values());
+}
+
+const arraylength=100000;
+/*const data = Array.from({ length: arraylength*3 }, () => Math.random());
+const vao=gl.createVertexArray();
+gl.bindVertexArray(vao);
+const buffer=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.DYNAMIC_DRAW);
+gl.enableVertexAttribArray(0);
+gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);
+*/
+const data = Array.from({ length: arraylength*7 }, () => Math.random());
+const vao=gl.createVertexArray();
+gl.bindVertexArray(vao);
+const buffer=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.DYNAMIC_DRAW);
+
+// Attribute 0 → vec4 position
+gl.enableVertexAttribArray(0);
+gl.vertexAttribPointer(
+  0,       // location
+  4,       // vec4
+  gl.FLOAT,
+  false,
+  7*4,  // stride
+  0        // offset
+);
+
+// Attribute 1 → vec3 offset + a
+gl.enableVertexAttribArray(1);
+gl.vertexAttribPointer(
+  1,       // location
+  3,       // vec3
+  gl.FLOAT,
+  false,
+  7*4,
+  4 * 4    // offset = 4 floats
+);
+
+// ===== BEFORE THE LOOP =====
+const comparisonResults = []; // stores all function/target old vs new stats
+
+function pushComparisonResult(functionName, targetName, oldStats, newStats,jsonpath) {
+    comparisonResults.push({
+        functionName,
+        targetName,
+        old: oldStats,
+        new: newStats,
+        jsonpath
+    });
+}
+
+// Helper to format stats nicely
+function formatStats(stats) {
+    return `${stats.min} / ${stats.mean.toFixed(2)} / ${stats.max} / ${stats.median}`;
+}
+
+
+for(const target of targets){
+  
+        "float Summofsquares(vec3 rayDir, vec3 rayOrigin,float a){?}";
+        "xyzDual xyzDualSummofsquares(vec3 pos) {?}";
+        "void DualF(vec3 rayDir, vec3 rayOrigin,float a,out Dual[numoutputs] result) {?}";
+        "DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){?}";
+        "Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {?}";
+        "bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {?}";
+        "DualComplex DualComplexSingular(vec3 rayDir, vec3 rayOrigin,Complex a){?}";
+
+  const shaderparts=[
+`
+//Summofsquares
+for(int i=0;i<100;i++)result+=vec4(Summofsquares(direction,position,float(i)*0.01));
+`,
+`
+//xyzDualSummofsquares
+for(int i=0;i<100;i++)result+=xyzDualSummofsquares(position+direction*float(i)*0.01);
+`,
+`
+//DualF
+Dual temp[numoutputs];
+for(int i = 0; i < 100; i++) {
+    DualF(position, direction,  float(i) * 0.01, temp);
+    for(int j = 0; j < numoutputs; j++) result.xy += temp[j];
+}`,
+
+`
+// DualComplexSummofsquares
+for(int i = 0; i < 100; i++) {
+    result += DualComplexSummofsquares(position,direction, vec2(direction.x*float(i)*0.01+direction.z,direction.y*float(i)*0.02));
+}
+`,
+
+`
+// IntervallSummofsquares
+for(int i = 0; i < 100; i++) {
+    Intervall X = position.x+direction.x*float(i)+Intervall(-1.0,1.0)*a;
+    Intervall Y = position.y+direction.y*float(i)+Intervall(-1.0,1.0)*a;
+    Intervall Z = position.z+direction.z*float(i)+Intervall(-1.0,1.0)*a;
+    result.xy += IntervallSummofsquares(X, Y, Z);
+}
+`,
+
+/*`
+// evaluatevoxelIntervall3d
+for(int i = 0; i < 100; i++) {
+  Intervall X = position.x+direction.x*float(i)+Intervall(-1.0,1.0)*a;
+  Intervall Y = position.y+direction.y*float(i)+Intervall(-1.0,1.0)*a;
+  Intervall Z = position.z+direction.z*float(i)+Intervall(-1.0,1.0)*a;
+    result.x += float(evaluatevoxelIntervall3d(X, Y, Z));
+}
+`*/]
+  for(const shaderpart of shaderparts){
+  let vertexshader;
+  vertexshader=
+`
+#version 300 es
+precision mediump float;
+
+layout(location = 0) in vec4 inputPosition;   // xyz = position
+layout(location = 1) in vec3 inputOffsetAndA; // xyz = offset + a
+
+out vec4 result;
+
+#include "./common/generated_functions.glsl"
+
+void main() {
+    vec3 position = inputPosition.xyz;
+    vec3 direction = inputOffsetAndA.xyz;
+    float a = inputOffsetAndA.z; // example: last component as a
+
+    result = vec4(0.0);
+
+
+    ${shaderpart}
+    
+}
+`;
+
+  console.log(performance.now()-tstart,"compile shader");
+  console.log("testing: ",target.name," " ,shaderpart.split("\n")[1].trim()," ======================================");
+
+
+  const source1=await loadshaderdource2(target.target1,vertexshader);
+  const source2=await loadshaderdource2(target.target2,vertexshader);
+  
+  let tf1=new TransformFeedbackWrapper(gl,source1, ["result"]);//new
+  let tf2=new TransformFeedbackWrapper(gl,source2, ["result"]);
+
+  if(!setsEqual(new Set(target.graph1.inputScalars.keys()),new Set(target.graph2.inputScalars.keys())))throw Error("bad");
+  console.log(shaderpart);
+  logsourcecollapsed("new",source1,false);
+  logsourcecollapsed("old",source2,false);
+
+  //set uniforms
+  {
+    const variables=new Map([...target.graph1.inputScalars.keys()].map(x=>[x,Math.random()]));
+
+    tf1.shader.use();
+    const cache=new Map();
+    target.target1.generatecode2cached().nodetosubgraphname.entries().forEach(([node,name]) => {
+      const value=node.eval(variables,cache);
+      //console.log(name,value)
+      tf1.shader.uniform1f(name,value);
+    });
+
+    tf2.shader.use();
+    target.target2.setuniforms(new Map(variables),tf2.shader);
+    //console.log(gen2.parameters(new Map(variables)));
+  }
+
+  {
+    const a1=tf1.run(arraylength)[0];
+    const a2=tf2.run(arraylength)[0];
+
+    /*console.log(
+      zip(a1,a2)
+    .filter(([a,b])=>Math.abs(a-b)>0)
+    .slice(0,100)
+    .map(([a,b])=>[a,b,Math.abs(a-b)])
+    );*/
+    /*console.log(
+      zip(a1,a2)
+    .slice(0,100)
+    .map(([a,b])=>[a,b,Math.abs(a-b)])
+    );*/
+    console.log(zip(a1,a2).map(([a,b])=>[a,b,relErr(a,b)]).sort((a,b)=>(b[2]-a[2])).slice(0,5));
+
+    console.log(performance.now()-tstart,"sum");
+    console.log(a1.reduce((prev,cur,i)=>prev+Math.abs(cur-a2[i]),0));
+  }
+
+  {
+    
+    const times=[[],[]];
+    console.log(performance.now()-tstart,"actual test");
+    for(let i=0;i<10;i++){
+      
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(Array.from({ length: arraylength*7 }, () => Math.random())),gl.DYNAMIC_DRAW);
+    gl.finish();
+    const t0 = performance.now();
+    const result1 = tf1.run(arraylength)[0];
+    const t1 = performance.now();
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(Array.from({ length: arraylength*7 }, () => Math.random())),gl.DYNAMIC_DRAW);
+    gl.finish()
+    const t2 = performance.now();
+    const result2 = tf2.run(arraylength)[0];
+    const t3 = performance.now();
+    times[0].push(t1-t0);
+    times[1].push(t3-t2);
+    }
+    console.log(target);
+    console.log(stats(times[0]));
+    console.log(stats(times[1]));
+
+    const oldStats = stats(times[1]);
+const newStats = stats(times[0]);
+pushComparisonResult(shaderpart.split("\n")[1].trim() || `Function ${shaderparts.indexOf(shaderpart)}`, 
+                     target.name || "unknown",
+                     oldStats,
+                     newStats,target.jsonpath);
+  }
+
+  console.groupCollapsed("intermediate result");
+logComparisonTable();
+console.groupEnd();
+
+
+}}
+
+// ===== AFTER THE MAIN LOOP =====
+// Call this at the very end of your code
+logComparisonTable();
+
+
+
+
+/*
+Function                  | Target   | Old Min/Mean/Max/Median | New Min/Mean/Max/Median testcodegenbackproptestall.html:392:13
+--------------------------------------------------------------------------------------- testcodegenbackproptestall.html:393:13
+// DualComplexSummofsquares    | CurveTP    | 177 / 179.80 / 190 / 178   | 320 / 322.30 / 330 / 321          testcodegenbackproptestall.html:395:17
+// DualComplexSummofsquares    | Pl         | 38 / 41.00 / 49 / 39.5     | 47 / 48.80 / 56 / 48          testcodegenbackproptestall.html:395:17
+// DualComplexSummofsquares    | T1         | 34 / 36.40 / 44 / 35       | 33 / 34.00 / 35 / 34          testcodegenbackproptestall.html:395:17
+// IntervallSummofsquares      | CurveTP    | 797 / 799.20 / 804 / 798.5 | 404 / 407.80 / 415 / 407.5          testcodegenbackproptestall.html:395:17
+// IntervallSummofsquares      | Pl         | 80 / 95.60 / 127 / 90      | 45 / 53.90 / 77 / 49          testcodegenbackproptestall.html:395:17
+// IntervallSummofsquares      | T1         | 51 / 53.20 / 58 / 52.5     | 35 / 37.10 / 42 / 37          testcodegenbackproptestall.html:395:17
+// evaluatevoxelIntervall3d    | CurveTP    | 110 / 114.40 / 123 / 113   | 65 / 71.00 / 89 / 66.5          testcodegenbackproptestall.html:395:17
+// evaluatevoxelIntervall3d    | Pl         | 46 / 52.40 / 59 / 51       | 46 / 52.00 / 63 / 51          testcodegenbackproptestall.html:395:17
+// evaluatevoxelIntervall3d    | T1         | 72 / 80.40 / 85 / 81       | 63 / 70.10 / 80 / 70.5          testcodegenbackproptestall.html:395:17
+//DualF                        | CurveTP    | 7 / 8.50 / 14 / 8          | 7 / 8.40 / 12 / 8         testcodegenbackproptestall.html:395:17
+//DualF                        | Pl         | 7 / 8.80 / 17 / 8          | 7 / 7.70 / 9 / 8          testcodegenbackproptestall.html:395:17
+//DualF                        | T1         | 6 / 8.10 / 14 / 7          | 7 / 8.00 / 13 / 7.5         testcodegenbackproptestall.html:395:17
+//Summofsquares                | CurveTP    | 114 / 117.90 / 136 / 115.5 | 120 / 123.70 / 137 / 121          testcodegenbackproptestall.html:395:17
+//Summofsquares                | Pl         | 17 / 19.20 / 25 / 19       | 18 / 19.20 / 24 / 19          testcodegenbackproptestall.html:395:17
+//Summofsquares                | T1         | 22 / 23.80 / 27 / 23       | 13 / 15.20 / 20 / 15          testcodegenbackproptestall.html:395:17
+//xyzDualSummofsquares         | CurveTP    | 148 / 151.10 / 160 / 150   | 236 / 238.30 / 244 / 237          testcodegenbackproptestall.html:395:17
+//xyzDualSummofsquares         | Pl         | 26 / 27.60 / 34 / 27       | 33 / 34.10 / 39 / 33.5          testcodegenbackproptestall.html:395:17
+//xyzDualSummofsquares         | T1         | 24 / 25.60 / 31 / 25       | 18 / 19.70 / 25 / 19          testcodegenbackproptestall.html:395:17
+
+​Function                  | Target   | Old Min/Mean/Max/Median | New Min/Mean/Max/Median testcodegenbackproptestall.html:392:13
+--------------------------------------------------------------------------------------- testcodegenbackproptestall.html:393:13
+// DualComplexSummofsquares    | CurveTP    | 178 / 180.60 / 186 / 180.5     | 320 / 324.30 / 336 / 323 testcodegenbackproptestall.html:395:17
+// DualComplexSummofsquares    | Pl         | 37 / 39.10 / 45 / 38           | 47 / 48.90 / 58 / 48 testcodegenbackproptestall.html:395:17
+// DualComplexSummofsquares    | T1         | 34 / 35.80 / 40 / 35.5         | 33 / 35.00 / 42 / 34 testcodegenbackproptestall.html:395:17
+// IntervallSummofsquares      | CurveTP    | 796 / 798.50 / 803 / 797       | 402 / 404.50 / 415 / 403 testcodegenbackproptestall.html:395:17
+// IntervallSummofsquares      | Pl         | 88 / 100.10 / 113 / 99.5       | 50 / 55.30 / 63 / 54 testcodegenbackproptestall.html:395:17
+// IntervallSummofsquares      | T1         | 51 / 56.20 / 67 / 54           | 35 / 38.30 / 47 / 37.5 testcodegenbackproptestall.html:395:17
+// evaluatevoxelIntervall3d    | CurveTP    | 109 / 117.30 / 146 / 113.5     | 66 / 72.20 / 93 / 70 testcodegenbackproptestall.html:395:17
+// evaluatevoxelIntervall3d    | Pl         | 60 / 62.20 / 67 / 62           | 59 / 62.10 / 69 / 61 testcodegenbackproptestall.html:395:17
+// evaluatevoxelIntervall3d    | T1         | 81 / 82.10 / 86 / 82           | 71 / 72.40 / 78 / 71.5 testcodegenbackproptestall.html:395:17
+//DualF                        | CurveTP    | 6 / 8.50 / 20 / 7              | 6 / 8.20 / 14 / 7 testcodegenbackproptestall.html:395:17
+//DualF                        | Pl         | 7 / 9.60 / 20 / 8.5            | 8 / 9.70 / 17 / 9 testcodegenbackproptestall.html:395:17
+//DualF                        | T1         | 7 / 7.70 / 13 / 7              | 6 / 7.70 / 12 / 7 testcodegenbackproptestall.html:395:17
+//Summofsquares                | CurveTP    | 113 / 115.70 / 120 / 114.5     | 120 / 124.50 / 143 / 122.5 testcodegenbackproptestall.html:395:17
+//Summofsquares                | Pl         | 17 / 18.80 / 24 / 18           | 18 / 18.50 / 23 / 18 testcodegenbackproptestall.html:395:17
+//Summofsquares                | T1         | 22 / 23.40 / 28 / 23           | 14 / 15.60 / 26 / 14.5 testcodegenbackproptestall.html:395:17
+//xyzDualSummofsquares         | CurveTP    | 148 / 149.10 / 150 / 149       | 235 / 237.60 / 243 / 236.5 testcodegenbackproptestall.html:395:17
+//xyzDualSummofsquares         | Pl         | 26 / 27.40 / 31 / 27           | 32 / 34.10 / 39 / 33 testcodegenbackproptestall.html:395:17
+//xyzDualSummofsquares         | T1         | 24 / 25.10 / 29 / 25           | 18 / 19.60 / 24 / 19 testcodegenbackproptestall.html:395:17
+
+​
+
+
+
+*/
+
+/*
+Function                  | Target   | Old Min/Mean/Max/Median | New Min/Mean/Max/Median testcodegenbackproptestall.html:41:13
+--------------------------------------------------------------------------------------- testcodegenbackproptestall.html:42:13
+// DualComplexSummofsquares    | ../assets/torus_plane_intersect.json     | CurveTP    | 177 / 178.20 / 183 / 178       | 298 / 299.90 / 310 / 299 testcodegenbackproptestall.html:44:17
+// DualComplexSummofsquares    | ../assets/torus_plane_intersect.json     | Pl         | 37 / 38.80 / 41 / 39           | 46 / 48.10 / 53 / 48 testcodegenbackproptestall.html:44:17
+// DualComplexSummofsquares    | ../assets/torus_plane_intersect.json     | T1         | 34 / 35.60 / 37 / 36           | 38 / 39.90 / 45 / 39 testcodegenbackproptestall.html:44:17
+// IntervallSummofsquares      | ../assets/torus_plane_intersect.json     | CurveTP    | 797 / 798.30 / 803 / 798       | 401 / 402.60 / 411 / 402 testcodegenbackproptestall.html:44:17
+// IntervallSummofsquares      | ../assets/torus_plane_intersect.json     | Pl         | 84 / 95.60 / 117 / 96          | 49 / 56.10 / 73 / 54.5 testcodegenbackproptestall.html:44:17
+// IntervallSummofsquares      | ../assets/torus_plane_intersect.json     | T1         | 51 / 52.80 / 58 / 52           | 34 / 34.50 / 35 / 34.5 testcodegenbackproptestall.html:44:17
+//DualF                        | ../assets/torus_plane_intersect.json     | CurveTP    | 119 / 120.50 / 126 / 120       | 204 / 205.40 / 206 / 205.5 testcodegenbackproptestall.html:44:17
+//DualF                        | ../assets/torus_plane_intersect.json     | Pl         | 33 / 35.60 / 48 / 34           | 33 / 34.90 / 39 / 34 testcodegenbackproptestall.html:44:17
+//DualF                        | ../assets/torus_plane_intersect.json     | T1         | 23 / 24.40 / 29 / 24           | 25 / 26.30 / 29 / 26 testcodegenbackproptestall.html:44:17
+//Summofsquares                | ../assets/torus_plane_intersect.json     | CurveTP    | 113 / 114.70 / 119 / 114       | 113 / 115.40 / 125 / 114 testcodegenbackproptestall.html:44:17
+//Summofsquares                | ../assets/torus_plane_intersect.json     | Pl         | 17 / 18.70 / 25 / 18           | 17 / 18.30 / 23 / 18 testcodegenbackproptestall.html:44:17
+//Summofsquares                | ../assets/torus_plane_intersect.json     | T1         | 21 / 22.30 / 24 / 22           | 22 / 23.20 / 28 / 23 testcodegenbackproptestall.html:44:17
+//xyzDualSummofsquares         | ../assets/torus_plane_intersect.json     | CurveTP    | 148 / 149.60 / 155 / 149       | 229 / 230.90 / 239 / 230 testcodegenbackproptestall.html:44:17
+//xyzDualSummofsquares         | ../assets/torus_plane_intersect.json     | Pl         | 26 / 28.50 / 41 / 27           | 32 / 33.10 / 38 / 33 testcodegenbackproptestall.html:44:17
+//xyzDualSummofsquares         | ../assets/torus_plane_intersect.json     | T1         | 25 / 26.30 / 32 / 26           | 29 / 30.40 / 32 / 30.5 testcodegenbackproptestall.html:44:17
+*/
+</script>     
+</body>
+</html>
