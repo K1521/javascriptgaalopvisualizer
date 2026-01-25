@@ -236,12 +236,12 @@ export class Shader{
     buffermode??=gl.INTERLEAVED_ATTRIBS; //cant be a default arg because gl doesnt exist
 
     //compile the shader
-    const vertexShader = Shader.compileShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
-    const fragmentShader = Shader.compileShader(gl, fragmentShaderSource ?? Shader.emptyfragmentshader, gl.FRAGMENT_SHADER);
+    this.vertexShader = Shader.compileShader(gl, vertexShaderSource, gl.VERTEX_SHADER);
+    this.fragmentShader = Shader.compileShader(gl, fragmentShaderSource ?? Shader.emptyfragmentshader, gl.FRAGMENT_SHADER);
     const program = gl.createProgram();
     this.program=program;
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
+    gl.attachShader(program, this.vertexShader);
+    gl.attachShader(program, this.fragmentShader);
 
     if(varyings){
       this.varyings=varyings;
@@ -261,6 +261,38 @@ export class Shader{
     //init cache
     this.attributelocations=new Map();
     this.uniformlocations=new Map();
+  }
+
+  dispose() {
+    if (!this.gl) return; // already dead
+
+    const gl = this.gl;
+
+    if (this.program) {
+      gl.useProgram(null);
+
+      if (this.vertexShader) {
+        gl.detachShader(this.program, this.vertexShader);
+        gl.deleteShader(this.vertexShader);
+      }
+
+      if (this.fragmentShader) {
+        gl.detachShader(this.program, this.fragmentShader);
+        gl.deleteShader(this.fragmentShader);
+      }
+
+      gl.deleteProgram(this.program);
+    }
+
+
+    this.attributelocations?.clear();
+    this.uniformlocations?.clear();
+
+
+    this.vertexShader = null;
+    this.fragmentShader = null;
+    this.program = null;
+    this.gl = null;
   }
 
   /**
@@ -342,9 +374,16 @@ export class Shader{
 
   uniform1i(nameOrLocation, value) {
     const loc = this.resolveUniformLocation(nameOrLocation);
-    if (loc === null) return;
+    if (loc === null) return false;
     this.gl.uniform1i(loc, value);
   }
+
+  uniform1f(nameOrLocation, value) {
+    const loc = this.resolveUniformLocation(nameOrLocation);
+    if (loc === null) return false;
+    this.gl.uniform1f(loc, value);
+  }
+
 
   uniform2fv(nameOrLocation, value) {
     const loc = this.resolveUniformLocation(nameOrLocation);

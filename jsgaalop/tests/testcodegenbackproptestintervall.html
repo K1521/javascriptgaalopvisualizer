@@ -8,6 +8,10 @@
 <body>
     <canvas id="mainCanvas" tabindex="0" style="border-style: solid;"></canvas>
 <script type="module">
+const tstart=performance.now();
+
+
+console.log(performance.now()-tstart,"imports and weggl context");
 import { GaalopGraph } from "../src/core/codegenv4/codegenBackpropergation2.js";
 
 const mainCanvas = document.getElementById('mainCanvas');
@@ -67,7 +71,7 @@ import { shaderSources,loadWithIncludes } from "../src/glwrapper/shaderimporter.
 import { Shader } from "../src/glwrapper/glwrapper.js";
 
 async function loadshaderdource(generator,template){
-    let code=(await loadWithIncludes("../src/shadersource/shaderlibv1/",template))
+    let code=(await loadWithIncludes("../src/shadersource/shaderlibv1/",template));
     //.replace("Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {?}","")
     //.replace("bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {?}","");
 
@@ -104,18 +108,18 @@ out vec4 result;
 void main(){
     //result=xyzDualSummofsquares(position);
     result=vec4(0.);
-    for(int i=0;i<1000+(1.>result.x?1:0);i++)
+    for(int i=0;i<1000;i++)
     //result+=vec4(Summofsquares(position,position.zxy,position.z));
-    result+=xyzDualSummofsquares(position);
+    result+=xyzDualSummofsquares(position+vec3(i)*0.1);
 }
 `;
 
 function log(x){console.log(x);return x;}
-
+console.log(performance.now()-tstart,"compile shader");
 const arraylength=100000;
 let transformfeedback=new TransformFeedbackWrapper(gl, log(await loadshaderdource(gen,vertexshader)), ["result"]);
 let transformfeedback2=new TransformFeedbackWrapper(gl, log(await loadshaderdource2(gen2,vertexshader)), ["result"]);
-
+console.log(performance.now()-tstart,"random array");
 //console.log(transformfeedback.shader.getAttribLocation("position"));
 const data = Array.from({ length: arraylength*3 }, () => Math.random());
 
@@ -128,7 +132,7 @@ gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.DYNAMIC_DRAW);
 gl.enableVertexAttribArray(0);
 gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);
 
-
+console.log(performance.now()-tstart,"run once");
 
 
 const a1=transformfeedback.run(arraylength)[0];
@@ -142,6 +146,11 @@ console.log(
 .map(([a,b])=>[a,b,Math.abs(a-b)])
 );
 
+
+
+
+
+console.log(performance.now()-tstart,"sum");
 console.log(a1.reduce((prev,cur,i)=>prev+Math.abs(cur-a2[i]),0));
 console.log(a1.reduce((prev,cur,i)=>prev+Math.abs(cur-a2[i]),0));
 
@@ -159,7 +168,8 @@ function stats(arr) {
 }
 
 const times=[[],[]];
-for(let i=0;i<1000;i++){
+console.log(performance.now()-tstart,"actual test");
+for(let i=0;i<100;i++){
   
 gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(Array.from({ length: arraylength*3 }, () => Math.random())),gl.DYNAMIC_DRAW);
 const t0 = performance.now();
@@ -175,7 +185,7 @@ console.log(stats(times[0]));
 console.log(stats(times[1]));
 
 console.log(transformfeedback,transformfeedback2);
-
+console.log(performance.now()-tstart,"finished");
 </script>     
 </body>
 </html>

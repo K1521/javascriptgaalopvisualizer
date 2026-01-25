@@ -8,6 +8,8 @@ export class Poly {
     this.coeffs = coeffs; 
   }
 
+
+
   static monomialToKey(monomial) {
     return JSON.stringify(
       Object.fromEntries(
@@ -150,4 +152,68 @@ export class Poly {
     }
     return degrees;
   }
+
+
+
+
+  isZero(eps = 1e-12) {
+    for (const c of this.coeffs.values())
+      if (Math.abs(c) > eps)
+        return false;
+    return true;
+  }
+
+  /**
+   * Checks whether this polynomial is a scalar multiple of another.
+   *
+   * Finds k such that: this = k * other, up to numerical tolerance.
+   * Uses the largest-magnitude coefficient as a pivot for stability.
+   *
+   * Zero cases:
+   * - both zero → returns 1
+   * - one zero  → returns false
+   *
+   * @param {Poly} other
+   * @returns {number|false} k if multiple, otherwise false
+   */
+  isMultipleOf(other) {
+    const eps = 1e-10;
+
+    const thisZero  = this.isZero(eps);
+    const otherZero = other.isZero(eps);
+    if (thisZero && otherZero) return 1;
+    if (thisZero || otherZero) return false;
+
+    // find pivot with largest magnitude in this poly
+    let pivotMonom = null;
+    let pivotAbs = 0;
+    for (const [m, c] of this.coeffs.entries()) {
+        const abs = Math.abs(c);
+        if (abs > pivotAbs) {
+            pivotAbs = abs;
+            pivotMonom = m;
+        }
+    }
+
+    const pivotCoeffOther = other.coeffs.get(pivotMonom);
+    if (pivotCoeffOther == null || Math.abs(pivotCoeffOther) < eps)
+        return false;
+
+    const k = this.coeffs.get(pivotMonom) / pivotCoeffOther;
+
+    for (const m of new Set([
+        ...this.coeffs.keys(),
+        ...other.coeffs.keys()
+    ])) {
+        const coeffThis  = this.coeffs.get(m) ?? 0;
+        const coeffOther = (other.coeffs.get(m) ?? 0) * k;
+        const diff = coeffThis - coeffOther;
+        const tol = eps * Math.max(1, Math.abs(coeffThis), Math.abs(coeffOther));
+        if (Math.abs(diff) > tol)
+            return false;
+    }
+
+    return k; // this = k * other
+  }
+
 }
