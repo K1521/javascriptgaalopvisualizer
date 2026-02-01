@@ -384,6 +384,11 @@ export class Shader{
     this.gl.uniform1f(loc, value);
   }
 
+  uniform1fv(nameOrLocation, value) {
+    const loc = this.resolveUniformLocation(nameOrLocation);
+    if (loc === null) return false;
+    this.gl.uniform1fv(loc, value);
+  }
 
   uniform2fv(nameOrLocation, value) {
     const loc = this.resolveUniformLocation(nameOrLocation);
