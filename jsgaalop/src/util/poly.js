@@ -1,5 +1,5 @@
 export class Poly {
-  constructor(coeffs) {
+  constructor(coeffs=new Map()) {
     for (const [key, value] of coeffs) {
       if (value === 0) {
         coeffs.delete(key);
@@ -8,6 +8,10 @@ export class Poly {
     this.coeffs = coeffs; 
   }
 
+  static monom(varname,exponent,coeff=1){
+    const key = Poly.monomialToKey({ [varname]: exponent });
+    return new Poly(new Map([[key, coeff]]));
+  }
 
 
   static monomialToKey(monomial) {
@@ -29,8 +33,9 @@ export class Poly {
   }
 
   static var(varname, value = 1) {
-    const key = Poly.monomialToKey({ [varname]: 1 });
-    return new Poly(new Map([[key, value]]));
+    //const key = Poly.monomialToKey({ [varname]: 1 });
+    //return new Poly(new Map([[key, value]]));
+    return Poly.monom(varname,1,value);
   }
   
   entries(){
@@ -44,6 +49,13 @@ export class Poly {
       coeffs.set(key, (coeffs.get(key) ?? 0) + c);
     }
     return new Poly(coeffs);
+  }
+
+  addip(other) {//+=
+    other = Poly.convert(other);
+    for (const [key, c] of other.coeffs) {
+      this.coeffs.set(key, (this.coeffs.get(key) ?? 0) + c);
+    }
   }
 
   sub(other) {
@@ -158,7 +170,7 @@ export class Poly {
 
   isZero(eps = 1e-12) {
     for (const c of this.coeffs.values())
-      if (Math.abs(c) > eps)
+      if (Math.abs(c) >= eps)
         return false;
     return true;
   }
@@ -176,8 +188,8 @@ export class Poly {
    * @param {Poly} other
    * @returns {number|false} k if multiple, otherwise false
    */
-  isMultipleOf(other) {
-    const eps = 1e-10;
+  isMultipleOf(other,eps = 1e-10) {
+    //const eps = 1e-10;
 
     const thisZero  = this.isZero(eps);
     const otherZero = other.isZero(eps);
@@ -214,6 +226,12 @@ export class Poly {
     }
 
     return k; // this = k * other
+  }
+
+  isMonomial(eps = 1e-10) {//writtenbychatgpt
+    let countNonZero = 0;
+    for (const coeff of this.coeffs.values()) if (Math.abs(coeff) >= eps) countNonZero++;
+    return countNonZero === 1; // exactly one non-zero term
   }
 
 }
