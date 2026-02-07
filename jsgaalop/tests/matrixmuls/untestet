@@ -53,6 +53,29 @@ gl.vertexAttribPointer(
 );
 const iter=100;
 const n=25;
+
+
+const lines = [
+  "results+=horner(a.x,coeffs);",
+  "results+=rowM(pos);",
+  "results+=rowMDense(pos);",
+  "results+=susR(pos);",
+  "results+=susM(pos);",
+  "results+=susMDense(pos);",
+  "results+=susMPad(pos);",
+  "results+=dot(DChorner(a,coeffs),vec4(1));",
+  "results+=dot(DCrowM(ro,rd,a),vec4(1));",
+  "results+=dot(DCrowMDense(ro,rd,a),vec4(1));",
+  "results+=dot(DCsusR(ro,rd,a),vec4(1));",
+  "results+=dot(DCsusM(ro,rd,a),vec4(1));",
+  "results+=dot(DCsusMDense(ro,rd,a),vec4(1));",
+  "results+=dot(DCsusMPad(ro,rd,a),vec4(1));",
+];
+const tests=[0,1].flatMap((u)=>lines.map((l)=>[l,u]));
+
+
+
+for(let [line,USE_UNIFORM]of tests){
 //for(let n=1;n<25;n++){
 //for(let iter=1;iter<100;iter++){
 let vertexshader=
@@ -60,18 +83,29 @@ let vertexshader=
 precision mediump float;
 const int n=${n};
 const int rowlength=(n+3)/4;
+layout(location = 0) in vec3 P0;   
+layout(location = 1) in vec3 P1;  
+
+
+#define USE_UNIFORM ${USE_UNIFORM}
+#if USE_UNIFORM
 uniform float[n] M; // 8x8 matrix in row-major
 uniform float[n*(n+1)/2] R;
+uniform vec4[n*rowlength] MDense;
+uniform float[4*n*rowlength] MPad;
+#else
 layout(std140) uniform MatrixBlock {
     //float M2[n*n];
     //vec4 M2[(n*n+3)/4];//+3 because ceildiv
-    vec4 M2[n*rowlength];
+    //vec4 M2[n*rowlength];
+    float[n] M; // 8x8 matrix in row-major
+    float[n*(n+1)/2] R;
+    vec4[n*rowlength] MDense;
+    float[4*n*rowlength] MPad;
 };
-    
-layout(location = 0) in vec3 P0;   
-layout(location = 1) in vec3 P1;  
-uniform vec4[n*rowlength] M3;
-uniform float[4*n*rowlength] M4;
+#endif
+
+
 /*out vec4 result1;
 out vec4 result2;*/
 out float results;
@@ -323,38 +357,30 @@ float susM(vec3 pos){
    
    return res;
 }
-float susM2(vec3 pos){//fastest
+
+float susMDense(vec3 pos){//fastest
 	vec4[rowlength] Pvec4;
     makePvec4(pos,Pvec4);
   	float res=0.;
   	float acc=0.;
     for(int i=0;i<n;i++){
       acc=0.;  
-      for(int j=0;j<rowlength;j++)acc+=dot(M2[i*rowlength+j],Pvec4[j]);
+      for(int j=0;j<rowlength;j++)acc+=dot(MDense[i*rowlength+j],Pvec4[j]);
       res+=acc*acc;
     }
     return res;
 }
-float susM3(vec3 pos){//fastest
-	vec4[rowlength] Pvec4;
-    makePvec4(pos,Pvec4);
+float susMPad(vec3 pos){//fastest
+	//vec4[rowlength] Pvec4;
+    //makePvec4(pos,Pvec4);
+    float[n] P;
+	makeP(pos,P);
   	float res=0.;
   	float acc=0.;
     for(int i=0;i<n;i++){
       acc=0.;  
-      for(int j=0;j<rowlength;j++)acc+=dot(M3[i*rowlength+j],Pvec4[j]);
-      res+=acc*acc;
-    }
-    return res;
-}
-float susM4(vec3 pos){//fastest
-	vec4[rowlength] Pvec4;
-    makePvec4(pos,Pvec4);
-  	float res=0.;
-  	float acc=0.;
-    for(int i=0;i<n;i++){
-      acc=0.;  
-      for(int j=0;j<rowlength;j++)acc+=dot(vec4(M4[(i*rowlength+j)*4+0],M4[(i*rowlength+j)*4+1],M4[(i*rowlength+j)*4+2],M4[(i*rowlength+j)*4+3]),Pvec4[j]);
+      //for(int j=0;j<rowlength;j++)acc+=dot(vec4(MPad[(i*rowlength+j)*4+0],MPad[(i*rowlength+j)*4+1],MPad[(i*rowlength+j)*4+2],MPad[(i*rowlength+j)*4+3]),Pvec4[j]);
+      for(int j=0;j<n;j++)acc+=MPad[i*rowlength*4+j]*P[j];
       res+=acc*acc;
     }
     return res;
@@ -372,6 +398,12 @@ vec4 DCsusR(vec3 ro,vec3 rd,Complex a){
    
    return res;
 }
+    
+    
+    
+    
+
+    
 vec4 DCsusM(vec3 ro,vec3 rd,Complex a){
   	vec4[n] P;
 	makeDualComplexP(ro,rd,a,P);
@@ -385,31 +417,31 @@ vec4 DCsusM(vec3 ro,vec3 rd,Complex a){
    
    return res;
 }
-vec4 DCsusM3(vec3 ro,vec3 rd,Complex a){
+vec4 DCsusMDense(vec3 ro,vec3 rd,Complex a){
   	vec4[n] P;
 	makeDualComplexP(ro,rd,a,P);
   	vec4 res=vec4(0.);
     for(int i=0;i<n;i++){
       vec4 acc=vec4(0.);
       for(int j=0;j<rowlength;j++){
-        acc+=M2[i*rowlength+j][0]*P[4*j+0];
-        acc+=M2[i*rowlength+j][1]*P[4*j+1];
-        acc+=M2[i*rowlength+j][2]*P[4*j+2];
-        acc+=M2[i*rowlength+j][3]*P[4*j+3];
+        acc+=MDense[i*rowlength+j][0]*P[4*j+0];
+        acc+=MDense[i*rowlength+j][1]*P[4*j+1];
+        acc+=MDense[i*rowlength+j][2]*P[4*j+2];
+        acc+=MDense[i*rowlength+j][3]*P[4*j+3];
       }
       res+=DualComplexSqare(acc);
     }
    
    return res;
 }
-vec4 DCsusM4(vec3 ro,vec3 rd,Complex a){
+vec4 DCsusMPad(vec3 ro,vec3 rd,Complex a){
   	vec4[n] P;
 	makeDualComplexP(ro,rd,a,P);
   	vec4 res=vec4(0.);
     for(int i=0;i<n;i++){
       vec4 acc=vec4(0.);
       for(int j=0;j<n;j++){
-        acc+=M4[i*n+j]*P[j];
+        acc+=MPad[i*rowlength*4+j]*P[j];
       }
       res+=DualComplexSqare(acc);
     }
@@ -448,16 +480,16 @@ float sus(vec3 pos){
     for(int i=0;i<n;i++){
       float acc=0.;
       
-      /*for(int j=i;j<n;j++,ri++){
+      for(int j=i;j<n;j++,ri++){
           acc+=getM2(i*n+j)*P[j];
           //acc+=M[i*n+j]*P[j];
           //acc+=M2[i*n+j]*P[j];
           //acc+=R[ri]*P[j];
           //result[i]+=M[i*n+j]*P[j];
           //result[j]+=M[j*8+i]*P[i];
-      }*/
+      }
       //for(int j=0;j<n;j++)acc+=M[i*n+j]*P[j];
-   /*   for(int j=0;j<rowlength;j++)acc+=dot(M3[i*n+j],Pvec4[j]);
+      for(int j=0;j<rowlength;j++)acc+=dot(MDense[i*n+j],Pvec4[j]);
 
       //result[i]=acc;
       res+=acc*acc;
@@ -472,11 +504,11 @@ float rowM(vec3 pos){
     for(int j=0;j<n;j++)acc+=M[j]*P[j];
     return acc;
 }    
-float rowM3(vec3 pos){
+float rowMDense(vec3 pos){
     vec4[rowlength] Pvec4;
     makePvec4(pos,Pvec4);
   	float acc=0.;
-    for(int j=0;j<rowlength;j++)acc+=dot(M2[j],Pvec4[j]);
+    for(int j=0;j<rowlength;j++)acc+=dot(MDense[j],Pvec4[j]);
     return acc;
 }   
 
@@ -495,20 +527,20 @@ vec4 DCrow2M(vec3 ro,vec3 rd,Complex a){
     for(int j=0;j<n;j++)res+=M[j+n*1]*P[j];
     return res;
 }    
-vec4 DCrowM3(vec3 ro,vec3 rd,Complex a){
+vec4 DCrowMDense(vec3 ro,vec3 rd,Complex a){
     vec4[n] P;
 	makeDualComplexP(ro,rd,a,P);
   	vec4 acc=vec4(0.);
-/*    for(int j=0;j<rowlength;j++){
-        acc+=M3[j][0]*P[4*j+0];
-        acc+=M3[j][1]*P[4*j+1];
-        acc+=M3[j][2]*P[4*j+2];
-        acc+=M3[j][3]*P[4*j+3];
+    for(int j=0;j<rowlength;j++){
+        acc+=MDense[j][0]*P[4*j+0];
+        acc+=MDense[j][1]*P[4*j+1];
+        acc+=MDense[j][2]*P[4*j+2];
+        acc+=MDense[j][3]*P[4*j+3];
     }
-  /*for(int j=0;j<rowlength;j++)acc+=M3[j][0]*P[4*j+0];
-  for(int j=0;j<rowlength;j++)acc+=M3[j][1]*P[4*j+1];
-  for(int j=0;j<rowlength;j++)acc+=M3[j][2]*P[4*j+2];
-  for(int j=0;j<rowlength;j++)acc+=M3[j][3]*P[4*j+3];*/
+  /*for(int j=0;j<rowlength;j++)acc+=MDense[j][0]*P[4*j+0];
+  for(int j=0;j<rowlength;j++)acc+=MDense[j][1]*P[4*j+1];
+  for(int j=0;j<rowlength;j++)acc+=MDense[j][2]*P[4*j+2];
+  for(int j=0;j<rowlength;j++)acc+=MDense[j][3]*P[4*j+3];*/
     return acc;
 }   
 float horner(float x,float[maxdegree+1] coeffs){
@@ -583,14 +615,14 @@ void main() {
   vec3 ro=P0;
   vec3 rd=P1;
   
-  /*float[maxdegree+1] xi;
+  float[maxdegree+1] xi;
   makeChebyshevNodes(xi);
   float[maxdegree+1] yi;
   makeY(ro,rd,xi,yi);
-  float[maxdegree+1] wi;
-  makeBarycentricLangrange(xi,wi);
+  /*float[maxdegree+1] wi;
+  makeBarycentricLangrange(xi,wi);*/
   float[maxdegree+1] coeffs;
-  makeCoeffs(yi,coeffs);*/
+  makeCoeffs(yi,coeffs);
   
   for(int s=0;s<iter;s++){
     Complex a=Complex(float(s)*0.01,float(s)*0.02+0.01);
@@ -603,17 +635,22 @@ void main() {
     //results+=dot(vec4(1),DChorner(a,coeffs));//22 172
     //results+=dot(vec4(1),abs(DChorner(a,coeffs)-DCrowM(ro,rd,a)));
     //results2+=dot(vec4(1),abs(DCBarycentricLangrange(a,xi,yi,wi)-MCDrow(ro,rd,a)));
-    results+=susR(pos);//2379 
+
+    //results+=horner(a,coeffs);//
+    //results+=susR(pos);//2379 
     //results+=rowM(pos);//24
-    //results+=rowM3(pos);//19
+    //results+=rowMDense(pos);//19
     //results+=susM(pos);//337
-    //results+=susM3(pos);//135
+    //results+=susMDense(pos);//135
+    //results+=susMPad(pos);//755
+    //results+=dot(DChorner(a,coeffs),vec4(1));//22 172
     //results+=dot(DCsusR(ro,rd,a),vec4(1));//2382
     //results+=dot(DCrowM(ro,rd,a),vec4(1));//71 685
-    //results+=dot(DCrowM3(ro,rd,a),vec4(1));//1660
+    //results+=dot(DCrowMDense(ro,rd,a),vec4(1));//1660
     //results+=dot(DCsusM(ro,rd,a),vec4(1));//432
-    //results+=dot(DCsusM3(ro,rd,a),vec4(1));
-    //results+=susM4(pos);//755
+    //results+=dot(DCsusMDense(ro,rd,a),vec4(1));
+    //results+=dot(DCsusMPad(ro,rd,a),vec4(1));
+    ${line}
     
   }
   Complex a=Complex(0.77,0.55);
@@ -637,7 +674,7 @@ void main() {
   results=0.;//coeffs[gl_VertexID%(maxdegree+1)];
   for(int i=0;i<iter;i++)results+=horner(float(i),coeffs);
   //for(int i=0;i<maxdegree+1;i++)results+=coeffs[i];
-  /*for(int s=0;s<iter;s++){
+  for(int s=0;s<iter;s++){
     results+=MCDrow(float(s));
     //results+=susM(float(s)*P0.xyz);
 	//results+=susMCD2(float(s));
@@ -660,12 +697,12 @@ const M = new Float32Array(n*n).map(() => Math.random());
 const R=[];
 for (let row = 0; row < n; row++) for (let col = row; col < n; col++) R.push(M[row*8 + col]);
 tf.shader.uniform1fv("M", M);
-tf.shader.uniform4fv("M3", new Float32Array(n*(Math.ceil(n/4)*4)).map(() => Math.random()));
+tf.shader.uniform4fv("MDense", new Float32Array(n*(Math.ceil(n/4)*4)).map(() => Math.random()));
+tf.shader.uniform4fv("MPad", new Float32Array(n*(Math.ceil(n/4)*4)).map(() => Math.random()));
 tf.shader.uniform1fv("R", new Float32Array(R));
 tf.shader.uniform1i("rank", n);
 tf.shader.uniform1i("iter", iter);
 
-appendLog( new Float32Array(n*(Math.ceil(n/4)*4)).map(() => Math.random()).length);
 
 const blockIndex = gl.getUniformBlockIndex(tf.shader.program, "MatrixBlock");
 const blockSize  = gl.getActiveUniformBlockParameter(
@@ -679,33 +716,43 @@ gl.bufferData(gl.UNIFORM_BUFFER, blockSize, gl.DYNAMIC_DRAW);
 gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, ubo);
 gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
 //gl.bufferSubData(gl.UNIFORM_BUFFER, 0, new Float32Array([...M].flatMap(x=>[x,0,0,0])));
-gl.bufferSubData(gl.UNIFORM_BUFFER, 0, M);
+gl.bufferSubData(gl.UNIFORM_BUFFER, 0, new Float32Array(4000).map(() => Math.random()));
 
 
 
 // bind block → binding point 0
 gl.uniformBlockBinding(tf.shader.program, blockIndex, 0);
+let times=[]
+let iters=1;
+ let r1;
+tf.shader.uniform1i("iter", n);
+while(!times.length || times[times.length - 1] < 100){
+   r1=tf.run(arraylength);
+  const timings=range(20).map(()=>{
+    gl.finish();
+    const t0 = performance.now();
+    tf.run(arraylength);
+    return performance.now()-t0;
+  });
 
-const r1=tf.run(arraylength)
-const timings=range(20).map(()=>{
-  gl.finish();
-  const t0 = performance.now();
-  tf.run(arraylength);
-  return performance.now()-t0;
-})
-addPlotlyPlot({
+  addPlotlyPlot({
   x: timings.keys(),
   y: timings,
   layout: { title: 'Dynamic Plot in IDE' }
-});
-const mean = timings.reduce((a, b) => a + b, 0) / timings.length;
-appendResult(iter,Math.min(...timings).toFixed(2),mean.toFixed(2),Math.max(...timings).toFixed(2));
+  });
+  //const mean = timings.reduce((a, b) => a +b, 0)
+  times.push(Math.min( ... timings));
+  iters *= 10;
+ }
+//appendResult(iter,Math.min(...timings).toFixed(2),mean.toFixed(2),Math.max(...timings).toFixed(2));
 //appendLog(Math.min(...timings),mean,Math.max(...timings));
 //appendResult(r1[0].slice(0,4),r1[1].slice(4,8));
 //appendLog(r1[0].length,r1[1].length);
 
-r1.forEach((e)=>appendResult(e.slice(0,5)));
+//r1.forEach((e)=>appendResult(e.slice(0,5)));
 //}
 //appendLog(gl.getParameter(gl.MAX_UNIFORM_BLOCK_SIZE));
 // often 16 KB or 64 KB
-//}
+appendResult(times,line,USE_UNIFORM);
+appendLog(times,line,USE_UNIFORM,r1.map((e)=>e.slice(0,5)));
+}
