@@ -1,16 +1,23 @@
 export class Poly {
-  constructor(coeffs=new Map()) {
-    for (const [key, value] of coeffs) {
-      if (value === 0) {
-        coeffs.delete(key);
-      }
+  constructor(coeffs) {
+    for (const [k, v] of [...coeffs]) {
+      if (typeof v !== "number" || !Number.isFinite(v))throw new Error("polynomial coefficients must be finite numbers");
+      if (v === 0) coeffs.delete(k);
     }
-    this.coeffs = coeffs; 
+    this.coeffs = coeffs;
   }
+
+  static get zero() {return new Poly(new Map());}
+  static get one() {return Poly.constant(1);}
 
   static monom(varname,exponent,coeff=1){
     const key = Poly.monomialToKey({ [varname]: exponent });
     return new Poly(new Map([[key, coeff]]));
+  }
+
+  static constant(x) {
+    const key = Poly.monomialToKey({}); // constant term
+    return new Poly(new Map([[key, x]]));
   }
 
 
@@ -53,9 +60,13 @@ export class Poly {
 
   addip(other) {//+=
     other = Poly.convert(other);
-    for (const [key, c] of other.coeffs) {
-      this.coeffs.set(key, (this.coeffs.get(key) ?? 0) + c);
+    for (const [k, c] of other.coeffs) {
+      const v = (this.coeffs.get(k) ?? 0) + c;
+      if (v === 0)this.coeffs.delete(k);
+      else this.coeffs.set(k, v);
+      //this.coeffs.set(key, (this.coeffs.get(key) ?? 0) + c);
     }
+    //return this;
   }
 
   sub(other) {

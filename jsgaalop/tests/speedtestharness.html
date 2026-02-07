@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GLSL Test Harness</title>
+
+<!-- CodeMirror 5 CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/monokai.min.css">
+<!-- CodeMirror 5 JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/clike/clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/mode/multiplex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/javascript/javascript.min.js"></script>
+<!-- splitjs -->
+<script src="https://unpkg.com/split.js/dist/split.min.js"></script>
+<!-- Plotly.js -->
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+
+<!-- css entirely by chatgpt -->
+<style>
+  
+body { margin: 0; height: 100vh; display: flex; font-family: monospace; }
+/*#editor { width: 50%; height: 100%; }
+#right { width: 50%; display: flex; flex-direction: column; }*/
+#editor {height: 100vh; }
+#right {height: 100vh;   display: flex; flex-direction: column; }
+/*#historyEl, #consoleEl { margin: 0; padding: 8px; overflow: auto; background: #111; color: #0f0; }
+*/
+#historyEl { color: #0f0; }
+#consoleEl {  margin: 0;color: #f66; }
+.CodeMirror {
+    height: 100% !important; /* important: make CodeMirror fill container */
+}
+#myCanvas {
+    /*width: 100px;      /* fill horizontal space */
+    /*height: 100px;    /* small height, enough for GL context */
+    display: block;
+    background: #000;
+    aspect-ratio: 1;
+    height: 100%;
+}
+.result-block {
+  border: 1px solid #0ff;
+  background: #111;
+  margin: 4px 0;
+  font-size: 12px;
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px;
+  cursor: pointer;
+  background: #181818;
+}
+
+.result-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /*max-width: 70%;*/
+}
+
+.result-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.result-content {
+  background: #222;
+  padding: 4px;
+  margin: 0;
+  display: none; /* collapsed by default */
+}
+
+.gutter {
+    background-color: #eee;
+    background-repeat: no-repeat;
+    background-position: 50%;
+}
+
+.gutter.gutter-vertical {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEEFwAn3kMwcB6I2AAAAAASUVORK5CYII=');
+    cursor: row-resize;
+}
+.gutter.gutter-horizontal {
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bMfxAGAgYYmwGrIIiDjrELjpo5aiZeMwF+yNnOs5KSvgAAAABJRU5ErkJggg==');
+    cursor: col-resize;
+}
+
+#rightSplitContainer {
+  flex: 1;             /* fills all remaining vertical space above button */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+#buttonsContainer {
+  display: flex;
+  flex-direction:row;
+  height: 100px; 
+  align-items: center;
+  gap: 8px;
+}
+.panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin: 0;
+  outline-offset: -1px; 
+  outline: 1px solid #0ff;
+  box-sizing: border-box; /* include padding in height */
+}
+
+/* Panel header */
+.panel-header {
+  background: #181818;
+  color: #0ff;
+  padding: 4px 8px;
+  font-weight: bold;
+  cursor: default;
+  flex-shrink: 0; /* header does not shrink */
+}
+
+/* Panel content */
+.panel-content {
+  flex: 1;
+  overflow: auto;
+  padding: 4px;
+  background: #111;
+  color: #0f0;
+}
+#runTest {height:100%;aspect-ratio: 1;}
+</style>
+</head>
+<body>
+
+<div id="editor"></div>
+
+<div id="right">
+  <!-- vertical stack above button -->
+  <div id="rightSplitContainer">
+    
+    <div id="historyPanel" class="panel">
+      <div class="panel-header">History</div>
+      <div class="panel-content" id="historyEl">
+        <template id="result-template">
+          <div class="result-block">
+            <div class="result-header">
+              <span class="result-title"></span>
+              <div class="result-buttons">
+                <button class="restore">Restore</button>
+                <button class="delete">Delete</button>
+              </div>
+            </div>
+            <pre class="result-content"></pre>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <div id="consolePanel" class="panel">
+      <div class="panel-header">Console</div>
+      <pre class="panel-content" id="consoleEl"></pre>
+    </div>
+
+    <div id="customPanel" class="panel">
+      <div class="panel-header">Custom Tool</div>
+      <div class="panel-content" id="customEl"></div>
+    </div>
+
+  </div>
+
+  <!-- Fixed buttons + canvas below split -->
+  <div id="buttonsContainer">
+    <button id="runTest">Run Test</button>
+    <canvas id="myCanvas" width="256" height="256"></canvas>
+  </div>
+</div>
+
+
+
+
+
+<script type="module">
+//import Split from 'split.js'
+import * as mathjs from 'https://cdn.jsdelivr.net/npm/mathjs@14.5.2/+esm';
+
+import { TransformFeedbackWrapper } from "../src/glwrapper/TransformFeedbackWrapper.js";
+import { shaderSources,loadWithIncludes } from "../src/glwrapper/shaderimporter.js";
+import { Shader } from "../src/glwrapper/glwrapper.js";
+
+function range(start,stop,step=1){
+  if(stop==undefined){
+    stop=start;
+    start=0;
+  }
+  if (step === 0) throw new Error("step cannot be 0");
+  const length=Math.ceil((stop-start)/step);
+  return Array.from({length},(_,i)=>start+step*i);
+}
+
+function zip(...arrs){
+  return range(
+    Math.min(...arrs.map(arr=>arr.length))
+  ).map(i=>arrs.map(arr=>arr[i])); 
+}
+
+function resizePlots() {window.dispatchEvent(new Event('resize'));}
+Split(['#editor', '#right'], {minSize: 100,onDragEnd: resizePlots});
+//Split(['#historyEl', '#consoleEl','#customEl'], {minSize: 0,direction: 'vertical'})
+Split(['#historyPanel', '#consolePanel','#customPanel'], {minSize: 0,direction: 'vertical',onDragEnd: resizePlots});
+CodeMirror.defineMode("jswithglsl", function (config) {
+  return CodeMirror.multiplexingMode(
+    CodeMirror.getMode(config, "javascript"),
+    {
+      open: "`",
+      close: "`",
+      mode: CodeMirror.getMode(config, "text/x-csrc"),
+      delimStyle: "delimit"
+    }
+  );
+});
+const editor = CodeMirror(document.getElementById("editor"), {
+  value: `
+appendLog("hello");
+appendResult("world");
+`,
+  mode: "jswithglsl",
+  theme: "monokai",
+  lineNumbers: true
+});
+
+// Access editor content like this:
+editor.on("change", () => {
+  const code = editor.getValue();
+  //console.log("Editor changed:", code);
+});
+
+const consoleEl = document.getElementById("consoleEl");
+const gl = document.getElementById('myCanvas').getContext('webgl2',{preserveDrawingBuffer: true,antialias: false});
+
+
+function appendLog(...args) {
+    consoleEl.textContent += args.join(' ') + '\n';
+    consoleEl.scrollTop = consoleEl.scrollHeight; // auto-scroll
+}
+
+
+function clearLog() {
+    consoleEl.textContent = "";
+}
+
+function setCustom(content=null) {
+  const container = document.getElementById('customEl');
+
+  // Clear previous content
+  container.innerHTML = '';
+  if(content==null){
+
+  } else if (typeof content === 'string') {
+    // If content is a string, insert as HTML
+    container.innerHTML = content;
+  } else {
+    // If content is an element, append it
+    container.appendChild(content);
+  }
+}
+
+document.getElementById("runTest").addEventListener("click", () => {
+  const code=editor.getValue()
+  let result="";
+  function appendResult(...args) {
+    result += args.join(' ') + '\n';
+  }
+
+  clearLog();
+  appendLog("// Running...");
+  setCustom();
+  try {
+      eval(code);
+      appendLog("// Done");
+  } catch(e) {
+      appendLog("[ERROR]");
+      appendLog(e);
+      appendLog(e.stack);
+      appendLog("// Done with Error");
+  }
+  appendLog("// Result");
+  appendLog(result);
+
+  if(result)appendHistory(result,code,consoleEl.textContent);
+});
+
+
+/*function appendHistory(result,code,output) {
+    const template = document.getElementById("result-template");
+    const clone = template.content.cloneNode(true);
+    const block = clone.querySelector(".result-block");
+
+    const pre = block.querySelector(".result-content");
+    pre.textContent = result;
+
+    //const code=editor.getValue();
+    //const output=consoleEl.textContent;
+    block.querySelector(".restore").addEventListener("click", () => {
+        editor.setValue(code);
+        consoleEl.textContent=output;
+    });
+
+    
+    block.querySelector(".delete").addEventListener("click", () => {
+        block.remove();
+    });
+
+    const history=document.getElementById("historyEl");
+    history.appendChild(clone);
+    history.scrollTop = history.scrollHeight;
+}*/
+
+function appendHistory(result, code, output) {
+  const template = document.getElementById("result-template");
+  const clone = template.content.cloneNode(true);
+  const block = clone.querySelector(".result-block");
+
+  const header = block.querySelector(".result-header");
+  const title = block.querySelector(".result-title");
+  const content = block.querySelector(".result-content");
+
+  // one-line summary (first line, trimmed)
+  title.textContent = result.split('\n')[0].slice(0, 120);
+
+  // full content
+  content.textContent = result;
+
+  // toggle collapse
+  header.addEventListener("click", (e) => {
+    if (e.target.tagName === "BUTTON") return; // don't toggle when clicking buttons
+    if (content.style.display === "none") {
+        content.style.display = "block";
+        // scroll into view after expanding
+        block.scrollIntoView({ behavior: "smooth", block: "end" });
+    } else {
+        content.style.display = "none";
+    }
+  });
+  content.style.display = "none"; // collapsed by default
+
+  block.querySelector(".restore").addEventListener("click", () => {
+    editor.setValue(code);
+    //const scrollInfo = editor.getScrollInfo();
+    editor.setValue(code);
+    //editor.scrollTo(scrollInfo.left, scrollInfo.top);
+    consoleEl.textContent = output;
+  });
+
+  block.querySelector(".delete").addEventListener("click", () => {
+    block.remove();
+  });
+
+  const history = document.getElementById("historyEl");
+  history.appendChild(clone);
+  history.scrollTop = history.scrollHeight;
+}
+
+</script>
+
+</body>
+</html>

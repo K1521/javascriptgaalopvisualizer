@@ -192,11 +192,13 @@ for(const jsonpath of ["../assets/torus_plane_intersect.json","../assets/torusto
   const graph1=GaalopGraph.fromjson(json);//new
   const graph2=new GaalopGraph2();graph2.fromjson(json);
 
+  const ctx1=graph1.makeEvalcontext();
+
   const vistargets=new Map();
   const targets1=graph1.vistargets();
   const targets2=graph2.createVisualisationgraphs2();
   if(!setsEqual(targets1.map(t=>t.name),targets2.map(t=>t.name))){throw new Error("different");}
-  targets1.forEach(target1=>vistargets.set(target1.name,{name:target1.name,target1,graph1,graph2,jsonpath}));
+  targets1.forEach(target1=>vistargets.set(target1.name,{name:target1.name,target1,graph1,graph2,jsonpath,ctx1}));
   targets2.forEach(target2=>vistargets.get(target2.name).target2=target2);
 
   
@@ -359,14 +361,17 @@ void main() {
   //set uniforms
   {
     const variables=new Map([...target.graph1.inputScalars.keys()].map(x=>[x,Math.random()]));
+    ["_V_X", "_V_Y", "_V_Z"].forEach((v)=>variables.delete(v));
 
     tf1.shader.use();
-    const cache=new Map();
+    target.ctx1.paramsChanged(variables);
+    target.target1.setuniforms(tf1.shader,target.ctx1);
+    /*const cache=new Map();
     target.target1.generatecode2cached().nodetosubgraphname.entries().forEach(([node,name]) => {
       const value=node.eval(variables,cache);
       //console.log(name,value)
       tf1.shader.uniform1f(name,value);
-    });
+    });*/
 
     tf2.shader.use();
     target.target2.setuniforms(new Map(variables),tf2.shader);

@@ -1,3 +1,5 @@
+import { pinv, multiply, transpose ,qr} from 'https://cdn.jsdelivr.net/npm/mathjs@14.5.2/+esm';
+
 class Color {
     constructor(r = 0, g = 0, b = 0 ,a = 1) {
         this.r = r;
@@ -162,6 +164,12 @@ export class GaalopGraph {
             VisualisationGraphs.push(new visualizationtargetnode(innerProductResultNodes,outputMultivectorName,color))
         }
         return VisualisationGraphs;
+    }
+
+    makeEvalcontext(){
+        const ctx=new evalContext();
+        ctx.registerParams(this.inputScalars.keys(),{ ignoreReserved : true });
+        return ctx;
     }
 
     /*getoptimizedvistargets(){
@@ -769,6 +777,7 @@ function simplify(root) {
 
     function normalization(node) {
         if (!(node instanceof ExpressionNode)) return node;
+        if ((node instanceof CastNode)) return node;
         if (node.parents.length > 0 && node.parents.every(x => x instanceof ConstNode))//constantantfolding
             return new ConstNode(node.eval());
         if (node instanceof NegNode)
@@ -1265,22 +1274,47 @@ const int numoutputs=?;
     }
 
 
+    static #generateFunctionCode( header,body) {
+        let optomized =body;
+        //optomized = new CommonSubexpressionElimination().getreplacement(body);
+        optomized = simplify(body);
+        //optomized = simplify_easy(body);
+        const functionbody = codegenGLSLTyped(optomized);
+        const code = header.replace("?", "\n" + functionbody + "\n");
+        return code;
+    }
+
+    static #replacexyz(root, x, y, z) {
+        return root.copyGraph((original) => {
+            if (original instanceof VarNode) {
+                if (original.varname == "_V_X") { return x; }
+                if (original.varname == "_V_Y") { return y; }
+                if (original.varname == "_V_Z") { return z; }
+            }
+        });
+    }
+
+        
+    static #rayify(subgraphxyz,type=NodeTypes.SCALAR){
+        const a = new VarNode("a",type);
+        const x = new AddNode(new VarNode("rayOrigin.x"), new MulNode(a, new VarNode("rayDir.x")));
+        const y = new AddNode(new VarNode("rayOrigin.y"), new MulNode(a, new VarNode("rayDir.y")));
+        const z = new AddNode(new VarNode("rayOrigin.z"), new MulNode(a, new VarNode("rayDir.z")));
+        return visualizationtargetnode.#replacexyz(subgraphxyz,x,y,z);
+    }
+
     generatecode2() {
+        const generateFunctionCode=visualizationtargetnode.#generateFunctionCode;
+        const replacexyz=visualizationtargetnode.#replacexyz;
+        const rayify=visualizationtargetnode.#rayify;
+
         function summofsquares(nodes) {
             const squares=nodes.map(n => new MulNode(n, n));
             if(nodes.length==1)return squares[0];
             return new AddNode(...squares);
         }
 
-        function replacexyz(root, x, y, z) {
-            return root.copyGraph((original) => {
-                if (original instanceof VarNode) {
-                    if (original.varname == "_V_X") { return x; }
-                    if (original.varname == "_V_Y") { return y; }
-                    if (original.varname == "_V_Z") { return z; }
-                }
-            });
-        }
+        
 
         function returnvec4node(x,y,z,w){
             return new custumStatementNode(
@@ -1289,26 +1323,11 @@ const int numoutputs=?;
             );
         }
 
-        function generateFunctionCode( header,body) {
-            let optomized =body;
-            //optomized = new CommonSubexpressionElimination().getreplacement(body);
-            optomized = simplify(body);
-            //optomized = simplify_easy(body);
-            const functionbody = codegenGLSLTyped(optomized);
-            const code = header.replace("?", "\n" + functionbody + "\n");
-            return code;
-        }
-
-        const { nodetosubgraphname, subgraph:subgraphxyz } = splitgraph((new BundlenodeNode(this.parents)), ["_V_X", "_V_Y", "_V_Z"]);
+        
+        const root=new BundlenodeNode(this.parents);
+        const { nodetosubgraphname, subgraph:subgraphxyz } = splitgraph(root, ["_V_X", "_V_Y", "_V_Z"]);
         
         
-        function rayify(subgraphxyz,type=NodeTypes.SCALAR){
-            const a = new VarNode("a",type);
-            const x = new AddNode(new VarNode("rayOrigin.x"), new MulNode(a, new VarNode("rayDir.x")));
-            const y = new AddNode(new VarNode("rayOrigin.y"), new MulNode(a, new VarNode("rayDir.y")));
-            const z = new AddNode(new VarNode("rayOrigin.z"), new MulNode(a, new VarNode("rayDir.z")));
-           return replacexyz(subgraphxyz,x,y,z);
-        }
 
         //function setInputtype()
 
@@ -1481,28 +1500,81 @@ const int numoutputs=?;
         );
 
 
-        const arglist=Array(nodetosubgraphname.size);
+        const argnodes=Array(nodetosubgraphname.size);
         for(const [node,name] of nodetosubgraphname){
             const m = /^args\[(\d+)\]$/.exec(name);
             if(!m)throw new Error("regex mismatch");
             const index=Number(m[1]);
-            if (index < 0 || index >= size || arglist[index] !== undefined)throw new Error("invalid or duplicate index");
-            arglist[index]=node;
+            if (index < 0 || index >= nodetosubgraphname.size || argnodes[index] !== undefined)throw new Error("invalid or duplicate index");
+            argnodes[index]=node;
         }
 
-        const{basis,matrix}=matrixextractor2.extractbasis3(root);
-
+        
         //TODO generate code for basis
 
-        return {codereplacements:replacements,nodetosubgraphname,arglist,matrix};
+        return {codereplacements:replacements,nodetosubgraphname,argnodes};
 
 
         
     }
 
+    generatecodeR(){
+        const generateFunctionCode=visualizationtargetnode.#generateFunctionCode;
+        const replacexyz=visualizationtargetnode.#replacexyz;
+        const rayify=visualizationtargetnode.#rayify;
+
+        const replacements=new Map();
+        const{basis,matrix,basispolys}=matrixextractor2.extractbasis3(new BundlenodeNode(this.parents));
+        const matrixsize=matrix[0].length;
+
+        replacements.set("basislength=?",`basislength=${matrixsize}`);
+        //replacements.set("Rflat=?",`basislength=${matrixsize}`);
+        
+        {
+            const basisray=rayify(basis,NodeTypes.COMPLEX);
+            //void DualComplexP(vec3 rayDir, vec3 rayOrigin,float a,out DualComplex[basislength] P) {?}
+            const d_da=basisray.forwardpropergation("a");
+            const body=new BundlenodeNode(basisray.parents.map((resulti,i)=>
+                new custumStatementNode(
+                    [
+                        new CastNode(resulti,NodeTypes.COMPLEX),
+                        new CastNode(d_da.get(resulti)??ConstNode.zero,NodeTypes.COMPLEX)
+                    ],
+                    (strresulti,strdresultida)=>`P[${i}]=vec4(${strresulti},${strdresultida});`
+                )
+            ));//:)
+            const header="void DualComplexP(vec3 rayDir, vec3 rayOrigin,Complex a,out DualComplex[basislength] P) {?}";
+            replacements.set(header,generateFunctionCode(header,body));
+
+            
+        }
+
+        {
+            const basisxyz=replacexyz(basis,...["pos.x","pos.y","pos.z"].map(v=>new VarNode(v)));
+            //void P(vec3 pos,out float[basislength] P) {?}
+            const body=new BundlenodeNode(basisxyz.parents.map((resulti,i)=>
+                new custumStatementNode(
+                    [resulti],
+                    (strresulti)=>`P[${i}]=${strresulti};`
+                )
+            ));//:)
+            const header="void P(vec3 pos,out float[basislength] P) {?}";
+            replacements.set(header,generateFunctionCode(header,body));
+
+            
+        }
+
+
+        return {codereplacements:replacements,matrix,basispolys};
+    }
+
     generatecode2cached(){
-        if(!this.cache)this.cache=this.generatecode2();
-        return this.cache;
+        if(!this.cachegeneratecode2)this.cachegeneratecode2=this.generatecode2();
+        return this.cachegeneratecode2;
+    }
+    generatecodeRcached(){
+        if(!this.cachegeneratecodeR)this.cachegeneratecodeR=this.generatecodeR();
+        return this.cachegeneratecodeR;
     }
 
 
@@ -1512,14 +1584,46 @@ const int numoutputs=?;
             template=template.replace(k,v);
         return template;
     }
+    gencodeR(template){
+        for(const [k,v]of this.generatecodeRcached().codereplacements.entries())
+            template=template.replace(k,v);
+        return template;
+    }
 
-    setuniformsargs(shader,nodecache){
+    setuniformsargs(shader,evalcontext){
         /*this.generatecode2cached().nodetosubgraphname.entries().forEach(([node,name]) => {
             const value=node.eval(variables,cache);
             //console.log(name,value)
             shader.uniform1f(name,value);
         });*/
+        if(shader.resolveUniformLocation("args")===null)return;
+        const args=new Float32Array(this.generatecode2cached().argnodes.map(node=>evalcontext.eval(node)));
+        shader.uniform1fv("args",args);
         
+
+    }
+    setuniformsR(shader,evalcontext){
+        if(shader.resolveUniformLocation("R")===null)return;
+        const{matrix,basispolys}=this.generatecodeRcached();
+        const M=matrix.map(row=>row.map(node=>evalcontext.eval(node)));
+        const R=qr(M).R;
+        const size=M[0].length;
+        const tol = 1e-12;
+        const rank=R.findLastIndex(row =>row.some(x => Math.abs(x) > tol))+1;
+        const Rflat=R.flatMap((row,i)=>row.slice(i));
+        const degree=rank === 0 ? 0:Math.max(...basispolys.slice(rank-1).map(poly=>poly.degree()));
+        
+        
+        const Rflatpad=new Float32Array(size*(size+1)/2);
+        Rflatpad.set(Rflat);
+        shader.uniform1fv("R",Rflatpad);
+        shader.uniform1i("rank",rank);
+        shader.uniform1i("degree",degree);
+    }
+
+    setuniforms(shader,evalcontext){
+        this.setuniformsargs(shader,evalcontext);
+        this.setuniformsR(shader,evalcontext);
     }
 
 
@@ -2435,12 +2539,12 @@ class matrixextractor2{
 
 
 
-    static extractbasis3(root,forcemonomialbasis=true){
+    static extractbasis3(root,forcemonomialbasis=false){
         
         
         
 
-        const basisPolys = [{ node: ConstNode.one, poly: Poly.convert(1), ops: 1 }]; // list of {node, poly, ops}. I added 1 already
+        const basisPolys = [{ node: ConstNode.one, poly: Poly.one, ops: 1 }]; // list of {node, poly, ops}. I added 1 already
         const equivalenceClassIndex = new Map(); // node => index of basisPolys
         const basisextractioncache=new Map();//node=>{poly,parentSet}
         /**
@@ -2493,7 +2597,7 @@ class matrixextractor2{
         root.visitnodesrec((node,parentResults)=>{
             if(node instanceof BundlenodeNode)return;
 
-            if(node instanceof ConstNode)return {poly:Poly.convert(node.value),dependsonxyz:false};//this needs to be before the rest because dependsolyonxyz is true for ConstNode
+            if(node instanceof ConstNode)return {poly:Poly.constant(node.value),dependsonxyz:false};//this needs to be before the rest because dependsolyonxyz is true for ConstNode
 
             const dependsolyonxyz=basisextraction(node);
 
@@ -2512,10 +2616,10 @@ class matrixextractor2{
         
         const polysout=root.parents.map((outputnode)=>{//linearizees the poly basis. this is only nessesary if it is "optimized" in gaalop
             let polyout=linearmapping.get(outputnode).poly;
-            const acc=new Poly();
+            const acc=Poly.zero;
             for(const [monom,coeff] of polyout.entries()){
                 const basisnodes=[];
-                let monomacc=Poly.convert(coeff);
+                let monomacc=Poly.constant(coeff);
                 for(const [varname,exponent] of Object.entries(monom)){
                     //if(exponent!=1)throw new Error("non linear");
                     const monompartnode=handles.get(varname);
@@ -2537,9 +2641,9 @@ class matrixextractor2{
 
         const usedbasisindicees=new Set();
         const rowmaps=polysout.map((polyout)=>{
-            const normalizedPoly=new Poly();//TODO normalize poly das heisst potentielle basiselemente durch equivalence poly aus basis ersetzen
+            const normalizedPoly=Poly.zero;//TODO normalize poly das heisst potentielle basiselemente durch equivalence poly aus basis ersetzen
             for(const [monom,coeff] of polyout.entries()){
-                let monomacc=Poly.convert(coeff);
+                let monomacc=Poly.constant(coeff);
                 for(const [varname,exponent] of Object.entries(monom)){
                     
                     const monompartnode=handles.get(varname);
@@ -2598,7 +2702,7 @@ class matrixextractor2{
         });
         const basis=new BundlenodeNode(basisindicees.map(i=>basisPolys[i].node));
         const matrix=rowmaps.map((rowmap)=>basisindicees.map(i=>rowmap.get(`basis[${i}]`)??ConstNode.zero));
-
+        const basispolys=basisindicees.map(i=>basisPolys[i].poly);
 
 
  
@@ -2615,7 +2719,7 @@ class matrixextractor2{
         }
         console.log(basisindicees);
         console.log(matrix);
-        return {basis,matrix};
+        return {basis,matrix,basispolys};
 
 
     }
@@ -2625,3 +2729,70 @@ class matrixextractor2{
 
 
 
+class evalContext {
+    constructor() {
+        this.variables = new Map();
+        this.nodecache = new Map();
+        this.paramsversion = 0;
+    }
+    static RESERVED_PARAMS = ["_V_X", "_V_Y", "_V_Z"];
+
+    /**
+     * Registers a list of parameter names. Reserved names are rejected by default.
+     * 
+     * @param {Iterable<string>} newParams - Parameter names to register.
+     * @param {Object} [options] - Optional settings.
+     * @param {boolean} [options.ignoreReserved=false] - If true, reserved names are silently skipped.
+     * @throws Will throw an error if a reserved name is encountered and not ignored.
+     */
+    registerParams(newParams, { ignoreReserved = false } = {}) {
+        for (const p of newParams) {
+            if (evalContext.RESERVED_PARAMS.includes(p)) {
+                if (!ignoreReserved)
+                    throw new Error(`Cannot register reserved parameter: ${p}`);
+                continue;
+            }
+            if (!this.variables.has(p))
+                this.variables.set(p, 0);
+        }
+    }
+
+    /**
+     * Merges new parameter values into the current parameter set.
+     * Only registered parameters may be changed.
+     * Reserved parameters are always rejected.
+     * 
+     * @param {Map<string, number>} newParams - Map of parameter names and new values.
+     * @throws Will throw if any key is unregistered or reserved.
+     */
+    paramsChanged(newParams = new Map()) {
+        let changed = false;
+        for (const [k, v] of newParams) {
+            if (evalContext.RESERVED_PARAMS.includes(k))
+                throw new Error(`Cannot change reserved parameter: ${k}`);
+            if (!this.variables.has(k))
+                throw new Error(`Unregistered parameter: ${k}`);
+            if (this.variables.get(k) !== v) {
+                changed = true;
+                this.variables.set(k, v);
+            }
+        }
+        if (changed) {
+            this.nodecache.clear();
+            this.paramsversion = (this.paramsversion + 1) % Number.MAX_SAFE_INTEGER;//the modulo is useless because it wont overflow for years if you call this thousends of times per seccond
+        }
+    }
+
+    /**
+     * Evaluates a given node using the current variables and cached results.
+     *
+     * @param {Node} node - The node to evaluate.
+     * @returns {*} The computed value of the node.
+     */
+    eval(node) {
+        return node.eval(this.variables, this.nodecache);
+    }
+
+    
+
+}
