@@ -1,0 +1,30 @@
+1080
+
+2,2,2,3,11,71,707 results+=horner(a.x,coeffs); 0
+2,2,2,8,57,549 results+=rowM(pos); 0
+2,2,3,7,59,577 results+=rowMDense(pos); 0
+3,8,58,573 results+=susR(pos); 0
+2,2,3,12,103 results+=susM(pos); 0
+3,7,34,288 results+=susMDense(pos); 0
+3,4,18,151 results+=susMPad(pos); 0
+2,2,2,6,37,353 results+=dot(DChorner(a,coeffs),vec4(1)); 0
+2,2,5,32,302 results+=dot(DCrowM(ro,rd,a),vec4(1)); 0
+2,2,5,32,305 results+=dot(DCrowMDense(ro,rd,a),vec4(1)); 0
+4,14,125 results+=dot(DCsusR(ro,rd,a),vec4(1)); 0
+2,2,6,43,405 results+=dot(DCsusM(ro,rd,a),vec4(1)); 0
+3,7,54,641 results+=dot(DCsusMDense(ro,rd,a),vec4(1)); 0
+3,34,266 results+=dot(DCsusMPad(ro,rd,a),vec4(1)); 0
+2,2,2,2,9,71,711 results+=horner(a.x,coeffs); 1
+2,2,3,8,56,552 results+=rowM(pos); 1
+2,2,2,8,60,581 results+=rowMDense(pos); 1
+3,8,58,572 results+=susR(pos); 1
+2,2,3,12,103 results+=susM(pos); 1
+2,7,32,287 results+=susMDense(pos); 1
+3,4,18,153 results+=susMPad(pos); 1
+2,2,3,6,37,353 results+=dot(DChorner(a,coeffs),vec4(1)); 1
+2,2,5,31,302 results+=dot(DCrowM(ro,rd,a),vec4(1)); 1
+2,2,5,32,306 results+=dot(DCrowMDense(ro,rd,a),vec4(1)); 1
+3,14,125 results+=dot(DCsusR(ro,rd,a),vec4(1)); 1
+2,2,7,42,405 results+=dot(DCsusM(ro,rd,a),vec4(1)); 1
+5,20,93,938 results+=dot(DCsusMDense(ro,rd,a),vec4(1)); 1
+7,37,214 results+=dot(DCsusMPad(ro,rd,a),vec4(1)); 1
