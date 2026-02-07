@@ -725,13 +725,13 @@ gl.uniformBlockBinding(tf.shader.program, blockIndex, 0);
 let times=[]
 let iters=1;
  let r1;
-tf.shader.uniform1i("iter", n);
+
 while(!times.length || times[times.length - 1] < 100){
-   r1=tf.run(arraylength);
+   tf.shader.uniform1i("iter", iters);
   const timings=range(20).map(()=>{
     gl.finish();
     const t0 = performance.now();
-    tf.run(arraylength);
+    r1=tf.run(arraylength);
     return performance.now()-t0;
   });
 
@@ -744,6 +744,7 @@ while(!times.length || times[times.length - 1] < 100){
   times.push(Math.min( ... timings));
   iters *= 10;
  }
+  
 //appendResult(iter,Math.min(...timings).toFixed(2),mean.toFixed(2),Math.max(...timings).toFixed(2));
 //appendLog(Math.min(...timings),mean,Math.max(...timings));
 //appendResult(r1[0].slice(0,4),r1[1].slice(4,8));
