@@ -271,7 +271,7 @@ function setCustom(content=null) {
 }
 
 document.getElementById("runTest").addEventListener("click", () => {
-  const code=editor.getValue()
+  const code=editor.getValue();
   let result="";
   function appendResult(...args) {
     result += args.join(' ') + '\n';
@@ -352,7 +352,7 @@ function appendHistory(result, code, output) {
   block.querySelector(".restore").addEventListener("click", () => {
     editor.setValue(code);
     //const scrollInfo = editor.getScrollInfo();
-    editor.setValue(code);
+    //editor.setValue(code);
     //editor.scrollTo(scrollInfo.left, scrollInfo.top);
     consoleEl.textContent = output;
   });
