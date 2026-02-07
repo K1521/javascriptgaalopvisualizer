@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <title>test</title>
+    <!--<base href="/jsgaalop/">-->
+</head>
+<body>
+    <canvas id="mainCanvas" tabindex="0" style="border-style: solid;"></canvas>
+<script type="module">
+
+
+
+const tstart=performance.now();
+
+
+console.log(performance.now()-tstart,"imports and weggl context");
+
+import { GaalopGraph } from "../src/core/codegenv4/codegenBackpropergation2.js";//new
+import { TransformFeedbackWrapper } from "../src/glwrapper/TransformFeedbackWrapper.js";
+import { shaderSources,loadWithIncludes } from "../src/glwrapper/shaderimporter.js";
+import { Shader } from "../src/glwrapper/glwrapper.js";
+const mainCanvas = document.getElementById('mainCanvas');
+//const diagramCanvas = document.getElementById('diagramCanvas');
+/** @type{WebGL2RenderingContext}*/
+const gl = mainCanvas.getContext('webgl2',{preserveDrawingBuffer: true,antialias: false});
+
+function logComparisonTable() {
+    // sort first by functionName, then by targetName
+    comparisonResults.sort((a, b) => {
+        if (a.functionName < b.functionName) return -1;
+        if (a.functionName > b.functionName) return 1;
+        if (a.jsonpath < b.jsonpath) return -1;
+        if (a.jsonpath > b.jsonpath) return 1;
+        if (a.targetName < b.targetName) return -1;
+        if (a.targetName > b.targetName) return 1;
+        return 0;
+    });
+
+    console.log("Function                  | Target   | Old Min/Mean/Max/Median | New Min/Mean/Max/Median");
+    console.log("---------------------------------------------------------------------------------------");
+    for (const r of comparisonResults) {
+        console.log(
+            r.functionName.padEnd(30) + " | " +
+            r.jsonpath.padEnd(40) + " | " +
+            r.targetName.padEnd(10) + " | " +
+            formatStats(r.old).padEnd(30) + " | " +
+            formatStats(r.new)
+        );
+    }
+}
+
+
+
+function logsourcecollapsed(name,source,addlinenumbers=true){
+    if(addlinenumbers)  source = source
+        .split('\n')
+        .map((line, i) => `${(i + 1).toString().padStart(3, ' ')}: ${line}`)
+        .join('\n');
+
+      console.groupCollapsed(name);
+      console.log(source);
+      console.groupEnd();
+}
+
+
+/**
+ * python style range but returns a list instead of iterator
+*/
+function range(start,stop,step=1){
+  if(stop==undefined){
+    stop=start;
+    start=0;
+  }
+  if (step === 0) throw new Error("step cannot be 0");
+  const length=Math.ceil((stop-start)/step);
+  return Array.from({length},(_,i)=>start+step*i);
+}
+
+function zip(...arrs){
+  return range(
+    Math.min(...arrs.map(arr=>arr.length))
+  ).map(i=>arrs.map(arr=>arr[i])); 
+}
+
+async function load(url) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    console.error('Failed to load:', url);
+    return '';
+  }
+  return await response.text();
+}
+
+
+function setsEqual(a, b) {
+  if(!(a instanceof Set))a=new Set(a);
+  if(!(b instanceof Set))b=new Set(b);
+  if (a.size !== b.size) return false;
+  for (const v of a) {
+    if (!b.has(v)) return false;
+  }
+  return true;
+}
+
+function relErr(a, b, eps = 1e-12) {
+  return Math.abs(a - b) / Math.max(Math.abs(a), Math.abs(b), eps);
+}
+/**
+ * Compute the maximum relative error in a list of numbers.
+ * Works for any values, including mixed signs.
+ *
+ * @param {number[]} L - List of numbers
+ * @param {number} eps - Small epsilon to avoid division by zero (default 1e-12)
+ * @returns {number} Maximum relative error
+ */
+function maxRelErr(L, eps = 1e-12) {
+  if (L.length < 2) return 0;
+
+  const m = Math.min(...L);
+  const M = Math.max(...L);
+
+  let maxErr = 0;
+
+  for (const x of L) {
+    const relMin = Math.abs(x - m) / Math.max(Math.abs(x), Math.abs(m), eps);
+    const relMax = Math.abs(x - M) / Math.max(Math.abs(x), Math.abs(M), eps);
+    maxErr = Math.max(maxErr, relMin, relMax);
+  }
+
+  return maxErr;
+}
+function maxRelErrAprox(L, eps = 1e-12) {
+  if (L.length < 2) return 0;
+  const m = Math.min(...L);
+  const M = Math.max(...L);
+  return (M-m) / Math.max(Math.abs(m), Math.abs(m), eps)
+}
+function maxBy(arr, key) {
+  if (arr.length === 0) return undefined;
+  let best = arr[0];
+  let bestScore = key(best, 0);
+
+  for (let i = 1; i < arr.length; i++) {
+    const score = key(arr[i], i);
+    if (score > bestScore) {
+      bestScore = score;
+      best = arr[i];
+    }
+  }
+  return best;
+}
+function minBy(arr, key) {
+  if (arr.length === 0) return undefined;
+  let best = arr[0];
+  let bestScore = key(best, 0);
+
+  for (let i = 1; i < arr.length; i++) {
+    const score = key(arr[i], i);
+    if (score > bestScore) {
+      bestScore = score;
+      best = arr[i];
+    }
+  }
+  return best;
+}
+
+function stats(arr) {
+  const n = arr.length;
+  const sorted = [...arr].sort((a, b) => a - b);
+  const min = sorted[0];
+  const max = sorted[n - 1];
+  const mean = arr.reduce((a, b) => a + b, 0) / n;
+  const std = Math.sqrt(arr.reduce((s, x) => s + (x - mean) ** 2, 0) / n);
+  const median = n % 2 ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+  return { n, min, max, mean, median, std };
+}
+
+async function loadshaderdource2(generator,template){
+    return generator.gencode(await loadWithIncludes("../src/shadersource/shaderlibv1/",template));
+}
+
+//let gajson=await load("../assets/torustorusintersect.json");
+//let gajson=await load("../assets/torus_plane_intersect.json");
+//let gajson=await load("../assets/torus_plane_intersect.json");
+
+
+const targets=[];//json x vistarget x codegen
+for(const jsonpath of ["../assets/torus_plane_intersect.json","../assets/torustorusintersect.json"]){
+  const json=await load(jsonpath);
+  const graph1=GaalopGraph.fromjson(json);//new
+
+  const ctx1=graph1.makeEvalcontext();
+
+  const vistargets=new Map();
+  const targets1=graph1.vistargets();
+  //const targets2=graph2.createVisualisationgraphs2();
+  //if(!setsEqual(targets1.map(t=>t.name),targets2.map(t=>t.name))){throw new Error("different");}
+  targets1.forEach(target1=>vistargets.set(target1.name,{name:target1.name,target1,graph1,jsonpath,ctx1}));
+  //targets2.forEach(target2=>vistargets.get(target2.name).target2=target2);
+
+  
+  targets.push(...vistargets.values());
+}
+
+const arraylength=100000;
+/*const data = Array.from({ length: arraylength*3 }, () => Math.random());
+const vao=gl.createVertexArray();
+gl.bindVertexArray(vao);
+const buffer=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.DYNAMIC_DRAW);
+gl.enableVertexAttribArray(0);
+gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);
+*/
+const data = Array.from({ length: arraylength*7 }, () => Math.random());
+const vao=gl.createVertexArray();
+gl.bindVertexArray(vao);
+const buffer=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.DYNAMIC_DRAW);
+
+// Attribute 0 → vec4 position
+gl.enableVertexAttribArray(0);
+gl.vertexAttribPointer(
+  0,       // location
+  4,       // vec4
+  gl.FLOAT,
+  false,
+  7*4,  // stride
+  0        // offset
+);
+
+// Attribute 1 → vec3 offset + a
+gl.enableVertexAttribArray(1);
+gl.vertexAttribPointer(
+  1,       // location
+  3,       // vec3
+  gl.FLOAT,
+  false,
+  7*4,
+  4 * 4    // offset = 4 floats
+);
+
+// ===== BEFORE THE LOOP =====
+const comparisonResults = []; // stores all function/target old vs new stats
+
+function pushComparisonResult(functionName, targetName, oldStats, newStats,jsonpath) {
+    comparisonResults.push({
+        functionName,
+        targetName,
+        old: oldStats,
+        new: newStats,
+        jsonpath
+    });
+}
+
+// Helper to format stats nicely
+function formatStats(stats) {
+    return `${stats.min} / ${stats.mean.toFixed(2)} / ${stats.max} / ${stats.median}`;
+}
+
+
+for(const target of targets){
+  
+  const shaderparts=[
+/*`
+//Summofsquares
+result=vec4(Summofsquares(direction,position,a));
+`,
+`
+// DualComplexSummofsquares
+
+result = DualComplexSummofsquares(position,direction, vec2(direction.x*float(a)*0.01+direction.z,direction.y*float(a)*0.02));
+
+`*/
+`
+//Summofsquares
+for(int i=0;i<100;i++)result+=vec4(Summofsquares(direction,position,float(i)*0.01));
+`,
+`
+// DualComplexSummofsquares
+for(int i = 0; i < 100; i++) {
+    result += DualComplexSummofsquares(position,direction, vec2(direction.x*float(i)*0.01+direction.z,direction.y*float(i)*0.02));
+}`
+]
+  for(const shaderpart of shaderparts){
+  let vertexshader;
+  vertexshader=
+`
+#version 300 es
+precision mediump float;
+
+layout(location = 0) in vec4 inputPosition;   // xyz = position
+layout(location = 1) in vec3 inputOffsetAndA; // xyz = offset + a
+
+out vec4 result;
+
+#include "./common/generated_functions.glsl"
+
+void main() {
+    vec3 position = inputPosition.xyz;
+    vec3 direction = inputOffsetAndA.xyz;
+    float a = inputOffsetAndA.z; // example: last component as a
+
+    result = vec4(0.0);
+
+
+    ${shaderpart}
+    
+}
+`;
+
+
+ const vertexshader2=
+`#version 300 es
+precision mediump float;
+
+layout(location = 0) in vec4 inputPosition;   // xyz = position
+layout(location = 1) in vec3 inputOffsetAndA; // xyz = offset + a
+
+out vec4 result;
+const int basislength=?;
+const int R_SIZE = basislength * (basislength + 1) / 2;
+uniform float[R_SIZE] R;
+uniform int rank;
+uniform int degree;
+
+
+
+
+
+#define Complex vec2
+Complex ComplexAdd(Complex a, Complex b) {return a+b;}
+Complex ComplexAdd(float a, Complex b) {return Complex(a + b.x,b.y);}
+Complex ComplexAdd(Complex a, float b) {return ComplexAdd(b,a);}
+
+Complex ComplexMul(Complex a, Complex b) {
+    // Complex multiplication: (a.x + i*a.y) * (b.x + i*b.y)
+    return Complex(
+        a.x * b.x - a.y * b.y, // Real part
+        a.x * b.y + a.y * b.x  // Imaginary part
+    );
+}
+Complex ComplexMul(Complex a, float b) {return a*b;}
+Complex ComplexMul(float a, Complex b) {return a*b;}
+Complex ComplexSquare(Complex a) {
+    // Complex multiplication: (a.x + i*a.y) * (b.x + i*b.y)
+    return Complex(
+        a.x * a.x - a.y * a.y, // Real part
+        2.0 * a.x * a.y  // Imaginary part
+    );
+}
+Complex ComplexDiv(Complex a, Complex b) {
+    // Complex division: (a.x + i*a.y) / (b.x + i*b.y)
+    return Complex(
+        (a.x * b.x + a.y * b.y) ,
+        (a.y * b.x - a.x * b.y)
+    ) / dot(b,b);
+}
+Complex ComplexInv(Complex a) {
+    // Complex division: 1 / (a.x + i*a.y)
+    return a*Complex(1,-1) / dot(a,a);
+}
+Complex ComplexConjugate(Complex a) {
+    // Complex division: 1 / (a.x + i*a.y)
+    return a*Complex(1,-1);
+}
+
+#define DualComplex vec4
+
+DualComplex DualComplexMul(DualComplex a,DualComplex b){
+    return DualComplex(ComplexMul(a.xy,b.xy),ComplexMul(a.xy,b.zw)+ComplexMul(a.zw,b.xy));
+}
+DualComplex DualComplexSqare(DualComplex a){
+    return DualComplex(ComplexSquare(a.xy),2.0*ComplexMul(a.xy,a.zw));
+}
+DualComplex DualComplexAdd(DualComplex a,float b){
+    return DualComplex(a.x+b, a.yzw);
+}
+
+
+
+void DualComplexP(vec3 rayDir, vec3 rayOrigin,Complex a,out DualComplex[basislength] P) {?}
+void P(vec3 pos,out float[basislength] P) {?}
+
+
+float Summofsquares(vec3 rayDir, vec3 rayOrigin,float a){ 
+    float[basislength] basis;
+    P(rayOrigin+rayDir*a,basis);
+    for (int i = 0; i < basislength; i++) {
+        basis[i] += float(i + 1) * 1e-3;
+    }
+
+    float acc=0.;
+    int rindex=0;
+    for(int i=0;i<rank;i++){
+      float rowsum=0.;
+      for(int j=i;j<basislength;j++,rindex++)rowsum+=basis[j]*R[rindex];
+      acc+=rowsum*rowsum;
+    }
+    return acc;
+
+    
+    /*float[basislength] basis;
+    P(rayOrigin+rayDir*a,basis);
+    float rowsum=0.;
+    int rindex=0;
+    for(int j=0;j<basislength;j++,rindex++)rowsum+=basis[j]*R[j];
+    return rowsum;*/
+}
+
+
+DualComplex DualComplexSummofsquares(vec3 rayDir, vec3 rayOrigin,Complex a){ 
+    DualComplex[basislength] basis;
+    DualComplexP(rayDir,rayOrigin,a,basis);
+    for (int i = 0; i < basislength; i++) {
+        basis[i] += DualComplex(float(i + 1) * 1e-3*vec4(1.,2.,3.,4.))+1.;
+    }
+    
+
+    DualComplex acc=DualComplex(0.);
+    int rindex=0;
+    for(int i=0;i<rank;i++){
+      DualComplex rowsum=DualComplex(0.);
+      for(int j=i;j<basislength;j++,rindex++)rowsum+=basis[j]*R[rindex];
+      acc+=DualComplexMul(rowsum,rowsum);
+    }
+    return acc;
+}
+
+void main() {
+    vec3 position = inputPosition.xyz;
+    vec3 direction = inputOffsetAndA.xyz;
+    float a = inputOffsetAndA.z; // example: last component as a
+
+    result = vec4(0.0);
+
+
+    ${shaderpart}
+    
+}
+`;
+
+  console.log(performance.now()-tstart,"compile shader");
+  console.log("testing: ",target.name," " ,shaderpart.split("\n")[1].trim()," ======================================");
+
+
+  const source1=await loadshaderdource2(target.target1,vertexshader);
+  const source2=target.target1.gencodeR(vertexshader2);//await loadshaderdource2(target.target2,vertexshader);
+  
+  let tf1=new TransformFeedbackWrapper(gl,source1, ["result"]);//new
+  let tf2=new TransformFeedbackWrapper(gl,source2, ["result"]);
+
+  //if(!setsEqual(new Set(target.graph1.inputScalars.keys()),new Set(target.graph2.inputScalars.keys())))throw Error("bad");
+  console.log(shaderpart);
+  logsourcecollapsed("new",source1,false);
+  logsourcecollapsed("old",source2,false);
+
+  //set uniforms
+  {
+    const variables=new Map([...target.graph1.inputScalars.keys()].map(x=>[x,Math.random()]));
+    ["_V_X", "_V_Y", "_V_Z"].forEach((v)=>variables.delete(v));
+
+    tf1.shader.use();
+    target.ctx1.paramsChanged(variables);
+    target.target1.setuniforms(tf1.shader,target.ctx1);
+    /*const cache=new Map();
+    target.target1.generatecode2cached().nodetosubgraphname.entries().forEach(([node,name]) => {
+      const value=node.eval(variables,cache);
+      //console.log(name,value)
+      tf1.shader.uniform1f(name,value);
+    });*/
+
+    tf2.shader.use();
+    //target.target2.setuniforms(new Map(variables),tf2.shader);
+    target.target1.setuniforms(tf2.shader,target.ctx1);
+    //console.log(gen2.parameters(new Map(variables)));
+  }
+
+  {
+    const a1=tf1.run(arraylength)[0];
+    const a2=tf2.run(arraylength)[0];
+
+    /*console.log(
+      zip(a1,a2)
+    .filter(([a,b])=>Math.abs(a-b)>0)
+    .slice(0,100)
+    .map(([a,b])=>[a,b,Math.abs(a-b)])
+    );*/
+    /*console.log(
+      zip(a1,a2)
+    .slice(0,100)
+    .map(([a,b])=>[a,b,Math.abs(a-b)])
+    );*/
+    console.log(zip(a1,a2).map(([a,b])=>[a,b,relErr(a,b)]).sort((a,b)=>(b[2]-a[2])).slice(0,5));
+
+    console.log(performance.now()-tstart,"sum");
+    console.log(a1.reduce((prev,cur,i)=>prev+Math.abs(cur-a2[i]),0));
+  }
+
+  {
+    
+    const times=[[],[]];
+    console.log(performance.now()-tstart,"actual test");
+    for(let i=0;i<10;i++){
+      
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(Array.from({ length: arraylength*7 }, () => Math.random())),gl.DYNAMIC_DRAW);
+    gl.finish();
+    const t0 = performance.now();
+    const result1 = tf1.run(arraylength)[0];
+    const t1 = performance.now();
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(Array.from({ length: arraylength*7 }, () => Math.random())),gl.DYNAMIC_DRAW);
+    gl.finish()
+    const t2 = performance.now();
+    const result2 = tf2.run(arraylength)[0];
+    const t3 = performance.now();
+    times[0].push(t1-t0);
+    times[1].push(t3-t2);
+    }
+    console.log(target);
+    console.log(stats(times[0]));
+    console.log(stats(times[1]));
+
+    const oldStats = stats(times[1]);
+const newStats = stats(times[0]);
+pushComparisonResult(shaderpart.split("\n")[1].trim() || `Function ${shaderparts.indexOf(shaderpart)}`, 
+                     target.name || "unknown",
+                     oldStats,
+                     newStats,target.jsonpath);
+  }
+
+  console.groupCollapsed("intermediate result");
+logComparisonTable();
+console.groupEnd();
+
+
+}}
+
+// ===== AFTER THE MAIN LOOP =====
+// Call this at the very end of your code
+logComparisonTable();
+
+
+
+
+/*
+Function                  | Target   | Old Min/Mean/Max/Median | New Min/Mean/Max/Median testr1.html:40:13
+--------------------------------------------------------------------------------------- testr1.html:41:13
+
+
+// DualComplexSummofsquares    | ../assets/torus_plane_intersect.json     | Pl         | 177 / 179.30 / 192 / 178       | 32 / 33.80 / 43 / 32.5 testr1.html:43:17
+// DualComplexSummofsquares    | ../assets/torus_plane_intersect.json     | T1         | 199 / 202.90 / 219 / 201       | 23 / 23.70 / 26 / 23.5 testr1.html:43:17
+//Summofsquares                | ../assets/torus_plane_intersect.json     | CurveTP    | 0 / 1.40 / 11 / 0              | 0 / 0.20 / 1 / 0 testr1.html:43:17
+//Summofsquares                | ../assets/torus_plane_intersect.json     | Pl         | 138 / 143.40 / 152 / 144.5     | 13 / 13.90 / 15 / 14 testr1.html:43:17
+//Summofsquares                | ../assets/torus_plane_intersect.json     | T1         | 138 / 142.00 / 154 / 140.5     | 10 / 11.20 / 14 / 11
+
+// DualComplexSummofsquares    | ../assets/torus_plane_intersect.json     | Pl         | 200 / 202.50 / 213 / 201       | 32 / 34.40 / 42 / 33 testr1.html:43:17
+// DualComplexSummofsquares    | ../assets/torus_plane_intersect.json     | T1         | 200 / 203.50 / 217 / 201       | 23 / 25.00 / 29 / 24 testr1.html:43:17
+//Summofsquares                | ../assets/torus_plane_intersect.json     | CurveTP    | 0 / 1.70 / 10 / 1              | 0 / 0.60 / 5 / 0 testr1.html:43:17
+//Summofsquares                | ../assets/torus_plane_intersect.json     | Pl         | 140 / 146.20 / 167 / 141.5     | 13 / 14.90 / 20 / 14 testr1.html:43:17
+//Summofsquares                | ../assets/torus_plane_intersect.json     | T1         | 141 / 147.80 / 178 / 144       | 10 / 11.60 / 14 / 11
+
+
+Function                  | Target   | Old Min/Mean/Max/Median | New Min/Mean/Max/Median testr1.html:40:13
+--------------------------------------------------------------------------------------- testr1.html:41:13
+// DualComplexSummofsquares    | ../assets/torus_plane_intersect.json     | Pl         | 200 / 203.50 / 214 / 202       | 31 / 33.40 / 39 / 33 testr1.html:43:17
+// DualComplexSummofsquares    | ../assets/torus_plane_intersect.json     | T1         | 200 / 203.50 / 223 / 201       | 23 / 25.70 / 32 / 25 testr1.html:43:17
+//Summofsquares                | ../assets/torus_plane_intersect.json     | CurveTP    | 0 / 1.70 / 11 / 1              | 0 / 0.80 / 5 / 0 testr1.html:43:17
+//Summofsquares                | ../assets/torus_plane_intersect.json     | Pl         | 142 / 146.90 / 155 / 145       | 14 / 15.80 / 27 / 14 testr1.html:43:17
+//Summofsquares                | ../assets/torus_plane_intersect.json     | T1         | 141 / 148.90 / 162 / 148.5     | 11 / 12.60 / 15 / 12.5
+
+Function                  | Target   | Old Min/Mean/Max/Median | New Min/Mean/Max/Median testr1.html:40:13
+--------------------------------------------------------------------------------------- testr1.html:41:13
+// DualComplexSummofsquares    | ../assets/torus_plane_intersect.json     | Pl         | 193 / 195.20 / 203 / 194       | 31 / 33.80 / 43 / 33 testr1.html:43:17
+// DualComplexSummofsquares    | ../assets/torus_plane_intersect.json     | T1         | 218 / 221.20 / 231 / 219       | 23 / 24.90 / 31 / 24 testr1.html:43:17
+//Summofsquares                | ../assets/torus_plane_intersect.json     | CurveTP    | 0 / 1.80 / 11 / 0.5            | 0 / 0.80 / 7 / 0 testr1.html:43:17
+//Summofsquares                | ../assets/torus_plane_intersect.json     | Pl         | 143 / 146.00 / 155 / 143       | 12 / 14.00 / 19 / 13.5 testr1.html:43:17
+//Summofsquares                | ../assets/torus_plane_intersect.json     | T1         | 143 / 150.00 / 163 / 150.5     | 10 / 11.00 / 12 / 11
+
+
+
+
+
+
+
+
+*/
+
+</script>     
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

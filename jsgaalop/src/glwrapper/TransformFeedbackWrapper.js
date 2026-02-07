@@ -56,7 +56,7 @@ export class TransformFeedbackWrapper {
    */
   constructor(gl, vertexshader, varyings) {
     this.gl = gl;
-    this.shader = new Shader(gl, vertexshader, null, varyings);
+    this.shader = new Shader(gl, vertexshader, null, varyings,gl.SEPARATE_ATTRIBS);
     this.varyings = this.shader.getTransformFeedbackVaryings();
     this.buffers = [];
     //output transform feedback and buffer
