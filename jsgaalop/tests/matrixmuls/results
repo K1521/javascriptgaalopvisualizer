@@ -1,3 +1,5 @@
+import { EdgeMasks } from "../../src/voxelutil/mctabel";
+
 1080
 
 2,2,2,3,11,71,707 results+=horner(a.x,coeffs); 0
@@ -28,3 +30,93 @@
 2,2,7,42,405 results+=dot(DCsusM(ro,rd,a),vec4(1)); 1
 5,20,93,938 results+=dot(DCsusMDense(ro,rd,a),vec4(1)); 1
 7,37,214 results+=dot(DCsusMPad(ro,rd,a),vec4(1)); 1
+
+
+Akoya Edge
+3.900000035762787,4.100000023841858,12.699999988079071,68.29999995231628,650.6000000238419 results+=horner(a.x,coeffs); 0
+2.899999976158142,3.800000011920929,23.099999964237213,211.60000002384186 results+=rowM(pos); 0
+3.399999976158142,2.899999976158142,15.899999976158142,123.20000004768372 results+=rowMDense(pos); 0
+18.30000001192093,142.9000000357628 results+=susR(pos); 0
+7.700000047683716,38.5,358.7000000476837 results+=susM(pos); 0
+4.5,16.5,131.9000000357628 results+=susMDense(pos); 0
+40.19999998807907,379 results+=susMPad(pos); 0
+3.599999964237213,4.299999952316284,19.80000001192093,172.19999998807907 results+=dot(DChorner(a,coeffs),vec4(1)); 0
+3.399999976158142,9.099999964237213,71.30000001192093,685.1999999880791 results+=dot(DCrowM(ro,rd,a),vec4(1)); 0
+1567.2999999523163 results+=dot(DCrowMDense(ro,rd,a),vec4(1)); 0
+17,143.80000001192093 results+=dot(DCsusR(ro,rd,a),vec4(1)); 0
+8.099999964237213,47.69999998807907,452.39999997615814 results+=dot(DCsusM(ro,rd,a),vec4(1)); 0
+1871.8999999761581 results+=dot(DCsusMDense(ro,rd,a),vec4(1)); 0
+40.60000002384186,378.89999997615814 results+=dot(DCsusMPad(ro,rd,a),vec4(1)); 0
+3.5,3.100000023841858,9.800000011920929,68,650.8999999761581 results+=horner(a.x,coeffs); 1
+2.299999952316284,4,23.100000023841858,211.79999995231628 results+=rowM(pos); 1
+2.600000023841858,3,15.699999988079071,123.39999997615814 results+=rowMDense(pos); 1
+17.19999998807907,139.4000000357628 results+=susR(pos); 1
+6.800000011920929,36.19999998807907,336.60000002384186 results+=susM(pos); 1
+4.300000011920929,15.400000035762787,134 results+=susMDense(pos); 1
+40.5,378.5 results+=susMPad(pos); 1
+2.800000011920929,4.300000011920929,19.900000035762787,172.30000001192093 results+=dot(DChorner(a,coeffs),vec4(1)); 1
+3.300000011920929,9,71,685 results+=dot(DCrowM(ro,rd,a),vec4(1)); 1
+1544.6000000238419 results+=dot(DCrowMDense(ro,rd,a),vec4(1)); 1
+17,139.69999998807907 results+=dot(DCsusR(ro,rd,a),vec4(1)); 1
+7.199999988079071,46.30000001192093,431.30000001192093 results+=dot(DCsusM(ro,rd,a),vec4(1)); 1
+1844 results+=dot(DCsusMDense(ro,rd,a),vec4(1)); 1
+40.09999996423721,378.7000000476837 results+=dot(DCsusMPad(ro,rd,a),vec4(1)); 1
+
+Akoya2
+3.799999952316284,3.899999976158142,12.599999964237213,67.69999998807907,650.0999999642372 results+=horner(a.x,coeffs); 0
+2.200000047683716,4,22.799999952316284,211.0999999642372 results+=rowM(pos); 0
+2.300000011920929,3,13.899999976158142,123.19999998807907 results+=rowMDense(pos); 0
+16.19999998807907,138.5999999642372 results+=susR(pos); 0
+6.300000011920929,36.299999952316284,336.0999999642372 results+=susM(pos); 0
+4.199999988079071,16.099999964237213,133.0999999642372 results+=susMDense(pos); 0
+39.59999996423721,378 results+=susMPad(pos); 0
+3.5,4.600000023841858,19.80000001192093,171.60000002384186 results+=dot(DChorner(a,coeffs),vec4(1)); 0
+2.599999964237213,8.300000011920929,70.5,684.1999999880791 results+=dot(DCrowM(ro,rd,a),vec4(1)); 0
+271.19999998807907 results+=dot(DCrowMDense(ro,rd,a),vec4(1)); 0
+19.30000001192093,139.0999999642372 results+=dot(DCsusR(ro,rd,a),vec4(1)); 0
+7,45.69999998807907,430.89999997615814 results+=dot(DCsusM(ro,rd,a),vec4(1)); 0
+544.3000000119209 results+=dot(DCsusMDense(ro,rd,a),vec4(1)); 0
+39.69999998807907,378 results+=dot(DCsusMPad(ro,rd,a),vec4(1)); 0
+3.100000023841858,3.100000023841858,9.899999976158142,67.29999995231628,650.1999999880791 results+=horner(a.x,coeffs); 1
+1.699999988079071,3.800000011920929,23.19999998807907,210.80000001192093 results+=rowM(pos); 1
+4.899999976158142,4.5,15.599999964237213,128.5999999642372 results+=rowMDense(pos); 1
+16.599999964237213,138.39999997615814 results+=susR(pos); 1
+6.699999988079071,36.19999998807907,344.19999998807907 results+=susM(pos); 1
+9.699999988079071,74.20000004768372,714.1999999880791 results+=susMDense(pos); 1
+27,244.69999998807907 results+=susMPad(pos); 1
+3.399999976158142,4.299999952316284,19.899999976158142,171.60000002384186 results+=dot(DChorner(a,coeffs),vec4(1)); 1
+2.800000011920929,8.700000047683716,70.40000003576279,684.2999999523163 results+=dot(DCrowM(ro,rd,a),vec4(1)); 1
+267 results+=dot(DCrowMDense(ro,rd,a),vec4(1)); 1
+17.69999998807907,138.79999995231628 results+=dot(DCsusR(ro,rd,a),vec4(1)); 1
+6.799999952316284,46.09999996423721,439.60000002384186 results+=dot(DCsusM(ro,rd,a),vec4(1)); 1
+525.5 results+=dot(DCsusMDense(ro,rd,a),vec4(1)); 1
+25.5,231.39999997615814 results+=dot(DCsusMPad(ro,rd,a),vec4(1)); 1
+
+5,6,14,69,652 results+=horner(a.x,coeffs); 0
+4,5,25,212 results+=rowM(pos); 0
+3,4,16,124 results+=rowMDense(pos); 0
+42,390 results+=susR(pos); 0
+63,606 results+=susM(pos); 0
+22,179 results+=susMDense(pos); 0
+66,629 results+=susMPad(pos); 0
+5,6,22,152 results+=dot(DChorner(a,coeffs),vec4(1)); 0
+4,10,71,686 results+=dot(DCrowM(ro,rd,a),vec4(1)); 0
+5,10,72,695 results+=dot(DCrowMDense(ro,rd,a),vec4(1)); 0
+42,394 results+=dot(DCsusR(ro,rd,a),vec4(1)); 0
+66,630 results+=dot(DCsusM(ro,rd,a),vec4(1)); 0
+23,179 results+=dot(DCsusMDense(ro,rd,a),vec4(1)); 0
+66,630 results+=dot(DCsusMPad(ro,rd,a),vec4(1)); 0
+5,5,11,68,652 results+=horner(a.x,coeffs); 1
+4,6,25,212 results+=rowM(pos); 1
+7,6,17,129 results+=rowMDense(pos); 1
+42,389 results+=susR(pos); 1
+64,606 results+=susM(pos); 1
+11,86,827 results+=susMDense(pos); 1
+29,250 results+=susMPad(pos); 1
+4,6,22,152 results+=dot(DChorner(a,coeffs),vec4(1)); 1
+4,10,72,685 results+=dot(DCrowM(ro,rd,a),vec4(1)); 1
+7,11,75,713 results+=dot(DCrowMDense(ro,rd,a),vec4(1)); 1
+42,392 results+=dot(DCsusR(ro,rd,a),vec4(1)); 1
+65,630 results+=dot(DCsusM(ro,rd,a),vec4(1)); 1
+15,102 results+=dot(DCsusMDense(ro,rd,a),vec4(1)); 1
+29,236 results+=dot(DCsusMPad(ro,rd,a),vec4(1)); 1

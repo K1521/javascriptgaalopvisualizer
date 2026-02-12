@@ -51,11 +51,21 @@ gl.vertexAttribPointer(
   6*4,
   3 * 4    // offset = 4 floats
 );
-const iter=100;
+
+const ubo = gl.createBuffer();
+gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
+gl.bufferData(gl.UNIFORM_BUFFER, 16000, gl.DYNAMIC_DRAW);
+gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, ubo);
+gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
+//gl.bufferSubData(gl.UNIFORM_BUFFER, 0, new Float32Array([...M].flatMap(x=>[x,0,0,0])));
+gl.bufferSubData(gl.UNIFORM_BUFFER, 0, new Float32Array(4000).map(() => Math.random()));
+
+
+
 const n=25;
 
 
-const tests = [
+let tests = [
   {
     line: "results+=horner(a.x,coeffs);",
     setup: `
@@ -94,7 +104,30 @@ makeCoeffs(yi,coeffs);
   { line: "results+=dot(DCsusM(ro,rd,a),vec4(1));",       setup: "", uses: "M" },
   { line: "results+=dot(DCsusMDense(ro,rd,a),vec4(1));", setup: "", uses: "MDense" },
   { line: "results+=dot(DCsusMPad(ro,rd,a),vec4(1));",    setup: "", uses: "MPad" },
+  { line: "results+=dot(DCrowCopy(c,ro,rd,a),vec4(1));",    setup: `   
+float[n] c;
+for(int i=0;i<n;i++)c[i]=M[i];
+   `, uses: "M" },
+{ line: "results+=rowCopy(c,pos);",    setup: `   
+float[n] c;
+for(int i=0;i<n;i++)c[i]=M[i];
+   `, uses: "M" },
+  { line: "results+=rowCopyDense(cDense,pos);",    setup: `   
+vec4[rowlength] cDense;
+for (int i = 0; i < rowlength; i++) {
+      int k = i * 4;
+      cDense[i] = vec4(k + 0 < n ? M[k + 0] : 0.0,k + 1 < n ? M[k + 1] : 0.0,k + 2 < n ? M[k + 2] : 0.0,k + 3 < n ? M[k + 3] : 0.0);
+  	}
+   `, uses: "M" },
+  { line: "results+=rowCopyDenseUnrolled(cDense,pos);",    setup: `   
+vec4[rowlength] cDense;
+for (int i = 0; i < rowlength; i++) {
+      int k = i * 4;
+      cDense[i] = vec4(k + 0 < n ? M[k + 0] : 0.0,k + 1 < n ? M[k + 1] : 0.0,k + 2 < n ? M[k + 2] : 0.0,k + 3 < n ? M[k + 3] : 0.0);
+  	}
+   `, uses: "M" }
 ];
+tests=tests.filter((x)=>x.line.includes("Copy"));
 const testsWithUbo =
   [0, 1].flatMap(useubo =>
     tests.map(t => ({ ...t, useubo }))
@@ -104,11 +137,14 @@ const testsWithUbo =
 
 for(const test of testsWithUbo){
 
-const uboM      = test.useubo && test.uses === "M";
-const uboR      = test.useubo && test.uses === "R";
-const uboMDense = test.useubo && test.uses === "MDense";
-const uboMPad   = test.useubo && test.uses === "MPad";
-  
+const uboM      = +(test.useubo && test.uses === "M");
+const uboR      = +(test.useubo && test.uses === "R");
+const uboMDense = +(test.useubo && test.uses === "MDense");
+const uboMPad   = +(test.useubo && test.uses === "MPad");
+const uniM      = +(!test.useubo && test.uses === "M");
+const uniR      = +(!test.useubo && test.uses === "R");
+const uniMDense = +(!test.useubo && test.uses === "MDense");
+const uniMPad   = +(!test.useubo && test.uses === "MPad");  
   
 let vertexshader=
 `#version 300 es
@@ -121,18 +157,22 @@ layout(location = 1) in vec3 P1;
 
 ${(uboM || uboR || uboMDense || uboMPad) ? `
 layout(std140) uniform MatrixBlock {
-  ${uboM      ? `float[n] M;` : ``}
+  ${uboM      ? `float[n*n] M;` : ``}
   ${uboR      ? `float[n*(n+1)/2] R;` : ``}
   ${uboMDense ? `vec4[n*rowlength] MDense;` : ``}
   ${uboMPad   ? `float[4*n*rowlength] MPad;` : ``}
 };
 ` : ``}
 
-${!uboM      ? `uniform float[n] M;` : ``}
-${!uboR      ? `uniform float[n*(n+1)/2] R;` : ``}
-${!uboMDense ? `uniform vec4[n*rowlength] MDense;` : ``}
-${!uboMPad   ? `uniform float[4*n*rowlength] MPad;` : ``}
+${uniM      ? `uniform float[n*n] M;` : ``}
+${uniR      ? `uniform float[n*(n+1)/2] R;` : ``}
+${uniMDense ? `uniform vec4[n*rowlength] MDense;` : ``}
+${uniMPad   ? `uniform float[4*n*rowlength] MPad;` : ``}
 
+#define defM ${uniM||uboM}
+#define defR ${uniR||uboR}
+#define defMDense ${uniMDense||uboMDense}
+#define defMPad ${uniMPad||uboMPad}
 
 /*out vec4 result1;
 out vec4 result2;*/
@@ -317,7 +357,9 @@ const ivec3 monomexponents[25] = ivec3[25](
     ivec3(0,0,0)  // 1
 );
 
+    
 const int maxdegree=4;
+#if defM    
 const float fact[8] = float[8](1.,1.,2.,6.,24.,120.,720.,5040.);    
 void convolve(in float[maxdegree+1] a,in float[maxdegree+1] b,out float[maxdegree+1] o){
 	for(int i=0;i<maxdegree+1;i++)o[i]=0.;
@@ -359,6 +401,8 @@ void makePoly(vec3 ro,vec3 rd,out float[maxdegree+1] coeffs){
       	for(int j=0;j<maxdegree+1;j++)coeffs[j]+=M[i]*coeffsmonom[j];
     }
 }
+#endif
+#if defR
 float susR(vec3 pos){
   	float[n] P;
 	makeP(pos,P);
@@ -366,12 +410,17 @@ float susR(vec3 pos){
   	int ri=0;
     for(int i=0;i<n;i++){
       float acc=0.;
-      for(int j=i;j<n;j++,ri++)acc+=M[ri]*P[j];
+      for(int j=i;j<n;j++,ri++)acc+=R[ri]*P[j];
       res+=acc*acc;
     }
    
    return res;
 }
+#endif
+    
+    
+  
+#if defM
 float susM(vec3 pos){
   	float[n] P;
 	makeP(pos,P);
@@ -385,6 +434,8 @@ float susM(vec3 pos){
    
    return res;
 }
+#endif
+#if defMDense
 
 float susMDense(vec3 pos){//fastest
 	vec4[rowlength] Pvec4;
@@ -398,6 +449,10 @@ float susMDense(vec3 pos){//fastest
     }
     return res;
 }
+#endif
+    
+#if defMPad
+
 float susMPad(vec3 pos){//fastest
 	//vec4[rowlength] Pvec4;
     //makePvec4(pos,Pvec4);
@@ -413,6 +468,9 @@ float susMPad(vec3 pos){//fastest
     }
     return res;
 }
+#endif
+#if defR
+    
 vec4 DCsusR(vec3 ro,vec3 rd,Complex a){
   	vec4[n] P;
 	makeDualComplexP(ro,rd,a,P);
@@ -420,7 +478,7 @@ vec4 DCsusR(vec3 ro,vec3 rd,Complex a){
   	int ri=0;
     for(int i=0;i<n;i++){
       vec4 acc=vec4(0.);
-      for(int j=i;j<n;j++,ri++)acc+=M[ri]*P[j];
+      for(int j=i;j<n;j++,ri++)acc+=R[ri]*P[j];
       res+=DualComplexSqare(acc);
     }
    
@@ -430,6 +488,8 @@ vec4 DCsusR(vec3 ro,vec3 rd,Complex a){
     
     
     
+#endif
+#if defM
 
     
 vec4 DCsusM(vec3 ro,vec3 rd,Complex a){
@@ -445,23 +505,29 @@ vec4 DCsusM(vec3 ro,vec3 rd,Complex a){
    
    return res;
 }
+#endif
+#if defMDense
+
 vec4 DCsusMDense(vec3 ro,vec3 rd,Complex a){
   	vec4[n] P;
 	makeDualComplexP(ro,rd,a,P);
   	vec4 res=vec4(0.);
     for(int i=0;i<n;i++){
       vec4 acc=vec4(0.);
-      for(int j=0;j<rowlength;j++){
-        acc+=MDense[i*rowlength+j][0]*P[4*j+0];
-        acc+=MDense[i*rowlength+j][1]*P[4*j+1];
+      for(int j=0;j<n;j++){
+        acc+=MDense[i*rowlength+j/4][j%4]*P[j];
+        /*acc+=MDense[i*rowlength+j][1]*P[4*j+1];
         acc+=MDense[i*rowlength+j][2]*P[4*j+2];
-        acc+=MDense[i*rowlength+j][3]*P[4*j+3];
+        acc+=MDense[i*rowlength+j][3]*P[4*j+3];*/
       }
       res+=DualComplexSqare(acc);
     }
    
    return res;
 }
+#endif
+#if defMPad
+
 vec4 DCsusMPad(vec3 ro,vec3 rd,Complex a){
   	vec4[n] P;
 	makeDualComplexP(ro,rd,a,P);
@@ -477,7 +543,7 @@ vec4 DCsusMPad(vec3 ro,vec3 rd,Complex a){
    return res;
 }
     
-    
+#endif    
     
 const float[(maxdegree+1)*(maxdegree+1)] V = float[](
   ${(()=>{
@@ -524,6 +590,7 @@ float sus(vec3 pos){
     }
   return res;
 }*/
+#if defM
 
 float rowM(vec3 pos){
     float[n] P;
@@ -531,7 +598,38 @@ float rowM(vec3 pos){
     float acc=0.;
     for(int j=0;j<n;j++)acc+=M[j]*P[j];
     return acc;
-}    
+}
+float rowCopy(float[n] c,vec3 pos){
+    float[n] P;
+	makeP(pos,P);
+    float acc=0.;
+    for(int j=0;j<n;j++)acc+=c[j]*P[j];
+    return acc;
+}
+float rowCopyDense(vec4[rowlength] cDense,vec3 pos){
+    vec4[rowlength] Pvec4;
+	makePvec4(pos,Pvec4);
+    float acc=0.;
+    for(int j=0;j<rowlength;j++)acc+=dot(cDense[j],Pvec4[j]);
+    return acc;
+}
+float rowCopyDenseUnrolled(vec4[rowlength] cDense,vec3 pos){
+    vec4[rowlength] Pvec4;
+	makePvec4(pos,Pvec4);
+    float acc=0.;
+    //for(int j=0;j<rowlength;j++)acc+=dot(cDense[j],Pvec4[j]);
+  	acc+=dot(cDense[0],Pvec4[0]);
+    acc+=dot(cDense[1],Pvec4[1]);
+    acc+=dot(cDense[2],Pvec4[2]);
+    acc+=dot(cDense[3],Pvec4[3]);
+    acc+=dot(cDense[4],Pvec4[4]);
+    acc+=dot(cDense[5],Pvec4[5]);
+    acc+=dot(cDense[6],Pvec4[6]);
+    return acc;
+}
+#endif
+#if defMDense
+    
 float rowMDense(vec3 pos){
     vec4[rowlength] Pvec4;
     makePvec4(pos,Pvec4);
@@ -540,6 +638,8 @@ float rowMDense(vec3 pos){
     return acc;
 }   
 
+#endif
+#if defM
 
 vec4 DCrowM(vec3 ro,vec3 rd,Complex a){
     vec4[n] P;
@@ -548,29 +648,43 @@ vec4 DCrowM(vec3 ro,vec3 rd,Complex a){
     for(int j=0;j<n;j++)res+=M[j]*P[j];
     return res;
 }
+vec4 DCrowCopy(float[n]c ,vec3 ro,vec3 rd,Complex a){
+    vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+  	vec4 res=vec4(0.);
+    for(int j=0;j<n;j++)res+=c[j]*P[j];
+    return res;
+}    
 vec4 DCrow2M(vec3 ro,vec3 rd,Complex a){
     vec4[n] P;
 	makeDualComplexP(ro,rd,a,P);
   	vec4 res=vec4(0.);
     for(int j=0;j<n;j++)res+=M[j+n*1]*P[j];
     return res;
-}    
+}
+#endif
+#if defMDense
+
 vec4 DCrowMDense(vec3 ro,vec3 rd,Complex a){
     vec4[n] P;
 	makeDualComplexP(ro,rd,a,P);
   	vec4 acc=vec4(0.);
-    for(int j=0;j<rowlength;j++){
-        acc+=MDense[j][0]*P[4*j+0];
+    for(int j=0;j<n;j++){
+      acc+=MDense[j/4][j%4]*P[j];
+        /*acc+=MDense[j][0]*P[4*j+0];
         acc+=MDense[j][1]*P[4*j+1];
         acc+=MDense[j][2]*P[4*j+2];
-        acc+=MDense[j][3]*P[4*j+3];
+        acc+=MDense[j][3]*P[4*j+3];*/
     }
   /*for(int j=0;j<rowlength;j++)acc+=MDense[j][0]*P[4*j+0];
   for(int j=0;j<rowlength;j++)acc+=MDense[j][1]*P[4*j+1];
   for(int j=0;j<rowlength;j++)acc+=MDense[j][2]*P[4*j+2];
   for(int j=0;j<rowlength;j++)acc+=MDense[j][3]*P[4*j+3];*/
     return acc;
-}   
+}
+#endif
+#if defM
+
 float horner(float x,float[maxdegree+1] coeffs){
 	float res=0.; 
     for(int i=0;i<maxdegree+1;i++){
@@ -634,7 +748,7 @@ void makeCoeffs(float[maxdegree+1] yi,out float[maxdegree+1] coeffs){
     for(int j=0;j<maxdegree+1;j++) coeffs[i]+=V[i*(maxdegree+1)+j]*yi[j];
   }
 }
-    
+#endif    
 void main() {
   
   
@@ -727,25 +841,18 @@ const R=[];
 for (let row = 0; row < n; row++) for (let col = row; col < n; col++) R.push(M[row*8 + col]);
 tf.shader.uniform1fv("M", M);
 tf.shader.uniform4fv("MDense", new Float32Array(n*(Math.ceil(n/4)*4)).map(() => Math.random()));
-tf.shader.uniform4fv("MPad", new Float32Array(n*(Math.ceil(n/4)*4)).map(() => Math.random()));
+tf.shader.uniform1fv("MPad", new Float32Array(n*(Math.ceil(n/4))).map(() => Math.random()));
 tf.shader.uniform1fv("R", new Float32Array(R));
 tf.shader.uniform1i("rank", n);
-tf.shader.uniform1i("iter", iter);
+//tf.shader.uniform1i("iter", iter);
 
 
 const blockIndex = gl.getUniformBlockIndex(tf.shader.program, "MatrixBlock");
-const blockSize  = gl.getActiveUniformBlockParameter(
+/*const blockSize  = gl.getActiveUniformBlockParameter(
   tf.shader.program,
   blockIndex,
   gl.UNIFORM_BLOCK_DATA_SIZE
-);
-const ubo = gl.createBuffer();
-gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
-gl.bufferData(gl.UNIFORM_BUFFER, blockSize, gl.DYNAMIC_DRAW);
-gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, ubo);
-gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
-//gl.bufferSubData(gl.UNIFORM_BUFFER, 0, new Float32Array([...M].flatMap(x=>[x,0,0,0])));
-gl.bufferSubData(gl.UNIFORM_BUFFER, 0, new Float32Array(4000).map(() => Math.random()));
+);*/
 
 
 
@@ -786,3 +893,4 @@ while(!times.length || times[times.length - 1] < 100){
 appendResult(times,test.line,test.useubo);
 appendLog(times,test.line,test.useubo,r1.map((e)=>e.slice(0,5)));
 }
+

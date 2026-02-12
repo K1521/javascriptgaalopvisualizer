@@ -1,4 +1,4 @@
-import { pinv, multiply, transpose ,qr} from 'https://cdn.jsdelivr.net/npm/mathjs@14.5.2/+esm';
+import * as mathjs from 'https://cdn.jsdelivr.net/npm/mathjs@14.5.2/+esm';
 
 class Color {
     constructor(r = 0, g = 0, b = 0 ,a = 1) {
@@ -10,6 +10,9 @@ class Color {
 
     toString() {
         return `rgba(${this.r}, ${this.g}, ${this.b}, ${this.a})`;
+    }
+    toCss() {
+       return `rgb(${Math.round(this.r * 255)}, ${Math.round(this.g * 255)}, ${Math.round(this.b * 255)})`;
     }
 }
 
@@ -1529,7 +1532,24 @@ const int numoutputs=?;
 
         replacements.set("basislength=?",`basislength=${matrixsize}`);
         //replacements.set("Rflat=?",`basislength=${matrixsize}`);
+
+        const degree=Math.max(...basispolys.map(poly=>poly.degree()));
+        replacements.set("basismaxdegree=?",`basismaxdegree=${degree}`);
         
+        {
+            const ki=[...Array(degree+1).keys()];
+            const chebichev=ki.map((k)=>Math.cos((2*k+1)*Math.PI/(2*(degree+1))));
+            const Vandermonde=chebichev.map(x=>ki.map(p=>x**p));
+            const inv=mathjs.inv(Vandermonde);
+            const flat=inv.flat();
+            console.log(inv.flat().join(", "));
+            const s= inv.flat().map(x=>"float("+x+")").join(", ");
+            const arr='const float[(basismaxdegree+1)*(basismaxdegree+1)] Vinv = float[]('+s+')';
+            replacements.set("const float[(basismaxdegree+1)*(basismaxdegree+1)] Vinv = float[](?)",arr);
+
+        }
+        
+
         {
             const basisray=rayify(basis,NodeTypes.COMPLEX);
             //void DualComplexP(vec3 rayDir, vec3 rayOrigin,float a,out DualComplex[basislength] P) {?}
@@ -1543,7 +1563,7 @@ const int numoutputs=?;
                     (strresulti,strdresultida)=>`P[${i}]=vec4(${strresulti},${strdresultida});`
                 )
             ));//:)
-            const header="void DualComplexP(vec3 rayDir, vec3 rayOrigin,Complex a,out DualComplex[basislength] P) {?}";
+            const header="void makeDualComplexP(vec3 rayDir, vec3 rayOrigin,Complex a,out DualComplex[basislength] P) {?}";
             replacements.set(header,generateFunctionCode(header,body));
 
             
@@ -1558,11 +1578,13 @@ const int numoutputs=?;
                     (strresulti)=>`P[${i}]=${strresulti};`
                 )
             ));//:)
-            const header="void P(vec3 pos,out float[basislength] P) {?}";
+            const header="void makeP(vec3 pos,out float[basislength] P) {?}";
             replacements.set(header,generateFunctionCode(header,body));
 
             
         }
+
+        
 
 
         return {codereplacements:replacements,matrix,basispolys};
@@ -1606,7 +1628,7 @@ const int numoutputs=?;
         if(shader.resolveUniformLocation("R")===null)return;
         const{matrix,basispolys}=this.generatecodeRcached();
         const M=matrix.map(row=>row.map(node=>evalcontext.eval(node)));
-        const R=qr(M).R;
+        const R=mathjs.qr(M).R;
         const size=M[0].length;
         const tol = 1e-12;
         const rank=R.findLastIndex(row =>row.some(x => Math.abs(x) > tol))+1;
@@ -2729,7 +2751,7 @@ class matrixextractor2{
 
 
 
-class evalContext {
+export class evalContext {
     constructor() {
         this.variables = new Map();
         this.nodecache = new Map();
