@@ -213,3 +213,8 @@ await Promise.all(
     shaderSources[name] = source;
   })
 );
+
+
+export async function loadWithIncludesRelativeToShadersource(entryUrl,shadersource=undefined){
+  return await loadWithIncludes(basePath+entryUrl,shadersource);
+}

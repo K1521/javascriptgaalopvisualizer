@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geometric Algebra</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <link rel="stylesheet" href="src/styles/main.css">
+  <link rel="stylesheet" href="src/styles/sliders.css">
+
+</head>
+<body>
+
+
+  <canvas id="mainCanvas" tabindex="0"></canvas>
+
+
+
+<div id="uiContainerLeft"> 
+    <div id="fpsCounter">FPS: 0</div>
+
+  <div id="sliderscroll">
+    <div id="sliderPanel">
+        <template data-type="slider">
+            <div class="slideritem">
+                <label>placeholderlabel</label>
+                <input type="range" class="ReorderableListNoDrag" min="0" max="1" step="0.01" value="0.5">
+                <span>placeholdervalue</span>
+            </div>
+        </template>
+    </div>
+  </div>
+
+  </div>
+
+  <div id="diagramPanel">
+    <div id="plotlyDiagram"></div>
+  </div>
+  <div id="shaderControls" style="position: absolute; bottom: 10px; right: 10px; background-color: rgba(0,0,0,0.7); padding: 10px; border-radius: 10px; color: white; max-height: 40%; overflow-y: auto;">
+    <strong>Shaders</strong><br>
+    <div id="object-visualization-controls"></div>
+    <!-- checkboxes will be inserted here dynamically -->
+  </div>
+  <script type="module" src="./src/core/main2.js"></script>
+</body>
+</html>

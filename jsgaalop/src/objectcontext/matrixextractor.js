@@ -1,4 +1,4 @@
-import {GaalopGraph,visitnodes,VarOperand,AddOperand,MulOperand,NegOperand,ConstOperand,DivOperand} from "../core/graph2.js";
+import {GaalopGraph,visitnodes,VarOperand,AddOperand,MulOperand,NegOperand,ConstOperand,DivOperand, SubOperand} from "../core/graph2.js";
 import { Poly } from "../util/poly.js";
 import { pinv, multiply, transpose ,qr} from 'https://cdn.jsdelivr.net/npm/mathjs@14.5.2/+esm';
 
@@ -116,6 +116,10 @@ export class matrixextractor{
       if(node.operand instanceof DivOperand){
         //console.log("div "+parentresults[0]);
           return parentresults[0].div(parentresults[1]);//only maximal degree
+      }
+      if(node.operand instanceof SubOperand){
+        //console.log("div "+parentresults[0]);
+          return parentresults[0].sub(parentresults[1]);
       }
       throw new Error("bad operation :"+node.operand.constructor.name);
     });
