@@ -202,6 +202,91 @@ PC:Akoya Browser:Edge
 5.0999999940395355,5.199999988079071,14.700000002980232,129.19999998807907 results+=rowCopyDenseUnrolled(cDense,pos); 1
 8,67.3999999910593,650 results+=susRDense(pos); 1
 168.69999998807907 results+=dot(DCsusRDense(ro,rd,a),vec4(1)); 1
+
+PC:Medionmit1080 Browser:Firefox
+3,2,2,2,11,73,750 results+=horner(a.x,coeffs); 0
+2,2,2,8,57,589 results+=rowM(pos); 0
+2,2,2,8,60,604 results+=rowMDense(pos); 0
+3,8,61,617 results+=susR(pos); 0
+2,3,14,133 results+=susM(pos); 0
+2,6,41,360 results+=susMDense(pos); 0
+3,4,17,174 results+=susMPad(pos); 0
+2,2,2,6,38,372 results+=dot(DChorner(a,coeffs),vec4(1)); 0
+2,2,5,32,307 results+=dot(DCrowM(ro,rd,a),vec4(1)); 0
+2,2,5,32,306 results+=dot(DCrowMDense(ro,rd,a),vec4(1)); 0
+4,15,130 results+=dot(DCsusR(ro,rd,a),vec4(1)); 0
+7,38,234 results+=dot(DCsusM(ro,rd,a),vec4(1)); 0
+5,21,128 results+=dot(DCsusMDense(ro,rd,a),vec4(1)); 0
+4,31,268 results+=dot(DCsusMPad(ro,rd,a),vec4(1)); 0
+2,2,5,32,306 results+=dot(DCrowCopy(c,ro,rd,a),vec4(1)); 0
+2,1,3,8,58,590 results+=rowCopy(c,pos); 0
+2,2,2,8,60,605 results+=rowCopyDense(cDense,pos); 0
+2,2,2,8,61,603 results+=rowCopyDenseUnrolled(cDense,pos); 0
+2,6,38,398 results+=susRDense(pos); 0
+11,84,812 results+=dot(DCsusRDense(ro,rd,a),vec4(1)); 0
+2,2,2,3,10,77,774 results+=horner(a.x,coeffs); 1
+2,2,2,8,60,615 results+=rowM(pos); 1
+2,2,3,8,61,614 results+=rowMDense(pos); 1
+3,12,102 results+=susR(pos); 1
+7,22,186 results+=susM(pos); 1
+2,7,51,483 results+=susMDense(pos); 1
+7,23,185 results+=susMPad(pos); 1
+2,2,2,5,38,374 results+=dot(DChorner(a,coeffs),vec4(1)); 1
+2,3,5,31,312 results+=dot(DCrowM(ro,rd,a),vec4(1)); 1
+2,2,5,32,313 results+=dot(DCrowMDense(ro,rd,a),vec4(1)); 1
+4,26,248 results+=dot(DCsusR(ro,rd,a),vec4(1)); 1
+3,12,96,959 results+=dot(DCsusM(ro,rd,a),vec4(1)); 1
+2,7,50,492 results+=dot(DCsusMDense(ro,rd,a),vec4(1)); 1
+3,12,96,938 results+=dot(DCsusMPad(ro,rd,a),vec4(1)); 1
+2,3,5,34,312 results+=dot(DCrowCopy(c,ro,rd,a),vec4(1)); 1
+2,2,3,8,60,619 results+=rowCopy(c,pos); 1
+2,2,2,8,61,621 results+=rowCopyDense(cDense,pos); 1
+2,2,2,8,61,622 results+=rowCopyDenseUnrolled(cDense,pos); 1
+3,10,75,723 results+=susRDense(pos); 1
+12,97,930 results+=dot(DCsusRDense(ro,rd,a),vec4(1)); 1
+
+
+PC:Medionmit1080 Browser:Edge
+3.5,3.5,3.5,2.2999999999883585,10,73.79999999998836,729 results+=horner(a.x,coeffs); 0
+1.1000000000349246,1.1999999999534339,1.3999999999650754,6.600000000034925,55.100000000034925,547 results+=rowM(pos); 0
+1,1,1.3999999999650754,6.699999999953434,58.5,579.2999999999884 results+=rowMDense(pos); 0
+1.5,4.2000000000116415,30.900000000023283,337.70000000001164 results+=susR(pos); 0
+1.400000000023283,2.7999999999883585,12.599999999976717,114.39999999996508 results+=susM(pos); 0
+1.7000000000116415,5.399999999965075,38,343.20000000001164 results+=susMDense(pos); 0
+1.5,3.099999999976717,16.29999999998836,149.29999999998836 results+=susMPad(pos); 0
+1.2000000000116415,1.1000000000349246,1.3999999999650754,4.099999999976717,36,352.8999999999651 results+=dot(DChorner(a,coeffs),vec4(1)); 0
+1.2000000000116415,1.2999999999883585,4,30.5,300.9000000000233 results+=dot(DCrowM(ro,rd,a),vec4(1)); 0
+1,1.5,3.8999999999650754,30.79999999998836,300.4000000000233 results+=dot(DCrowMDense(ro,rd,a),vec4(1)); 0
+2.2000000000116415,12.400000000023283,116.59999999997672 results+=dot(DCsusR(ro,rd,a),vec4(1)); 0
+5.5,39.40000000002328,287.5 results+=dot(DCsusM(ro,rd,a),vec4(1)); 0
+3.3999999999650754,19.29999999998836,122.19999999995343 results+=dot(DCsusMDense(ro,rd,a),vec4(1)); 0
+6.2999999999883585,39.5,271.1000000000349 results+=dot(DCsusMPad(ro,rd,a),vec4(1)); 0
+1,1.099999999976717,4,30.5,300.9000000000233 results+=dot(DCrowCopy(c,ro,rd,a),vec4(1)); 0
+0.9000000000232831,1.1999999999534339,1.5,6.599999999976717,55.199999999953434,550.2999999999884 results+=rowCopy(c,pos); 0
+1.1000000000349246,1.2999999999883585,1.5,6.900000000023283,58.5,579.7000000000116 results+=rowCopyDense(cDense,pos); 0
+0.8999999999650754,1,1.5,6.899999999965075,58.40000000002328,579.5 results+=rowCopyDenseUnrolled(cDense,pos); 0
+1.3999999999650754,4.7999999999883585,36.59999999997672,374.5 results+=susRDense(pos); 0
+7.7999999999883585,61.899999999965075,605.5999999999767 results+=dot(DCsusRDense(ro,rd,a),vec4(1)); 0
+1,1.099999999976717,1,1.7000000000116415,8.200000000011642,70.69999999995343,707.1000000000349 results+=horner(a.x,coeffs); 1
+0.9000000000232831,1,1.2000000000116415,6.7999999999883585,57.5,570.5 results+=rowM(pos); 1
+1.2999999999883585,1,1.599999999976717,6.900000000023283,58.79999999998836,589 results+=rowMDense(pos); 1
+2.099999999976717,10.900000000023283,98.30000000004657,972.2000000000698 results+=susR(pos); 1
+5.300000000046566,21.5,184.19999999995343 results+=susM(pos); 1
+1.1000000000931323,5.900000000023283,49.199999999953434,480.79999999993015 results+=susMDense(pos); 1
+5.599999999976717,21.300000000046566,184.19999999995343 results+=susMPad(pos); 1
+1.099999999976717,1.1999999999534339,1.3000000000465661,4.700000000069849,36,353.79999999993015 results+=dot(DChorner(a,coeffs),vec4(1)); 1
+1.099999999976717,1.3999999999068677,3.900000000023283,30.800000000046566,302.5 results+=dot(DCrowM(ro,rd,a),vec4(1)); 1
+1,1.1999999999534339,4.199999999953434,30.900000000023283,304.5 results+=dot(DCrowMDense(ro,rd,a),vec4(1)); 1
+3.199999999953434,19.400000000023283,181.90000000002328 results+=dot(DCsusR(ro,rd,a),vec4(1)); 1
+2,10.399999999906868,93.59999999997672,923.9000000000233 results+=dot(DCsusM(ro,rd,a),vec4(1)); 1
+1.599999999976717,5.900000000023283,49.40000000002328,481.5 results+=dot(DCsusMDense(ro,rd,a),vec4(1)); 1
+2.099999999976717,10.29999999993015,93.59999999997672,923.9000000000233 results+=dot(DCsusMPad(ro,rd,a),vec4(1)); 1
+1.099999999976717,1.5,4.400000000023283,31.099999999976717,302.5 results+=dot(DCrowCopy(c,ro,rd,a),vec4(1)); 1
+1.2999999999301508,1.099999999976717,1.7999999999301508,7.199999999953434,57.59999999997672,570 results+=rowCopy(c,pos); 1
+1,1.5,1.6999999999534339,7.099999999976717,59.09999999997672,591.0999999999767 results+=rowCopyDense(cDense,pos); 1
+1,1.1999999999534339,1.5,7.199999999953434,59.09999999997672,591.2999999999302 results+=rowCopyDenseUnrolled(cDense,pos); 1
+1.5,8.300000000046566,74.39999999990687,728.6999999999534 results+=susRDense(pos); 1
+9.599999999976717,85.09999999997672,839.5 results+=dot(DCsusRDense(ro,rd,a),vec4(1)); 1
 """
 
 
@@ -236,9 +321,22 @@ data=pd.DataFrame(result, columns="pc;browser;run;method;useubo;time_per_iter".s
 print(data.groupby(by=["method","useubo"])["time_per_iter"].max().unstack("useubo"))
 #data=data[~data['method'].str.contains("Pad")]
 
+
+def getgroup(method):
+    groups={"DCsus":"DCsus","DCrow":"DCrow","sus":"sus","row":"row","DChorner":"DCrow","horner":"row"}
+    for k,v in groups.items():
+        if k in method:return v
+    
+data["methodgroup"]=data["method"].apply(getgroup)
+
+
+
+
+
 print(data
-    .groupby(["method", "useubo","browser","pc"])["time_per_iter"]
-    .agg(["min", "max"])
+    .groupby(["method", "useubo","browser","pc","methodgroup"])["time_per_iter"]
+    #.agg(["min", "max"])
+    .min()
     .unstack(["browser","pc"])
     .to_string())
     #.swaplevel(axis=1)[[("0","min"), ("0","max"), ("1","min"), ("1","max") ]] )
