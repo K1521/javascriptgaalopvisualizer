@@ -92,7 +92,7 @@ void main() {
 
     
     float error,x;
-    Raymarch(rayDir,rayOrigin,error,x);
+    Raymarch(rayDir,rayOrigin,error,x,v_rayDirXY);
     vec3 p=rayOrigin+x*rayDir;
     x*=raydirLocal.z;//undo normalization. This means x is the z in view space
 
