@@ -113,16 +113,31 @@ class RenderLoop {
   }
   loop2(timestamp) {
     if (!this.running) return;
-
     const gl = this.gl;
-
-      gl.finish();
-      this.animate(timestamp); // forward timestamp here
-      gl.flush();
+    if(!this.syncs)this.syncs=[];//.map(()=>gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0));
+    while(this.syncs.length>0 && gl.clientWaitSync(this.syncs[0], 0, 0)==gl.ALREADY_SIGNALED){
+      gl.deleteSync(this.syncs[0]);this.syncs.shift();
+    }
+    if(this.syncs.length<2){
+      this.animate(timestamp);
+      this.syncs.push(gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0)); 
+      gl.flush();  
+    }
 
     requestAnimationFrame((ts) => this.loop2(ts));
   }
 
+  loop4(timestamp) {
+    if (!this.running) return;
+
+    const gl = this.gl;
+
+      
+      this.animate(timestamp); // forward timestamp here
+      gl.finish();
+
+    requestAnimationFrame((ts) => this.loop4(ts));
+  }
   start() {
     if (!this.running) {
       this.running = true;
@@ -318,7 +333,7 @@ async function main(){
     traces.push(trace,trace2);
     traceinfos.push({tf,visgraph,row:trace,sus:trace2});
   }
-  Plotly.newPlot('plotlyDiagram',traces , { title: 'ROW AND SUS' ,margin:{l:40,r:20,b:40,t:40}});
+  Plotly.newPlot('plotlyDiagram',traces , { title: 'ROW AND SUS' ,margin:{l:40,r:20,b:40,t:40}},{responsive:true});
 
   const plotposvao=gl.createVertexArray();
   gl.bindVertexArray(plotposvao);
@@ -434,12 +449,17 @@ async function main(){
     
     
     context.updateParams();
-  if(context.render(deltatime)){
+    const status=context.render(deltatime);
+    if(status!=RenderContext.UNCHANGED){
       //drawplot(camera,funmat.array);
-      drawplot(context.camera);
+      //
       deltatimeavg=deltatimeavg*0.90+deltatime*0.10;
       fpscounter.innerText = `FPS: ${Math.ceil(1/deltatimeavg)}`;
+    } 
+    if(status==RenderContext.FINISHED){
+      drawplot(context.camera);
     }
+    console.log(status);
   }
 
   

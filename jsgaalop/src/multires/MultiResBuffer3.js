@@ -22,9 +22,13 @@ export class MultiResBuffer3 extends MultiresBase {
       this.resetscheduler();
     }
 
-    if (this.scheduler!=null) {
+    if (!this.finished) {
       this.ctx.requestRender();
     }
+  }
+
+  get finished(){
+    return this.scheduler==null;
   }
 
   render() {

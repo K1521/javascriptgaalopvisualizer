@@ -71,7 +71,10 @@ export class RenderContext {
     //console.log("changed");
   }
 
-  
+
+  static BUSY="busy";
+   static FINISHED="finished";
+    static UNCHANGED="unchanged";
 
   render(deltatime,force=false){
     //run all the scheduled functions
@@ -79,16 +82,20 @@ export class RenderContext {
     this.scheduledfunctions=[]
 
 
-    console.log("render",this.changed)
+    //console.log("render",this.changed)
     this.camera.update(deltatime);
     this.multires.update();
 
-    if(!(this.changed||force))return false;
+    if(!(this.changed||force))return RenderContext.UNCHANGED;
     this.changed=false;
     this.moved=false;
     
     this.multires.render();
-    return true;
+    //return true;
+    if(this.multires.finished){
+      return RenderContext.FINISHED;
+    }
+    else return RenderContext.BUSY;
   }
 
 
@@ -141,7 +148,7 @@ export class RenderContext {
 
     const focalLoc = shader.getUniformLocation("focal");
     if (focalLoc) {
-      const fovDeg = 120;
+      const fovDeg = this.camera.fov;
       const aspect =  this.resolution[0] /  this.resolution[1];
       const f = 1.0 / Math.tan(radians(fovDeg) * 0.5);
 
@@ -149,9 +156,6 @@ export class RenderContext {
       //const focal = [f/aspect, f]; // x = horizontal focal, y = vertical focal //fov in y dir
       shader.uniform2fv("focal", focal);
     }
-
-   
-
   }
   updateViewport(gl=undefined){
     gl??=this.gl;

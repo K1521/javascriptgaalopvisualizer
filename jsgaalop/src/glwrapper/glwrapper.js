@@ -8,6 +8,7 @@ function radians(degrees){return degrees*Math.PI/180;}
 export class Cameracontroll{
     constructor(canvas,gl,_onChange=null){
         //todo replace gl with this.gl
+      this.fov=120;
       this.canvas=canvas;
       this.colorpicker=true;
       this.c2w=Matrix.eye(3);
@@ -60,7 +61,7 @@ export class Cameracontroll{
         
         const width=rect.right-rect.left;
         const height=rect.bottom-rect.top;
-        const fovfactor=1/Math.tan(radians(120)/2);
+        const fovfactor=1/Math.tan(radians(this.fov)/2);
         
         const u= c=>(2.0*c-width)/width;//cords between [-1,1]
         const v= c=>(2.0*c-height)/width;
@@ -84,12 +85,13 @@ export class Cameracontroll{
       if (event.button === 2) this.mouse.right = true;   // Right button
   
       if(this.colorpicker){
-        const x = event.clientX;
-        const y = this.canvas.height - event.clientY; // Flip Y since WebGL has (0,0) at bottom-left
+        const x = event.clientX*(this.canvas.width/this.canvas.clientWidth);//in css pix
+        const y = (this.canvas.clientHeight - event.clientY)*(this.canvas.height/this.canvas.clientHeight); // Flip Y since WebGL has (0,0) at bottom-left
         const pixels = new Uint8Array(4); // RGBA
         this.gl.readPixels(x, y, 1, 1, this.gl.RGBA, this.gl.UNSIGNED_BYTE, pixels);
         const color = `rgb(${(pixels[0]/255).toFixed(3)}, ${(pixels[1]/255).toFixed(3)}, ${(pixels[2]/255).toFixed(3)}, ${(pixels[3]/255).toFixed(3)})    rgb(${pixels[0]}, ${pixels[1]}, ${pixels[2]}, ${pixels[3]})    (${pixels[0]-128}, ${pixels[1]-128}, ${pixels[2]-128}, ${pixels[3]-128})`;
         console.log(color); // Display the color in console or UI
+         console.log(x,y);
       }
     }
   
@@ -132,14 +134,16 @@ export class Cameracontroll{
     }
     update(deltatime){
       this.c2w=this.c2w.orthogonalize();//orthogonalize only against precision errors. probably unnessesary
-      let movementfactor=deltatime;
+      let movementfactor=deltatime*4;
       let deltapos=new Vector([0,0,0]);
-      if(this.keysPressed.shift)movementfactor/=10;
+      if(this.keysPressed.shift)movementfactor*=0.1;
       if(this.keysPressed.space)movementfactor*=5;
       if(this.keysPressed.a)deltapos=deltapos.add(new Vector([-1,0,0]));
       if(this.keysPressed.d)deltapos=deltapos.add(new Vector([1,0,0]));
       if(this.keysPressed.s)deltapos=deltapos.add(new Vector([0,0,-1]));
       if(this.keysPressed.w)deltapos=deltapos.add(new Vector([0,0,1]));
+      if(this.keysPressed.x)deltapos=deltapos.add(new Vector([0,1,0]));
+      if(this.keysPressed.y)deltapos=deltapos.add(new Vector([0,-1,0]));
       if(this.keysPressed.q){
         this.c2w=this.c2w.mul(Matrix.rotationMatrix(new Vector([0,1,0]),radians(-movementfactor*30)));
         this.camChanged();
@@ -148,7 +152,7 @@ export class Cameracontroll{
         this.c2w=this.c2w.mul(Matrix.rotationMatrix(new Vector([0,1,0]),radians(movementfactor*30)));
         this.camChanged();
       };
-      deltapos=deltapos.mul(movementfactor*4);
+      deltapos=deltapos.mul(movementfactor);
       if(deltapos.length()>0){
         this.camChanged();
         this.cameraPos = this.cameraPos.add(this.c2w.mul(deltapos));

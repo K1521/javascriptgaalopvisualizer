@@ -1,0 +1,1195 @@
+// Function to add a Plotly plot into the custom panel
+function addPlotlyPlot({ x = [], y = [], type = 'scatter', layout = {} }) {
+  // 1️⃣ Create a div for the plot
+  const plotDiv = document.createElement('div');
+  plotDiv.style.width = '100%';
+  plotDiv.style.height = '100%';  // fills customEl panel
+  plotDiv.style.minHeight = '150px'; // optional min height
+  plotDiv.style.overflow= "hidden";
+
+  // 2️⃣ Add it to the custom panel using addCustom
+  setCustom(plotDiv);
+
+  // 3️⃣ Plot using Plotly
+  Plotly.newPlot(plotDiv, [{ x, y, type }], {
+      autosize: true,
+      margin: { l: 30, r: 10, b: 30, t: 30 },
+      ...layout
+    }, { responsive: true });
+}
+
+
+
+
+
+const arraylength=100000;
+const data = Array.from({ length: arraylength*6 }, () => Math.random());
+const vao=gl.createVertexArray();
+gl.bindVertexArray(vao);
+const buffer=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.DYNAMIC_DRAW);
+
+// Attribute 0 → vec4 position
+gl.enableVertexAttribArray(0);
+gl.vertexAttribPointer(
+  0,       // location
+  3,       // vec
+  gl.FLOAT,
+  false,
+  6*4,  // stride
+  0        // offset
+);
+
+// Attribute 1 → vec3 offset + a
+gl.enableVertexAttribArray(1);
+gl.vertexAttribPointer(
+  1,       // location
+  3,       // vec3
+  gl.FLOAT,
+  false,
+  6*4,
+  3 * 4    // offset = 4 floats
+);
+
+const ubo = gl.createBuffer();
+gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
+gl.bufferData(gl.UNIFORM_BUFFER, 16000, gl.DYNAMIC_DRAW);
+gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, ubo);
+gl.bindBuffer(gl.UNIFORM_BUFFER, ubo);
+//gl.bufferSubData(gl.UNIFORM_BUFFER, 0, new Float32Array([...M].flatMap(x=>[x,0,0,0])));
+gl.bufferSubData(gl.UNIFORM_BUFFER, 0, new Float32Array(4000).map(() => Math.random()));
+
+
+
+const n=25;
+
+
+let tests = [
+  {
+    line: "results+=horner(a.x,coeffs);",
+    setup: `
+float[maxdegree+1] xi;
+makeChebyshevNodes(xi);
+float[maxdegree+1] yi;
+makeY(ro,rd,xi,yi);
+float[maxdegree+1] coeffs;
+makeCoeffs(yi,coeffs);
+    `,
+    uses: "M"
+  },
+
+  { line: "results+=rowM(pos);",                     setup: "results+=susM(pos);", uses: "M" },
+  { line: "results+=rowMDense(pos);",                setup: "", uses: "MDense" },
+  { line: "results+=susR(pos);",                     setup: "", uses: "R" },
+  { line: "results+=susM(pos);",                     setup: "", uses: "M" },
+  { line: "results+=susMDense(pos);",                setup: "", uses: "MDense" },
+  { line: "results+=susMPad(pos);",                  setup: "", uses: "MPad" },
+
+  { line: "results+=dot(DChorner(a,coeffs),vec4(1));",
+    setup: `
+float[maxdegree+1] xi;
+makeChebyshevNodes(xi);
+float[maxdegree+1] yi;
+makeY(ro,rd,xi,yi);
+float[maxdegree+1] coeffs;
+makeCoeffs(yi,coeffs);
+    `,
+    uses: "M"
+  },
+
+  { line: "results+=dot(DCrowM(ro,rd,a),vec4(1));",        setup: "", uses: "M" },
+  { line: "results+=dot(DCrowMDense(ro,rd,a),vec4(1));",  setup: "", uses: "MDense" },
+  { line: "results+=dot(DCsusR(ro,rd,a),vec4(1));",       setup: "", uses: "R" },
+  { line: "results+=dot(DCsusM(ro,rd,a),vec4(1));",       setup: "", uses: "M" },
+  { line: "results+=dot(DCsusMDense(ro,rd,a),vec4(1));", setup: "", uses: "MDense" },
+  { line: "results+=dot(DCsusMPad(ro,rd,a),vec4(1));",    setup: "", uses: "MPad" },
+  { line: "results+=dot(DCrowCopy(c,ro,rd,a),vec4(1));",    setup: `   
+float[n] c;
+for(int i=0;i<n;i++)c[i]=M[i];
+   `, uses: "M" },
+{ line: "results+=rowCopy(c,pos);",    setup: `   
+float[n] c;
+for(int i=0;i<n;i++)c[i]=M[i];
+   `, uses: "M" },
+  { line: "results+=rowCopyDense(cDense,pos);",    setup: `   
+vec4[rowlength] cDense;
+for (int i = 0; i < rowlength; i++) {
+      int k = i * 4;
+      cDense[i] = vec4(k + 0 < n ? M[k + 0] : 0.0,k + 1 < n ? M[k + 1] : 0.0,k + 2 < n ? M[k + 2] : 0.0,k + 3 < n ? M[k + 3] : 0.0);
+  	}
+   `, uses: "M" },
+  { line: "results+=rowCopyDenseUnrolled(cDense,pos);",    setup: `   
+vec4[rowlength] cDense;
+for (int i = 0; i < rowlength; i++) {
+      int k = i * 4;
+      cDense[i] = vec4(k + 0 < n ? M[k + 0] : 0.0,k + 1 < n ? M[k + 1] : 0.0,k + 2 < n ? M[k + 2] : 0.0,k + 3 < n ? M[k + 3] : 0.0);
+  	}
+   `, uses: "M" },
+{ line: "results+=susRDense(pos);",                setup: "", uses: "RDense" },
+{ line: "results+=dot(DCsusRDense(ro,rd,a),vec4(1));", setup: "", uses: "RDense" },
+  { line: "results+=dot(DCsusMDense2(ro,rd,a),vec4(1));", setup: "", uses: "MDense" },
+  { line: "results+=susRDense(pos);",                setup: "", uses: "RDense" },
+{ line: "results+=dot(DCsusRDenseReversed(ro,rd,a),vec4(1));", setup: "", uses: "RDense" },
+{ line: "results+=dot(DCsusRDenseUnrolled(ro,rd,a),vec4(1));", setup: "", uses: "RDense" },
+  { line: "results+=susRDenseUnrolled(pos);", setup: "", uses: "RDense" },
+{ line: "results+=susMUnrolled(pos);", setup: "", uses: "M" },
+{ line: "results+=susRUnrolled(pos);", setup: "", uses: "R" },
+{ line: "results+=susRUnrolledReversed(pos);", setup: "", uses: "R" },
+{ line: "results+=susRDenseUnrolledReversed(pos);", setup: "", uses: "RDense" },
+{ line: "results+=dot(DCsusRDenseUnrolledReversed(ro,rd,a),vec4(1));", setup: "", uses: "RDense" },
+{ line: "results+=susMflat(pos);", setup: "", uses: "M" }
+];
+tests=tests.filter((x)=>x.line.includes("susM"));
+const testsWithUbo =
+  [0, 1].flatMap(useubo =>
+    tests.map(t => ({ ...t, useubo }))
+  );
+
+
+
+for(const test of testsWithUbo){
+
+const uboM      = +(test.useubo && test.uses === "M");
+const uboR      = +(test.useubo && test.uses === "R");
+const uboMDense = +(test.useubo && test.uses === "MDense");
+const uboRDense = +(test.useubo && test.uses === "RDense");
+const uboMPad   = +(test.useubo && test.uses === "MPad");
+const uniM      = +(!test.useubo && test.uses === "M");
+const uniR      = +(!test.useubo && test.uses === "R");
+const uniMDense = +(!test.useubo && test.uses === "MDense");
+const uniRDense = +(!test.useubo && test.uses === "RDense"); 
+const uniMPad   = +(!test.useubo && test.uses === "MPad");  
+
+
+let vertexshader=
+`#version 300 es
+precision mediump float;
+const int n=${n};
+const int rowlength=(n+3)/4;
+layout(location = 0) in vec3 P0;   
+layout(location = 1) in vec3 P1;  
+
+
+${test.useubo ? `
+layout(std140) uniform MatrixBlock {
+  ${uboM      ? `float[n*n] M;` : ``}
+  ${uboR      ? `float[n*(n+1)/2] R;` : ``}
+  ${uboMDense ? `vec4[n*rowlength] MDense;` : ``}
+  ${uboMPad   ? `float[4*n*rowlength] MPad;` : ``}
+${uboRDense ? `vec4[(n-(n/4)*2)*(n/4+1)] RDense;` : ``}
+};
+` : ``}
+
+${uniM      ? `uniform float[n*n] M;` : ``}
+${uniR      ? `uniform float[n*(n+1)/2] R;` : ``}
+${uniMDense ? `uniform vec4[n*rowlength] MDense;` : ``}
+${uniMPad   ? `uniform float[4*n*rowlength] MPad;` : ``}
+${uniRDense ? `uniform vec4[(n-(n/4)*2)*(n/4+1)] RDense;` : ``}
+
+#define defM ${uniM||uboM}
+#define defR ${uniR||uboR}
+#define defMDense ${uniMDense||uboMDense}
+#define defMPad ${uniMPad||uboMPad}
+#define defRDense ${uniRDense||uboRDense}
+
+/*out vec4 result1;
+out vec4 result2;*/
+out float results;
+out float results2;
+
+uniform int rank;
+uniform int iter;
+ 
+    
+    
+float square(float x){
+	return x*x;
+}
+    
+const int Plen=rowlength*4;
+void makeP(vec3 pos,out float[n] P) {
+  float _generatednode0 = (pos.x*pos.x);
+  P[0]=(_generatednode0*_generatednode0);
+  float _generatednode1 = (pos.y*pos.y);
+  P[1]=(_generatednode1*_generatednode0);
+  float _generatednode2 = (pos.z*pos.z);
+  P[2]=(_generatednode2*_generatednode0);
+  P[3]=(_generatednode1*_generatednode1);
+  P[4]=(_generatednode1*_generatednode2);
+  P[5]=(_generatednode2*_generatednode2);
+  P[6]=(pos.x*_generatednode0);
+  P[7]=(_generatednode1*pos.x);
+  P[8]=(_generatednode2*pos.x);
+  P[9]=(pos.y*_generatednode0);
+  P[10]=(pos.y*_generatednode1);
+  P[11]=(pos.y*_generatednode2);
+  P[12]=(pos.z*_generatednode0);
+  P[13]=(_generatednode1*pos.z);
+  P[14]=(pos.z*_generatednode2);
+  P[15]=_generatednode1;
+  P[16]=(pos.y*pos.z);
+  P[17]=_generatednode2;
+  P[18]=_generatednode0;
+  P[19]=(pos.y*pos.x);
+  P[20]=(pos.z*pos.x);
+  P[21]=pos.y;
+  P[22]=pos.z;
+  P[23]=pos.x;
+  P[24]=1.0;
+}
+
+void makePvec4(vec3 pos,out vec4[rowlength] Pvec4){
+  	float[n] P;
+  	makeP(pos,P);
+	for (int i = 0; i < rowlength; i++) {
+      int k = i * 4;
+      Pvec4[i] = vec4(k + 0 < n ? P[k + 0] : 0.0,k + 1 < n ? P[k + 1] : 0.0,k + 2 < n ? P[k + 2] : 0.0,k + 3 < n ? P[k + 3] : 0.0);
+  	}
+}
+void makePvec4r(vec3 pos,out vec4[rowlength] Pvec4){
+  	float[n] P;
+  	makeP(pos,P);
+	const int offset0=rowlength*4-n;
+	for (int i = 0; i < rowlength; i++) {
+      int k = i * 4-offset0;
+      Pvec4[i] = vec4(k + 0 >= 0 ? P[k + 0] : 0.0,
+                      k + 1 >= 0 ? P[k + 1] : 0.0,
+                      k + 2 >= 0 ? P[k + 2] : 0.0,
+                      k + 3 >= 0 ? P[k + 3] : 0.0);
+  	}  
+	
+}
+
+#define Complex vec2
+Complex ComplexAdd(Complex a, Complex b) {return a+b;}
+Complex ComplexAdd(float a, Complex b) {return Complex(a + b.x,b.y);}
+Complex ComplexAdd(Complex a, float b) {return ComplexAdd(b,a);}
+Complex ComplexSub(float a, Complex b) {return Complex(a - b.x,b.y);}
+Complex ComplexSub(Complex a, float b) {return Complex(a.x-b,a.y);}
+Complex ComplexSub(Complex a, Complex b) {return a-b;}
+
+Complex ComplexMul(Complex a, Complex b) {
+    // Complex multiplication: (a.x + i*a.y) * (b.x + i*b.y)
+    return Complex(
+        a.x * b.x - a.y * b.y, // Real part
+        a.x * b.y + a.y * b.x  // Imaginary part
+    );
+}
+Complex ComplexMul(Complex a, float b) {return a*b;}
+Complex ComplexMul(float a, Complex b) {return a*b;}
+Complex ComplexSquare(Complex a) {
+    // Complex multiplication: (a.x + i*a.y) * (b.x + i*b.y)
+    return Complex(
+        a.x * a.x - a.y * a.y, // Real part
+        2.0 * a.x * a.y  // Imaginary part
+    );
+}
+Complex ComplexDiv(Complex a, Complex b) {
+    // Complex division: (a.x + i*a.y) / (b.x + i*b.y)
+    return Complex(
+        (a.x * b.x + a.y * b.y) ,
+        (a.y * b.x - a.x * b.y)
+    ) / dot(b,b);
+}
+Complex ComplexInv(Complex a) {
+    // Complex division: 1 / (a.x + i*a.y)
+    return a*Complex(1,-1) / dot(a,a);
+}
+Complex ComplexConjugate(Complex a) {
+    return a*Complex(1,-1);
+}
+
+#define DualComplex vec4
+
+DualComplex DualComplexMul(DualComplex a,DualComplex b){
+    return DualComplex(ComplexMul(a.xy,b.xy),ComplexMul(a.xy,b.zw)+ComplexMul(a.zw,b.xy));
+}
+DualComplex DualComplexSqare(DualComplex a){
+    return DualComplex(ComplexSquare(a.xy),2.0*ComplexMul(a.xy,a.zw));
+}
+DualComplex DualComplexAdd(DualComplex a,float b){
+    return DualComplex(a.x+b, a.yzw);
+}
+DualComplex DualComplexAdd(float a,DualComplex b){
+    return DualComplexAdd(b,a);
+}
+DualComplex DualComplexInv(DualComplex a){
+    Complex inv = ComplexInv(a.xy);        
+    Complex dualPart = -ComplexMul(a.zw,ComplexSquare(inv)); 
+  	return DualComplex(inv, dualPart);     // negate dual part
+}
+DualComplex DualComplexDiv(DualComplex a, DualComplex b){
+    return DualComplexMul(a, DualComplexInv(b));
+}
+
+void makeDualComplexP(vec3 rayDir, vec3 rayOrigin,Complex a,out DualComplex[n] P) {
+Complex _generatednode0 = ComplexAdd(rayOrigin.x,ComplexMul(a,rayDir.x));
+Complex _generatednode1 = ComplexSquare(_generatednode0);
+Complex _generatednode2 = ComplexMul(rayDir.x,_generatednode0);
+Complex _generatednode3 = ComplexAdd(_generatednode2,_generatednode2);
+Complex _generatednode4 = ComplexMul(_generatednode3,_generatednode1);
+P[0]=vec4(ComplexSquare(_generatednode1),ComplexAdd(_generatednode4,_generatednode4));
+Complex _generatednode5 = ComplexAdd(rayOrigin.y,ComplexMul(a,rayDir.y));
+Complex _generatednode6 = ComplexSquare(_generatednode5);
+Complex _generatednode7 = ComplexMul(rayDir.y,_generatednode5);
+Complex _generatednode8 = ComplexAdd(_generatednode7,_generatednode7);
+P[1]=vec4(ComplexMul(_generatednode6,_generatednode1),ComplexAdd(ComplexMul(_generatednode8,_generatednode1),ComplexMul(_generatednode3,_generatednode6)));
+Complex _generatednode9 = ComplexAdd(rayOrigin.z,ComplexMul(a,rayDir.z));
+Complex _generatednode10 = ComplexSquare(_generatednode9);
+Complex _generatednode11 = ComplexMul(rayDir.z,_generatednode9);
+Complex _generatednode12 = ComplexAdd(_generatednode11,_generatednode11);
+P[2]=vec4(ComplexMul(_generatednode10,_generatednode1),ComplexAdd(ComplexMul(_generatednode12,_generatednode1),ComplexMul(_generatednode3,_generatednode10)));
+Complex _generatednode13 = ComplexMul(_generatednode8,_generatednode6);
+P[3]=vec4(ComplexSquare(_generatednode6),ComplexAdd(_generatednode13,_generatednode13));
+P[4]=vec4(ComplexMul(_generatednode6,_generatednode10),ComplexAdd(ComplexMul(_generatednode8,_generatednode10),ComplexMul(_generatednode12,_generatednode6)));
+Complex _generatednode14 = ComplexMul(_generatednode12,_generatednode10);
+P[5]=vec4(ComplexSquare(_generatednode10),ComplexAdd(_generatednode14,_generatednode14));
+P[6]=vec4(ComplexMul(_generatednode0,_generatednode1),ComplexAdd(ComplexMul(rayDir.x,_generatednode1),ComplexMul(_generatednode3,_generatednode0)));
+P[7]=vec4(ComplexMul(_generatednode6,_generatednode0),ComplexAdd(ComplexMul(rayDir.x,_generatednode6),ComplexMul(_generatednode8,_generatednode0)));
+P[8]=vec4(ComplexMul(_generatednode10,_generatednode0),ComplexAdd(ComplexMul(rayDir.x,_generatednode10),ComplexMul(_generatednode12,_generatednode0)));
+P[9]=vec4(ComplexMul(_generatednode5,_generatednode1),ComplexAdd(ComplexMul(rayDir.y,_generatednode1),ComplexMul(_generatednode3,_generatednode5)));
+P[10]=vec4(ComplexMul(_generatednode5,_generatednode6),ComplexAdd(ComplexMul(rayDir.y,_generatednode6),ComplexMul(_generatednode8,_generatednode5)));
+P[11]=vec4(ComplexMul(_generatednode5,_generatednode10),ComplexAdd(ComplexMul(rayDir.y,_generatednode10),ComplexMul(_generatednode12,_generatednode5)));
+P[12]=vec4(ComplexMul(_generatednode9,_generatednode1),ComplexAdd(ComplexMul(rayDir.z,_generatednode1),ComplexMul(_generatednode3,_generatednode9)));
+P[13]=vec4(ComplexMul(_generatednode6,_generatednode9),ComplexAdd(ComplexMul(rayDir.z,_generatednode6),ComplexMul(_generatednode8,_generatednode9)));
+P[14]=vec4(ComplexMul(_generatednode9,_generatednode10),ComplexAdd(ComplexMul(rayDir.z,_generatednode10),ComplexMul(_generatednode12,_generatednode9)));
+P[15]=vec4(_generatednode6,_generatednode8);
+P[16]=vec4(ComplexMul(_generatednode5,_generatednode9),ComplexAdd(ComplexMul(rayDir.y,_generatednode9),ComplexMul(rayDir.z,_generatednode5)));
+P[17]=vec4(_generatednode10,_generatednode12);
+P[18]=vec4(_generatednode1,_generatednode3);
+P[19]=vec4(ComplexMul(_generatednode5,_generatednode0),ComplexAdd(ComplexMul(rayDir.x,_generatednode5),ComplexMul(rayDir.y,_generatednode0)));
+P[20]=vec4(ComplexMul(_generatednode9,_generatednode0),ComplexAdd(ComplexMul(rayDir.x,_generatednode9),ComplexMul(rayDir.z,_generatednode0)));
+P[21]=vec4(_generatednode5,Complex(rayDir.y,0.0));
+P[22]=vec4(_generatednode9,Complex(rayDir.z,0.0));
+P[23]=vec4(_generatednode0,Complex(rayDir.x,0.0));
+P[24]=vec4(Complex(1.0,0.0),Complex(0.0,0.0));
+}
+const ivec3 monomexponents[25] = ivec3[25](
+    ivec3(4,0,0), // x^4
+    ivec3(2,2,0), // x^2 y^2
+    ivec3(2,0,2), // x^2 z^2
+    ivec3(0,4,0), // y^4
+    ivec3(0,2,2), // y^2 z^2
+    ivec3(0,0,4), // z^4
+    ivec3(3,0,0), // x^3
+    ivec3(1,2,0), // x y^2
+    ivec3(1,0,2), // x z^2
+    ivec3(2,1,0), // x^2 y
+    ivec3(0,3,0), // y^3
+    ivec3(0,1,2), // y z^2
+    ivec3(2,0,1), // x^2 z
+    ivec3(0,2,1), // y^2 z
+    ivec3(0,0,3), // z^3
+    ivec3(0,2,0), // y^2
+    ivec3(0,1,1), // y z
+    ivec3(0,0,2), // z^2
+    ivec3(2,0,0), // x^2
+    ivec3(1,1,0), // x y
+    ivec3(1,0,1), // x z
+    ivec3(0,1,0), // y
+    ivec3(0,0,1), // z
+    ivec3(1,0,0), // x
+    ivec3(0,0,0)  // 1
+);
+
+    
+const int maxdegree=4;
+#if defM    
+const float fact[8] = float[8](1.,1.,2.,6.,24.,120.,720.,5040.);    
+void convolve(in float[maxdegree+1] a,in float[maxdegree+1] b,out float[maxdegree+1] o){
+	for(int i=0;i<maxdegree+1;i++)o[i]=0.;
+  for(int i=0;i<maxdegree+1;i++){
+      	for(int j=0;j<maxdegree+1-i;j++){
+          	o[i+j]+=a[i]*b[j];
+        }
+    }
+}
+void makePower(float o,float d,int e,out float[maxdegree+1] coeffs){// (o+x*d)^e
+	//sum{i in 0..e}(o**i*(x*d)**(e-i)*(e over i))
+   //=sum{i in 0..e}(o**(e-i)*(x*d)**i*(e over i))
+  for(int i=0;i<maxdegree+1;i++){coeffs[i]=0.;}
+  float acc=fact[e];
+  for(int i=0;i<e+1;i++){coeffs[i]=acc;acc*=d/float(i+1);}///float(i+1);}
+  acc=1.;
+  for(int i=0;i<e+1;i++){coeffs[e-i]*=acc;acc*=o/float(i+1);}//acc*=d/float(e-i-1);}
+  //for(int i=e;i<maxdegree+1;i++)coeffs[i]=0.;
+  
+}
+
+void makeMonom(vec3 ro,vec3 rd,ivec3 e,out float[maxdegree+1] coeffs){
+  float[maxdegree+1] coeffs1;
+  float[maxdegree+1] coeffs2;
+  float[maxdegree+1] coeffs3;
+  makePower(ro.x,rd.x,e.x,coeffs1);
+  makePower(ro.y,rd.y,e.y,coeffs2);
+  convolve(coeffs1,coeffs2,coeffs3);
+  makePower(ro.z,rd.z,e.z,coeffs1);
+  convolve(coeffs1,coeffs3,coeffs);
+}
+
+void makePoly(vec3 ro,vec3 rd,out float[maxdegree+1] coeffs){
+	for(int i=0;i<maxdegree+1;i++)coeffs[i]=0.;
+  	
+  	for(int i=0;i<n;i++){ 
+    	float[maxdegree+1] coeffsmonom;
+      	makeMonom(ro,rd,monomexponents[i],coeffsmonom);
+      	for(int j=0;j<maxdegree+1;j++)coeffs[j]+=M[i]*coeffsmonom[j];
+    }
+}
+#endif
+#if defR
+float susR(vec3 pos){
+  	float[n] P;
+	makeP(pos,P);
+  	float res=0.;
+  	int ri=0;
+    for(int i=0;i<n;i++){
+      float acc=0.;
+      for(int j=i;j<n;j++,ri++)acc+=R[ri]*P[j];
+      res+=acc*acc;
+    }
+   
+   return res;
+}
+float susRUnrolled(vec3 pos){
+  	float[n] P;
+	makeP(pos,P);
+  	float res=0.;
+  ${(()=>{
+let res="";
+let ri=0;
+for(let i=0;i<n;i++) {
+    let acc=[];
+    for(let j=i;j<n;j++){
+        
+        acc.push(`P[${j}]*R[${ri}]`);
+        ri++;
+    }
+    res+="\nres+=square("+acc.join("+")+");";    
+}
+    return res;})()}
+return res;
+}
+
+float susRUnrolledReversed(vec3 pos){
+  	float[n] P;
+	makeP(pos,P);
+  	float res=0.;
+  ${(()=>{
+let res="";
+let ri=0;
+for(let i=0;i<n;i++) {
+    let acc=[];
+    for(let j=0;j<n-i;j++){
+        
+        acc.push(`P[${j}]*R[${ri}]`);
+        ri++;
+    }
+    res+="\nres+=square("+acc.join("+")+");";    
+}
+    return res;})()}
+return res;
+}
+#endif
+    
+    
+  
+#if defM
+float susM(vec3 pos){
+  	float[n] P;
+	makeP(pos,P);
+  	float res=0.;
+  	int ri=0;
+    for(int i=0;i<n;i++){
+      float acc=0.;
+      for(int j=0;j<n;j++,ri++)acc+=M[ri]*P[j];
+      res+=acc*acc;
+    }
+   
+   return res;
+}
+float susMflat(vec3 pos){
+  	float[n] P;
+	makeP(pos,P);
+  	float res=0.;
+  	int ri=0;
+  	float acc=0.;
+    for(int i=0;i<n*n;i++){
+      acc+=M[i]*P[i%n];
+      if(i%n==n-1){res+=acc*acc;acc=0.;}
+    }
+   
+   return res;
+}
+float susMUnrolled(vec3 pos){
+  	float[n] P;
+	makeP(pos,P);
+  	float res=0.;
+  ${(()=>{
+let res="";
+let ri=0;
+for(let i=0;i<n;i++) {
+    let acc=[];
+    for(let j=0;j<n;j++){
+        
+        acc.push(`P[${j}]*M[${ri}]`);
+        ri++;
+    }
+    res+="\nres+=square("+acc.join("+")+");";    
+}
+    return res;})()}
+return res;
+}
+#endif
+#if defMDense
+
+float susMDense(vec3 pos){//fastest
+	vec4[rowlength] Pvec4;
+    makePvec4(pos,Pvec4);
+  	float res=0.;
+  	float acc=0.;
+    for(int i=0;i<n;i++){
+      acc=0.;  
+      for(int j=0;j<rowlength;j++)acc+=dot(MDense[i*rowlength+j],Pvec4[j]);
+      res+=acc*acc;
+    }
+    return res;
+}
+#endif
+#if defRDense
+
+float susRDense(vec3 pos){//fastest
+	vec4[rowlength] Pvec4;
+    makePvec4r(pos,Pvec4);
+  	float res=0.;
+  	float acc=0.;
+    int ri=0;
+    for(int i=0;i<n;i++){
+      acc=0.;  
+      for(int j=rowlength-(n-i)/4;j<rowlength;j++,ri++)acc+=dot(RDense[ri],Pvec4[j]);
+      res+=acc*acc;
+    }
+    return res;
+}
+    
+
+float susRDenseUnrolled(vec3 pos){
+  	vec4[rowlength] Pvec4;
+    makePvec4r(pos,Pvec4);
+  	float res=0.;
+  ${(()=>{
+let res="";
+let ri=0;
+for(let i=0;i<n;i++) {
+    let acc=[];
+  	//const offset=//should be the same as -
+    for(let j=Math.ceil(n/4)-Math.ceil((n-i)/4);j<Math.ceil(n/4);j++){
+        
+        acc.push(`dot(Pvec4[${j}],RDense[${ri}])`);
+        ri++;
+    }
+    res+="\nres+=square("+acc.join("+")+");";    
+}
+    return res;})()}
+return res;
+}
+float susRDenseUnrolledReversed(vec3 pos){
+  	vec4[rowlength] Pvec4;
+    makePvec4(pos,Pvec4);
+  	float res=0.;
+  ${(()=>{
+let res="";
+let ri=0;
+for(let i=0;i<n;i++) {
+    let acc=[];
+  	//const offset=//should be the same as -
+    for(let j=0;j<Math.ceil((n-i)/4);j++){
+        
+        acc.push(`dot(Pvec4[${j}],RDense[${ri}])`);
+        ri++;
+    }
+    res+="\nres+=square("+acc.join("+")+");";    
+}
+    return res;})()}
+return res;
+}
+    
+#endif
+
+#if defMPad
+
+float susMPad(vec3 pos){//fastest
+	//vec4[rowlength] Pvec4;
+    //makePvec4(pos,Pvec4);
+    float[n] P;
+	makeP(pos,P);
+  	float res=0.;
+  	float acc=0.;
+    for(int i=0;i<n;i++){
+      acc=0.;  
+      //for(int j=0;j<rowlength;j++)acc+=dot(vec4(MPad[(i*rowlength+j)*4+0],MPad[(i*rowlength+j)*4+1],MPad[(i*rowlength+j)*4+2],MPad[(i*rowlength+j)*4+3]),Pvec4[j]);
+      for(int j=0;j<n;j++)acc+=MPad[i*rowlength*4+j]*P[j];
+      res+=acc*acc;
+    }
+    return res;
+}
+#endif
+#if defR
+    
+vec4 DCsusR(vec3 ro,vec3 rd,Complex a){
+  	vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+  	vec4 res=vec4(0.);
+  	int ri=0;
+    for(int i=0;i<n;i++){
+      vec4 acc=vec4(0.);
+      for(int j=i;j<n;j++,ri++)acc+=R[ri]*P[j];
+      res+=DualComplexSqare(acc);
+    }
+   
+   return res;
+}
+    
+    
+    
+    
+#endif
+#if defM
+
+    
+vec4 DCsusM(vec3 ro,vec3 rd,Complex a){
+  	vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+  	vec4 res=vec4(0.);
+  	int ri=0;
+    for(int i=0;i<n;i++){
+      vec4 acc=vec4(0.);
+      for(int j=0;j<n;j++,ri++)acc+=M[ri]*P[j];
+      res+=DualComplexSqare(acc);
+    }
+   
+   return res;
+}
+#endif
+#if defMDense
+
+vec4 DCsusMDense(vec3 ro,vec3 rd,Complex a){
+  	vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+  	vec4 res=vec4(0.);
+    for(int i=0;i<n;i++){
+      vec4 acc=vec4(0.);
+      for(int j=0;j<n;j++){
+        acc+=MDense[i*rowlength+j/4][j%4]*P[j];
+        /*acc+=MDense[i*rowlength+j][1]*P[4*j+1];
+        acc+=MDense[i*rowlength+j][2]*P[4*j+2];
+        acc+=MDense[i*rowlength+j][3]*P[4*j+3];*/
+      }
+      res+=DualComplexSqare(acc);
+    }
+   
+   return res;
+}
+#endif
+#if defMDense
+
+vec4 DCsusMDense2(vec3 ro,vec3 rd,Complex a){
+  	vec4[n] P;
+//mat4[rowlength] Pm;
+	makeDualComplexP(ro,rd,a,P);
+//for(int i =0;i<rowlength;i++)Pm[i],mat4(4*i<n?P[4*i]:vec4(0.),4*i+1<n?P[4*i+1]:vec4(0.),4*i+2<n?P[4*i+2]:vec4(0.),4*i+3<n?P[4+i+3]:vec4(0.));
+  	vec4 res=vec4(0.);
+    for(int i=0;i<n;i++){
+      vec4 acc=vec4(0.);
+      for(int j=0;j<n;j++){
+        //acc+=MDense[i*rowlength+j/4][j%4]*P[j];
+        acc+=((j<(i/4)*4)?MDense[i*rowlength+j/4][j%4]:0.)*P[j];
+        //vec4 c=MDense[i*rowlength+j];
+        //acc+=c[0]*P[4*j]+c[1]*P[4*j+1]+c[2]*P[4*j+2]+c[3]*P[4*j+3];
+        /*acc+=MDense[i*rowlength+j][1]*P[4*j+1];
+        acc+=MDense[i*rowlength+j][2]*P[4*j+2];
+        acc+=MDense[i*rowlength+j][3]*P[4*j+3];*/
+      }
+      res+=DualComplexSqare(acc);
+    }
+   
+   return res;
+}
+#endif
+#if defRDense
+
+vec4 DCsusRDenseReverse(vec3 ro,vec3 rd,Complex a){
+  	vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+  	vec4 res=vec4(0.);
+  int ri=0;
+    for(int i=0;i<n;i++){
+      vec4 acc=vec4(0.);
+      for(int j=0;j<(n-i);j++,ri++){
+        acc+=RDense[ri/4][ri%4]*P[j];
+        /*acc+=MDense[i*rowlength+j][1]*P[4*j+1];
+        acc+=MDense[i*rowlength+j][2]*P[4*j+2];
+        acc+=MDense[i*rowlength+j][3]*P[4*j+3];*/
+      }
+      ri+=(4 - (ri % 4)) % 4;
+      res+=DualComplexSqare(acc);
+    }
+   
+   return res;
+}
+/*vec4 DCsusRDense2(vec3 ro,vec3 rd,Complex a){
+  	vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+  	vec4 res=vec4(0.);
+  int ri=0;
+    for(int i=0;i<n;i++){
+      vec4 acc=vec4(0.);
+      for(int j=0;j<n;j++){
+        float c=0.;
+        if(j>=i/4*4){
+        	c=RDense[ri/4][ri%4];
+          ri++;
+        }
+        acc+=c*P[j];
+        //acc+=MDense[i*rowlength+j][1]*P[4*j+1];
+        //acc+=MDense[i*rowlength+j][2]*P[4*j+2];
+        //acc+=MDense[i*rowlength+j][3]*P[4*j+3];
+      }
+      res+=DualComplexSqare(acc);
+    }
+   
+   return res;
+
+}*/
+vec4 DCsusRDenseUnrolled(vec3 ro,vec3 rd,Complex a){
+  	vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+  	vec4 res=vec4(0.);
+  
+${(()=>{
+let res="";
+let ri=0;
+let rowstart=0;
+const offset=4*Math.ceil(n/4)-n;
+for(let i=0;i<n;i++) {
+    let acc=[];
+
+	for (let j = n - 4*Math.ceil((n-i)/4); j < n; j++) {
+    //for(let j=Math.floor(i/4)*4;j<Math.ceil((n)/4)*4;j++){
+        
+        if(j>=i)acc.push(`P[${j}]*RDense[${Math.floor(ri/4)}][${ri%4}]`);
+        ri++;
+    }
+    res+="\nres+=DualComplexSqare("+acc.join("+")+");";
+        
+}
+res+="\n";
+return res;
+})()}
+    
+   
+   return res;
+
+}
+
+
+vec4 DCsusRDenseUnrolledReversed(vec3 ro,vec3 rd,Complex a){
+  	vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+  	vec4 res=vec4(0.);
+  
+${(()=>{
+let res="";
+let ri=0;
+let rowstart=0;
+for(let i=0;i<n;i++) {
+    let acc=[];
+
+	for (let j =0; j < 4*Math.ceil((n-i)/4); j++) {
+    //for(let j=Math.floor(i/4)*4;j<Math.ceil((n)/4)*4;j++){
+        
+        if(j<n-i)acc.push(`P[${j}]*RDense[${Math.floor(ri/4)}][${ri%4}]`);
+        ri++;
+    }
+    res+="\nres+=DualComplexSqare("+acc.join("+")+");";
+        
+}
+res+="\n";
+return res;
+})()}
+    
+   
+   return res;
+
+}
+
+#endif
+#if defMPad
+
+vec4 DCsusMPad(vec3 ro,vec3 rd,Complex a){
+  	vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+  	vec4 res=vec4(0.);
+    for(int i=0;i<n;i++){
+      vec4 acc=vec4(0.);
+      for(int j=0;j<n;j++){
+        acc+=MPad[i*rowlength*4+j]*P[j];
+      }
+      res+=DualComplexSqare(acc);
+    }
+   
+   return res;
+}
+    
+#endif    
+    
+const float[(maxdegree+1)*(maxdegree+1)] V = float[](
+  ${(()=>{
+  const maxdegree=4;
+  const ki=[...Array(maxdegree+1).keys()];
+  const chebichev=ki.map((k)=>Math.cos((2*k+1)*Math.PI/(2*(maxdegree+1))));
+  const Vandermonde=chebichev.map(x=>ki.map(p=>x**p));
+  const inv=mathjs.inv(Vandermonde);
+  const flat=inv.flat();
+  console.log(inv.flat().join(", "));
+  return inv.flat().map(x=>"float("+x+")").join(", ");
+  })()}
+);
+
+/*
+float sus(vec3 pos){
+	//float[n] result;
+    //for(int i=0;i<n;i++){result[i]=0.;}
+    //float[Plen] P;
+    vec4[rowlength] Pvec4;
+    makeP2(pos,Pvec4);
+    //P[25] = 0.0;P[26] = 0.0;P[27] = 0.0;
+
+    //vec4[rowlength] Pvec4;
+    //for(int j=0;j<rowlength;j++)Pvec4[j]=vec4(P[j*4],P[j*4+1],P[j*4+2],P[j*4+3]);
+    float res=0.;
+    int ri=0;
+    for(int i=0;i<n;i++){
+      float acc=0.;
+      
+      for(int j=i;j<n;j++,ri++){
+          acc+=getM2(i*n+j)*P[j];
+          //acc+=M[i*n+j]*P[j];
+          //acc+=M2[i*n+j]*P[j];
+          //acc+=R[ri]*P[j];
+          //result[i]+=M[i*n+j]*P[j];
+          //result[j]+=M[j*8+i]*P[i];
+      }
+      //for(int j=0;j<n;j++)acc+=M[i*n+j]*P[j];
+      for(int j=0;j<rowlength;j++)acc+=dot(MDense[i*n+j],Pvec4[j]);
+
+      //result[i]=acc;
+      res+=acc*acc;
+    }
+  return res;
+}*/
+#if defM
+
+float rowM(vec3 pos){
+    float[n] P;
+	makeP(pos,P);
+    float acc=0.;
+    for(int j=0;j<n;j++)acc+=M[j]*P[j];
+    return acc;
+}
+float rowCopy(float[n] c,vec3 pos){
+    float[n] P;
+	makeP(pos,P);
+    float acc=0.;
+    for(int j=0;j<n;j++)acc+=c[j]*P[j];
+    return acc;
+}
+float rowCopyDense(vec4[rowlength] cDense,vec3 pos){
+    vec4[rowlength] Pvec4;
+	makePvec4(pos,Pvec4);
+    float acc=0.;
+    for(int j=0;j<rowlength;j++)acc+=dot(cDense[j],Pvec4[j]);
+    return acc;
+}
+float rowCopyDenseUnrolled(vec4[rowlength] cDense,vec3 pos){
+    vec4[rowlength] Pvec4;
+	makePvec4(pos,Pvec4);
+    float acc=0.;
+    //for(int j=0;j<rowlength;j++)acc+=dot(cDense[j],Pvec4[j]);
+  	acc+=dot(cDense[0],Pvec4[0]);
+    acc+=dot(cDense[1],Pvec4[1]);
+    acc+=dot(cDense[2],Pvec4[2]);
+    acc+=dot(cDense[3],Pvec4[3]);
+    acc+=dot(cDense[4],Pvec4[4]);
+    acc+=dot(cDense[5],Pvec4[5]);
+    acc+=dot(cDense[6],Pvec4[6]);
+    return acc;
+}
+#endif
+#if defMDense
+    
+float rowMDense(vec3 pos){
+    vec4[rowlength] Pvec4;
+    makePvec4(pos,Pvec4);
+  	float acc=0.;
+    for(int j=0;j<rowlength;j++)acc+=dot(MDense[j],Pvec4[j]);
+    return acc;
+}   
+
+#endif
+#if defM
+
+vec4 DCrowM(vec3 ro,vec3 rd,Complex a){
+    vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+  	vec4 res=vec4(0.);
+    for(int j=0;j<n;j++)res+=M[j]*P[j];
+    return res;
+}
+vec4 DCrowCopy(float[n]c ,vec3 ro,vec3 rd,Complex a){
+    vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+  	vec4 res=vec4(0.);
+    for(int j=0;j<n;j++)res+=c[j]*P[j];
+    return res;
+}    
+vec4 DCrow2M(vec3 ro,vec3 rd,Complex a){
+    vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+  	vec4 res=vec4(0.);
+    for(int j=0;j<n;j++)res+=M[j+n*1]*P[j];
+    return res;
+}
+#endif
+#if defMDense
+
+vec4 DCrowMDense(vec3 ro,vec3 rd,Complex a){
+    vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+  	vec4 acc=vec4(0.);
+    for(int j=0;j<n;j++){
+      acc+=MDense[j/4][j%4]*P[j];
+        /*acc+=MDense[j][0]*P[4*j+0];
+        acc+=MDense[j][1]*P[4*j+1];
+        acc+=MDense[j][2]*P[4*j+2];
+        acc+=MDense[j][3]*P[4*j+3];*/
+    }
+  /*for(int j=0;j<rowlength;j++)acc+=MDense[j][0]*P[4*j+0];
+  for(int j=0;j<rowlength;j++)acc+=MDense[j][1]*P[4*j+1];
+  for(int j=0;j<rowlength;j++)acc+=MDense[j][2]*P[4*j+2];
+  for(int j=0;j<rowlength;j++)acc+=MDense[j][3]*P[4*j+3];*/
+    return acc;
+}
+#endif
+#if defM
+
+float horner(float x,float[maxdegree+1] coeffs){
+	float res=0.; 
+    for(int i=0;i<maxdegree+1;i++){
+    	res=coeffs[maxdegree-i]+x*res;
+    }
+  	return res;
+}
+    
+DualComplex DChorner(Complex x,float[maxdegree+1] coeffs){
+	DualComplex res=vec4(0); 
+    for(int i=0;i<maxdegree+1;i++){
+    	res=DualComplexAdd(coeffs[maxdegree-i],DualComplexMul(DualComplex(x,1,0),res));
+        //res=x.x*res+x.y*vec2(1,-1).yxyx*res.yxwz+DualComplex(coeffs[maxdegree-i],0.,res.xy);
+    }
+  	return res;
+}
+    
+float BarycentricLangrange(float x,float[maxdegree+1] xi,float[maxdegree+1] yi,float[maxdegree+1] wi){
+	vec2 acc=vec2(0.);
+  	for(int i=0;i<maxdegree+1;i++){
+    	acc+=vec2(yi[i],1.)*(wi[i]/(x-xi[i]));
+    }
+    return acc.x/acc.y;
+}
+    
+DualComplex DCBarycentricLangrange(Complex x,float[maxdegree+1] xi,float[maxdegree+1] yi,float[maxdegree+1] wi){
+	vec4 acc1=vec4(0.);
+	vec4 acc2=vec4(0.);
+  	for(int i=0;i<maxdegree+1;i++){
+      	vec4 mul=wi[i]*DualComplexInv(DualComplex(ComplexSub(x,xi[i]),Complex(1.,0.)));
+    	acc1+=yi[i]*mul;
+      	acc2+=mul;
+    }
+  	//results=acc1.z;
+    //results2=acc2.z;
+    return DualComplexDiv(acc1,acc2);
+}
+void makeBarycentricLangrange(float[maxdegree+1] xi,out float[maxdegree+1] wi){
+  float acc=1.;
+  for(int i=0;i<maxdegree+1;i++){
+    	float prod = 1.0;
+        for(int j=0;j<maxdegree+1;j++){
+            //if(j != i) prod *= (xi[i] - xi[j]);
+			prod *= mix(1.,xi[i] - xi[j],j != i);
+        }
+    	wi[i] = 1.0 / prod;
+    }
+}
+void makeChebyshevNodes(out float xi[maxdegree+1]) {
+    for(int i=0;i<maxdegree+1;i++) {
+        xi[i] = cos((2.*float(i) + 1.)*3.14159265359 / (2.0 * float(maxdegree + 1)));
+    }
+}
+void makeY(vec3 ro,vec3 rd,float[maxdegree+1] xi,out float[maxdegree+1] yi){
+for(int i=0;i<maxdegree+1;i++) yi[i]=DCrowM(ro,rd,Complex(xi[i],0.)).x;
+}
+
+void makeCoeffs(float[maxdegree+1] yi,out float[maxdegree+1] coeffs){
+  for(int i=0;i<maxdegree+1;i++) {
+    coeffs[i]=0.;
+    for(int j=0;j<maxdegree+1;j++) coeffs[i]+=V[i*(maxdegree+1)+j]*yi[j];
+  }
+}
+#endif    
+void main() {
+  
+  
+  results=0.;
+  results2=0.;
+  vec3 ro=P0;
+  vec3 rd=P1;
+  
+  /*oat[maxdegree+1] xi;
+  makeChebyshevNodes(xi);
+  float[maxdegree+1] yi;
+  makeY(ro,rd,xi,yi);*/
+  ${test.setup}
+  /*float[maxdegree+1] wi;
+  makeBarycentricLangrange(xi,wi);*/
+  /*float[maxdegree+1] coeffs;
+  makeCoeffs(yi,coeffs);*/
+  
+  for(int s=0;s<iter;s++){
+    Complex a=Complex(float(s)*0.01,float(s)*0.02+0.01);
+    vec3 pos=a.x*rd+ro;
+  	//results+=dot(abs(MCDrow(ro,rd,a)-BarycentricLangrange(a,xi,yi,wi)),vec2(1.,0.).yyxy);
+    //results+=abs(MCDrow(ro,rd,Complex(a.x,0.)).x-BarycentricLangrange(a.x,xi,yi,wi));
+    //results+=abs(MCDrow(float(s)*0.01).x);
+    //results+=dot(vec4(1),DCBarycentricLangrange(a,xi,yi,wi));
+    //results+=dot(vec4(1),MCDrow(ro,rd,a));
+    //results+=dot(vec4(1),DChorner(a,coeffs));//22 172
+    //results+=dot(vec4(1),abs(DChorner(a,coeffs)-DCrowM(ro,rd,a)));
+    //results2+=dot(vec4(1),abs(DCBarycentricLangrange(a,xi,yi,wi)-MCDrow(ro,rd,a)));
+
+    //results+=horner(a,coeffs);//
+    //results+=susR(pos);//2379 
+    //results+=rowM(pos);//24
+    //results+=rowMDense(pos);//19
+    //results+=susM(pos);//337
+    //results+=susMDense(pos);//135
+    //results+=susMPad(pos);//755
+    //results+=dot(DChorner(a,coeffs),vec4(1));//22 172
+    //results+=dot(DCsusR(ro,rd,a),vec4(1));//2382
+    //results+=dot(DCrowM(ro,rd,a),vec4(1));//71 685
+    //results+=dot(DCrowMDense(ro,rd,a),vec4(1));//1660
+    //results+=dot(DCsusM(ro,rd,a),vec4(1));//432
+    //results+=dot(DCsusMDense(ro,rd,a),vec4(1));
+    //results+=dot(DCsusMPad(ro,rd,a),vec4(1));
+    ${test.line}
+    
+  }
+  Complex a=Complex(0.77,0.55);
+  //results+=MCDrow(ro,rd,a)[gl_VertexID%4];
+  //results2=DCBarycentricLangrange(a,xi,yi,wi)[gl_VertexID%4];
+  
+  //results=BarycentricLangrange(Complex(2.,0.),xi,yi,wi)[gl_VertexID%4];
+  //BarycentricLangrange(Complex(2.,0.),xi,yi,wi);
+  //results+=dot(susMCD(P0.xyz,P0.zxy*P0.yzx,Complex(P0.x,P0.y)),vec4(1.));
+  
+  
+  
+  //results=wi[gl_VertexID%(maxdegree+1)];
+  
+  
+  /*float[maxdegree+1] coeffs;
+  makePoly(P0,P1,coeffs);
+  //makeMonom(P0,P1,ivec3(1,1,1),coeffs);
+  
+  //makePower(0.5,0.6,0,coeffs);
+  results=0.;//coeffs[gl_VertexID%(maxdegree+1)];
+  for(int i=0;i<iter;i++)results+=horner(float(i),coeffs);
+  //for(int i=0;i<maxdegree+1;i++)results+=coeffs[i];
+  for(int s=0;s<iter;s++){
+    results+=MCDrow(float(s));
+    //results+=susM(float(s)*P0.xyz);
+	//results+=susMCD2(float(s));
+  }*/
+  
+  //result1=vec4(result[0],result[1],result[2],result[3]);
+  //result2=vec4(result[4],result[5],result[6],result[7]);
+  //results=result[0]+result[1]+result[2]+result[3]+result[4]+result[5]+result[6]+result[7];
+  //results+=result[0]*result[0]+result[1]*result[1]+result[2]*result[2]+result[3]*result[3]+result[4]*result[4]+result[5]*result[5]+result[6]*result[6]+result[7]*result[7];
+
+}
+`;
+console.log(vertexshader);
+
+const tf=new TransformFeedbackWrapper(gl,vertexshader, ["results","results2"]);
+//const tf=new TransformFeedbackWrapper(gl,vertexshader, ["result1","result2"]);
+tf.shader.use();
+const M = new Float32Array(n*n).map(() => Math.random());
+//const R =range(8).map(i=>M.slice( 0 8,8 15,15 21   8*9/2-(n)*(n+1)/2  8*9/2-(n+2)*(n+2)/2 
+const R=[];
+for (let row = 0; row < n; row++) for (let col = row; col < n; col++) R.push(M[row*8 + col]);
+tf.shader.uniform1fv("M", M);
+tf.shader.uniform4fv("MDense", new Float32Array(n*(Math.ceil(n/4)*4)).map(() => Math.random()));
+tf.shader.uniform1fv("MPad", new Float32Array(n*(Math.ceil(n/4))).map(() => Math.random()));
+tf.shader.uniform1fv("R", new Float32Array(R));
+tf.shader.uniform1i("rank", n);
+//tf.shader.uniform1i("iter", iter);
+
+
+const blockIndex = gl.getUniformBlockIndex(tf.shader.program, "MatrixBlock");
+/*const blockSize  = gl.getActiveUniformBlockParameter(
+  tf.shader.program,
+  blockIndex,
+  gl.UNIFORM_BLOCK_DATA_SIZE
+);*/
+
+
+
+// bind block → binding point 0
+gl.uniformBlockBinding(tf.shader.program, blockIndex, 0);
+let times=[]
+let iters=1;
+ let r1;
+
+while(!times.length || times[times.length - 1] < 100){
+   tf.shader.uniform1i("iter", iters);
+  const timings=range(20).map(()=>{
+    gl.finish();
+    const t0 = performance.now();
+    r1=tf.run(arraylength);
+    return performance.now()-t0;
+  });
+
+  addPlotlyPlot({
+  x: timings.keys(),
+  y: timings,
+  layout: { title: 'Dynamic Plot in IDE' }
+  });
+  //const mean = timings.reduce((a, b) => a +b, 0)
+  times.push(Math.min( ... timings));
+  iters *= 10;
+ }
+  
+//appendResult(iter,Math.min(...timings).toFixed(2),mean.toFixed(2),Math.max(...timings).toFixed(2));
+//appendLog(Math.min(...timings),mean,Math.max(...timings));
+//appendResult(r1[0].slice(0,4),r1[1].slice(4,8));
+//appendLog(r1[0].length,r1[1].length);
+
+//r1.forEach((e)=>appendResult(e.slice(0,5)));
+//}
+//appendLog(gl.getParameter(gl.MAX_UNIFORM_BLOCK_SIZE));
+// often 16 KB or 64 KB
+appendResult(times,test.line,test.useubo);
+appendLog(times,test.line,test.useubo,r1.map((e)=>e.slice(0,5)));
+}
+
