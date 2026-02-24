@@ -1,10 +1,15 @@
 
-import { Cameracontroll } from "../glwrapper/glwrapper.js";
+import { Cameracontroll,throwonglerror } from "../glwrapper/glwrapper.js";
 import {MultiResBuffer3} from "../multires/MultiResBuffer3.js";
 import {evalContext} from "./codegenv4/codegenBackpropergation2.js";
+
+
+
 function radians(degrees) {
     return degrees * Math.PI / 180;
 }
+
+
 
 
 
@@ -89,8 +94,10 @@ export class RenderContext {
     if(!(this.changed||force))return RenderContext.UNCHANGED;
     this.changed=false;
     this.moved=false;
-    
+    throwonglerror(this.gl,true);
     this.multires.render();
+    throwonglerror(this.gl,false);
+
     //return true;
     if(this.multires.finished){
       return RenderContext.FINISHED;
@@ -118,9 +125,11 @@ export class RenderContext {
   }
 
   updateParams(){
+    throwonglerror(this.gl,true);
     for(const object of this.objects.values()){
       object.updateParams(this);
     }
+    throwonglerror(this.gl,false);
   }
    
   

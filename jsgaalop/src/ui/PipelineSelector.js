@@ -1,3 +1,12 @@
+const selectortemplate=`<template id="pipeline-selector-template">
+  <div class="object-visualization-mode">
+    <label class="object-label"></label>
+    <select class="pipeline-select">
+      <option value="">no_visualization</option>
+    </select>
+  </div>
+</template>`
+
 
 export function addPipelineSelectorForObject(renderableObject, container) {
   const wrapper = document.createElement('div');
@@ -24,7 +33,7 @@ export function addPipelineSelectorForObject(renderableObject, container) {
   }
 
   // Set initial selection
-  select.value ="aberth";// renderableObject.activePipelineName ?? [...renderableObject.pipelines.keys()][0];
+  select.value ="";// renderableObject.activePipelineName ?? [...renderableObject.pipelines.keys()][0];
 
   // On change: update active pipeline + call ctx
   select.onchange = () => {

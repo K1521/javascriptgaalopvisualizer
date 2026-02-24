@@ -349,6 +349,8 @@ class Node {
                 //derivs[child]+=   derivs[node]*edgederiv         
             }
         }
+
+        derivs.getOrZero=function(x){return this.get(x)??ConstNode.zero;};
         return derivs;
 
     }
@@ -693,7 +695,7 @@ class CastNode extends ExpressionNode {
         if(a.type==this.type)return a;
         if(a.type==NodeTypes.SCALAR){
             if(this.type==NodeTypes.COMPLEX)return{type:this.type,code:`Complex(${a.code},0.0)`};
-            if(this.type==NodeTypes.INTERVALL)return{type:this.type,code:`Intervall${a.code})`};
+            if(this.type==NodeTypes.INTERVALL)return{type:this.type,code:`Intervall(${a.code})`};
         }
         throw Error("unknown sub codegen case");
     }
@@ -1195,7 +1197,7 @@ export class visualizationtargetnode extends Node {
             const d_da=subgraphray.forwardpropergation(a);
             const body=new BundlenodeNode(subgraphray.parents.map((resulti,i)=>
                 new custumStatementNode(
-                    [resulti,d_da.get(resulti)??ConstNode.zero],
+                    [resulti,d_da.getOrZero(resulti)],
                     (strresulti,strdresultida)=>`result[${i}]=vec2(${strresulti},${strdresultida});`
                 )
             ));//:)
@@ -1564,9 +1566,21 @@ const int numoutputs=?;
                 )
             ));//:)
             const header="void makeDualComplexP(vec3 rayDir, vec3 rayOrigin,Complex a,out DualComplex[basislength] P) {?}";
-            replacements.set(header,generateFunctionCode(header,body));
+            replacements.set(header,generateFunctionCode(header,body));   
+        }
 
-            
+        {
+            const basisray=rayify(basis);
+            //void DualP(vec3 rayDir, vec3 rayOrigin,float a,out DualComplex[basislength] P) {?}
+            const d_da=basisray.forwardpropergation("a");
+            const body=new BundlenodeNode(basisray.parents.map((resulti,i)=>
+                new custumStatementNode(
+                    [resulti,d_da.getOrZero(resulti)],
+                    (strresulti,strdresultida)=>`P[${i}]=vec2(${strresulti},${strdresultida});`
+                )
+            ));//:)
+            const header="void makeDualP(vec3 rayDir, vec3 rayOrigin,float a,out Dual[basislength] P) {?}";
+            replacements.set(header,generateFunctionCode(header,body));   
         }
 
         {
@@ -1580,11 +1594,72 @@ const int numoutputs=?;
             ));//:)
             const header="void makeP(vec3 pos,out float[basislength] P) {?}";
             replacements.set(header,generateFunctionCode(header,body));
-
-            
         }
 
-        
+        {
+            const basisxyz=replacexyz(basis,...["pos.x","pos.y","pos.z"].map(v=>new VarNode(v)));
+            //void xyzDualP(vec3 pos,out xyzDual[basislength] P) {?}
+            const d_dx=basisxyz.forwardpropergation("pos.x");
+            const d_dy=basisxyz.forwardpropergation("pos.y");
+            const d_dz=basisxyz.forwardpropergation("pos.z");
+            const body=new BundlenodeNode(basisxyz.parents.map((resulti,i)=>
+                new custumStatementNode(
+                    [resulti,d_dx.getOrZero(resulti),d_dy.getOrZero(resulti),d_dz.getOrZero(resulti)],
+                    (ri,dridx,dridy,dridz)=>`P[${i}]=vec4(${dridx},${dridy},${dridz},${ri});`
+                )
+            ));//:)
+            const header="void makexyzDualP(vec3 pos,out xyzDual[basislength] P) {?}";
+            replacements.set(header,generateFunctionCode(header,body));
+        }
+
+        {
+            const basisxyz=replacexyz(basis,...["X","Y","Z"].map(v=>new VarNode(v,NodeTypes.INTERVALL)));
+            const body=new BundlenodeNode(basisxyz.parents.map((resulti,i)=>
+                new custumStatementNode(
+                    [new CastNode(resulti,NodeTypes.INTERVALL)],
+                    (ri)=>`P[${i}]=${ri};`
+                )
+            ));//:)
+            const header="void makeIntervallP(Intervall X,Intervall Y,Intervall Z,out Intervall[basislength] P) {?}";
+            replacements.set(header,generateFunctionCode(header,body));
+        }
+
+        {
+            //void MatmulRDense(vec4[basislength] x,out vec4[basislength] b){?}
+            //void MatmulRDense(vec2[basislength] x,out vec2[basislength] b){?}
+            const n=matrixsize;
+            let ri=0;
+            let body="\n";
+            for(let i=0;i<n;i++){
+                const acc=[];
+                for(let j=n - 4*Math.ceil((n-i)/4);j<n;j++){
+                    if(j>=i)acc.push(`P[${j}]*RDense[${Math.floor(ri/4)}][${ri%4}]`);
+                    ri++;
+                }
+                body+=`\nb[${i}]=`+acc.join("+")+";";
+            }
+            const header="void MatmulRDense(vec4[basislength] P,out vec4[basislength] b){?}";
+            const fullfunctioncode=header.replace("?",body);
+            replacements.set(header,fullfunctioncode);
+            replacements.set(header.replaceAll("vec4","vec2"),fullfunctioncode.replaceAll("vec4","vec2"));
+        }
+        {
+            //float susRDenseUnrolled(vec3 pos){
+            let body="vec4[basislength4] Pvec4;\nmakePvec4r(pos,Pvec4);\nfloat res=0.;"
+            const n=matrixsize;
+            let ri=0;
+            for(let i=0;i<n;i++) {
+                let acc=[];
+                //const offset=//should be the same as -
+                for(let j=Math.ceil(n/4)-Math.ceil((n-i)/4);j<Math.ceil(n/4);j++){
+                    acc.push(`dot(Pvec4[${j}],RDense[${ri++}])`);
+                }
+                body+="\nres+=square("+acc.join("+")+");";    
+            }
+            body+="\nreturn res;\n";
+            const header="float susRDenseUnrolled(vec3 pos){?}";
+            replacements.set(header,header.replace("?",body));
+        }
 
 
         return {codereplacements:replacements,matrix,basispolys};
@@ -1625,22 +1700,35 @@ const int numoutputs=?;
 
     }
     setuniformsR(shader,evalcontext){
-        if(shader.resolveUniformLocation("R")===null)return;
+        if(shader.resolveUniformLocation("R")===null && shader.resolveUniformLocation("RDense")===null)return;
         const{matrix,basispolys}=this.generatecodeRcached();
         const M=matrix.map(row=>row.map(node=>evalcontext.eval(node)));
         const R=mathjs.qr(M).R;
-        const size=M[0].length;
+        const n=M[0].length;
         const tol = 1e-12;
         const rank=R.findLastIndex(row =>row.some(x => Math.abs(x) > tol))+1;
         const Rflat=R.flatMap((row,i)=>row.slice(i));
         const degree=rank === 0 ? 0:Math.max(...basispolys.slice(rank-1).map(poly=>poly.degree()));
-        
-        
-        const Rflatpad=new Float32Array(size*(size+1)/2);
+        const Rflatpad=new Float32Array(n*(n+1)/2);
         Rflatpad.set(Rflat);
         shader.uniform1fv("R",Rflatpad);
         shader.uniform1i("rank",rank);
         shader.uniform1i("degree",degree);
+
+
+        const Rfull=R.slice();
+        while(Rfull.length<n)Rfull.push(new Array(n).fill(0));//padd with 0s to nxn
+        let RDense=[]; 
+
+        const n4=Math.ceil(n/4)*4;
+        for(let i=0;i<n;i++){
+            for(let j=n - 4*Math.ceil((n-i)/4);j<n;j++){
+                if(j<i)RDense.push(0);
+                else RDense.push(Rfull[i][j]);
+            }
+        }
+        shader.uniform4fv("RDense",new Float32Array(RDense));
+
     }
 
     setuniforms(shader,evalcontext){
@@ -1748,7 +1836,7 @@ const int numoutputs=?;
             const d_da=subgraphray.forwardpropergation("a");
             const body=new BundlenodeNode(subgraphray.parents.map((resulti,i)=>
                 new custumStatementNode(
-                    [resulti,d_da.get(resulti)??ConstNode.zero],
+                    [resulti,d_da.getOrZero(resulti)],
                     (strresulti,strdresultida)=>`result[${i}]=vec2(${strresulti},${strdresultida});`
                 )
             ));//:)

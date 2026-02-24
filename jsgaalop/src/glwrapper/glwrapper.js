@@ -178,7 +178,53 @@ export class Cameracontroll{
 }
 
 
-  
+
+
+const pendingFences=[];
+let lastCompleated=null;
+/**
+ * 
+ * @param {WebGL2RenderingContext} gl 
+ */
+export function throwonglerror(gl,makefence=true){
+  if(gl.isContextLost()&&pendingFences){
+    console.log("lastCompleated");
+    console.log(lastCompleated);
+    if(pendingFences.length>0){
+      console.log("next pending");
+      console.log(pendingFences[0].stack);
+    }else console.log("no pending fences")
+  }
+  while(pendingFences.length>0 && gl.clientWaitSync(pendingFences[0].sync, 0, 0)==gl.ALREADY_SIGNALED){
+    const {sync,stack}=pendingFences.shift();
+    lastCompleated=stack;
+    gl.deleteSync(sync);
+  }
+  if(makefence){
+  const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+  //gl.flush(); // important, but NOT finish()
+
+  pendingFences.push({
+    sync,
+    stack: new Error().stack
+  });
+}
+
+
+  const error=gl.getError();
+
+  if(error==gl.NO_ERROR)return;
+  if(error==gl.INVALID_ENUM)throw new Error("gl.INVALID_ENUM");
+  if(error==gl.INVALID_VALUE)throw new Error("gl.INVALID_VALUE");
+  if(error==gl.INVALID_OPERATION)throw new Error("gl.INVALID_OPERATION");
+  if(error==gl.INVALID_FRAMEBUFFER_OPERATION)throw new Error("gl.INVALID_FRAMEBUFFER_OPERATION");
+  if(error==gl.OUT_OF_MEMORY)throw new Error("gl.OUT_OF_MEMORY");
+  if(error==gl.CONTEXT_LOST_WEBGL)throw new Error("gl.CONTEXT_LOST_WEBGL");
+  if(gl.isContextLost())throw new Error("Context lost");
+  throw new Error(error);
+}
+
+
 export class Shader{
   static emptyfragmentshader = `#version 300 es
   precision highp float;

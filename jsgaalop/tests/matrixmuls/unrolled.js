@@ -138,9 +138,12 @@ for (int i = 0; i < rowlength; i++) {
 { line: "results+=susRUnrolledReversed(pos);", setup: "", uses: "R" },
 { line: "results+=susRDenseUnrolledReversed(pos);", setup: "", uses: "RDense" },
 { line: "results+=dot(DCsusRDenseUnrolledReversed(ro,rd,a),vec4(1));", setup: "", uses: "RDense" },
-{ line: "results+=susMflat(pos);", setup: "", uses: "M" }
+{ line: "results+=susMflat(pos);", setup: "", uses: "M" },
+{ line: "results+=dot(DCsusRUnrolled(ro,rd,a),vec4(1));", setup: "", uses: "R" },
+{ line: "results+=dot(DCsusMDenseUnrolled(ro,rd,a),vec4(1));", setup: "", uses: "MDense" },
+{ line: "results+=dot(DCsusMDenseUnrolled2(ro,rd,a),vec4(1));", setup: "", uses: "MDense" },
 ];
-tests=tests.filter((x)=>x.line.includes("susM"));
+tests=tests.filter((x)=>x.line.includes("DCsusMDenseUnrolled"));
 const testsWithUbo =
   [0, 1].flatMap(useubo =>
     tests.map(t => ({ ...t, useubo }))
@@ -651,6 +654,36 @@ vec4 DCsusR(vec3 ro,vec3 rd,Complex a){
    return res;
 }
     
+vec4 DCsusRUnrolled(vec3 ro,vec3 rd,Complex a){
+  	vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+  	vec4 res=vec4(0.);
+  
+${(()=>{
+let res="";
+let ri=0;
+let rowstart=0;
+const offset=4*Math.ceil(n/4)-n;
+for(let i=0;i<n;i++) {
+    let acc=[];
+
+	for (let j = i; j < n; j++) {
+    //for(let j=Math.floor(i/4)*4;j<Math.ceil((n)/4)*4;j++){
+        
+        if(j>=i)acc.push(`P[${j}]*R[${ri}]`);
+        ri++;
+    }
+    res+="\nres+=DualComplexSqare("+acc.join("+")+");";
+        
+}
+res+="\n";
+return res;
+})()}
+    
+   
+   return res;
+
+}
     
     
     
@@ -691,6 +724,60 @@ vec4 DCsusMDense(vec3 ro,vec3 rd,Complex a){
    
    return res;
 }
+
+vec4 DCsusMDenseUnrolled(vec3 ro,vec3 rd,Complex a){
+  	vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+  	vec4 res=vec4(0.);
+  ${(()=>{
+let res="";
+let ri=0;
+for(let i=0;i<n;i++) {
+    let acc=[];
+  	//const offset=//should be the same as -
+    for(let j=i;j<n;j++){
+        acc.push(`MDense[${i}*rowlength+${j}/4][${j}%4]*P[${j}]`);
+        //acc.push(`dot(Pvec4[${j}],MDense[${ri}])`);
+        
+    }
+    res+="\nres+=DualComplexSqare("+acc.join("+")+");";    
+}
+    return res;})()}
+return res;
+}
+
+
+
+void MatmulMDenseHalfUnrolled(vec4[n] P,out vec4[n] res){
+  	
+  ${(()=>{
+let res="";
+let ri=0;
+for(let i=0;i<n;i++) {
+    let acc=[];
+  	//const offset=//should be the same as -
+    for(let j=i;j<n;j++){
+        acc.push(`MDense[${i}*rowlength+${j}/4][${j}%4]*P[${j}]`);
+
+        
+    }
+    res+=`\nres[${i}]=(`+acc.join("+")+");";    
+}
+    return res;})()}
+}
+
+vec4 DCsusMDenseUnrolled2(vec3 ro,vec3 rd,Complex a){
+  	vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+	vec4[n] b;
+  	MatmulMDenseHalfUnrolled(P,b);
+  	vec4 res=vec4(0.);
+  	for(int i=0;i<n;i++){
+		res+=DualComplexSqare(b[i]);
+	}
+return res;
+}
+
 #endif
 #if defMDense
 

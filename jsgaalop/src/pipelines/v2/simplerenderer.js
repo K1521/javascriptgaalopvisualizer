@@ -30,7 +30,6 @@ export class simplerenderer extends LazyRenderingPipeline{
     this.paramsversion=ctx.evalContext.paramsversion;
     this.shader.use();
     this.visgraph.setuniforms(this.shader,ctx.evalContext);
-
   }
   isTilable(){return true;}
 }

@@ -30,6 +30,13 @@ Complex ComplexDiv(Complex a, Complex b) {
         (a.y * b.x - a.x * b.y)
     ) / dot(b,b);
 }
+Complex ComplexDiv(Complex a, Complex b,float eps) {
+    // Complex division: (a.x + i*a.y) / (b.x + i*b.y)
+    return Complex(
+        (a.x * b.x + a.y * b.y) ,
+        (a.y * b.x - a.x * b.y)
+    ) / max(dot(b,b),eps);
+}
 Complex ComplexInv(Complex a) {
     // Complex division: 1 / (a.x + i*a.y)
     return a*Complex(1,-1) / dot(a,a);

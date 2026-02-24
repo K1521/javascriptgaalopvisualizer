@@ -8,79 +8,84 @@
 #include "./Dual.glsl"
 #include "./Intervall.glsl"
 
+
+
+
+//all the ? get generated in codegenBackpropergation2 in class visualisationtargetnode in method gencodeR
 const int basislength=?;
 const int basismaxdegree=?;
 const int basislength4=(basislength+3)/4;
+
+uniform vec4[(basislength-(basislength/4)*2)*(basislength/4+1)] RDense;
+const float[(basismaxdegree+1)*(basismaxdegree+1)] Vinv = float[](?);
+
+void MatmulRDense(vec4[basislength] P,out vec4[basislength] b){?}
+void MatmulRDense(vec2[basislength] P,out vec2[basislength] b){?}
+
 void makeDualComplexP(vec3 rayDir, vec3 rayOrigin,Complex a,out DualComplex[basislength] P) {?}
 void makeP(vec3 pos,out float[basislength] P) {?}
 void makexyzDualP(vec3 pos,out xyzDual[basislength] P) {?}
 void makeDualP(vec3 rayDir, vec3 rayOrigin,float a,out Dual[basislength] P) {?}
 void makeIntervallP(Intervall X,Intervall Y,Intervall Z,out Intervall[basislength] P) {?}
 
-uniform float[basislength*(basislength+1)/2] R;
-const float[(basismaxdegree+1)*(basismaxdegree+1)] Vinv = float[](?);
-
-void makeP4(vec3 pos,out vec4[basislength4] Pvec4){
+float square(float x){return x*x;}
+void makePvec4r(vec3 pos,out vec4[basislength4] Pvec4){
   	float[basislength] P;
   	makeP(pos,P);
+	const int offset0=basislength4*4-basislength;
 	for (int i = 0; i < basislength4; i++) {
-      int k = i * 4;
-      Pvec4[i] = vec4(k + 0 < basislength ? P[k + 0] : 0.0,k + 1 < basislength ? P[k + 1] : 0.0,k + 2 < basislength ? P[k + 2] : 0.0,k + 3 < basislength ? P[k + 3] : 0.0);
-  	}
+      int k = i * 4-offset0;
+      Pvec4[i] = vec4(k + 0 >= 0 ? P[k + 0] : 0.0,
+                      k + 1 >= 0 ? P[k + 1] : 0.0,
+                      k + 2 >= 0 ? P[k + 2] : 0.0,
+                      k + 3 >= 0 ? P[k + 3] : 0.0);
+  	}  
 }
+
+float susRDenseUnrolled(vec3 pos){?}
+
+
+
+
 
 vec4 xyzDualsusR(vec3 pos){
   	vec4[basislength] P;
 	  makexyzDualP(pos,P);
+    vec4[basislength] b;
+    MatmulRDense(P,b);
   	vec4 res=vec4(0.);
-  	int ri=0;
     for(int i=0;i<basislength;i++){
-      vec4 acc=vec4(0.);
-      for(int j=i;j<basislength;j++,ri++)acc+=R[ri]*P[j];
-      res+=xyzDualSqare(acc);
+      res+=xyzDualSqare(b[i]);
     }
    
    return res;
 }
 
 
-bool boolIntervallR(vec2 X,vec2 Y,vec2 Z,float eps){
-  	Intervall[basislength] P;
-	  makeIntervallP(X,Y,Z,P);
-  	int ri=0;
-    for(int i=0;i<basislength;i++){
-      Intervall acc=vec2(0.);
-      for(int j=i;j<basislength;j++,ri++)acc+=IntervallMul(R[ri],P[j]);
-      if(!IntervallOverlap(acc,vec2(-eps,eps)))return false;
-    }
-   
-   return true;
-}
 
 
 vec4 DCsusR(vec3 ro,vec3 rd,Complex a){
   	vec4[basislength] P;
-	makeDualComplexP(ro,rd,a,P);
+    makeDualComplexP(ro,rd,a,P);
+    vec4[basislength] b;
+    MatmulRDense(P,b);
   	vec4 res=vec4(0.);
-  	int ri=0;
     for(int i=0;i<basislength;i++){
-      vec4 acc=vec4(0.);
-      for(int j=i;j<basislength;j++,ri++)acc+=R[ri]*P[j];
-      res+=DualComplexSqare(acc);
+      res+=DualComplexSqare(b[i]);
     }
-   
-   return res;
+    return res;
 }
 
 
 float GaussNewtonStepR(vec3 ro,vec3 rd,float a,float eps){
   	vec2[basislength] P;
 	  makeDualP(ro,rd,a,P);
+    vec2[basislength] b;
+    MatmulRDense(P,b);
   	vec2 res=vec2(0.);
   	int ri=0;
     for(int i=0;i<basislength;i++){
-      Dual acc=vec2(0.);
-      for(int j=i;j<basislength;j++,ri++)acc+=R[ri]*P[j];
+      Dual acc=b[i];
       res+=acc.y*acc;
     }
    
@@ -88,32 +93,26 @@ float GaussNewtonStepR(vec3 ro,vec3 rd,float a,float eps){
 }
 
 float susR(vec3 pos){
-  	float[basislength] P;
-	makeP(pos,P);
-  	float res=0.;
-  	int ri=0;
-    for(int i=0;i<basislength;i++){
-      float acc=0.;
-      for(int j=i;j<basislength;j++,ri++)acc+=R[ri]*P[j];
-      res+=acc*acc;
-    }
-   
-   return res;
+  return susRDenseUnrolled(pos);
 }
 
 vec4 DCrowR(vec3 ro,vec3 rd,Complex a){
     vec4[basislength] P;
-	makeDualComplexP(ro,rd,a,P);
-  	vec4 res=vec4(0.);
-    for(int j=0;j<basislength;j++)res+=R[j]*P[j];
-    return res;
+	  makeDualComplexP(ro,rd,a,P);
+  	vec4 acc=vec4(0.);
+    const int offset0=basislength4*4-basislength;
+    for(int j=0;j<basislength;j++){
+      int k=offset0+j;
+      acc+=RDense[k/4][k%4]*P[j];
+    }
+    return acc;
 }
 
 float rowR(vec3 pos){
-    float[basislength] P;
-	makeP(pos,P);
-    float acc=0.;
-    for(int j=0;j<basislength;j++)acc+=R[j]*P[j];
+    vec4[basislength4] Pvec4;
+    makePvec4r(pos,Pvec4);
+  	float acc=0.;
+    for(int j=0;j<basislength4;j++)acc+=dot(RDense[j],Pvec4[j]);
     return acc;
 }
 

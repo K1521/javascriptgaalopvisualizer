@@ -15,15 +15,16 @@ import { BasisConvert } from "../objectcontext/BasisConvert.js";
 import { pointcloudrenderer } from "../pipelines/pointcloudrenderer.js";
 import { linegridrenderer } from "../pipelines/linegridrenderer.js";
 import { simplerenderer } from "../pipelines/v2/simplerenderer.js";
+import { Voxelrenderer } from "../pipelines/v2/Voxelrenderer.js";
 import { matrixrenderer } from "../pipelines/matrixrenderer.js";
-import { Voxelrenderer } from "../pipelines/Voxelrenderer.js";
+//import { Voxelrenderer } from "../pipelines/Voxelrenderer.js";
 import { addPipelineSelectorForObject } from "../ui/PipelineSelector.js";
 import { MarchingCubesRenderer } from "../pipelines/MarchingCubesRenderer.js";
 
 import { makeSlider,ReorderableList } from "../ui/sliders.js";
 import { MarchingCubesRenderer2 } from "../pipelines/MarchingCubesRenderer2.js";
 
-
+import { throwonglerror } from "../glwrapper/glwrapper.js";
 
 
 
@@ -114,14 +115,19 @@ class RenderLoop {
   loop2(timestamp) {
     if (!this.running) return;
     const gl = this.gl;
+    //throwonglerror(gl);
     if(!this.syncs)this.syncs=[];//.map(()=>gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0));
     while(this.syncs.length>0 && gl.clientWaitSync(this.syncs[0], 0, 0)==gl.ALREADY_SIGNALED){
       gl.deleteSync(this.syncs[0]);this.syncs.shift();
     }
     if(this.syncs.length<2){
+      //throwonglerror(gl);
       this.animate(timestamp);
+      //throwonglerror(gl);
       this.syncs.push(gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0)); 
+      //throwonglerror(gl);
       gl.flush();  
+      //throwonglerror(gl);
     }
 
     requestAnimationFrame((ts) => this.loop2(ts));
@@ -295,6 +301,9 @@ async function main(){
     const aberthsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/aberth.glsl");
     obj.addPipeline("aberth",new simplerenderer(context,gl,visgraph,aberthsource,color));
     
+
+    const Rintervallsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/Rintervall.glsl");
+    obj.addPipeline("voxelpoint",new Voxelrenderer(gl,visgraph,Rintervallsource,color));
     //obj.setActivePipeline("voxelpoint2");
     //context.updateParams();
     //obj.setActivePipeline("aberth");
