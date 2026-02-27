@@ -71,8 +71,9 @@ export function makeSlider(template, name, callback = undefined, { min = 0, max 
 
     function updatespanandcallback() {
         const value = Number(slider.value);
-        valueSpan.textContent = value.toFixed(2);
-        callback?.(value);
+        let display=callback?.(value);
+        if(display==undefined)display=value.toFixed(2);
+        valueSpan.textContent = display;
     };
     updatespanandcallback();
     slider.addEventListener("input", updatespanandcallback);

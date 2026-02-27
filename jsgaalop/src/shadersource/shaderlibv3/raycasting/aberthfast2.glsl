@@ -10,9 +10,11 @@ precision mediump float;
 #include "../common/RDenseevalGenerator.glsl"
 
 
-const int ABERTH_MAXITER = 40;
-const float ABERTH_THRESHOLD = 1e-3;
+//const int ABERTH_MAXITER = 40;
+const float ABERTH_THRESHOLD = 1e-4;
 const float ROOT_ZERRO_THRESHOLD = 1e-4;
+
+uniform float eps;
 
 #define NUM_ROOTS basismaxdegree
 //#define polylen basismaxdegree+1
@@ -214,7 +216,7 @@ void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_
         //float e=length(cross(p, rayDir)) / length(rayDir);
         float e=abs(f.w)/sqrt(dot(f.xyz,f.xyz)+1e-10);
         //e*=1./(a*a);
-        if(a<xmin && a>=0. && e<0.01 && abs(f.w)<0.1){
+        if(a<xmin && a>=0. && e<eps && abs(f.w)<0.1){
             error=e;
             xmin=a;
         }

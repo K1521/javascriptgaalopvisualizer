@@ -15,6 +15,7 @@ import { BasisConvert } from "../objectcontext/BasisConvert.js";
 import { pointcloudrenderer } from "../pipelines/pointcloudrenderer.js";
 import { linegridrenderer } from "../pipelines/linegridrenderer.js";
 import { simplerenderer } from "../pipelines/v2/simplerenderer.js";
+import { aberthrenderer } from "../pipelines/v2/aberthrenderer.js";
 import { Voxelrenderer } from "../pipelines/v2/Voxelrenderer.js";
 import { matrixrenderer } from "../pipelines/matrixrenderer.js";
 //import { Voxelrenderer } from "../pipelines/Voxelrenderer.js";
@@ -251,7 +252,6 @@ async function main(){
     ["d14", 0.5], ["d24", 0.4], ["d34", 0.3],
   ]);*/
 
-  const object_visualization_controls = document.getElementById('object-visualization-controls');
   
   const visgraphs=graph.vistargets();
   for(const visgraph of visgraphs){
@@ -299,7 +299,7 @@ async function main(){
     obj.addPipeline("marching_cubes2",new MarchingCubesRenderer2(gl,visgraph,shaderSources.vertTemplateVoxelBig,shaderSources.computeTemplatexyzDual,color));*/
     
     const aberthsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/aberth.glsl");
-    obj.addPipeline("aberth",new simplerenderer(context,gl,visgraph,aberthsource,color));
+    obj.addPipeline("aberth",new aberthrenderer(context,gl,visgraph,aberthsource,color));
     
 
     const Rintervallsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/Rintervall.glsl");
@@ -308,7 +308,7 @@ async function main(){
     //context.updateParams();
     //obj.setActivePipeline("aberth");
      //context.updateParams();
-    addPipelineSelectorForObject(obj,object_visualization_controls);
+    addPipelineSelectorForObject(obj);
 
     
       

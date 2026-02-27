@@ -134,6 +134,7 @@ body { margin: 0; height: 100vh; display: flex; font-family: monospace; }
   color: #0f0;
 }
 #runTest {height:100%;aspect-ratio: 1;}
+#stopTest {height:100%;aspect-ratio: 1;}
 </style>
 </head>
 <body>
@@ -177,6 +178,7 @@ body { margin: 0; height: 100vh; display: flex; font-family: monospace; }
   <!-- Fixed buttons + canvas below split -->
   <div id="buttonsContainer">
     <button id="runTest">Run Test</button>
+    <button id="stopTest">Stop Test</button>
     <canvas id="myCanvas" width="256" height="256"></canvas>
   </div>
 </div>
@@ -192,7 +194,12 @@ import * as mathjs from 'https://cdn.jsdelivr.net/npm/mathjs@14.5.2/+esm';
 import { TransformFeedbackWrapper } from "../src/glwrapper/TransformFeedbackWrapper.js";
 import { shaderSources,loadWithIncludes } from "../src/glwrapper/shaderimporter.js";
 import { Shader } from "../src/glwrapper/glwrapper.js";
-
+const importedFns={
+  mathjs,
+  TransformFeedbackWrapper,
+  shaderSources,loadWithIncludes,
+  Shader
+}
 function range(start,stop,step=1){
   if(stop==undefined){
     stop=start;
@@ -270,29 +277,85 @@ function setCustom(content=null) {
   }
 }
 
+
+
+
 document.getElementById("runTest").addEventListener("click", () => {
-  const code=editor.getValue();
-  let result="";
-  function appendResult(...args) {
-    result += args.join(' ') + '\n';
-  }
+    const code = editor.getValue();
+    let result = "";
 
-  clearLog();
-  appendLog("// Running...");
-  setCustom();
-  try {
-      eval(code);
-      appendLog("// Done");
-  } catch(e) {
-      appendLog("[ERROR]");
-      appendLog(e);
-      appendLog(e.stack);
-      appendLog("// Done with Error");
-  }
-  appendLog("// Result");
-  appendLog(result);
+    function appendResult(...args) {
+        result += args.join(" ") + "\n";
+    }
 
-  if(result)appendHistory(result,code,consoleEl.textContent);
+    clearLog();
+    appendLog("// Running...");
+    setCustom();
+
+    function runUserCode(code) {
+      const internalFns = {
+      appendLog,
+      appendResult,
+      setCustom,
+      gl,
+      startLoop,
+      range
+    };
+
+      const fn = new Function(
+        ...Object.keys(importedFns),
+        ...Object.keys(internalFns),
+        code
+      );
+
+      return fn(...Object.values(importedFns),...Object.values(internalFns));
+    }
+
+
+
+    try {
+        const evaluated = runUserCode(code);
+
+        if (typeof evaluated === "function" &&
+            evaluated.constructor.name === "GeneratorFunction") {
+
+            appendLog("// Generator started");
+
+            startLoop(evaluated, {
+                onDone: ({ finished, stopped, error } = {}) => {
+
+                    if (error) {
+                        appendLog("[ERROR inside generator]");
+                        appendLog(error);
+                        appendLog(error.stack);
+                    }
+
+                    if (finished) appendLog("// Finished");
+                    if (stopped) appendLog("// Stopped");
+
+                    appendLog("// Result");
+                    appendLog(result);
+
+                    if (result)
+                        appendHistory(result, code, consoleEl.textContent);
+                }
+            });
+
+        } else {
+            appendLog("// Done (sync)");
+            appendLog("// Result");
+            appendLog(result);
+
+            if (result)
+                appendHistory(result, code, consoleEl.textContent);
+        }
+
+    } catch (e) {
+        appendLog("[ERROR during eval]");
+        appendLog(e);
+        appendLog(e.stack);
+        appendLog("// Done with Error");
+    }
 });
 
 
@@ -365,6 +428,61 @@ function appendHistory(result, code, output) {
   history.appendChild(clone);
   history.scrollTop = history.scrollHeight;
 }
+
+
+
+//jay chatgpt code
+// --------------------
+// Global run/version variable
+// --------------------
+let run = 0;
+
+function startLoop(generatorFn, { onDone } = {}) {
+    run++;
+    const runLocal = run;
+
+    let iterator;
+
+    try {
+        iterator = generatorFn();   // MUST be generator function
+    } catch (err) {
+        if (onDone) onDone({ error: err });
+        return;
+    }
+
+    function loop() {
+        if (runLocal !== run) {
+            if (onDone) onDone({ stopped: true });
+            return;
+        }
+
+        let res;
+        try {
+            res = iterator.next();
+        } catch (err) {
+            if (onDone) onDone({ error: err });
+            return;
+        }
+
+        if (res.done) {
+            if (onDone) onDone({ finished: true });
+            return;
+        }
+
+        requestAnimationFrame(loop);
+    }
+
+    requestAnimationFrame(loop);
+}
+
+// --------------------
+// Stop Button
+// --------------------
+
+document.getElementById("stopTest").addEventListener("click", () => {
+    run++;  // increment run to stop any active loop
+});
+
 
 </script>
 

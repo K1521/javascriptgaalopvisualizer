@@ -5,6 +5,7 @@ export class simplerenderer extends LazyRenderingPipeline{
 
   constructor(ctx,gl,visgraph,fragmentShaderSourceTemplate,color){
     super(()=>{
+      this.ctx=ctx;
       const frag=visgraph.gencodeR(fragmentShaderSourceTemplate);
 
       this.shader=new Shader(gl, shaderSources.vertRaycastFullscreen,frag );

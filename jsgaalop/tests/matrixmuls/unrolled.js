@@ -1,3 +1,7 @@
+
+return function*(){
+
+
 // Function to add a Plotly plot into the custom panel
 function addPlotlyPlot({ x = [], y = [], type = 'scatter', layout = {} }) {
   // 1️⃣ Create a div for the plot
@@ -79,7 +83,7 @@ makeCoeffs(yi,coeffs);
     uses: "M"
   },
 
-  { line: "results+=rowM(pos);",                     setup: "results+=susM(pos);", uses: "M" },
+  { line: "results+=rowM(pos);",                     setup: "", uses: "M" },
   { line: "results+=rowMDense(pos);",                setup: "", uses: "MDense" },
   { line: "results+=susR(pos);",                     setup: "", uses: "R" },
   { line: "results+=susM(pos);",                     setup: "", uses: "M" },
@@ -143,7 +147,7 @@ for (int i = 0; i < rowlength; i++) {
 { line: "results+=dot(DCsusMDenseUnrolled(ro,rd,a),vec4(1));", setup: "", uses: "MDense" },
 { line: "results+=dot(DCsusMDenseUnrolled2(ro,rd,a),vec4(1));", setup: "", uses: "MDense" },
 ];
-tests=tests.filter((x)=>x.line.includes("DCsusMDenseUnrolled"));
+//tests=tests.filter((x)=>x.line.includes("DCsusMDenseUnrolled"));
 const testsWithUbo =
   [0, 1].flatMap(useubo =>
     tests.map(t => ({ ...t, useubo }))
@@ -806,7 +810,8 @@ vec4 DCsusMDense2(vec3 ro,vec3 rd,Complex a){
 #endif
 #if defRDense
 
-vec4 DCsusRDenseReverse(vec3 ro,vec3 rd,Complex a){
+
+vec4 DCsusRDenseReversed(vec3 ro,vec3 rd,Complex a){
   	vec4[n] P;
 	makeDualComplexP(ro,rd,a,P);
   	vec4 res=vec4(0.);
@@ -824,7 +829,29 @@ vec4 DCsusRDenseReverse(vec3 ro,vec3 rd,Complex a){
     }
    
    return res;
+}  
+  
+vec4 DCsusRDense(vec3 ro,vec3 rd,Complex a){
+  	vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+  	vec4 res=vec4(0.);
+  int ri=0;
+    for(int i=0;i<n;i++){
+      vec4 acc=vec4(0.);
+      for(int j=n-4*((n+3)/4);j<n;j++,ri++){
+        if(j>=i)acc+=RDense[ri/4][ri%4]*P[j];
+        /*acc+=MDense[i*rowlength+j][1]*P[4*j+1];
+        acc+=MDense[i*rowlength+j][2]*P[4*j+2];
+        acc+=MDense[i*rowlength+j][3]*P[4*j+3];*/
+      }
+      //ri+=(4 - (ri % 4)) % 4;
+      res+=DualComplexSqare(acc);
+    }
+   
+   return res;
 }
+
+
 /*vec4 DCsusRDense2(vec3 ro,vec3 rd,Complex a){
   	vec4[n] P;
 	makeDualComplexP(ro,rd,a,P);
@@ -1262,6 +1289,7 @@ while(!times.length || times[times.length - 1] < 100){
   y: timings,
   layout: { title: 'Dynamic Plot in IDE' }
   });
+yield;
   //const mean = timings.reduce((a, b) => a +b, 0)
   times.push(Math.min( ... timings));
   iters *= 10;
@@ -1278,5 +1306,8 @@ while(!times.length || times[times.length - 1] < 100){
 // often 16 KB or 64 KB
 appendResult(times,test.line,test.useubo);
 appendLog(times,test.line,test.useubo,r1.map((e)=>e.slice(0,5)));
+}
+
+
 }
 

@@ -40,6 +40,26 @@
     <strong>Shaders</strong><br>
     <div id="object-visualization-controls">
       <!-- checkboxes will be inserted here dynamically -->
+       <template id="pipeline-selector-template">
+          <div class="object-visualization-mode">
+            <!-- Header row: label + selector + collapse button -->
+            <div class="header-row" style="display: flex; gap: 8px; align-items: center;">
+              <label class="object-label" style="flex: 1;">Object Name</label>
+              <select class="pipeline-select" style="flex: 1;">
+                <option value="">no_visualization</option>
+              </select>
+              <span class="arrow" >▶</span>
+            </div>
+
+            <!-- Collapsible content -->
+            <div class="pipeline-controls" style="display: none; margin-top: 4px;">
+              <div class="controls-content">
+                <!-- Sliders or other controls will be appended here -->
+                loading
+              </div>
+            </div>
+          </div>
+        </template>
     </div>
     
   </div>

@@ -72,7 +72,7 @@ body {
   max-width: 400px;
 }
 
-.object-visualization-mode {
+/*.object-visualization-mode {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -86,4 +86,4 @@ body {
 .object-visualization-mode select {
   flex: 2;
   min-width: 180px;
-}
+}*/
