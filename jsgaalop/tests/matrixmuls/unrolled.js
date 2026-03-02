@@ -146,8 +146,9 @@ for (int i = 0; i < rowlength; i++) {
 { line: "results+=dot(DCsusRUnrolled(ro,rd,a),vec4(1));", setup: "", uses: "R" },
 { line: "results+=dot(DCsusMDenseUnrolled(ro,rd,a),vec4(1));", setup: "", uses: "MDense" },
 { line: "results+=dot(DCsusMDenseUnrolled2(ro,rd,a),vec4(1));", setup: "", uses: "MDense" },
+  { line: "results+=dot(DCsusRDenseUnrolled2(ro,rd,a),vec4(1));", setup: "", uses: "RDense" }
 ];
-//tests=tests.filter((x)=>x.line.includes("DCsusMDenseUnrolled"));
+tests=tests.filter((x)=>x.line.includes("DCsusRDenseUnrolled2"));
 const testsWithUbo =
   [0, 1].flatMap(useubo =>
     tests.map(t => ({ ...t, useubo }))
@@ -908,6 +909,8 @@ return res;
 }
 
 
+
+
 vec4 DCsusRDenseUnrolledReversed(vec3 ro,vec3 rd,Complex a){
   	vec4[n] P;
 	makeDualComplexP(ro,rd,a,P);
@@ -937,6 +940,35 @@ return res;
    return res;
 
 }
+
+
+void MatmulRDense(vec4[n] P,out vec4[n] b){
+${(()=>{
+            let ri=0;
+            let body="\n";
+            for(let i=0;i<n;i++){
+                const acc=[];
+                for(let j=n - 4*Math.ceil((n-i)/4);j<n;j++){
+                    if(j>=i)acc.push(`P[${j}]*RDense[${Math.floor(ri/4)}][${ri%4}]`);
+                    ri++;
+                }
+                body+=`\nb[${i}]=`+acc.join("+")+";";
+            }
+return body;
+  })()}
+}
+vec4 DCsusRDenseUnrolled2(vec3 ro,vec3 rd,Complex a){
+  	vec4[n] P;
+	makeDualComplexP(ro,rd,a,P);
+	vec4[n] b;
+  	MatmulRDense(P,b);
+  	vec4 res=vec4(0.);
+  	for(int i=0;i<n;i++){
+		res+=DualComplexSqare(b[i]);
+	}
+return res;
+}
+
 
 #endif
 #if defMPad
@@ -1014,14 +1046,14 @@ float rowM(vec3 pos){
 }
 float rowCopy(float[n] c,vec3 pos){
     float[n] P;
-	makeP(pos,P);
+	  makeP(pos,P);
     float acc=0.;
     for(int j=0;j<n;j++)acc+=c[j]*P[j];
     return acc;
 }
 float rowCopyDense(vec4[rowlength] cDense,vec3 pos){
     vec4[rowlength] Pvec4;
-	makePvec4(pos,Pvec4);
+	  makePvec4(pos,Pvec4);
     float acc=0.;
     for(int j=0;j<rowlength;j++)acc+=dot(cDense[j],Pvec4[j]);
     return acc;

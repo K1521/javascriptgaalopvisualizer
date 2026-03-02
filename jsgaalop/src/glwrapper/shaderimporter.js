@@ -192,29 +192,47 @@ export async function loadWithIncludes(entryUrl,shadersource=undefined) {
   vertTemplateVoxelBool: "vert_voxel_bool_generated.glsl",//compute shader for voxels, Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {?}
   vertRaycastFullscreen:"vertRaycastFullscreen.glsl",
 };*/
-export const shaderSources  = {//path gets replaced with content
-  fragTemplateAberth: "shaderlibv1/raycasting_frag_shaders/frag_aberth.glsl",//raycasting using aberth
-  fragTemplateDualGauss: "shaderlibv1/raycasting_frag_shaders/frag_gauss.glsl",//raycasting using Gauss
-  fragTemplateSphere: "shaderlibv1/raycasting_frag_shaders/frag_sphereaprox.glsl",//raycasting using Gauss
-  fragTemplateAxisAligned: "frag_aberth_generated_axis_aligned.glsl",//orthographic , outputs roots for each ray 
-  fragTemplateAberthMatrix: "frag_aberth_matrix_dcga.glsl",//raycasting using aberth with matrix
-  vertTemplateVoxel: "vert_voxel_generated.glsl",//compute shader for voxels, bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {?}
-  vertTemplateVoxelBool: "vert_voxel_bool_generated.glsl",//compute shader for voxels, Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {?}
-  vertRaycastFullscreen:"vertRaycastFullscreen.glsl",
-  computeTemplatexyzDual:"shaderlibv1/computeshaders/dualxyz.glsl",
-  vertTemplateVoxelBig:"vert_voxel_bool_generated_big.glsl",
-};
 
 const src = new URL('../', import.meta.url);
 const basePath = new URL("./shadersource/",src);//relative to index
-await Promise.all(
+/*export const shaderSources  = {//path gets replaced with content
+//  fragTemplateAberth: "shaderlibv1/raycasting_frag_shaders/frag_aberth.glsl",//raycasting using aberth
+//  fragTemplateDualGauss: "shaderlibv1/raycasting_frag_shaders/frag_gauss.glsl",//raycasting using Gauss
+ // fragTemplateSphere: "shaderlibv1/raycasting_frag_shaders/frag_sphereaprox.glsl",//raycasting using Gauss
+ // fragTemplateAxisAligned: "frag_aberth_generated_axis_aligned.glsl",//orthographic , outputs roots for each ray 
+ // fragTemplateAberthMatrix: "frag_aberth_matrix_dcga.glsl",//raycasting using aberth with matrix
+ // vertTemplateVoxel: "vert_voxel_generated.glsl",//compute shader for voxels, bool evaluatevoxelIntervall3d(Intervall x, Intervall y, Intervall z) {?}
+ // vertTemplateVoxelBool: "vert_voxel_bool_generated.glsl",//compute shader for voxels, Intervall IntervallSummofsquares(Intervall _V_X,Intervall _V_Y,Intervall _V_Z) {?}
+  vertRaycastFullscreen:"vertRaycastFullscreen.glsl",
+  //computeTemplatexyzDual:"shaderlibv1/computeshaders/dualxyz.glsl",
+  //vertTemplateVoxelBig:"vert_voxel_bool_generated_big.glsl",
+};*/
+
+async function loadShaders() {
+  const loadedEntries = await Promise.all(
+    Object.entries({
+      vertRaycastFullscreen: "vertRaycastFullscreen.glsl",
+      // ... andere Shader
+    }).map(async ([name, path]) => {
+      const source = await loadWithIncludes(basePath + path);
+      return [name, source];
+    })
+  );
+  return Object.fromEntries(loadedEntries);
+}
+
+export const shaderSources = await loadShaders();
+
+/*await Promise.all(
   Object.entries(shaderSources).map(async ([name, path]) => {
     const source = await loadWithIncludes(basePath + path);
     shaderSources[name] = source;
   })
-);
+);*/
 
 
 export async function loadWithIncludesRelativeToShadersource(entryUrl,shadersource=undefined){
+  //alert(entryUrl);
+  console.log(basePath+entryUrl,shadersource);
   return await loadWithIncludes(basePath+entryUrl,shadersource);
 }

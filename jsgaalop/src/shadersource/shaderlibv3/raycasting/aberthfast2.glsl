@@ -15,6 +15,7 @@ const float ABERTH_THRESHOLD = 1e-4;
 const float ROOT_ZERRO_THRESHOLD = 1e-4;
 
 uniform float eps;
+uniform float beta;
 
 #define NUM_ROOTS basismaxdegree
 //#define polylen basismaxdegree+1
@@ -75,11 +76,11 @@ void aberth_method_sus(inout Complex[NUM_ROOTS] roots, vec3 rayDir, vec3 rayOrig
 
 
         
-            Complex s = Complex(0.0); // Summation term
+            Complex rk=roots[k];
+            Complex s =ComplexInv(rk-ComplexConjugate(rk)); // Summation term
             for (int j = 0; j < NUM_ROOTS; j++) {
-                if (j != k) {
-                    Complex diff = roots[k] - roots[j];
-                    s += ComplexInv(diff);
+                if (j != k) { // Avoid self-interaction
+                    s += ComplexInv(rk - roots[j])+ComplexInv(rk - ComplexConjugate(roots[j]));
                 }
             }
         
@@ -95,10 +96,10 @@ void aberth_method_sus(inout Complex[NUM_ROOTS] roots, vec3 rayDir, vec3 rayOrig
         
 
         // If the maximum change is smaller than the threshold, stop early
-        if (max_change < ABERTH_THRESHOLD) {
+        /*if (max_change < ABERTH_THRESHOLD) {
             //debugcolor(vec3(float(iter+1)/float(ABERTH_MAXITER)));
             break; // Converged, exit the loop
-        }
+        }*/
     }
 }
 
@@ -137,10 +138,10 @@ void aberth_method_horner(inout Complex[NUM_ROOTS] roots,float[NUM_ROOTS+1] coef
         
 
         // If the maximum change is smaller than the threshold, stop early
-        if (max_change < ABERTH_THRESHOLD) {
+        /*if (max_change < ABERTH_THRESHOLD) {
             //debugcolor(vec3(float(iter+1)/float(ABERTH_MAXITER)));
             break; // Converged, exit the loop
-        }
+        }*/
     }
 }
 
@@ -181,6 +182,27 @@ float gaussnewton(vec3 rayDir, vec3 rayOrigin,float a,int iter){
     for(int i=0;i<iter;i++)a-=GaussNewtonStepR(rayDir,rayOrigin,a,1e-12);
     return a;
 }
+float distanceLinePoint(vec3 ro, vec3 rd, vec3 p) {
+    return length(cross(p - ro, rd));
+}
+
+float raySphereIntersect(vec3 ro, vec3 rd, vec3 center, float radius) {
+    vec3 oc = ro - center;
+    float b = dot(oc, rd);
+    float c = dot(oc, oc) - radius * radius;
+    float h = b*b - c;
+
+    if (h < 0.0) return inf;  // no intersection
+
+    h = sqrt(h);
+    float t0 = -b - h;  // entry point
+    float t1 = -b + h;  // exit point
+
+    if (t0 >= 0.0) return t0;
+    if (t1 >= 0.0) return t1;
+
+    return inf;  // sphere is behind the ray
+}
 
 void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_rayDirXY) {
     
@@ -207,19 +229,34 @@ void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_
     xmin=inf;
     for(int i = 0; i < NUM_ROOTS; ++i){
         float a=roots[i].x;
-        xyzDual f=xyzDualsusR(rayDir*a+rayOrigin);
+        //xyzDual f=xyzDualsusR(rayDir*a+rayOrigin);
 
-        vec3 p=abs(f.w)/(dot(f.xyz,f.xyz)+1e-10)*f.xyz;
+        //vec3 p=abs(f.w)/(dot(f.xyz,f.xyz)+1e-10)*f.xyz;
         //pd=p-dot(p,rayDir)/dot(rayDir,rayDir)*rayDir
         //dist=sqrt(dot(pd,pd))
 
         //float e=length(cross(p, rayDir)) / length(rayDir);
-        float e=abs(f.w)/sqrt(dot(f.xyz,f.xyz)+1e-10);
+        //float e=abs(f.w)/sqrt(dot(f.xyz,f.xyz)+1e-10);
+        vec4 gn=GaussNewtonStepR(rayDir*a+rayOrigin,beta);
+        float e=length(gn.xyz);
+        float f=gn.w;
         //e*=1./(a*a);
-        if(a<xmin && a>=0. && e<eps && abs(f.w)<0.1){
-            error=e;
-            xmin=a;
-        }
+        if(a<xmin && e<eps && a>=0. && abs(f)<1.){
+                error=e;
+                xmin=a;
+            }
+        /*if(v_rayDirXY.x>0.){
+            a=raySphereIntersect(rayOrigin,rayDir,rayDir*a+rayOrigin+gn.xyz,eps);
+            if(a<xmin && a>=0. && abs(f)<1.){
+                error=e;
+                xmin=a;
+            }
+        }else{
+            if(a<xmin && e<eps && a>=0. && abs(f)<1.){
+                error=e;
+                xmin=a;
+            }
+        }*/
     }
 
     /*for(int i = 0; i < NUM_ROOTS; ++i){

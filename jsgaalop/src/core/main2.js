@@ -2,7 +2,7 @@
 
 import { Vector} from './../util/linalg1.js';
 //import {Cameracontroll,renderingpipeline,renderingpipeline_coeffxyz,Shader} from "../glwrapper/glwrapper.js";
-import { shaderSources ,loadWithIncludesRelativeToShadersource} from "../glwrapper/shaderimporter.js";
+import { loadWithIncludesRelativeToShadersource} from "../glwrapper/shaderimporter.js";
 import {TransformFeedbackWrapper} from "../glwrapper/TransformFeedbackWrapper.js";
 import {GaalopGraph} from "./codegenv4/codegenBackpropergation2.js";
 import { RenderableObject } from "./RenderableObject.js";
@@ -17,6 +17,8 @@ import { linegridrenderer } from "../pipelines/linegridrenderer.js";
 import { simplerenderer } from "../pipelines/v2/simplerenderer.js";
 import { aberthrenderer } from "../pipelines/v2/aberthrenderer.js";
 import { Voxelrenderer } from "../pipelines/v2/Voxelrenderer.js";
+import { VoxelDistRenderer } from "../pipelines/v2/VoxelDistRenderer.js";
+import { VoxelGNRenderer } from "../pipelines/v2/VoxelGNRenderer.js";
 import { matrixrenderer } from "../pipelines/matrixrenderer.js";
 //import { Voxelrenderer } from "../pipelines/Voxelrenderer.js";
 import { addPipelineSelectorForObject } from "../ui/PipelineSelector.js";
@@ -27,7 +29,7 @@ import { MarchingCubesRenderer2 } from "../pipelines/MarchingCubesRenderer2.js";
 
 import { throwonglerror } from "../glwrapper/glwrapper.js";
 
-
+window.DEBUG_LOG = ["test"];
 
 class RenderLoop {
   constructor(gl, animate) {
@@ -76,7 +78,7 @@ class RenderLoop {
     if (!this.running) return;
 
     const gl = this.gl;
-
+    
 
      /*if (!this.syncold){
         const status=gl.clientWaitSync(this.syncold,  gl.SYNC_FLUSH_COMMANDS_BIT, 0);
@@ -218,7 +220,7 @@ function init_sliders_and_parameters(context,graph) {
 
 let context;
 async function main(){
-
+//alert("1")
     //let gajson=await load("./jsonexport.json");
     //let gajson=await load("./torus.json");
     //let gajson=await load("./assets/torus_intersect.json");
@@ -285,7 +287,7 @@ async function main(){
     const color=graph.objectcolormap.get(visgraph.name); 
     
     //gl.uniform4fv(shader.getUniformLocation('incolor'), [color.r,color.g,color.b,1.0]);
-    
+
     
     /*obj.addPipeline("point",new pointcloudrenderer(gl,visgraph,shaderSources.fragTemplateAxisAligned,color));
     obj.addPipeline("lines",new linegridrenderer(gl,visgraph,shaderSources.fragTemplateAxisAligned,color));
@@ -304,6 +306,13 @@ async function main(){
 
     const Rintervallsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/Rintervall.glsl");
     obj.addPipeline("voxelpoint",new Voxelrenderer(gl,visgraph,Rintervallsource,color));
+
+    const gaussnewtondistsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGaussNewtonGrid.glsl");
+    obj.addPipeline("RGaussNewtonGrid",new VoxelDistRenderer(gl,visgraph,gaussnewtondistsource,color));
+    
+    const gaussnewtonitersource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGaussNewtonIterGrid.glsl");
+    obj.addPipeline("RGaussNewtonGridIter",new VoxelGNRenderer(context,gl,visgraph,gaussnewtonitersource,color));
+
     //obj.setActivePipeline("voxelpoint2");
     //context.updateParams();
     //obj.setActivePipeline("aberth");

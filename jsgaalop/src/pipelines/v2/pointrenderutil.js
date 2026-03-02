@@ -18,7 +18,7 @@ uniform mat3 cameraMatrix;
 uniform vec3 cameraPos;
 uniform vec2 windowsize;
 
-
+uniform float pointsize;
 //const float FOV=120.;
 //const float FOVfactor=1./tan(radians(FOV) * 0.5);
 uniform vec2 focal;
@@ -43,7 +43,12 @@ void main() {
     gl_Position = vec4(xy, ndcZ, 1.0);
 
     // Optional point size
-    gl_PointSize = 3.0;
+    //gl_PointSize = 3.0;
+    if(pointsize>0.)gl_PointSize=pointsize* (focal.x+focal.y)*0.5 / viewVec.z;
+    else gl_PointSize=-pointsize;
+
+    gl_PointSize = clamp(gl_PointSize, 1.0, 20.0);
+
 }`;
 const fShader=`#version 300 es
 // Fragment Shader
@@ -77,11 +82,13 @@ export class PointShader{
     gl.enableVertexAttribArray(positionAttribLoc);
     gl.vertexAttribPointer(positionAttribLoc, 3, gl.FLOAT, false, 0, 0);
     gl.bindVertexArray(null);
+    this.pointsize=-3;
   }
   render(ctx){
     const color=this.color;
     const gl=this.gl;
     this.shader.use();
+    this.shader.uniform1f('pointsize', this.pointsize);
     this.shader.uniform4fv('incolor', [color.r,color.g,color.b,1.0]);
     ctx.updateUniforms(this.shader); // sets cameraPos and cameraMatrix and windowsize
     gl.bindVertexArray(this.vao);

@@ -19,7 +19,7 @@ vec3 normaltocol(vec3 normal){
 
 
 float vsum(vec3 v) {
-    return v.x+v.y+v.z;
+    return dot(v,vec3(1));
 }
 int vsum(ivec3 v) {
     return v.x+v.y+v.z;

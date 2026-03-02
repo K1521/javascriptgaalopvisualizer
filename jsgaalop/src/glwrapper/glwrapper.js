@@ -428,10 +428,46 @@ export class Shader{
     this.gl.uniform1i(loc, value);
   }
 
-  uniform1f(nameOrLocation, value) {
+  uniform2i(nameOrLocation, v1,v2) {
     const loc = this.resolveUniformLocation(nameOrLocation);
     if (loc === null) return false;
-    this.gl.uniform1f(loc, value);
+    this.gl.uniform2i(loc, v1,v2);
+  }
+
+  uniform3i(nameOrLocation, v1,v2,v3) {
+    const loc = this.resolveUniformLocation(nameOrLocation);
+    if (loc === null) return false;
+    this.gl.uniform3i(loc, v1,v2,v3);
+  }
+
+  uniform4i(nameOrLocation, v1,v2,v3,v4) {
+    const loc = this.resolveUniformLocation(nameOrLocation);
+    if (loc === null) return false;
+    this.gl.uniform4i(loc, v1,v2,v3,v4);
+  }
+
+  uniform1f(nameOrLocation, v1) {
+    const loc = this.resolveUniformLocation(nameOrLocation);
+    if (loc === null) return false;
+    this.gl.uniform1f(loc, v1);
+  }
+
+  uniform2f(nameOrLocation, v1,v2) {
+    const loc = this.resolveUniformLocation(nameOrLocation);
+    if (loc === null) return false;
+    this.gl.uniform2f(loc, v1,v2);
+  }
+
+  uniform3f(nameOrLocation, v1,v2,v3) {
+    const loc = this.resolveUniformLocation(nameOrLocation);
+    if (loc === null) return false;
+    this.gl.uniform3f(loc, v1,v2,v3);
+  }
+
+  uniform4f(nameOrLocation, v1,v2,v3,v4) {
+    const loc = this.resolveUniformLocation(nameOrLocation);
+    if (loc === null) return false;
+    this.gl.uniform4f(loc, v1,v2,v3,v4);
   }
 
   uniform1fv(nameOrLocation, value) {

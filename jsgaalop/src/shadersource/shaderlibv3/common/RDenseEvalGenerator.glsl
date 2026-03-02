@@ -92,6 +92,46 @@ float GaussNewtonStepR(vec3 ro,vec3 rd,float a,float eps){
    return res.x/(eps+res.y);
 }
 
+
+vec4 GaussNewtonStepR(vec3 pos,float beta){
+  	vec4[basislength] P;
+	  makexyzDualP(pos,P);
+    vec4[basislength] F;
+    MatmulRDense(P,F);
+
+    vec4 JtJdiagandf=vec4(vec3(beta),0);
+    vec3 JtJ_xy_xz_zy=vec3(0);
+    vec3 Jtf=vec3(0);
+    //float f=0.;
+    for(int i=0;i<basislength;i++){
+      vec4 xyzf=F[i];
+      //JtJdiag+=xyzf.xyz*xyzf.xyz;
+      JtJdiagandf+=xyzf*xyzf;
+      JtJ_xy_xz_zy+=xyzf.xxy*xyzf.yzz;
+      Jtf+=xyzf.xyz*xyzf.w;
+      //f+=xyzf.w*xyzf.w;
+    }
+
+    float f=JtJdiagandf.w;
+
+    //[a11 a21 a31 a12 a22 a32 a13 a23 a33]
+    //
+    /*
+    |a11=xx=JtJdiag.x a12=xy=JtJ_xy_xz_zy[0] a13=xz=JtJ_xy_xz_zy[1]|
+    |a21=yx=JtJ_xy_xz_zy[0] a22=yy=JtJdiag.y a23=yz=JtJ_xy_xz_zy[2]|
+    |a31=zx=JtJ_xy_xz_zy[1] a32=zy=JtJ_xy_xz_zy[2] a33=zz=JtJdiag.z|
+    */
+    mat3 JtJ=mat3(//column major
+      JtJdiagandf.x,JtJ_xy_xz_zy[0],JtJ_xy_xz_zy[1],
+      JtJ_xy_xz_zy[0],JtJdiagandf.y,JtJ_xy_xz_zy[2],
+      JtJ_xy_xz_zy[1],JtJ_xy_xz_zy[2],JtJdiagandf.z
+    );
+    vec3 result=-inverse(JtJ)*Jtf;
+    return vec4(result,f);//return the step and the sus
+    
+}
+
+
 float susR(vec3 pos){
   return susRDenseUnrolled(pos);
 }

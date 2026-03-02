@@ -1,0 +1,2947 @@
+This is LuaHBTeX, Version 1.22.0 (TeX Live 2025)  (format=lualatex 2026.3.1)  2 MAR 2026 03:26
+ restricted system commands enabled.
+ file:line:error style messages enabled.
+**c:/Users/konst/data/repos/jsgaalop/javascriptgaalopvisualizer/KonstantinsBachelorarbeit/DEMO-TUDaThesis
+(c:/Users/konst/data/repos/jsgaalop/javascriptgaalopvisualizer/KonstantinsBachelorarbeit/DEMO-TUDaThesis.tex
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-01-19>
+Lua module: luaotfload 2024-12-03 v3.29 Lua based OpenType font support
+Lua module: lualibs 2023-07-13 v2.76 ConTeXt Lua standard libraries.
+Lua module: lualibs-extended 2023-07-13 v2.76 ConTeXt Lua libraries -- extended collection.
+luaotfload | conf : Root cache directory is "C:/othersoftware/texlive/2025/texmf-var/luatex-cache/generic/names".
+luaotfload | init : Loading fontloader "fontloader-2023-12-28.lua" from kpse-resolved path "c:/othersoftware/texlive/2025/texmf-dist/tex/luatex/luaotfload/fontloader-2023-12-28.lua".
+Lua-only attribute luaotfload@noligature = 1
+luaotfload | init : Context OpenType loader version 3.134
+Inserting `luaotfload.node_processor' in `pre_linebreak_filter'.
+Inserting `luaotfload.node_processor' in `hpack_filter'.
+Inserting `luaotfload.glyph_stream' in `glyph_stream_provider'.
+Inserting `luaotfload.define_font' in `define_font'.
+Lua-only attribute luaotfload_color_attribute = 2
+luaotfload | conf : Root cache directory is "C:/othersoftware/texlive/2025/texmf-var/luatex-cache/generic/names".
+Inserting `luaotfload.harf.strip_prefix' in `find_opentype_file'.
+Inserting `luaotfload.harf.strip_prefix' in `find_truetype_file'.
+Removing  `luaotfload.glyph_stream' from `glyph_stream_provider'.
+Inserting `luaotfload.harf.glyphstream' in `glyph_stream_provider'.
+Inserting `luaotfload.harf.finalize_vlist' in `post_linebreak_filter'.
+Inserting `luaotfload.harf.finalize_hlist' in `hpack_filter'.
+Inserting `luaotfload.cleanup_files' in `wrapup_run'.
+Inserting `luaotfload.harf.finalize_unicode' in `finish_pdffile'.
+Inserting `luaotfload.glyphinfo' in `glyph_info'.
+Lua-only attribute luaotfload.letterspace_done = 3
+Inserting `luaotfload.aux.set_sscale_dimens' in `luaotfload.patch_font'.
+Inserting `luaotfload.aux.set_font_index' in `luaotfload.patch_font'.
+Inserting `luaotfload.aux.patch_cambria_domh' in `luaotfload.patch_font'.
+Inserting `luaotfload.aux.fixup_fontdata' in `luaotfload.patch_font_unsafe'.
+Inserting `luaotfload.aux.set_capheight' in `luaotfload.patch_font'.
+Inserting `luaotfload.aux.set_xheight' in `luaotfload.patch_font'.
+Inserting `luaotfload.rewrite_fontname' in `luaotfload.patch_font'.
+Inserting `tracingstacklevels' in `input_level_string'. (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/documentmetadata-support.ltx (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/pdfmanagement-testphase/pdfmanagement-testphase.sty
+Package: pdfmanagement-testphase 2026-01-23 v0.96y LaTeX PDF management bundle
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/tagpdf/tagpdf-base.sty
+Package: tagpdf-base 2026-01-29 v0.99y part of tagpdf - provide base, no-op versions of the user commands 
+\c@g__tag_MCID_abs_int=\count273
+\c@g__tag_struct_abs_int=\count274
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/pdfmanagement-testphase/pdfmanagement.ltx
+File: pdfmanagement.ltx 2026-01-23 v0.96y PDF management code
+\g__pdfmanagement_EmbeddedFiles_int=\count275
+\l__pdfmeta_xmp_indent_int=\count276
+\g_pdffile_embed_pdfa_int=\count277
+\g_pdffile_embed_nonpdfa_int=\count278
+))) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/l3backend/l3backend-luatex.def
+File: l3backend-luatex.def 2025-10-09 L3 backend support: PDF output (LuaTeX)
+\l__color_backend_stack_int=\count279
+Inserting `l3color' in `luaotfload.parse_color'.
+Inserting `l3opacity' in `luaotfload.parse_transparent'.) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/pdfmanagement-testphase/l3backend-testphase-luatex.def
+File: l3backend-testphase-luatex.def 2026-01-23 v0.96y LaTeX PDF management bundle backend support:PDFoutput(LuaTeX)
+\l__pdf_backend_tmpa_box=\box53
+\l__pdf_backend_tmpb_box=\box54
+\g__pdf_backend_resourceid_int=\count280
+\g__pdf_backend_name_int=\count281
+\g__pdf_backend_page_int=\count282
+Custom whatsit pdf_link_adjust_level = 1
+Inserting `linksplit' in `pre_shipout_filter'.
+Lua function pdflinkadjustlevel = 31) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-latest.sty
+Package: latex-lab-testphase-latest 2025-09-13 v0.1d latex-lab modules
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/tagpdf/tagpdf.sty
+Package: tagpdf 2026-01-29 v0.99y  LaTeX kernel code for PDF tagging 
+\l__tag_tmpa_int=\count283
+\l__tag_tmpa_box=\box55
+\l__tag_tmpb_box=\box56
+\l__tag_loglevel_int=\count284
+\g__tag_unique_cnt_int=\count285
+\l__tag_tag_stop_int=\count286
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/tagpdf/tagpdf-luatex.def
+File: tagpdf-luatex.def 2026-01-29 v0.99y tagpdf driver for luatex
+luaotfload | db : Font names database loaded from C:/othersoftware/texlive/2025/texmf-var/luatex-cache/generic/names/luaotfload-names.luc.gz
+Lua module: tagpdf 2026-01-29 v0.99y tagpdf lua code
+Lua-only attribute g__tag_mc_type_attr = 4
+Lua-only attribute g__tag_mc_cnt_attr = 5
+Lua-only attribute g__tag_structnum_attr = 6
+Lua-only attribute g__tag_interwordspaceOff_attr = 7
+Lua-only attribute g__tag_interwordspace_attr = 8
+Lua-only attribute g__tag_interwordfont_attr = 9
+Lua-only attribute l__tag_softhyphen_attr = 10
+Inserting `tagpdf.rewrite-softhyphen' in `pre_shaping_filter'.
+Inserting `tagpdf.rewrite-softhyphen' in `post_shaping_filter'.
+Inserting `tagpdf' in `linksplit'.) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/tagpdf/tagpdf-mc-code-lua.sty
+Package: tagpdf-mc-code-lua 2026-01-29 v0.99y tagpdf - mc code only for the luamode 
+)
+\g__tag_tree_id_pad_int=\count287
+\c@g__tag_parenttree_obj_int=\count288
+
+Package tagpdf Info: reading namespace definitions tagpdf-ns-pdf.def
+
+
+Package tagpdf Info: reading namespace definitions tagpdf-ns-pdf2.def
+
+
+Package tagpdf Info: reading namespace definitions tagpdf-ns-mathml.def
+
+
+Package tagpdf Info: reading namespace definitions tagpdf-ns-latex-book.def
+
+
+Package tagpdf Info: reading namespace definitions tagpdf-ns-latex.def
+
+
+Package tagpdf Info: reading namespace definitions tagpdf-ns-latex-lab.def
+
+
+Package tagpdf Info: reading namespace definitions tagpdf-ns-pdf.def
+
+
+Package tagpdf Info: reading namespace definitions tagpdf-ns-pdf2.def
+
+\g__tag_struct_AFobj_int=\count289
+\g__tag_para_begin_int=\count290
+\g__tag_para_end_int=\count291
+\g__tag_para_main_begin_int=\count292
+\g__tag_para_main_end_int=\count293
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-names.sty
+Package: latex-lab-testphase-names 2025-08-14 v0.8f Code related to the names of tags
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-new-or-2.sty
+Package: latex-lab-testphase-new-or-2 2025-05-10 v0.86d Changes to the output routine
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-footnotes.ltx
+File: latex-lab-footnotes.ltx 2025-07-04 v0.8o changes to the footnote interfaces
+\footnotemargin=\dimen147
+\g_fnote_id_int=\count294
+)) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-block.sty
+Package: latex-lab-testphase-block 2025-07-26 v0.9k blockenv implementation
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-kernel-changes.sty
+Package: latex-lab-kernel-changes 2025-07-09 v0.85i General kernel and class changes
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/pdftex/glyphtounicode.tex) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/glyphtounicode-cmex.tex)) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-context.sty
+Package: latex-lab-testphase-context 2025-10-09 v0.5b Providing context for instance, etc.
+)
+
+LaTeX template Info: Declaring template type 'blockenv' taking 1 argument(s)
+(template)           on line 96.
+
+
+LaTeX template Info: Declaring template type 'block' taking 1 argument(s) on
+(template)           line 97.
+
+
+LaTeX template Info: Declaring template type 'para' taking 1 argument(s) on
+(template)           line 98.
+
+
+LaTeX template Info: Declaring template type 'list' taking 1 argument(s) on
+(template)           line 99.
+
+
+LaTeX template Info: Declaring template type 'item' taking 1 argument(s) on
+(template)           line 100.
+
+\c@maxblocklevels=\count295
+\l__par_start_skip=\skip49
+\l__block_botsep_skip=\skip50
+\l__block_parbotsep_skip=\skip51
+\l__block_parindent_dim=\dimen148
+\l__block_counter_start_int=\count296
+\l__block_one_label_box=\box57
+\g__block_labels_box=\box58
+\l__block_tmpa_skip=\skip52
+\l__block_topsepadd_skip=\skip53
+\l__block_effective_top_skip=\skip54
+LaTeX Info: Redefining \centering on input line 1476.
+LaTeX Info: Redefining \raggedleft on input line 1477.
+LaTeX Info: Redefining \raggedright on input line 1478.
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-sec.sty
+Package: latex-lab-testphase-sec 2025-10-20 v0.84k Code related to the tagging of sectioning commands
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-toc.sty
+Package: latex-lab-testphase-toc 2025-07-02 v0.85h  Code related to the tagging of toc-like lists
+\g__tag_toc_level_int=\count297
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-minipage.sty
+Package: latex-lab-testphase-minipage 2025-05-10 v0.81g Code related to the tagging of minipages and parboxes
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-new-or-1.sty
+Package: latex-lab-testphase-new-or-1 2025-05-10 v0.85d Temporary output patches for tagging and better link support -- no longer active
+)) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-graphic.sty
+Package: latex-lab-testphase-graphic 2025-09-25 v0.80i Code related to the tagging of graphics
+\g__tag_graphic_int=\count298
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-float.sty
+Package: latex-lab-testphase-float 2025-10-17 v0.81l Code related to the tagging of floats
+\g__tag_float_int=\count299
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-bib.sty
+Package: latex-lab-testphase-bib 2025-05-09 v0.81c Code related to the tagging of bibliography and cite command
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-text.sty
+Package: latex-lab-testphase-text 2025-05-10 v0.85f Code related to the tagging of various small text commands
+LaTeX Info: Redefining \mbox on input line 84.
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-marginpar.sty
+Package: latex-lab-testphase-marginpar 2025-07-23 v0.85h Changes related to the tagging of the margin notes
+\g__kernel_marginpar_int=\count300
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-title.sty
+Package: latex-lab-testphase-title 2025-03-08 v0.85d Changes related to the tagging of the title
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-table.sty
+Package: latex-lab-testphase-table 2025-08-01 v0.85s Code related to the tagging of tables
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/tools/array.sty
+Package: array 2025/09/25 v2.6n Tabular extension package (FMi)
+\col@sep=\dimen149
+\ar@mcellbox=\box59
+\extrarowheight=\dimen150
+\NC@list=\toks17
+\extratabsurround=\skip55
+\backup@length=\skip56
+\ar@cellbox=\box60
+)) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-math.sty
+Package: latex-lab-testphase-math 2025-03-10 v0.8d code related to the math tagging
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-math.ltx
+File: latex-lab-math.ltx 2025-10-02 v0.6w Grab all the math(s) and tag it (experiments)
+\l__math_tmpa_skip=\skip57
+\g__math_mathml_total_int=\count301
+\g__math_mathml_int=\count302
+\g__math_math_total_int=\count303
+\g__math_mathml_AF_found_int=\count304
+\g__math_mathml_AF_attached_int=\count305
+\l__math_tmpa_box=\box61
+\l__math_mathstyle_int=\count306
+\g__math_mathchoice_int=\count307
+\l__math_grab_env_int=\count308
+\g__math_postdisplaypenalty_int=\count309
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-mathpkg.ltx
+File: latex-lab-mathpkg.ltx 2025-06-20 v0.1c mathpkg adaptions
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-mathintent.ltx
+File: latex-lab-mathintent.ltx 2025-08-03 v0.1c MathML intent attributes
+)) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-firstaid.sty
+Package: latex-lab-testphase-firstaid 2025-11-03 v2025-11-03 Temporary patches to external packages needed for the tagging project
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-testphase-tikz.sty
+Package: latex-lab-testphase-tikz 2025-09-27 v0.80d Code related to the tagging of tikz pictures
+)) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/pdfmanagement-testphase/pdfmanagement-firstaid.sty
+Package: pdfmanagement-firstaid 2026-01-23 v0.96y LaTeX PDF management bundle / firstaid-patches
+
+Package pdfmanagement Info: loading pdfmanagement firstaid code for pgf
+
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/tuda-ci/tudapub.cls
+Document Class: tudapub 2025-11-13 v4.05 Publications using TU Darmstadt's Corporate Design (TUDa-CI)
+(c:/othersoftware/texlive/2025/texmf-dist/tex/latex/urcls/URspecialopts.sty (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/l3kernel/expl3.sty
+Package: expl3 2026-01-19 L3 programming layer (loader) 
+)
+Package: URspecialopts 2019/01/22 v2.1 Implementation of keyval-options accepting multiple values as grouped clists
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/l3packages/l3keys2e/l3keys2e.sty
+Package: l3keys2e 2025-10-09 LaTeX2e option processing using LaTeX3 keys
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/l3packages/xparse/xparse.sty
+Package: xparse 2025-10-09 L3 Experimental document command parser
+))
+\g_ptxcd_ruledheaders_int=\count310
+\g_ptxcd_paper_int=\count311
+
+Package tudapub Info: I detected usage of l3pdfmeta (\DocumentMetadata ) to
+(tudapub)             create PDF/A.
+(tudapub)             tudapub will not load pdfx to avoid conflicts.
+(tudapub)             To disable this message use pdfx=false.
+
+
+Package tudapub Info: You did not add a color profile.
+(tudapub)             I will use the default one and automatically try to
+(tudapub)             convert internal colors to RGB.
+(tudapub)             This is required to be able to create PDF/A compliance.
+
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/koma-script/scrreprt.cls
+Document Class: scrreprt 2026/02/02 v3.49.2 KOMA-Script document class (report)
+(c:/othersoftware/texlive/2025/texmf-dist/tex/latex/koma-script/scrkbase.sty
+Package: scrkbase 2026/02/02 v3.49.2 KOMA-Script package (KOMA-Script-dependent basics and keyval usage)
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/koma-script/scrbase.sty
+Package: scrbase 2026/02/02 v3.49.2 KOMA-Script package (KOMA-Script-independent basics and keyval usage)
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/koma-script/scrlfile.sty
+Package: scrlfile 2026/02/02 v3.49.2 KOMA-Script package (file load hooks)
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/koma-script/scrlfile-hook.sty
+Package: scrlfile-hook 2026/02/02 v3.49.2 KOMA-Script package (using LaTeX hooks)
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/koma-script/scrlogo.sty
+Package: scrlogo 2026/02/02 v3.49.2 KOMA-Script package (logo)
+))) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/graphics/keyval.sty
+Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
+\KV@toks@=\toks18
+)
+Applying: [2021/05/01] Usage of raw or classic option list on input line 254.
+Already applied: [0000/00/00] Usage of raw or classic option list on input line 370.
+)) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/koma-script/tocbasic.sty
+Package: tocbasic 2026/02/02 v3.49.2 KOMA-Script package (handling toc-files)
+\scr@dte@tocline@numberwidth=\skip58
+\scr@dte@tocline@numbox=\box62
+)
+Package tocbasic Info: omitting babel extension for `toc'
+(tocbasic)             because of feature `nobabel' available
+(tocbasic)             for `toc' on input line 143.
+
+
+LaTeX Warning: Command \@footnotemark  has changed.
+               Check if current package is valid.
+
+Class scrreprt Info: File `scrsize11pt.clo' used to setup font sizes on input line 2710.
+(c:/othersoftware/texlive/2025/texmf-dist/tex/latex/koma-script/scrsize11pt.clo
+File: scrsize11pt.clo 2026/02/02 v3.49.2 KOMA-Script font size class option (11pt)
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/koma-script/typearea.sty
+Package: typearea 2026/02/02 v3.49.2 KOMA-Script package (type area)
+\ta@bcor=\skip59
+\ta@div=\count312
+\ta@hblk=\skip60
+\ta@vblk=\skip61
+\ta@temp=\skip62
+\footheight=\skip63
+Package typearea Info: These are the values describing the layout:
+(typearea)             DIV  = 10
+(typearea)             BCOR = 0.0pt
+(typearea)             \paperwidth      = 597.50793pt
+(typearea)              \textwidth      = 418.25555pt
+(typearea)              DIV departure   = -6%
+(typearea)              \evensidemargin = 17.3562pt
+(typearea)              \oddsidemargin  = 17.3562pt
+(typearea)             \paperheight     = 845.04694pt
+(typearea)              \textheight     = 595.80026pt
+(typearea)              \topmargin      = -25.16531pt
+(typearea)              \headheight     = 17.0pt
+(typearea)              \headsep        = 20.40001pt
+(typearea)              \topskip        = 11.0pt
+(typearea)              \footskip       = 47.6pt
+(typearea)              \baselineskip   = 13.6pt
+(typearea)              on input line 1810.
+)
+\c_scrreprt_cmdhook_cctab=\catcodetable14
+\c@part=\count313
+\c@chapter=\count314
+\c@section=\count315
+\c@subsection=\count316
+\c@subsubsection=\count317
+\c@paragraph=\count318
+\c@subparagraph=\count319
+\scr@dte@chapter@maxnumwidth=\skip64
+Class scrreprt Info: using compatibility default `afterindent=bysign'
+(scrreprt)           for `\chapter on input line 5934.
+\scr@dte@section@maxnumwidth=\skip65
+Class scrreprt Info: using compatibility default `runin=bysign'
+(scrreprt)           for `\section on input line 5945.
+Class scrreprt Info: using compatibility default `afterindent=bysign'
+(scrreprt)           for `\section on input line 5945.
+\scr@dte@part@maxnumwidth=\skip66
+Class scrreprt Info: using compatibility default `afterindent=true'
+(scrreprt)           for `\part on input line 5954.
+\scr@dte@subsection@maxnumwidth=\skip67
+Class scrreprt Info: using compatibility default `runin=bysign'
+(scrreprt)           for `\subsection on input line 5964.
+Class scrreprt Info: using compatibility default `afterindent=bysign'
+(scrreprt)           for `\subsection on input line 5964.
+\scr@dte@subsubsection@maxnumwidth=\skip68
+Class scrreprt Info: using compatibility default `runin=bysign'
+(scrreprt)           for `\subsubsection on input line 5974.
+Class scrreprt Info: using compatibility default `afterindent=bysign'
+(scrreprt)           for `\subsubsection on input line 5974.
+\scr@dte@paragraph@maxnumwidth=\skip69
+Class scrreprt Info: using compatibility default `runin=bysign'
+(scrreprt)           for `\paragraph on input line 5985.
+Class scrreprt Info: using compatibility default `afterindent=bysign'
+(scrreprt)           for `\paragraph on input line 5985.
+\scr@dte@subparagraph@maxnumwidth=\skip70
+Class scrreprt Info: using compatibility default `runin=bysign'
+(scrreprt)           for `\subparagraph on input line 5995.
+Class scrreprt Info: using compatibility default `afterindent=bysign'
+(scrreprt)           for `\subparagraph on input line 5995.
+\abovecaptionskip=\skip71
+\belowcaptionskip=\skip72
+\c@pti@nb@sid@b@x=\box63
+Package tocbasic Info: omitting babel extension for `lof'
+(tocbasic)             because of feature `nobabel' available
+(tocbasic)             for `lof' on input line 7225.
+\scr@dte@figure@maxnumwidth=\skip73
+\c@figure=\count320
+Package tocbasic Info: omitting babel extension for `lot'
+(tocbasic)             because of feature `nobabel' available
+(tocbasic)             for `lot' on input line 7238.
+\scr@dte@table@maxnumwidth=\skip74
+\c@table=\count321
+Class scrreprt Info: Redefining `\numberline' on input line 7409.
+\bibindent=\dimen151
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/tuda-ci/tudafonts.sty
+Package: tudafonts 2025-11-13 4.05 font setup for TUDa-CI, TU Darmstadt's Corporate Design
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/iftex/iftex.sty
+Package: iftex 2024/12/12 v1.0g TeX engine tests
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/anyfontsize/anyfontsize.sty
+Package: anyfontsize 2007/11/22 anyfontsize.sty by pts
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/fontspec/fontspec.sty
+Package: fontspec 2025/09/29 v2.9g Font selection for XeLaTeX and LuaLaTeX
+Lua module: fontspec 2025/09/29 v2.9g Font selection for XeLaTeX and LuaLaTeX (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/fontspec/fontspec-luatex.sty
+Package: fontspec-luatex 2025/09/29 v2.9g Font selection for XeLaTeX and LuaLaTeX
+\l__fontspec_script_int=\count322
+\l__fontspec_language_int=\count323
+\l__fontspec_strnum_int=\count324
+\l__fontspec_tmp_int=\count325
+\l__fontspec_tmpa_int=\count326
+\l__fontspec_tmpb_int=\count327
+\l__fontspec_tmpc_int=\count328
+\l__fontspec_em_int=\count329
+\l__fontspec_emdef_int=\count330
+\l__fontspec_strong_int=\count331
+\l__fontspec_strongdef_int=\count332
+\l__fontspec_tmpa_dim=\dimen152
+\l__fontspec_tmpb_dim=\dimen153
+\l__fontspec_tmpc_dim=\dimen154
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/base/fontenc.sty
+Package: fontenc 2025/07/18 v2.1d Standard LaTeX package
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/fontspec/fontspec.cfg))) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/xcharter/XCharter.fontspec)
+
+Package fontspec Info: 
+(fontspec)             Font family 'XCharter(0)' created for font 'XCharter'
+(fontspec)             with options [Ligatures=TeX,Extension =
+(fontspec)             .otf,UprightFont = XCharter-Roman,BoldFont =
+(fontspec)             XCharter-Bold,ItalicFont =
+(fontspec)             XCharter-Italic,BoldItalicFont =
+(fontspec)             XCharter-BoldItalic,SlantedFont =
+(fontspec)             XCharter-Slanted,BoldSlantedFont =
+(fontspec)             XCharter-BoldSlanted,SmallCapsFeatures =
+(fontspec)             {Letters=SmallCaps}].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->"[XCharter-Roman.otf]:mode=node;script=latn;language=dflt;+tlig;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->"[XCharter-Roman.otf]:mode=node;script=latn;language=dflt;+tlig;+smcp;"
+(fontspec)             - 'bold' (b/n) with NFSS spec.:
+(fontspec)             <->"[XCharter-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;"
+(fontspec)             - 'bold small caps'  (b/sc) with NFSS spec.:
+(fontspec)             <->"[XCharter-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+smcp;"
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->"[XCharter-Italic.otf]:mode=node;script=latn;language=dflt;+tlig;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->"[XCharter-Italic.otf]:mode=node;script=latn;language=dflt;+tlig;+smcp;"
+(fontspec)             - 'slanted' (m/sl) with NFSS spec.:
+(fontspec)             <->"[XCharter-Slanted.otf]:mode=node;script=latn;language=dflt;+tlig;"
+(fontspec)             - 'slanted small caps'  (m/scsl) with NFSS spec.:
+(fontspec)             <->"[XCharter-Slanted.otf]:mode=node;script=latn;language=dflt;+tlig;+smcp;"
+(fontspec)             - 'bold italic' (b/it) with NFSS spec.:
+(fontspec)             <->"[XCharter-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;"
+(fontspec)             - 'bold italic small caps'  (b/scit) with NFSS spec.:
+(fontspec)             <->"[XCharter-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+smcp;"
+(fontspec)             - 'bold slanted' (b/sl) with NFSS spec.:
+(fontspec)             <->"[XCharter-BoldSlanted.otf]:mode=node;script=latn;language=dflt;+tlig;"
+(fontspec)             - 'bold slanted small caps'  (b/scsl) with NFSS spec.:
+(fontspec)             <->"[XCharter-BoldSlanted.otf]:mode=node;script=latn;language=dflt;+tlig;+smcp;"
+
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/roboto/roboto.sty
+Package: roboto 2022/09/10 (Bob Tennent) Supports Roboto fonts for all LaTeX engines.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/iftex/ifxetex.sty
+Package: ifxetex 2019/10/25 v0.7 ifxetex legacy package. Use iftex instead.
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/iftex/ifluatex.sty
+Package: ifluatex 2019/10/25 v1.5 ifluatex legacy package. Use iftex instead.
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/xkeyval/xkeyval.sty
+Package: xkeyval 2025/11/04 v2.10 package option processing (HA)
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/xkeyval/xkeyval.tex (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/xkeyval/xkvutils.tex
+\XKV@toks=\toks19
+\XKV@tempa@toks=\toks20
+\XKV@tempb@toks=\toks21
+)
+\XKV@depth=\count333
+File: xkeyval.tex 2014/12/03 v2.7a key=value parser (HA)
+)) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/base/textcomp.sty
+Package: textcomp 2024/04/24 v2.1b Standard LaTeX package
+)
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'Roboto(0)' created for font 'Roboto' with
+(fontspec)             options [Ligatures = TeX,Scale = 1,Extension =
+(fontspec)             .otf,Ligatures=TeX,Numbers =
+(fontspec)             {Proportional,Lining},UprightFont =
+(fontspec)             *-Regular,ItalicFont = *-Italic,BoldFont =
+(fontspec)             *-Bold,BoldItalicFont = *-BoldItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Regular.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Regular.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'bold' (b/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'bold small caps'  (b/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Italic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Italic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'bold italic' (b/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'bold italic small caps'  (b/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'Roboto(1)' created for font 'Roboto' with
+(fontspec)             options [Ligatures = TeX,Scale = 1,Extension =
+(fontspec)             .otf,Numbers = {Proportional,Lining},UprightFont =
+(fontspec)             *-Regular,ItalicFont = *-Italic,BoldFont =
+(fontspec)             *-Bold,BoldItalicFont = *-BoldItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Regular.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Regular.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'bold' (b/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'bold small caps'  (b/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Italic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Italic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'bold italic' (b/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'bold italic small caps'  (b/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'RobotoCondensed(0)' created for font
+(fontspec)             'RobotoCondensed' with options [Ligatures = TeX,Scale =
+(fontspec)             1,Extension = .otf,Numbers =
+(fontspec)             {Proportional,Lining},UprightFont =
+(fontspec)             *-Regular,ItalicFont = *-Italic,BoldFont =
+(fontspec)             *-Bold,BoldItalicFont = *-BoldItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoCondensed-Regular.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoCondensed-Regular.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'bold' (b/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoCondensed-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'bold small caps'  (b/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoCondensed-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoCondensed-Italic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoCondensed-Italic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'bold italic' (b/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoCondensed-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'bold italic small caps'  (b/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoCondensed-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoCondensed-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'RobotoCondensed(1)' created for font
+(fontspec)             'RobotoCondensed' with options [Ligatures = TeX,Scale =
+(fontspec)             1,Extension = .otf,Numbers =
+(fontspec)             {Proportional,Lining},UprightFont = *-Bold,ItalicFont =
+(fontspec)             *-BoldItalic,BoldFont = *-Bold,BoldItalicFont =
+(fontspec)             *-BoldItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoCondensed-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoCondensed-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'bold' (b/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoCondensed-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'bold small caps'  (b/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoCondensed-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoCondensed-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoCondensed-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'bold italic' (b/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoCondensed-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'bold italic small caps'  (b/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoCondensed-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+
+
+Package fontspec Info: 
+(fontspec)             RobotoSlab-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoSlab-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoSlab-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoSlab-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoSlab-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'RobotoSlab(0)' created for font
+(fontspec)             'RobotoSlab' with options [Ligatures = TeX,Scale =
+(fontspec)             1,Extension = .otf,UprightFont = *-Regular,BoldFont =
+(fontspec)             *-Bold].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoSlab-Regular.otf]:mode=node;script=DFLT;language=dflt;+tlig;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoSlab-Regular.otf]:mode=node;script=DFLT;language=dflt;+tlig;+smcp;"
+(fontspec)             - 'bold' (b/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoSlab-Bold.otf]:mode=node;script=DFLT;language=dflt;+tlig;"
+(fontspec)             - 'bold small caps'  (b/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoSlab-Bold.otf]:mode=node;script=DFLT;language=dflt;+tlig;+smcp;"
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'Roboto(2)' created for font 'Roboto' with
+(fontspec)             options [Ligatures = TeX,Scale = 1,Extension =
+(fontspec)             .otf,Numbers = {Proportional,Lining},UprightFont =
+(fontspec)             *-Regular,ItalicFont = *-Italic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Regular.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Regular.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Italic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Italic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Medium scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Medium scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Medium scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-MediumItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-MediumItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'Roboto(3)' created for font 'Roboto' with
+(fontspec)             options [Ligatures = TeX,Scale = 1,Extension =
+(fontspec)             .otf,Numbers = {Proportional,Lining},UprightFont =
+(fontspec)             *-Medium,ItalicFont = *-MediumItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Medium.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Medium.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-MediumItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-MediumItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Thin scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Thin scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Thin scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-ThinItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-ThinItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'Roboto(4)' created for font 'Roboto' with
+(fontspec)             options [Ligatures = TeX,Scale = 1,Extension =
+(fontspec)             .otf,Numbers = {Proportional,Lining},UprightFont =
+(fontspec)             *-Thin,ItalicFont = *-ThinItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Thin.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Thin.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-ThinItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-ThinItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Light scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Light scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Light scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-LightItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-LightItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'Roboto(5)' created for font 'Roboto' with
+(fontspec)             options [Ligatures = TeX,Scale = 1,Extension =
+(fontspec)             .otf,Numbers = {Proportional,Lining},UprightFont =
+(fontspec)             *-Light,ItalicFont = *-LightItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Light.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Light.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-LightItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-LightItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'Roboto(6)' created for font 'Roboto' with
+(fontspec)             options [Ligatures = TeX,Scale = 1,Extension =
+(fontspec)             .otf,Numbers = {Proportional,Lining},UprightFont =
+(fontspec)             *-Bold,ItalicFont = *-BoldItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Black scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Black scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Black scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-BlackItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-BlackItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'Roboto(7)' created for font 'Roboto' with
+(fontspec)             options [Ligatures = TeX,Scale = 1,Extension =
+(fontspec)             .otf,Numbers = {Proportional,Lining},UprightFont =
+(fontspec)             *-Black,ItalicFont = *-BlackItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Black.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Black.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-BlackItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-BlackItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+lnum;+smcp;"
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'Roboto(8)' created for font 'Roboto' with
+(fontspec)             options [Ligatures = TeX,Scale = 1,Extension =
+(fontspec)             .otf,Numbers = {Proportional,OldStyle},UprightFont =
+(fontspec)             *-Regular,ItalicFont = *-Italic,BoldFont =
+(fontspec)             *-Bold,BoldItalicFont = *-BoldItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Regular.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+onum;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Regular.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+onum;+smcp;"
+(fontspec)             - 'bold' (b/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+onum;"
+(fontspec)             - 'bold small caps'  (b/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+onum;+smcp;"
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Italic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+onum;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Italic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+onum;+smcp;"
+(fontspec)             - 'bold italic' (b/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+onum;"
+(fontspec)             - 'bold italic small caps'  (b/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+pnum;+onum;+smcp;"
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'Roboto(9)' created for font 'Roboto' with
+(fontspec)             options [Ligatures = TeX,Scale = 1,Extension =
+(fontspec)             .otf,Numbers = {Monospaced,Lining},UprightFont =
+(fontspec)             *-Regular,ItalicFont = *-Italic,BoldFont =
+(fontspec)             *-Bold,BoldItalicFont = *-BoldItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Regular.otf]:mode=node;script=latn;language=dflt;+tlig;+tnum;+lnum;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Regular.otf]:mode=node;script=latn;language=dflt;+tlig;+tnum;+lnum;+smcp;"
+(fontspec)             - 'bold' (b/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+tnum;+lnum;"
+(fontspec)             - 'bold small caps'  (b/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+tnum;+lnum;+smcp;"
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Italic.otf]:mode=node;script=latn;language=dflt;+tlig;+tnum;+lnum;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Italic.otf]:mode=node;script=latn;language=dflt;+tlig;+tnum;+lnum;+smcp;"
+(fontspec)             - 'bold italic' (b/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+tnum;+lnum;"
+(fontspec)             - 'bold italic small caps'  (b/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+tnum;+lnum;+smcp;"
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Roboto-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'Roboto(10)' created for font 'Roboto' with
+(fontspec)             options [Ligatures = TeX,Scale = 1,Extension =
+(fontspec)             .otf,Numbers = {Monospaced,OldStyle},UprightFont =
+(fontspec)             *-Regular,ItalicFont = *-Italic,BoldFont =
+(fontspec)             *-Bold,BoldItalicFont = *-BoldItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Regular.otf]:mode=node;script=latn;language=dflt;+tlig;+tnum;+onum;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Regular.otf]:mode=node;script=latn;language=dflt;+tlig;+tnum;+onum;+smcp;"
+(fontspec)             - 'bold' (b/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+tnum;+onum;"
+(fontspec)             - 'bold small caps'  (b/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Bold.otf]:mode=node;script=latn;language=dflt;+tlig;+tnum;+onum;+smcp;"
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Italic.otf]:mode=node;script=latn;language=dflt;+tlig;+tnum;+onum;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-Italic.otf]:mode=node;script=latn;language=dflt;+tlig;+tnum;+onum;+smcp;"
+(fontspec)             - 'bold italic' (b/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+tnum;+onum;"
+(fontspec)             - 'bold italic small caps'  (b/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[Roboto-BoldItalic.otf]:mode=node;script=latn;language=dflt;+tlig;+tnum;+onum;+smcp;"
+
+)
+luaotfload | cache : Lookup cache loaded from C:/othersoftware/texlive/2025/texmf-var/luatex-cache/generic/names/luaotfload-lookup-cache.luc.
+
+Package fontspec Info: 
+(fontspec)             Could not resolve font "Roboto-BlackItalic/B" (it
+(fontspec)             probably doesn't exist).
+
+
+Package fontspec Info: 
+(fontspec)             Could not resolve font "Roboto-Black/BI" (it probably
+(fontspec)             doesn't exist).
+
+
+Package fontspec Info: 
+(fontspec)             Could not resolve font "Roboto-Black/B" (it probably
+(fontspec)             doesn't exist).
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'Roboto(11)' created for font 'Roboto' with
+(fontspec)             options [Numbers = {Proportional,Lining},UprightFont =
+(fontspec)             *-Black,ItalicFont =
+(fontspec)             *-BlackItalic,LetterSpace=26,WordSpace=2.2].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->"name:Roboto-Black:mode=node;script=latn;language=dflt;letterspace=26;+pnum;+lnum;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->"name:Roboto-Black:mode=node;script=latn;language=dflt;letterspace=26;+pnum;+lnum;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \fontdimen 2\font =2.2\fontdimen 2\font \fontdimen
+(fontspec)             3\font =2.2\fontdimen 3\font \fontdimen 4\font
+(fontspec)             =2.2\fontdimen 4\font 
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->"name:Roboto-BlackItalic:mode=node;script=latn;language=dflt;letterspace=26;+pnum;+lnum;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->"name:Roboto-BlackItalic:mode=node;script=latn;language=dflt;letterspace=26;+pnum;+lnum;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \fontdimen 2\font =2.2\fontdimen 2\font \fontdimen
+(fontspec)             3\font =2.2\fontdimen 3\font \fontdimen 4\font
+(fontspec)             =2.2\fontdimen 4\font 
+
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/roboto/roboto-mono.sty
+Package: roboto-mono 2022/09/10 (Bob Tennent) Supports RobotoMono fonts for all LaTeX engines.
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'RobotoMono(0)' created for font
+(fontspec)             'RobotoMono' with options [HyphenChar=None,Scale =
+(fontspec)             1,Extension =
+(fontspec)             .otf,WordSpace={1,0,0},HyphenChar=None,PunctuationSpace=WordSpace,UprightFont
+(fontspec)             = *-Regular,ItalicFont = *-Italic,BoldFont =
+(fontspec)             *-Bold,BoldItalicFont = *-BoldItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Regular.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Regular.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \fontdimen 2\font =1\fontdimen 2\font \fontdimen 3\font
+(fontspec)             =0\fontdimen 3\font \fontdimen 4\font =0\fontdimen
+(fontspec)             4\font \fontdimen 7\font =0\fontdimen 2\font
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+(fontspec)             - 'bold' (b/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Bold.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'bold small caps'  (b/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Bold.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \fontdimen 2\font =1\fontdimen 2\font \fontdimen 3\font
+(fontspec)             =0\fontdimen 3\font \fontdimen 4\font =0\fontdimen
+(fontspec)             4\font \fontdimen 7\font =0\fontdimen 2\font
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Italic.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Italic.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \fontdimen 2\font =1\fontdimen 2\font \fontdimen 3\font
+(fontspec)             =0\fontdimen 3\font \fontdimen 4\font =0\fontdimen
+(fontspec)             4\font \fontdimen 7\font =0\fontdimen 2\font
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+(fontspec)             - 'bold italic' (b/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-BoldItalic.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'bold italic small caps'  (b/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-BoldItalic.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \fontdimen 2\font =1\fontdimen 2\font \fontdimen 3\font
+(fontspec)             =0\fontdimen 3\font \fontdimen 4\font =0\fontdimen
+(fontspec)             4\font \fontdimen 7\font =0\fontdimen 2\font
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'RobotoMono(1)' created for font
+(fontspec)             'RobotoMono' with options [HyphenChar=None,Scale =
+(fontspec)             1,Extension = .otf,UprightFont = *-Regular,ItalicFont =
+(fontspec)             *-Italic,BoldFont = *-Bold,BoldItalicFont =
+(fontspec)             *-BoldItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Regular.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Regular.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+(fontspec)             - 'bold' (b/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Bold.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'bold small caps'  (b/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Bold.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Italic.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Italic.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+(fontspec)             - 'bold italic' (b/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-BoldItalic.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'bold italic small caps'  (b/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-BoldItalic.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Regular scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Italic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'RobotoMono(2)' created for font
+(fontspec)             'RobotoMono' with options [HyphenChar=None,Scale =
+(fontspec)             1,Extension = .otf,UprightFont = *-Regular,ItalicFont =
+(fontspec)             *-Italic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Regular.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Regular.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Italic.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Italic.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Medium scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Medium scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Medium scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-MediumItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-MediumItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'RobotoMono(3)' created for font
+(fontspec)             'RobotoMono' with options [HyphenChar=None,Scale =
+(fontspec)             1,Extension = .otf,UprightFont = *-Medium,ItalicFont =
+(fontspec)             *-MediumItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Medium.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Medium.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-MediumItalic.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-MediumItalic.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Thin scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Thin scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Thin scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-ThinItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-ThinItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'RobotoMono(4)' created for font
+(fontspec)             'RobotoMono' with options [HyphenChar=None,Scale =
+(fontspec)             1,Extension = .otf,UprightFont = *-Thin,ItalicFont =
+(fontspec)             *-ThinItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Thin.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Thin.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-ThinItalic.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-ThinItalic.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Light scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Light scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Light scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-LightItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-LightItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'RobotoMono(5)' created for font
+(fontspec)             'RobotoMono' with options [HyphenChar=None,Scale =
+(fontspec)             1,Extension = .otf,UprightFont = *-Light,ItalicFont =
+(fontspec)             *-LightItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Light.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Light.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-LightItalic.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-LightItalic.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-Bold scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             RobotoMono-BoldItalic scale = 1.
+
+
+Package fontspec Info: 
+(fontspec)             Font family 'RobotoMono(6)' created for font
+(fontspec)             'RobotoMono' with options [HyphenChar=None,Scale =
+(fontspec)             1,Extension = .otf,UprightFont = *-Bold,ItalicFont =
+(fontspec)             *-BoldItalic].
+(fontspec)              
+(fontspec)              This font family consists of the following NFSS
+(fontspec)             series/shapes:
+(fontspec)              
+(fontspec)             - 'normal' (m/n) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Bold.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'small caps'  (m/sc) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-Bold.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+(fontspec)             - 'italic' (m/it) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-BoldItalic.otf]:mode=node;script=DFLT;language=dflt;"
+(fontspec)             - 'italic small caps'  (m/scit) with NFSS spec.:
+(fontspec)             <->s*[1]"[RobotoMono-BoldItalic.otf]:mode=node;script=DFLT;language=dflt;+smcp;"
+(fontspec)             and font adjustment code:
+(fontspec)             \tex_hyphenchar:D \font =-1\scan_stop: 
+
+)
+LaTeX Info: Redefining \LaTeX on input line 100.
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/tuda-ci/tudacolors.sty
+Package: tudacolors 2025-11-13 v4.05 Color definition for TU Darmstadt's tuda-ci bundle
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/xcolor/xcolor.sty
+Package: xcolor 2024/09/29 v3.02 LaTeX color extensions (UK)
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/graphics-cfg/color.cfg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package xcolor Info: Driver file: luatex.def on input line 274.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/graphics-def/luatex.def
+File: luatex.def 2025/09/29 v1.2f Graphics/color driver for luatex
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/graphics/mathcolor.ltx)
+Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1349.
+Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1353.
+Package xcolor Info: Model `RGB' extended on input line 1365.
+Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1367.
+Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1368.
+Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1369.
+Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1370.
+Package xcolor Info: Model `Gray' substituted by `gray' on input line 1371.
+Package xcolor Info: Model `wave' substituted by `hsb' on input line 1372.
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/pdfmanagement-testphase/xcolor-patches-tmp-ltx.sty
+Package: xcolor-patches-tmp-ltx 2026-01-23 v0.96y patch xcolor for l3color
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/tuda-ci/tudacolors.def
+File: tudacolors.def 2025-11-13 v4.05 Color definitions for tuda-ci
+)) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/koma-script/scrlayer-scrpage.sty
+Package: scrlayer-scrpage 2026/02/02 v3.49.2 KOMA-Script package (end user interface for scrlayer)
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/koma-script/scrlayer.sty
+Package: scrlayer 2026/02/02 v3.49.2 KOMA-Script package (defining layers and page styles)
+Package scrlayer Info: patching LaTeX kernel macro \pagestyle on input line 2179.
+)
+Package scrlayer-scrpage Info: Makeing stand-alone element `pagehead' from
+(scrlayer-scrpage)             alias to `pageheadfoot' on input line 1106.
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/graphics/graphicx.sty
+Package: graphicx 2024/12/31 v1.2e Enhanced LaTeX Graphics (DPC,SPQR)
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/graphics/graphics.sty
+Package: graphics 2024/08/06 v1.4g Standard LaTeX Graphics (DPC,SPQR)
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/graphics/trig.sty
+Package: trig 2023/12/02 v1.11 sin cos tan (DPC)
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
+File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
+)
+Package graphics Info: Driver file: luatex.def on input line 106.
+)
+\Gin@req@height=\dimen155
+\Gin@req@width=\dimen156
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/hyperref/hyperref.sty
+Package: hyperref 2026-01-29 v7.01p Hypertext links for LaTeX
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/kvsetkeys/kvsetkeys.sty
+Package: kvsetkeys 2022-10-05 v1.19 Key value parser (HO)
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/kvdefinekeys/kvdefinekeys.sty
+Package: kvdefinekeys 2019-12-19 v1.6 Define keys (HO)
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/pdfescape/pdfescape.sty
+Package: pdfescape 2019/12/09 v1.15 Implements pdfTeX's escape features (HO)
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/ltxcmds/ltxcmds.sty
+Package: ltxcmds 2023-12-04 v1.26 LaTeX kernel commands for general use (HO)
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/pdftexcmds/pdftexcmds.sty
+Package: pdftexcmds 2020-06-27 v0.33 Utility functions of pdfTeX for LuaTeX (HO)
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/infwarerr/infwarerr.sty
+Package: infwarerr 2019/12/03 v1.5 Providing info/warning/error messages (HO)
+)
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+Package pdftexcmds Info: \pdfdraftmode found.
+\pdftexcmds@toks=\toks22
+)) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/hycolor/hycolor.sty
+Package: hycolor 2020-01-27 v1.10 Color options for hyperref/bookmark (HO)
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/hyperref/nameref.sty
+Package: nameref 2026-01-29 v2.58 Cross-referencing by name of section
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/refcount/refcount.sty
+Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/gettitlestring/gettitlestring.sty
+Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/kvoptions/kvoptions.sty
+Package: kvoptions 2022-06-15 v3.15 Key value format for package options (HO)
+))
+\c@section@level=\count334
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/etoolbox/etoolbox.sty
+Package: etoolbox 2025/10/02 v2.5m e-TeX tools for LaTeX (JAW)
+\etb@tempcnta=\count335
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/stringenc/stringenc.sty
+Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO)
+)
+\@linkdim=\dimen157
+\Hy@linkcounter=\count336
+\Hy@pagecounter=\count337
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/hyperref/pd1enc.def
+File: pd1enc.def 2026-01-29 v7.01p Hyperref: PDFDocEncoding definition (HO)
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/intcalc/intcalc.sty
+Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
+)
+\Hy@SavedSpaceFactor=\count338
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/hyperref/puenc.def
+File: puenc.def 2026-01-29 v7.01p Hyperref: PDF Unicode definition (HO)
+)
+Package hyperref Info: Option `unicode' set `true' on input line 4072.
+Package hyperref Info: Hyper figures OFF on input line 4201.
+Package hyperref Info: Link nesting OFF on input line 4206.
+Package hyperref Info: Hyper index ON on input line 4209.
+Package hyperref Info: Plain pages OFF on input line 4216.
+Package hyperref Info: Backreferencing OFF on input line 4221.
+Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
+Package hyperref Info: Bookmarks ON on input line 4468.
+\c@Hy@tempcnt=\count339
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/url/url.sty
+\Urlmuskip=\muskip17
+Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
+)
+LaTeX Info: Redefining \url on input line 4807.
+\XeTeXLinkMargin=\dimen158
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/bitset/bitset.sty
+Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/bigintcalc/bigintcalc.sty
+Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO)
+))
+\Fld@menulength=\count340
+\Field@Width=\dimen159
+\Fld@charsize=\dimen160
+Package hyperref Info: Hyper figures OFF on input line 6084.
+Package hyperref Info: Link nesting OFF on input line 6089.
+Package hyperref Info: Hyper index ON on input line 6092.
+Package hyperref Info: backreferencing OFF on input line 6099.
+Package hyperref Info: Link coloring OFF on input line 6104.
+Package hyperref Info: Link coloring with OCG OFF on input line 6109.
+Package hyperref Info: PDF/A mode ON on input line 6112.
+\Hy@abspage=\count341
+\c@Item=\count342
+)
+Package hyperref Info: Driver (custom): hgeneric-testphase.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/pdfmanagement-testphase/hgeneric-testphase.def
+File: hgeneric-testphase.def 2026-01-23 v0.96y generic Hyperref driver for the LaTeX PDF management bundle
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/pdfmanagement-testphase/hyperref-colorschemes.def)
+LaTeX Info: Redefining \href on input line 262.
+LaTeX Info: Redefining \url on input line 348.
+\l__hyp_tmpa_box=\box64
+\l__hyp_tmpa_int=\count343
+\l__hyp_dest_box=\box65
+\g__hyp_linknestlevel_int=\count344
+\HyAnn@Count=\count345
+\Fld@listcount=\count346
+\Hy@SectionHShift=\skip75
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/bookmark/bookmark.sty
+Package: bookmark 2023-12-10 v1.31 PDF bookmarks (HO)
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/bookmark/bkm-pdftex.def
+File: bkm-pdftex.def 2023-12-10 v1.31 bookmark driver for pdfTeX and luaTeX (HO)
+\BKM@id=\count347
+)) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/tuda-ci/tudarules.sty
+Package: tudarules 2025-11-13 v4.05 Creation of colored bars for the tuda-ci bundle
+\g_ptxcd_titlerule_dim=\dimen161
+\c_ptxcd_largerule_dim=\dimen162
+\c_ptxcd_rulesep_dim=\dimen163
+\c_ptxcd_smallrule_dim=\dimen164
+\c_ptxcd_logoheight_dim=\dimen165
+\l_ptxcd_headrule_width_dim=\dimen166
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/adjustbox/trimclip.sty
+Package: trimclip 2025/02/21 v1.2a Trim and clip general TeX material
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/collectbox/collectbox.sty
+Package: collectbox 2022/10/17 v0.4c Collect macro arguments as boxes
+\collectedbox=\box66
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/adjustbox/adjcalc.sty
+Package: adjcalc 2012/05/16 v1.1 Provides advanced setlength with multiple back-ends (calc, etex, pgfmath)
+)
+\tc@llx=\dimen167
+\tc@lly=\dimen168
+\tc@urx=\dimen169
+\tc@ury=\dimen170
+Package trimclip Info: Using driver 'tc-luatex.def'.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/adjustbox/tc-luatex.def
+File: tc-luatex.def 2025/02/26 v1.1 Clipping driver for luatex
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/adjustbox/tc-pdftex.def
+File: tc-pdftex.def 2025/02/26 v2.3 Clipping driver for pdftex
+)))
+\g_ptxcd_marginpar_dim=\dimen171
+\g_ptxcd_innerMargin_dim=\dimen172
+\g_ptxcd_outerMargin_dim=\dimen173
+\g_ptxcd_bottomMargin_dim=\dimen174
+\g_ptxcd_topMargin_dim=\dimen175
+\g_ptxcd_columnSep_dim=\dimen176
+\g_ptxcd_headwidth_dim=\dimen177
+\g_ptxcd_headheight_dim=\dimen178
+Package typearea Info: These are the values describing the layout:
+(typearea)             DIV  = 10
+(typearea)             BCOR = 0.0pt
+(typearea)             \paperwidth      = 597.50793pt
+(typearea)              \textwidth      = 418.25555pt
+(typearea)              DIV departure   = -7%
+(typearea)              \evensidemargin = 17.3562pt
+(typearea)              \oddsidemargin  = 17.3562pt
+(typearea)             \paperheight     = 845.04694pt
+(typearea)              \textheight     = 514.20023pt
+(typearea)              \topmargin      = 12.2347pt
+(typearea)              \headheight     = 17.0pt
+(typearea)              \headsep        = 20.40001pt
+(typearea)              \topskip        = 11.0pt
+(typearea)              \footskip       = 47.6pt
+(typearea)              \baselineskip   = 13.6pt
+(typearea)              on input line 529.
+\l__ptxcd_titlegraphic_box=\box67
+\g_ptxcd_title_box=\box68
+\g_ptxcd_title_fill_skip=\skip76
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/tuda-ci/tuda-a4paper.clo
+File: tuda-a4paper.clo 2025-11-13 v4.05 tuda-ci size adjustments for a4paper
+)
+\g_ptxcd_title_info_box=\box69
+\ptxcd_title_headline_box=\box70
+\g_ptxcd_sponsor_box=\box71
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/tuda-ci/tudathesis.cfg
+\g_ptxcd_thesis_institution_box=\box72
+)
+\g_ptxcd_PaperID_box=\box73
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/babel/babel.sty
+Package: babel 2026/02/14 v26.3 The multilingual framework for LuaLaTeX, pdfLaTeX and XeLaTeX
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/babel/luababel.def
+\bbl@readstream=\read2
+\l@dumylang=\language2
+Package babel Info: Non-standard hyphenation setup on input line 118.
+\l@nohyphenation=\language3
+\l@german-x-2024-02-28=\language4
+\l@ngerman-x-2024-02-28=\language5
+\l@afrikaans=\language6
+\l@albanian=\language7
+\l@ancientgreek=\language8
+\l@ibycus=\language9
+\l@arabic=\language10
+\l@armenian=\language11
+\l@basque=\language12
+\l@belarusian=\language13
+\l@bulgarian=\language14
+\l@catalan=\language15
+\l@pinyin=\language16
+\l@churchslavonic=\language17
+\l@coptic=\language18
+\l@croatian=\language19
+\l@czech=\language20
+\l@danish=\language21
+\l@dutch=\language22
+\l@ukenglish=\language23
+\l@usenglishmax=\language24
+\l@esperanto=\language25
+\l@estonian=\language26
+\l@ethiopic=\language27
+\l@farsi=\language28
+\l@finnish=\language29
+\l@schoolfinnish=\language30
+\l@french=\language31
+\l@friulan=\language32
+\l@galician=\language33
+\l@georgian=\language34
+\l@german=\language35
+\l@ngerman=\language36
+\l@swissgerman=\language37
+\l@greek=\language38
+\l@monogreek=\language39
+\l@hebrew=\language40
+\l@hungarian=\language41
+\l@icelandic=\language42
+\l@assamese=\language43
+\l@bengali=\language44
+\l@gujarati=\language45
+\l@hindi=\language46
+\l@kannada=\language47
+\l@malayalam=\language48
+\l@marathi=\language49
+\l@oriya=\language50
+\l@pali=\language51
+\l@panjabi=\language52
+\l@tamil=\language53
+\l@telugu=\language54
+\l@indonesian=\language55
+\l@interlingua=\language56
+\l@irish=\language57
+\l@italian=\language58
+\l@kurmanji=\language59
+\l@classiclatin=\language60
+\l@latin=\language61
+\l@liturgicallatin=\language62
+\l@latvian=\language63
+\l@lithuanian=\language64
+\l@macedonian=\language65
+\l@mongolian=\language66
+\l@mongolianlmc=\language67
+\l@bokmal=\language68
+\l@nynorsk=\language69
+\l@occitan=\language70
+\l@piedmontese=\language71
+\l@polish=\language72
+\l@portuguese=\language73
+\l@romanian=\language74
+\l@romansh=\language75
+\l@russian=\language76
+\l@sanskrit=\language77
+\l@serbian=\language78
+\l@serbianc=\language79
+\l@slovak=\language80
+\l@slovenian=\language81
+\l@spanish=\language82
+\l@swedish=\language83
+\l@thai=\language84
+\l@turkish=\language85
+\l@turkmen=\language86
+\l@ukrainian=\language87
+\l@uppersorbian=\language88
+\l@vietnamese=\language89
+\l@welsh=\language90
+\babelcatcodetablenum=\catcodetable15
+\bbl@pattcodes=\catcodetable16
+)
+\babel@savecnt=\count348
+LaTeX Encoding Info:    Redeclaring text command \ij (encoding OT1) on input line 2078.
+LaTeX Encoding Info:    Redeclaring text command \IJ (encoding OT1) on input line 2080.
+LaTeX Encoding Info:    Redeclaring text command \ij (encoding T1) on input line 2082.
+LaTeX Encoding Info:    Redeclaring text command \IJ (encoding T1) on input line 2083.
+LaTeX Encoding Info:    Ignoring declaration for text command \ij (encoding ?) on input line 2084.
+LaTeX Encoding Info:    Ignoring declaration for text command \IJ (encoding ?) on input line 2086.
+LaTeX Encoding Info:    Ignoring declaration for text command \SS (encoding ?) on input line 2111.
+\U@D=\dimen179
+\l@unhyphenated=\language91
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/babel/luababel.def
+\bbl@attr@locale=\attribute11
+)
+Package babel Info: Fetching locale name for tag de
+(babel)             from babel-de.ini. Reported on input line 4184.
+Package babel Info: Passing ngerman to babel.
+(babel)             This will be the main language except if
+(babel)             explictly overriden with 'main='.
+(babel)             Reported on input line 4192.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/babel/locale/de/babel-german.tex) (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/babel/locale/invalid/babel-ngerman.tex) (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/babel/locale/de/babel-german.tex)
+Package babel Info: Importing font and identification data for ngerman
+(babel)             from babel-de.ini. Reported on input line 4330.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/babel-german/ngerman.ldf
+Language: ngerman 
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/babel-german/babel-german.def
+Package babel Info: Making " an active character on input line 470.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/hyph-utf8/loadhyph/loadhyph-de-1996.tex UTF-8 German hyphenation patterns (reformed orthography) (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/hyph-utf8/patterns/tex/hyph-de-1996.tex German Hyphenation Patterns (Reformed Orthography, 2006) `dehyphn-x' 2024-02-28 (WL)))))
+
+Package babel Warning: The name 'german' with the 'ldf' mechanism is
+(babel)                currently assigned to the old 1901 variant of German.
+(babel)                For modern post-1996 German, use the name 'ngerman'.
+(babel)                Reported on input line 4330.
+
+Package babel Info: Importing font and identification data for german
+(babel)             from babel-de-1901.ini. Reported on input line 4330.
+(c:/othersoftware/texlive/2025/texmf-dist/tex/generic/babel-german/german.ldf
+Language: german 
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/babel-german/babel-german.def (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/hyph-utf8/loadhyph/loadhyph-de-1901.tex UTF-8 German hyphenation patterns (traditional orthography) (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/hyph-utf8/patterns/tex/hyph-de-1901.tex German Hyphenation Patterns (Traditional Orthography) `dehypht-x' 2024-02-28 (WL)))))) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/microtype/microtype.sty
+Package: microtype 2026/02/26 v3.2c Micro-typographical refinements (RS)
+\MT@toks=\toks23
+\MT@tempbox=\box74
+\MT@count=\count349
+LaTeX Info: Redefining \noprotrusionifhmode on input line 1084.
+LaTeX Info: Redefining \leftprotrusion on input line 1085.
+\MT@prot@toks=\toks24
+LaTeX Info: Redefining \rightprotrusion on input line 1104.
+LaTeX Info: Redefining \textls on input line 1449.
+\MT@outer@kern=\dimen180
+LaTeX Info: Redefining \microtypecontext on input line 2053.
+LaTeX Info: Redefining \textmicrotypecontext on input line 2070.
+\MT@listname@count=\count350
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/microtype/microtype-luatex.def
+File: microtype-luatex.def 2026/02/26 v3.2c Definitions specific to luatex (RS)
+Lua module: microtype 2026/02/26 v3.2c microtype module.
+Module microtype Info: overwriting function `keepligature' on input line 63
+LaTeX Info: Redefining \lsstyle on input line 779.
+LaTeX Info: Redefining \lslig on input line 779.
+\MT@outer@space=\skip77
+)
+Package microtype Info: Loading configuration file microtype.cfg.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/microtype/microtype.cfg
+File: microtype.cfg 2026/02/26 v3.2c microtype main configuration file (RS)
+)
+LaTeX Info: Redefining \microtypesetup on input line 3065.
+)
+==> First Aid for microtype.sty no longer applied!
+    Expected:
+        2025/07/09 v3.2b Micro-typographical refinements (RS)
+    but found:
+        2026/02/26 v3.2c Micro-typographical refinements (RS)
+    so I'm assuming it got fixed.
+(c:/othersoftware/texlive/2025/texmf-dist/tex/latex/csquotes/csquotes.sty
+Package: csquotes 2024-04-04 v5.2o context-sensitive quotations (JAW)
+\csq@reset=\count351
+\csq@gtype=\count352
+\csq@glevel=\count353
+\csq@qlevel=\count354
+\csq@maxlvl=\count355
+\csq@tshold=\count356
+\csq@ltx@everypar=\toks25
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/csquotes/csquotes.def
+File: csquotes.def 2024-04-04 v5.2o csquotes generic definitions (JAW)
+)
+Package csquotes Info: Trying to load configuration file 'csquotes.cfg'...
+Package csquotes Info: ... configuration file loaded successfully.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/csquotes/csquotes.cfg
+File: csquotes.cfg 
+)
+Package csquotes Info: Enabling multilingual quotes.
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/biblatex/biblatex.sty
+Package: biblatex 2025/07/10 v3.21 programmable bibliographies (PK/MW)
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/logreq/logreq.sty
+Package: logreq 2010/08/04 v1.0 xml request logger
+\lrq@indent=\count357
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/logreq/logreq.def
+File: logreq.def 2010/08/04 v1.0 logreq spec v1.0
+)) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/base/ifthen.sty
+Package: ifthen 2024/03/16 v1.1e Standard LaTeX ifthen package (DPC)
+)
+\c@tabx@nest=\count358
+\c@listtotal=\count359
+\c@listcount=\count360
+\c@liststart=\count361
+\c@liststop=\count362
+\c@citecount=\count363
+\c@citetotal=\count364
+\c@multicitecount=\count365
+\c@multicitetotal=\count366
+\c@instcount=\count367
+\c@maxnames=\count368
+\c@minnames=\count369
+\c@maxitems=\count370
+\c@minitems=\count371
+\c@citecounter=\count372
+\c@maxcitecounter=\count373
+\c@savedcitecounter=\count374
+\c@uniquelist=\count375
+\c@uniquename=\count376
+\c@refsection=\count377
+\c@refsegment=\count378
+\c@maxextratitle=\count379
+\c@maxextratitleyear=\count380
+\c@maxextraname=\count381
+\c@maxextradate=\count382
+\c@maxextraalpha=\count383
+\c@abbrvpenalty=\count384
+\c@highnamepenalty=\count385
+\c@lownamepenalty=\count386
+\c@maxparens=\count387
+\c@parenlevel=\count388
+\blx@tempcnta=\count389
+\blx@tempcntb=\count390
+\blx@tempcntc=\count391
+\c@blx@maxsection=\count392
+\blx@maxsegment@0=\count393
+\blx@notetype=\count394
+\blx@parenlevel@text=\count395
+\blx@parenlevel@foot=\count396
+\blx@sectionciteorder@0=\count397
+\blx@sectionciteorderinternal@0=\count398
+\blx@entrysetcounter=\count399
+\blx@biblioinstance=\count400
+\labelnumberwidth=\skip78
+\labelalphawidth=\skip79
+\biblabelsep=\skip80
+\bibitemsep=\skip81
+\bibnamesep=\skip82
+\bibinitsep=\skip83
+\bibparsep=\skip84
+\bibhang=\skip85
+\blx@bcfin=\read3
+\blx@bcfout=\write3
+\blx@langwohyphens=\language92
+\c@mincomprange=\count401
+\c@maxcomprange=\count402
+\c@mincompwidth=\count403
+Package biblatex Info: Trying to load biblatex default data model...
+Package biblatex Info: ... file 'blx-dm.def' found.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/biblatex/blx-dm.def
+File: blx-dm.def 2025/07/10 v3.21 biblatex datamodel (PK/MW)
+)
+Package biblatex Info: Trying to load biblatex custom data model...
+Package biblatex Info: ... file 'biblatex-dm.cfg' not found.
+\c@afterword=\count404
+\c@savedafterword=\count405
+\c@annotator=\count406
+\c@savedannotator=\count407
+\c@author=\count408
+\c@savedauthor=\count409
+\c@bookauthor=\count410
+\c@savedbookauthor=\count411
+\c@commentator=\count412
+\c@savedcommentator=\count413
+\c@editor=\count414
+\c@savededitor=\count415
+\c@editora=\count416
+\c@savededitora=\count417
+\c@editorb=\count418
+\c@savededitorb=\count419
+\c@editorc=\count420
+\c@savededitorc=\count421
+\c@foreword=\count422
+\c@savedforeword=\count423
+\c@holder=\count424
+\c@savedholder=\count425
+\c@introduction=\count426
+\c@savedintroduction=\count427
+\c@namea=\count428
+\c@savednamea=\count429
+\c@nameb=\count430
+\c@savednameb=\count431
+\c@namec=\count432
+\c@savednamec=\count433
+\c@translator=\count434
+\c@savedtranslator=\count435
+\c@shortauthor=\count436
+\c@savedshortauthor=\count437
+\c@shorteditor=\count438
+\c@savedshorteditor=\count439
+\c@labelname=\count440
+\c@savedlabelname=\count441
+\c@institution=\count442
+\c@savedinstitution=\count443
+\c@lista=\count444
+\c@savedlista=\count445
+\c@listb=\count446
+\c@savedlistb=\count447
+\c@listc=\count448
+\c@savedlistc=\count449
+\c@listd=\count450
+\c@savedlistd=\count451
+\c@liste=\count452
+\c@savedliste=\count453
+\c@listf=\count454
+\c@savedlistf=\count455
+\c@location=\count456
+\c@savedlocation=\count457
+\c@organization=\count458
+\c@savedorganization=\count459
+\c@origlocation=\count460
+\c@savedoriglocation=\count461
+\c@origpublisher=\count462
+\c@savedorigpublisher=\count463
+\c@publisher=\count464
+\c@savedpublisher=\count465
+\c@language=\count466
+\c@savedlanguage=\count467
+\c@origlanguage=\count468
+\c@savedoriglanguage=\count469
+\c@pageref=\count470
+\c@savedpageref=\count471
+\shorthandwidth=\skip86
+\shortjournalwidth=\skip87
+\shortserieswidth=\skip88
+\shorttitlewidth=\skip89
+\shortauthorwidth=\skip90
+\shorteditorwidth=\skip91
+\locallabelnumberwidth=\skip92
+\locallabelalphawidth=\skip93
+\localshorthandwidth=\skip94
+\localshortjournalwidth=\skip95
+\localshortserieswidth=\skip96
+\localshorttitlewidth=\skip97
+\localshortauthorwidth=\skip98
+\localshorteditorwidth=\skip99
+Package biblatex Info: Trying to load enhanced support for Unicode engines...
+Package biblatex Info: ... file 'blx-unicode.def' found.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/biblatex/blx-unicode.def)
+Package biblatex Info: Trying to load compatibility code...
+Package biblatex Info: ... file 'blx-compat.def' found.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/biblatex/blx-compat.def
+File: blx-compat.def 2025/07/10 v3.21 biblatex compatibility (PK/MW)
+)
+Package biblatex Info: Trying to load generic definitions...
+Package biblatex Info: ... file 'biblatex.def' found.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/biblatex/biblatex.def
+File: biblatex.def 2025/07/10 v3.21 biblatex compatibility (PK/MW)
+\c@textcitecount=\count472
+\c@textcitetotal=\count473
+\c@textcitemaxnames=\count474
+\c@biburlbigbreakpenalty=\count475
+\c@biburlbreakpenalty=\count476
+\c@biburlnumpenalty=\count477
+\c@biburlucpenalty=\count478
+\c@biburllcpenalty=\count479
+\biburlbigskip=\muskip18
+\biburlnumskip=\muskip19
+\biburlucskip=\muskip20
+\biburllcskip=\muskip21
+\c@smartand=\count480
+)
+Package biblatex Info: Trying to load bibliography style 'numeric'...
+Package biblatex Info: ... file 'numeric.bbx' found.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/biblatex/bbx/numeric.bbx
+File: numeric.bbx 2025/07/10 v3.21 biblatex bibliography style (PK/MW)
+Package biblatex Info: Trying to load bibliography style 'standard'...
+Package biblatex Info: ... file 'standard.bbx' found.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/biblatex/bbx/standard.bbx
+File: standard.bbx 2025/07/10 v3.21 biblatex bibliography style (PK/MW)
+\c@bbx:relatedcount=\count481
+\c@bbx:relatedtotal=\count482
+))
+Package biblatex Info: Trying to load citation style 'numeric'...
+Package biblatex Info: ... file 'numeric.cbx' found.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/biblatex/cbx/numeric.cbx
+File: numeric.cbx 2025/07/10 v3.21 biblatex citation style (PK/MW)
+Package biblatex Info: Redefining '\cite'.
+Package biblatex Info: Redefining '\parencite'.
+Package biblatex Info: Redefining '\footcite'.
+Package biblatex Info: Redefining '\footcitetext'.
+Package biblatex Info: Redefining '\smartcite'.
+Package biblatex Info: Redefining '\supercite'.
+Package biblatex Info: Redefining '\textcite'.
+Package biblatex Info: Redefining '\textcites'.
+Package biblatex Info: Redefining '\cites'.
+Package biblatex Info: Redefining '\parencites'.
+Package biblatex Info: Redefining '\smartcites'.
+)
+Package biblatex Info: Trying to load configuration file...
+Package biblatex Info: ... file 'biblatex.cfg' found.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/biblatex/biblatex.cfg
+File: biblatex.cfg 
+)
+Package biblatex Info: LuaTeX detected.
+(biblatex)             Assuming input encoding 'utf8'.
+Package biblatex Info: Document encoding is UTF8 ....
+Package biblatex Info: ... and expl3
+(biblatex)             2026-01-19 L3 programming layer (loader) 
+(biblatex)             is new enough (at least 2020/04/06),
+(biblatex)             setting 'casechanger=expl3'.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/biblatex/blx-case-expl3.sty
+Package: blx-case-expl3 2025/07/10 v3.21 expl3 case changing code for biblatex
+)) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/mathtools/mathtools.sty
+Package: mathtools 2024/10/04 v1.31 mathematical typesetting tools
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/tools/calc.sty
+Package: calc 2025/03/01 v4.3b Infix arithmetic (KKT,FJ)
+\calc@Acount=\count483
+\calc@Bcount=\count484
+\calc@Adimen=\dimen181
+\calc@Bdimen=\dimen182
+\calc@Askip=\skip100
+\calc@Bskip=\skip101
+LaTeX Info: Redefining \setlength on input line 86.
+LaTeX Info: Redefining \addtolength on input line 87.
+\calc@Ccount=\count485
+\calc@Cskip=\skip102
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/mathtools/mhsetup.sty
+Package: mhsetup 2021/03/18 v1.4 programming setup (MH)
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/amsmath/amsmath.sty
+Package: amsmath 2025/07/09 v2.17z AMS math features
+\@mathmargin=\skip103
+
+For additional information on amsmath, use the `?' option.
+(c:/othersoftware/texlive/2025/texmf-dist/tex/latex/amsmath/amstext.sty
+Package: amstext 2024/11/17 v2.01 AMS text
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/amsmath/amsgen.sty
+File: amsgen.sty 1999/11/30 v2.0 generic functions
+\@emptytoks=\toks26
+\ex@=\dimen183
+)) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/amsmath/amsbsy.sty
+Package: amsbsy 1999/11/29 v1.2d Bold Symbols
+\pmbraise@=\dimen184
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/amsmath/amsopn.sty
+Package: amsopn 2022/04/08 v2.04 operator names
+)
+\inf@bad=\count486
+LaTeX Info: Redefining \frac on input line 235.
+\uproot@=\count487
+\leftroot@=\count488
+LaTeX Info: Redefining \overline on input line 398.
+LaTeX Info: Redefining \colon on input line 409.
+\classnum@=\count489
+\DOTSCASE@=\count490
+LaTeX Info: Redefining \ldots on input line 495.
+LaTeX Info: Redefining \dots on input line 498.
+LaTeX Info: Redefining \cdots on input line 619.
+\Mathstrutbox@=\box75
+\strutbox@=\box76
+LaTeX Info: Redefining \big on input line 721.
+LaTeX Info: Redefining \Big on input line 722.
+LaTeX Info: Redefining \bigg on input line 723.
+LaTeX Info: Redefining \Bigg on input line 724.
+\big@size=\dimen185
+LaTeX Font Info:    Redeclaring font encoding OML on input line 742.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 743.
+\macc@depth=\count491
+LaTeX Info: Redefining \bmod on input line 904.
+LaTeX Info: Redefining \pmod on input line 909.
+LaTeX Info: Redefining \smash on input line 939.
+LaTeX Info: Redefining \relbar on input line 969.
+LaTeX Info: Redefining \Relbar on input line 970.
+\c@MaxMatrixCols=\count492
+\dotsspace@=\muskip22
+\c@parentequation=\count493
+\dspbrk@lvl=\count494
+\tag@help=\toks27
+\row@=\count495
+\column@=\count496
+\maxfields@=\count497
+\andhelp@=\toks28
+\eqnshift@=\dimen186
+\alignsep@=\dimen187
+\tagshift@=\dimen188
+\tagwidth@=\dimen189
+\totwidth@=\dimen190
+\lineht@=\dimen191
+\@envbody=\toks29
+\multlinegap=\skip104
+\multlinetaggap=\skip105
+\mathdisplay@stack=\toks30
+LaTeX Info: Redefining \[ on input line 2950.
+LaTeX Info: Redefining \] on input line 2951.
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-amsmath.ltx
+File: latex-lab-amsmath.ltx 2025-09-29 v0.1i amsmath adaptions
+LaTeX Info: Redefining \eqref on input line 57.
+)
+\g_MT_multlinerow_int=\count498
+\l_MT_multwidth_dim=\dimen192
+\origjot=\skip106
+\l_MT_shortvdotswithinadjustabove_dim=\dimen193
+\l_MT_shortvdotswithinadjustbelow_dim=\dimen194
+\l_MT_above_intertext_sep=\dimen195
+\l_MT_below_intertext_sep=\dimen196
+\l_MT_above_shortintertext_sep=\dimen197
+\l_MT_below_shortintertext_sep=\dimen198
+\xmathstrut@box=\box77
+\xmathstrut@dim=\dimen199
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex-lab/latex-lab-mathtools.ltx
+File: latex-lab-mathtools.ltx 2024-07-13 v0.1a mathtools adaptions
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/amsfonts/amssymb.sty
+Package: amssymb 2013/01/14 v3.01 AMS font symbols
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/amsfonts/amsfonts.sty
+Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
+\symAMSa=\mathgroup4
+\symAMSb=\mathgroup5
+LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
+LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+)) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/minted/minted.sty
+Package: minted 2025/05/14 v3.7.0 Yet another Pygments shim for LaTeX
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/catchfile/catchfile.sty
+Package: catchfile 2019/12/09 v1.8 Catch the contents of a file (HO)
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/etexcmds/etexcmds.sty
+Package: etexcmds 2019/12/15 v1.7 Avoid name clashes with e-TeX commands (HO)
+)) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/fvextra/fvextra.sty
+Package: fvextra 2026/02/25 v1.14.0 fvextra - extensions and patches for fancyvrb
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/fancyvrb/fancyvrb.sty
+Package: fancyvrb 2025/07/28 4.6 verbatim text (tvz,hv)
+\FV@CodeLineNo=\count499
+\FV@InFile=\read4
+\FV@TabBox=\box78
+\c@FancyVerbLine=\count500
+\FV@StepNumber=\count501
+\FV@OutFile=\write4
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/upquote/upquote.sty
+Package: upquote 2012/04/19 v1.3 upright-quote and grave-accent glyphs in verbatim
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/lineno/lineno.sty
+Package: lineno 2026/02/16 line numbers on paragraphs v5.7
+\linenopenalty=\count502
+\output=\toks31
+\linenoprevgraf=\count503
+\linenumbersep=\dimen256
+\linenumberwidth=\dimen257
+\c@linenumber=\count504
+\c@pagewiselinenumber=\count505
+\c@LN@truepage=\count506
+\c@internallinenumber=\count507
+\c@internallinenumbers=\count508
+\quotelinenumbersep=\dimen258
+\bframerule=\dimen259
+\bframesep=\dimen260
+\bframebox=\box79
+\@LN@amsmath@ams@eqpen=\count509
+
+
+LaTeX Warning: Command \@parboxrestore  has changed.
+               Check if current package is valid.
+
+)
+
+Package fvextra Warning: csquotes should be loaded after fvextra, to avoid a warning from the lineno package on input line 36.
+
+\c@FancyVerbWriteLine=\count510
+\c@FancyVerbBufferLine=\count511
+\c@FV@TrueTabGroupLevel=\count512
+\c@FV@TrueTabCounter=\count513
+\FV@TabBox@Group=\box80
+\FV@bgcolorstructbox=\box81
+\FV@TmpLength=\skip107
+\c@FV@HighlightLinesStart=\count514
+\c@FV@HighlightLinesStop=\count515
+\FV@LoopCount=\count516
+\FV@NCharsBox=\box82
+\FV@BreakIndent=\dimen261
+\FV@BreakIndentNChars=\count517
+\FV@BreakSymbolSepLeft=\dimen262
+\FV@BreakSymbolSepLeftNChars=\count518
+\FV@BreakSymbolSepRight=\dimen263
+\FV@BreakSymbolSepRightNChars=\count519
+\FV@BreakSymbolIndentLeft=\dimen264
+\FV@BreakSymbolIndentLeftNChars=\count520
+\FV@BreakSymbolIndentRight=\dimen265
+\FV@BreakSymbolIndentRightNChars=\count521
+\c@FancyVerbLineBreakLast=\count522
+\FV@LineBox=\box83
+\FV@LineIndentBox=\box84
+\c@FV@BreakBufferDepth=\count523
+\FV@LineWidth=\dimen266
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latex2pydata/latex2pydata.sty
+Package: latex2pydata 2026/02/25 v0.7.0 latex2pydata - write data to file in Python literal format
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/pgf/utilities/pgfkeys.sty (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/pgf/utilities/pgfkeys.code.tex
+\pgfkeys@pathtoks=\toks32
+\pgfkeys@temptoks=\toks33
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/generic/pgf/utilities/pgfkeyslibraryfiltered.code.tex
+\pgfkeys@tmptoks=\toks34
+))) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/pgfopts/pgfopts.sty
+Package: pgfopts 2014/07/10 v2.1a LaTeX package options with pgfkeys
+\pgfopts@list@add@a@toks=\toks35
+\pgfopts@list@add@b@toks=\toks36
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/tools/shellesc.sty
+Package: shellesc 2023/07/08 v1.0d unified shell escape interface for LaTeX
+Package shellesc Info: Restricted shell escape enabled on input line 77.
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/float/float.sty
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count524
+\float@exts=\toks37
+\float@box=\box85
+\@float@everytoks=\toks38
+\@floatcapt=\box86
+)
+\c@minted@FancyVerbLineTemp=\count525
+\@float@every@listing=\toks39
+\c@listing=\count526
+)
+
+Package tudapub/thesis Info: You submitted examdate data for title
+(tudapub/thesis)             information.
+(tudapub/thesis)             This field is only used for type=dr/drfinal.
+(tudapub/thesis)             It will be ignored.
+
+Package csquotes Info: Checking for multilingual support...
+Package csquotes Info: ... found 'babel' package.
+
+No file DEMO-TUDaThesis.aux.
+
+\openout1 = DEMO-TUDaThesis.aux
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 115.
+LaTeX Font Info:    ... okay on input line 115.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 115.
+LaTeX Font Info:    ... okay on input line 115.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 115.
+LaTeX Font Info:    ... okay on input line 115.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 115.
+LaTeX Font Info:    ... okay on input line 115.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 115.
+LaTeX Font Info:    ... okay on input line 115.
+LaTeX Font Info:    Checking defaults for TU/lmr/m/n on input line 115.
+LaTeX Font Info:    ... okay on input line 115.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 115.
+LaTeX Font Info:    ... okay on input line 115.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 115.
+LaTeX Font Info:    ... okay on input line 115.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 115.
+LaTeX Font Info:    ... okay on input line 115.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 115.
+LaTeX Font Info:    ... okay on input line 115.
+
+Package fontspec Info: 
+(fontspec)             Adjusting the maths setup (use [no-math] to avoid
+(fontspec)             this).
+
+\symlegacymaths=\mathgroup6
+LaTeX Font Info:    Overwriting symbol font `legacymaths' in version `bold'
+(Font)                  OT1/cmr/m/n --> OT1/cmr/bx/n on input line 115.
+LaTeX Font Info:    Redeclaring math accent \acute on input line 115.
+LaTeX Font Info:    Redeclaring math accent \grave on input line 115.
+LaTeX Font Info:    Redeclaring math accent \ddot on input line 115.
+LaTeX Font Info:    Redeclaring math accent \tilde on input line 115.
+LaTeX Font Info:    Redeclaring math accent \bar on input line 115.
+LaTeX Font Info:    Redeclaring math accent \breve on input line 115.
+LaTeX Font Info:    Redeclaring math accent \check on input line 115.
+LaTeX Font Info:    Redeclaring math accent \hat on input line 115.
+LaTeX Font Info:    Redeclaring math accent \dot on input line 115.
+LaTeX Font Info:    Redeclaring math accent \mathring on input line 115.
+LaTeX Font Info:    Redeclaring math symbol \Gamma on input line 115.
+LaTeX Font Info:    Redeclaring math symbol \Delta on input line 115.
+LaTeX Font Info:    Redeclaring math symbol \Theta on input line 115.
+LaTeX Font Info:    Redeclaring math symbol \Lambda on input line 115.
+LaTeX Font Info:    Redeclaring math symbol \Xi on input line 115.
+LaTeX Font Info:    Redeclaring math symbol \Pi on input line 115.
+LaTeX Font Info:    Redeclaring math symbol \Sigma on input line 115.
+LaTeX Font Info:    Redeclaring math symbol \Upsilon on input line 115.
+LaTeX Font Info:    Redeclaring math symbol \Phi on input line 115.
+LaTeX Font Info:    Redeclaring math symbol \Psi on input line 115.
+LaTeX Font Info:    Redeclaring math symbol \Omega on input line 115.
+LaTeX Font Info:    Redeclaring math symbol \mathdollar on input line 115.
+LaTeX Font Info:    Redeclaring symbol font `operators' on input line 115.
+LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
+(Font)              `operators' in the math version `normal' on input line 115.
+LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
+(Font)                  OT1/cmr/m/n --> TU/XCharter(0)/m/n on input line 115.
+LaTeX Font Info:    Encoding `OT1' has changed to `TU' for symbol font
+(Font)              `operators' in the math version `bold' on input line 115.
+LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
+(Font)                  OT1/cmr/bx/n --> TU/XCharter(0)/m/n on input line 115.
+LaTeX Font Info:    Overwriting symbol font `operators' in version `normal'
+(Font)                  TU/XCharter(0)/m/n --> TU/XCharter(0)/m/n on input line 115.
+LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `normal'
+(Font)                  OT1/cmr/m/it --> TU/XCharter(0)/m/it on input line 115.
+LaTeX Font Info:    Overwriting math alphabet `\mathbf' in version `normal'
+(Font)                  OT1/cmr/bx/n --> TU/XCharter(0)/b/n on input line 115.
+LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `normal'
+(Font)                  OT1/cmss/m/n --> TU/Roboto(0)/m/n on input line 115.
+LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `normal'
+(Font)                  OT1/cmtt/m/n --> TU/RobotoMono(0)/m/n on input line 115.
+LaTeX Font Info:    Overwriting symbol font `operators' in version `bold'
+(Font)                  TU/XCharter(0)/m/n --> TU/XCharter(0)/b/n on input line 115.
+LaTeX Font Info:    Overwriting math alphabet `\mathit' in version `bold'
+(Font)                  OT1/cmr/bx/it --> TU/XCharter(0)/b/it on input line 115.
+LaTeX Font Info:    Overwriting math alphabet `\mathsf' in version `bold'
+(Font)                  OT1/cmss/bx/n --> TU/Roboto(0)/b/n on input line 115.
+LaTeX Font Info:    Overwriting math alphabet `\mathtt' in version `bold'
+(Font)                  OT1/cmtt/m/n --> TU/RobotoMono(0)/b/n on input line 115.
+(c:/othersoftware/texlive/2025/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count527
+\scratchdimen=\dimen267
+\scratchbox=\box87
+\nofMPsegments=\count528
+\nofMParguments=\count529
+\everyMPshowfont=\toks40
+\MPscratchCnt=\count530
+\MPscratchDim=\dimen268
+\MPnumerator=\count531
+\makeMPintoPDFobject=\count532
+\everyMPtoPDFconversion=\toks41
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
+Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 485.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Live
+))
+Package hyperref Info: Link coloring OFF on input line 115.
+\ptxcd_headrule_box=\box88
+Package babel Info: 'german' activates 'german' shorthands.
+(babel)             Reported on input line 115.
+Package scrbase Info: activating german \ptxcd_byname on input line 115.
+Package scrbase Info: activating german \ptxcd_fromname on input line 115.
+Package scrbase Info: activating german \ptxcd_departmentprefix: on input line 115.
+Package scrbase Info: activating german \ptxcd_reviewname on input line 115.
+Package scrbase Info: activating german \ptxcd_examdatename on input line 115.
+Package scrbase Info: activating german \ptxcd_submissiondatename on input line 115.
+Package scrbase Info: activating german \ptxcd_studentIDname on input line 115.
+Package scrbase Info: activating german \ptxcd_thesisType on input line 115.
+Package scrbase Info: activating german \g__ptxcd_cc_attr_by: on input line 115.
+Package scrbase Info: activating german \g__ptxcd_cc_attr_nc: on input line 115.
+Package scrbase Info: activating german \g__ptxcd_cc_attr_sa: on input line 115.
+Package scrbase Info: activating german \g__ptxcd_cc_attr_nd: on input line 115.
+Package scrbase Info: activating german \g__ptxcd_cc_intro: on input line 115.
+Package scrbase Info: activating german \g__ptxcd_cc_sep: on input line 115.
+Package scrbase Info: activating german \researchgroupname on input line 115.
+Package scrbase Info: activating german \istitutename on input line 115.
+Package scrbase Info: activating german \authorandname on input line 115.
+Package scrbase Info: activating german \ptxcd_datename on input line 115.
+LaTeX Info: Redefining \microtypecontext on input line 115.
+Package microtype Info: Applying patch `item' on input line 115.
+Package microtype Info: Applying patch `toc' on input line 115.
+Package microtype Info: Applying patch `eqnum' on input line 115.
+Package microtype Info: Applying patch `footnote' on input line 115.
+Package microtype Info: Applying patch `verbatim' on input line 115.
+LaTeX Info: Redefining \microtypesetup on input line 115.
+Package microtype Info: Generating PDF output.
+Package microtype Info: Character protrusion enabled (level 2).
+Package microtype Info: Using default protrusion set `alltext'.
+Package microtype Info: Automatic font expansion enabled (level 2),
+(microtype)             stretch: 20, shrink: 20, step: 1, non-selected.
+Package microtype Info: Using default expansion set `alltext-nott'.
+Package microtype Info: Patching command `\showhyphens'.
+Package microtype Info: No adjustment of tracking.
+Package microtype Info: No adjustment of spacing.
+Package microtype Info: No adjustment of kerning.
+Package microtype Info: Loading generic protrusion settings for font family
+(microtype)             `XCharter' (encoding: TU).
+(microtype)             For optimal results, create family-specific settings.
+(microtype)             See the microtype manual for details.
+Package biblatex Info: Trying to load language 'german'...
+Package biblatex Info: ... file 'german.lbx' found.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/biblatex/lbx/german.lbx
+File: german.lbx 2025/07/10 v3.21 biblatex localization (PK/MW)
+)
+Package biblatex Info: Trying to load language 'ngerman'...
+Package biblatex Info: ... file 'ngerman.lbx' found.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/biblatex/lbx/ngerman.lbx
+File: ngerman.lbx 2025/07/10 v3.21 biblatex localization (PK/MW)
+Package biblatex Info: Trying to load language 'german'...
+Package biblatex Info: ... file 'german.lbx' found.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/biblatex/lbx/german.lbx
+File: german.lbx 2025/07/10 v3.21 biblatex localization (PK/MW)
+)
+Package biblatex Info: Trying to load language 'german'...
+Package biblatex Info: ... file 'german.lbx' found.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/biblatex/lbx/german.lbx
+File: german.lbx 2025/07/10 v3.21 biblatex localization (PK/MW)
+))
+Package biblatex Info: LuaTeX detected.
+(biblatex)             Assuming input encoding 'utf8'.
+Package biblatex Info: Automatic encoding selection.
+(biblatex)             Assuming data encoding 'utf8'.
+
+\openout3 = DEMO-TUDaThesis.bcf
+Package biblatex Info: Trying to load bibliographic data...
+Package biblatex Info: ... file 'DEMO-TUDaThesis.bbl' not found.
+
+No file DEMO-TUDaThesis.bbl.
+Package biblatex Info: Reference section=0 on input line 115.
+Package biblatex Info: Reference segment=0 on input line 115.
+<<sRGB.icc>>
+\g__cctab_next_cctab=\catcodetable17
+
+
+Package tagpdf Info: luamml has been disabled and will not create an MathML
+(tagpdf)             file.
+
+Package scrbase Info: activating german \ptxcd_department: on input line 118.
+Package scrbase Info: activating german \departmentname on input line 118.
+Package scrbase Info: activating german \departmentfullname on input line 118.
+Package scrbase Info: activating german \ptxcd_departmentprefix: on input line 118.
+Package scrbase Info: activating german \ptxcd_in_department on input line 118.
+
+c:/Users/konst/data/repos/jsgaalop/javascriptgaalopvisualizer/KonstantinsBachelorarbeit/DEMO-TUDaThesis.tex:118: LaTeX template Error: The instance 'listblock-0' of type 'block' is unknown.
+
+For immediate help type H <return>.
+ ...                                              
+                                                  
+l.118 
+      
+
+You have asked to use an instance 'listblock-0', but this has not been
+created.
+
+
+LaTeX Font Info:    Font shape `TU/Roboto(0)/m/n' will be
+(Font)              scaled to size 10.95pt on input line 118.
+Package microtype Info: Loading generic protrusion settings for font family
+(microtype)             `Roboto' (encoding: TU).
+(microtype)             For optimal results, create family-specific settings.
+(microtype)             See the microtype manual for details.
+LaTeX Font Info:    Font shape `TU/Roboto(0)/b/n' will be
+(Font)              scaled to size 10.95pt on input line 118.
+LaTeX Font Info:    Font shape `TU/Roboto(0)/b/n' will be
+(Font)              scaled to size 36.0pt on input line 118.
+
+c:/Users/konst/data/repos/jsgaalop/javascriptgaalopvisualizer/KonstantinsBachelorarbeit/DEMO-TUDaThesis.tex:118: LaTeX template Error: The instance 'listblock-0' of type 'block' is unknown.
+
+For immediate help type H <return>.
+ ...                                              
+                                                  
+l.118 
+      
+
+You have asked to use an instance 'listblock-0', but this has not been
+created.
+
+
+LaTeX Font Info:    Font shape `TU/Roboto(9)/m/n' will be
+(Font)              scaled to size 10.95pt on input line 118.
+LaTeX Font Info:    Font shape `TU/Roboto(9)/m/n' will be
+(Font)              scaled to size 12.0pt on input line 118.
+
+c:/Users/konst/data/repos/jsgaalop/javascriptgaalopvisualizer/KonstantinsBachelorarbeit/DEMO-TUDaThesis.tex:118: LaTeX Error: File `tuda_logo' not found.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.118 
+      
+I could not locate the file with any of these extensions:
+.pdf,.png,.jpg,.mps,.jpeg,.jbig2,.jb2,.PDF,.PNG,.JPG,.JPEG,.JBIG2,.JB2,.eps
+Try typing  <return>  to proceed.
+If that doesn't work, type  X <return>  to quit.
+
+LaTeX Font Info:    Trying to load font information for U+msa on input line 118.
+(c:/othersoftware/texlive/2025/texmf-dist/tex/latex/amsfonts/umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/microtype/mt-msa.cfg
+File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
+)
+LaTeX Font Info:    Trying to load font information for U+msb on input line 118.
+ (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/amsfonts/umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/microtype/mt-msb.cfg
+File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
+) (c:/othersoftware/texlive/2025/texmf-dist/tex/latex/microtype/mt-cmr.cfg
+File: mt-cmr.cfg 2013/05/19 v2.2 microtype config. file: Computer Modern Roman (RS)
+)
+LaTeX Font Info:    Font shape `TU/Roboto(0)/m/n' will be
+(Font)              scaled to size 10.0pt on input line 118.
+ [1{c:/othersoftware/texlive/2025/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
+
+
+
+
+
+
+]
+Package typearea Info: These are the values describing the layout:
+(typearea)             DIV  = 10
+(typearea)             BCOR = 0.0pt
+(typearea)             \paperwidth      = 597.50793pt
+(typearea)              \textwidth      = 418.25555pt
+(typearea)              DIV departure   = -7%
+(typearea)              \evensidemargin = 17.3562pt
+(typearea)              \oddsidemargin  = 17.3562pt
+(typearea)             \paperheight     = 845.04694pt
+(typearea)              \textheight     = 514.20023pt
+(typearea)              \topmargin      = 12.2347pt
+(typearea)              \headheight     = 17.0pt
+(typearea)              \headsep        = 20.40001pt
+(typearea)              \topskip        = 11.0pt
+(typearea)              \footskip       = 47.6pt
+(typearea)              \baselineskip   = 13.6pt
+(typearea)              on input line 118.
+Package typearea Info: Using dirty hack to recalculate internal output
+(typearea)             dimensions of LaTeX on input line 118.
+LaTeX Font Info:    Font shape `TU/Roboto(0)/b/n' will be
+(Font)              scaled to size 20.74pt on input line 127.
+Package tocbasic Info: character protrusion at toc deactivated on input line 127.
+
+No file DEMO-TUDaThesis.toc.
+\tf@toc=\write5
+
+\openout5 = DEMO-TUDaThesis.toc
+[2
+
+
+
+
+]
+chapter 1.
+[3
+
+]
+chapter 2.
+LaTeX Font Info:    Font shape `TU/Roboto(0)/b/n' will be
+(Font)              scaled to size 14.4pt on input line 145.
+LaTeX Font Info:    Font shape `TU/Roboto(0)/b/n' will be
+(Font)              scaled to size 12.0pt on input line 152.
+[4
+
+] [5]
+LaTeX Font Info:    Font shape `TU/RobotoMono(0)/m/n' will be
+(Font)              scaled to size 10.95pt on input line 247.
+Package microtype Info: Loading generic protrusion settings for font family
+(microtype)             `RobotoMono' (encoding: TU).
+(microtype)             For optimal results, create family-specific settings.
+(microtype)             See the microtype manual for details.
+ [6]
+\pydata@fh@0=\write6
+
+\openout6 = _5D68B36B1EF0A475C6F07718AA364FAF.data.minted
+runsystem(latexminted config  --timestamp 20260302032636 5D68B36B1EF0A475C6F07718AA364FAF)...failed. 
+
+
+c:/Users/konst/data/repos/jsgaalop/javascriptgaalopvisualizer/KonstantinsBachelorarbeit/DEMO-TUDaThesis.tex:278: Package minted Error: minted v3+ executable is not installed, is not added to PATH, or is not permitted with restricted shell escape; or MiKTeX is being used with -aux-directory or -output-directory without setting a TEXMF_OUTPUT_DIRECTORY environment variable.
+
+See the minted package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.278 \end{minted}
+                  
+This error message was generated by an \errmessage
+command, so I can't give any explicit help.
+Pretend that you're Hercule Poirot: Examine all clues,
+and deduce the truth by order and method.
+
+
+c:/Users/konst/data/repos/jsgaalop/javascriptgaalopvisualizer/KonstantinsBachelorarbeit/DEMO-TUDaThesis.tex:278: Package minted Error: Missing definition for highlighting style "default" (minted executable is unavailable or disabled); attempting to substitute fallback style.
+
+See the minted package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.278 \end{minted}
+                  
+(That was another \errmessage.)
+
+
+c:/Users/konst/data/repos/jsgaalop/javascriptgaalopvisualizer/KonstantinsBachelorarbeit/DEMO-TUDaThesis.tex:278: Package minted Error: Cannot highlight code (minted executable is unavailable or disabled); attempting to typeset without highlighting.
+
+See the minted package documentation for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.278 \end{minted}
+                  
+(That was another \errmessage.)
+
+[7] [8] [9] [10]
+<pictures/Visualization_of_SDF_ray_marching_algorithm.png, id=87, 361.35pt x 196.10765pt>
+File: pictures/Visualization_of_SDF_ray_marching_algorithm.png Graphic file (type png)
+<use pictures/Visualization_of_SDF_ray_marching_algorithm.png>
+Package luatex.def Info: pictures/Visualization_of_SDF_ray_marching_algorithm.png  used on input line 444.
+(luatex.def)             Requested size: 418.25555pt x 226.99129pt.
+
+
+LaTeX Warning: Citation 'teadrinker2022sdf' on page 11 undefined on input line 445.
+
+
+LaTeX Warning: Citation 'teadrinker2022sdf' on page 11 undefined on input line 445.
+
+[11] [12<./pictures/Visualization_of_SDF_ray_marching_algorithm.png>] [13] [14] [15] [16]
+chapter 3.
+
+Overfull \hbox (74.49376pt too wide) in paragraph at lines 603--603
+[]            \TU/RobotoMono(0)/m/n/10.95 #es gilt f(ray(tlast))=dlast und f(ray(tlast+diff))=d da t=tlast+diff[] 
+ []
+
+[17
+
+] [18] [19] [20] [21]
+chapter 4.
+[22
+
+]
+chapter 5.
+[23
+
+]
+chapter 6.
+[24
+
+] [25] [26] [27] [28] [29] [30] [31]
+chapter 7.
+[32
+
+] [33]
+<FigureVoxelIntervallCompare.png, id=218, 867.24pt x 578.16pt>
+File: FigureVoxelIntervallCompare.png Graphic file (type png)
+<use FigureVoxelIntervallCompare.png>
+Package luatex.def Info: FigureVoxelIntervallCompare.png  used on input line 1101.
+(luatex.def)             Requested size: 418.25555pt x 278.83694pt.
+ [34] [35<./FigureVoxelIntervallCompare.png>] [36] [37]
+chapter 8.
+[38
+
+]
+Overfull \hbox (2.84438pt too wide) detected at line 1187
+[]\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 x; y; z\OT1/cmr/m/n/10.95 ) = \OML/cmm/m/it/10.95 x[]e[] \OT1/cmr/m/n/10.95 + \OML/cmm/m/it/10.95 xy e[] \OT1/cmr/m/n/10.95 + \OML/cmm/m/it/10.95 xz e[] \OT1/cmr/m/n/10.95 + \OML/cmm/m/it/10.95 x e[] \OT1/cmr/m/n/10.95 + [](\OML/cmm/m/it/10.95 x[] \OT1/cmr/m/n/10.95 + \OML/cmm/m/it/10.95 y[] \OT1/cmr/m/n/10.95 + \OML/cmm/m/it/10.95 z[]\OT1/cmr/m/n/10.95 ) \OML/cmm/m/it/10.95 x e[] \OT1/cmr/m/n/10.95 + [] + [](\OML/cmm/m/it/10.95 x[] \OT1/cmr/m/n/10.95 + \OML/cmm/m/it/10.95 y[] \OT1/cmr/m/n/10.95 + \OML/cmm/m/it/10.95 z[]\OT1/cmr/m/n/10.95 )[]\OML/cmm/m/it/10.95 e[]
+ []
+
+[39]
+Overfull \hbox (6.79108pt too wide) detected at line 1197
+\OML/cmm/m/it/10.95 P\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 x; y; z\OT1/cmr/m/n/10.95 ) = [][]
+ []
+
+[40] [41] [42]
+<pictures/aberth_rescaled_test.png, id=274, 171.64125pt x 165.61874pt>
+File: pictures/aberth_rescaled_test.png Graphic file (type png)
+<use pictures/aberth_rescaled_test.png>
+Package luatex.def Info: pictures/aberth_rescaled_test.png  used on input line 1321.
+(luatex.def)             Requested size: 209.12778pt x 201.78922pt.
+ [43<./pictures/aberth_rescaled_test.png>]
+chapter 9.
+[44
+
+] [45] [46] [47] [48] [49]
+<pictures/row_times_cleaned.png, id=317, 964.60374pt x 323.2075pt>
+File: pictures/row_times_cleaned.png Graphic file (type png)
+<use pictures/row_times_cleaned.png>
+Package luatex.def Info: pictures/row_times_cleaned.png  used on input line 1516.
+(luatex.def)             Requested size: 209.12778pt x 70.07019pt.
+ [50]
+<pictures/sustimes_cleaned.png, id=323, 964.60374pt x 805.0075pt>
+File: pictures/sustimes_cleaned.png Graphic file (type png)
+<use pictures/sustimes_cleaned.png>
+Package luatex.def Info: pictures/sustimes_cleaned.png  used on input line 1525.
+(luatex.def)             Requested size: 209.12778pt x 174.52267pt.
+ [51<./pictures/row_times_cleaned.png><./pictures/sustimes_cleaned.png>] [52]
+chapter 10.
+[53
+
+]
+chapter 11.
+[54
+
+]
+chapter 12.
+
+LaTeX Warning: Empty bibliography on input line 1548.
+
+
+Package tudapub Warning: You did not provide a Label for key introduction.
+(tudapub)                Either you need to recompile your document or add a
+(tudapub)                label using \IMRADlabel.
+
+
+Package tudapub Warning: You did not provide a Label for key methods.
+(tudapub)                Either you need to recompile your document or add a
+(tudapub)                label using \IMRADlabel.
+
+
+Package tudapub Warning: You did not provide a Label for key results.
+(tudapub)                Either you need to recompile your document or add a
+(tudapub)                label using \IMRADlabel.
+
+
+Package tudapub Warning: You did not provide a Label for key discussion.
+(tudapub)                Either you need to recompile your document or add a
+(tudapub)                label using \IMRADlabel.
+
+[55
+
+] (./DEMO-TUDaThesis.aux)
+ ***********
+LaTeX2e <2025-11-01>
+L3 programming layer <2026-01-19>
+ ***********
+
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+
+Package biblatex Warning: Please (re)run Biber on the file:
+(biblatex)                DEMO-TUDaThesis
+(biblatex)                and rerun LaTeX afterwards.
+
+Package logreq Info: Writing requests to 'DEMO-TUDaThesis.run.xml'.
+
+\openout1 = DEMO-TUDaThesis.run.xml
+)
+
+Here is how much of LuaTeX's memory you used:
+ 44201 strings out of 476076
+ 100000,2373549 words of node,token memory allocated
+ 6809 words of node memory still in use:
+   76 hlist, 9 vlist, 13 rule, 44 disc, 20 local_par, 6 math, 143 glue, 26 kern, 31 penalty, 6 margin_kern, 322 glyph, 408 attribute, 75 glue_spec, 210 attribute_list, 2 write, 24 pdf_colorstack nodes
+   avail lists: 1:2,2:1071,3:857,4:108,5:892,6:124,7:7242,8:97,9:978,10:32,11:746,12:1
+ 65631 multiletter control sequences out of 65536+600000
+ 147 fonts using 20787455 bytes
+ 122i,21n,135p,11328b,2460s stack positions out of 10000i,1000n,20000p,200000b,200000s
+<c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/public/xcharter/XCharter-Italic.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/google/roboto/RobotoMono-Regular.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/public/xcharter/XCharter-Bold.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/public/xcharter/XCharter-Roman.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/google/roboto/Roboto-Bold.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/google/roboto/Roboto-Regular.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on DEMO-TUDaThesis.pdf (55 pages, 517880 bytes).
+
+PDF statistics: 640 PDF objects out of 1000 (max. 8388607)
+ 389 compressed objects within 4 object streams
+ 146 named destinations out of 1000 (max. 131072)
+ 546 words of extra memory for PDF output out of 10000 (max. 100000000)
+
