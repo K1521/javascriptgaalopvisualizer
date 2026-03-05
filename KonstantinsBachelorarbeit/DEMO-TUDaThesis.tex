@@ -91,6 +91,7 @@
 %\usepackage{graphicx}
 \usepackage{minted}
 
+
 \hypersetup{% Metadata adjustments, in case these are not set, the data provided for \maketitle will be used
 	pdfauthor=Konstantin Bachem,%Marei Peischl (peiTeX),
 	pdfcreationdate=2024-05-03,
@@ -331,7 +332,7 @@ Für IPNS gilt entsprechend:
 \text{point}(x,y,z) \cdot \texttt{obj} = 0
 \]
 
-point, das innere und das äußere produkt sind dabei abhängig von der Algebra. point repräsentiert dabei einen Punkt in der Algebra und wird unter anderem auch als \glqq{}up\grqq{} bezeichnet.
+point, das innere und das äußere produkt sind dabei abhängig von der Algebra. point repräsentiert dabei einen Punkt in der Algebra und wird unter anderem auch als \enquote{up} bezeichnet.
 
 Statt die Ergebnisse dieser Produkte als Multivektoren zu interpretieren, 
 kann man sie auch als konventionelle vektorwertige Funktion
@@ -447,13 +448,26 @@ Diese Methode funktioniert, da für einen Punkt \( p = \text{ray}(t) \) die Entf
     \label{fig:enter-label}
 \end{figure}
     
-
-\section{Newtonverfahren}
+\section{Verfahren zur Nulstellensuche}
+\subsection{Newtonverfahren}
 Das Newtonverfahren ist ein iteratives Verfahren zur Suche von Nullstellen einer Funktion. 
 Die Iterationsvorschrift lautet dabei:
 \[x^\text{neu}=x-\frac{f(x)}{f'(x)}\]
 
-\section{Aberth Method}
+\subsection{Gauß-Newton Verfahren}
+Das Gauß-Newton Verfahren ist eine Methode für die Suche des minimums der summe der quadrate einer mehrwertigen Funktion.
+\[
+\min _{x\in \mathbb {R} ^{n}}\left\{{\frac {1}{2}}\sum _{i=1}^{m}\left(f_{i}(x)\right)^{2}\right\}
+\]
+Der update Schritt für dieses verfahren ist:
+\[x^\text{neu}=x-\alpha (J^\top J)^{-1} J^\top f(x)\] wobei \(J\) die jakobi Matrix bei x ist.
+
+Eine erweiterung des verfahrens ist:
+\[x^\text{neu}=x-\alpha (J^\top J+\beta I)^{-1} J^\top f(x)\]
+Dabei sorgt \(\beta I\) dafür das \(J^\top J+\beta I\) invertierbar ist.
+Dies ist ein variante des Levenberg Marquardt Iterationsschritts.
+
+\subsection{Aberth Method}
 Die Aberth Methode ist ein Verfahren zur Suche der komplexen Nullstellen von Polynomen. 
 Im Gegensatz zum Newtonverfahren findet es alle Nullstellen gleichzeitig.
 
@@ -475,7 +489,7 @@ Als Konvergenzkriterium wird üblicherweise die maximale Änderung der Nullstell
 \max_k \left| z_k^{(\text{neu})} - z_k^{(\text{alt})} \right| < \varepsilon
 \]
 
-\section{Intervall Arithmetic}
+\subsection{Intervall Arithmetic}
 Intervallarithmetik ist eine Methode zur sicheren Berechnung von Fehlergrenzen in numerischen Algorithmen. 
 Statt mit exakten Werten zu rechnen, wird, wie der Name schon sagt, mit Intervallen gerechnet. 
 Das Hauptaugenmerk bei der Intervallarithmetik liegt darin, obere und untere Schranken für den Wertebereich einer Funktion in einer oder mehreren Variablen zu bestimmen.
@@ -602,19 +616,20 @@ def findroot(ray,thresh):
     return ray(0)
 \end{verbatim}
 
-Ganja nimmt also einfach an, dass sqrt(f) eine SDF ist und benutzt dann im prinzip spheretracing.
+Ganja nimmt also einfach an, dass sqrt(f) eine SDF ist und benutzt dann im prinzip spheretracing. Das Problem dabei ist, dass die funktion keine Distance funktion ist. 
+Deshalb kann es passieren,dass der Schritt zu groß ist und die Nulstelle übersprungen wird. Mit hilfe eines größeren thresholds und kleinerer schrittweite kann dem entgegengewirkt werden. Allerdings bedeutet eine größerer threshold ,dass f=treshold visualisiert wird statt f=0 waszu großen unterschieden in der visualisierung führen kann. Kleine Schrittweiten haben das Problem von schlechterer Konvergenz.
 
 \section{Gaalop}
 
 \subsection{DiscreteCubeMethod}
 
-Diese Methode wird in \textsc{Gaalop} in der Klasse \texttt{DiscreteCubeMethod} implementiert. Dabei wird die Funktion \( f(\mathbf{x}) \) innerhalb eines Würfels \( [-a, a]^3 \) auf einem äquidistanten 3D Grid ausgewertet. 
+Diese Methode wird in \textsc{Gaalop} in der Klasse \texttt{DiscreteCubeMethod} implementiert. Dabei wird die Funktion \( f(\mathbf{x}) \) innerhalb eines Würfels \( [-a, a]^3 \) auf einem äquidistanten 3D Gitter ausgewertet. 
 
 Alle Punkte, für die der Funktionswert unterhalb eines gewählten Schwellwerts liegt, werden direkt Visualisiert. Auf diese Weise ergibt sich eine Punktwolke, die die Nullstellenmenge \( f(\mathbf{x}) = 0 \) näherungsweise beschreibt.
 
-%Gaalops Klasse DiscreteCubeMethod evaluiert f im Raum in einem Dichten Grid. Dann werden alle Punkte viesualisiert deren wert unter einem threshold liegt.
+%Gaalops Klasse DiscreteCubeMethod evaluiert f im Raum in einem Dichten Gitter. Dann werden alle Punkte viesualisiert deren wert unter einem threshold liegt.
 \subsection{RayMethod}
-Diese Methode wird in \textsc{Gaalop} in der Klasse \texttt{RayMethod} implementiert. Sie erzeugt ein 2d Grid mit y,z in [-a,a] und x=-a. Für jeden Punkt p des Grids wird eine Strecke erzeugt auf der mittels Intervall-Arithmetik Nullstellen gesucht werden. Wie beim raycasting wird also das Problem der Nullstellensuche in 3d also auf eine Nullstellensuche in 1d reduziert.
+Diese Methode wird in \textsc{Gaalop} in der Klasse \texttt{RayMethod} implementiert. Sie erzeugt ein 2d Gitter mit y,z in [-a,a] und x=-a. Für jeden Punkt p des Gitters wird eine Strecke erzeugt auf der mittels Intervall-Arithmetik Nullstellen gesucht werden. Wie beim raycasting wird also das Problem der Nullstellensuche in 3d also auf eine Nullstellensuche in 1d reduziert.
 %(Also f(x,y,-a+t) t=[0,2*a])
 Hier ist eine vereinfachte Version des Gaalop source codes:
 \begin{verbatim}
@@ -673,7 +688,7 @@ Allerdings hat dieser Code mehrere Probleme. Erstens wird nicht am Anfang geprü
 Da Gaalop auch die Summe der Quadrate für \( f_{\text{ray}} \) nutzt (soweit ich das aus dem Sourcecode lesen kann), muss \( f_{\text{ray}} > 0 \) sein, was bedeutet, dass es nie einen Nullstellenübergang gibt. Der Code sollte trotzdem funktionieren, mit der Einschränkung, dass \texttt{refinement} nie Nullstellen finden sollte.
 
 \subsection{GradientMethod}
-Die Gradient Methode erzeugt wie die DiscreteCubeMethod ein Dichtes 3D Grid. Diese Punkte werden dann iterativ mittels eines Gradienten Abstiegsverfahren Verfeinert.
+Die Gradient Methode erzeugt wie die DiscreteCubeMethod ein Dichtes 3D Gitter. Diese Punkte werden dann iterativ mittels eines Gradienten Abstiegsverfahren Verfeinert.
 
 \begin{verbatim}
 def searchInNeighborhood(p):
@@ -698,7 +713,7 @@ def searchInNeighborhood(p):
 
 
         
-Auch dieses Verfahren hat ein kleines Problem. Durch die Normalisierung ist der erste schritt immer Länge 1. Da der gesamte abgetastete Raum eine Kantenlänge von 10 hat ist dieser Schritt relativ groß und der Punkt landet nicht unbedingt in der nähe des Startpunktes. Dies ist für die Visualisierung nicht unbedingt ein Problem. 
+Auch dieses Verfahren hat ein kleines Problem. Durch die Normalisierung ist der erste Schritt immer Länge 1. Da der gesamte abgetastete Raum eine Kantenlänge von 10 hat ist dieser Schritt relativ groß und der Punkt landet nicht unbedingt in der nähe des Startpunktes. Dies ist für die Visualisierung jedoch nicht unbedingt ein Problem. 
 %TODO time mesurements
 
 
@@ -1030,7 +1045,7 @@ Der Vorteil dieser Methode liegt darin, dass das Rendern deutlich schneller ist 
 
 
 \section{Voxel-Subdivision}
-Wenn der Raum dicht abgetastet wird, muss $f$ sehr oft evaluiert werden. Die Anzahl der Auswertungen wächst dabei kubisch mit der Auflösung.
+Wenn der Raum dicht abgetastet wird, muss $f$ sehr oft evaluiert werden. Die Anzahl der Auswertungen wächst dabei kubisch mit der größe des Gitters.
 Bei einer Auflösung von 100 müsste man schon $10^6$ Punkte evaluieren. Objekte, deren Größe nahe der Auflösung ist, verlieren alle Details.
 
 Anstatt den ganzen Raum abzutasten, ist es deshalb sinnvoll, den Raum nur grob abzutasten und nur in der Nähe des zu visualisierenden Objektes feiner abzutasten. Dazu wird der Raum in Voxel unterteilt. Für jeden Voxel wird entschieden, ob sich Teile des Objektes im Voxel befinden, und alle Voxel, die leer sind, werden entfernt.
@@ -1136,7 +1151,7 @@ Marchin qubes ist ein häufig genutzter algorithmus zur iso flächen extrahierun
 
 Deswegen habe ich eine modifizierte Variante des Algorithmusses implementiert.
 
-Der normale Marching Cubes Algorithmus werted die Funktion \( f(\mathbf{x}) \) wie die Discrete qube method auf einem äquidistanten 3D Grid aus. Dann wird das grid in würfel zerteit ,sodass die funktionsauswerungen auf den eckpunkunkten der würfel liegen.
+Der normale Marching Cubes Algorithmus werted die Funktion \( f(\mathbf{x}) \) wie die Discrete qube method auf einem äquidistanten 3D Gitter aus. Dann wird das Gitter in würfel zerteit ,sodass die funktionsauswerungen auf den eckpunkunkten der würfel liegen.
 
 
 
@@ -1146,13 +1161,13 @@ TODO
 \chapter{Optimizations (Maybe not as a extra chapter)}
 \section{Adaptive resolution}
 %Tile based
-Manche der raycasting Methoden sind relativ langsam was zu niedrigen fps führt. Dies macht die oberfläche teilweise unnutzbar.
-Teilweise konnten frames über eine sekunde dauern. Dies kann zu einem timeout  und somit einem absturtz des opengl contextes führen.
+Manche der raycasting Methoden sind relativ langsam was zu niedrigen fps führt. Dies macht die oberfläche praktisch unnutzbar.
+Teilweise konnten frames über eine sekunde dauern. Dies kann zu einem timeout und somit zu einem Absturtz des opengl contextes führen. Der Kontext kann nach einem Absturtz nicht von innerhalb der Anwendung wieder hergestellt werden, nur durch Neuladen des Tabs oder teilweise neustarten des browsers kann ein neuer kontext erschaffen werden.
 Deshalb hatte ich anfangs die Auflösung verringert, solange der Nutzer die Kamera bewegt, um stattdessen wesentlich mehr fps zu generieren. Diese Optimierung ist relativ einfach zu implementieren und führt zu wesentlich angenehmerer Kamerabewegung. Auch die maximale Auflösung war reduziert um Abstürzten des opengl Kontextes zu verhindern.
 
 \section{Tile based rendering}
 Um trotzdem mit hoher Auflösung rendern zu können, habe ich dann einen Tile based rendering Ansatz implementiert. 
-Dazu wird der Bildschirm in rechteckige Tiles unterteilt, die dann nacheinander gerendert werden können. Der Vorteil dieses Ansatzes ist, dass so mit voller Auflösung gerendert werden kann ohne den OpenGL Context zu crashen. Weiterhin kann das rendern zwischendrin abgebrochen und von neu begonnen werden, falls sich die Kamera bewegt oder sich Parameter ändern, was zu einer schnellen Reaktion führt. Wie auch bei dem vorherigen Ansatz wird auch bei diesem Ansatz vor dem Tile based rendering das Bild in niedriger Auflösung gerendert.
+Dazu wird der Bildschirm in rechteckige Tiles unterteilt, die dann nacheinander gerendert werden können. Der Vorteil dieses Ansatzes ist, dass so mit voller Auflösung gerendert werden kann ohne den OpenGL Context zu crashen. Weiterhin kann das rendern zwischendrin abgebrochen und von neu begonnen werden, falls sich die Kamera bewegt oder sich Parameter ändern, was zu einer schnellen Reaktion führt. Wie auch bei dem vorherigen Ansatz wird auch bei diesem Ansatz vor dem Tile based rendering das Bild in niedriger Auflösung gerendert, damitt der Nutzer schnell ein neues bild erhält.
 
 Dabei muss beachtet werden, dass Tile based rendering (oder das rendern mit kleiner Auflösung) nur hilft, wenn der Vertexshader nur wenig Arbeit verrichten muss, da für jedes gerenderte Tile der Vertexshader für alle Vertices neu durchlaufen werden muss. 
 Beim rendern einer Punktwolke passiert im Vertexshader beispielsweise die Transformation der Punkte mit der Cameramatrix und Projektionsmatrix. Bei vielen Punkten ist das Tile based rendering deshalb wesentlich langsamer.
@@ -1199,7 +1214,7 @@ x,\ y,\ z,\ x^2,\ y^2,\ z^2,\ xy,\ xz,\ yz,\
 
 
 
-In der Software liegt dieses Produkt $M \cdot P(x,y,z)$ nicht explizit als Matrix-Vektor-Produkt vor, sondern wird als Computational Graph umgesetzt. Es ist theoretisch möglich, $M$ und $P$ aus dem Graphen zu extrahieren, allerdings ist dies relativ aufwendig, da Gaalop den Graphen intern umformt, um ihn zu vereinfachen.
+In der Software liegt dieses Produkt $M \cdot P(x,y,z)$ nicht explizit als Matrix-Vektor-Produkt vor, sondern wird als Computational Graph umgesetzt. Es ist theoretisch möglich, $M$ und $P$ aus dem Graphen zu extrahieren, allerdings ist dies relativ aufwendig, da Gaalop den Graphen intern umformt, um ihn zu vereinfachen. Deswegen funktioniert dieser ansatz besser wenn vereinfachung durch Maxima in gaalop bei der codegenerierung abgeschaltet wird.
 
 Der Vorteil der Darstellung $M \cdot P(x,y,z) = 0$ ist, dass sie Optimierungen erlaubt , insbesondere dann, wenn das Gleichungssystem überdeterminiert ist.
 
@@ -1249,23 +1264,36 @@ f = \left\|\begin{bmatrix} R' \\ 0 \end{bmatrix} \cdot P(x, y, z)\right\|^2 = \|
 
 Das bedeutet, es kann \( M' = R' \) gewählt werden.
 
-Beachtet werden muss hierbei, dass wegen floating point arithmetik die Zeilen von \( R \) die 0 sein sollten nur fast null sind (im Bereich von  \( 10^{-14} \)). Allerdings funktioniert das ganze trotzdem, wenn auch die Zeilen welche fast 0 sind, entfernt werden um \( R' \) zu erhalten.
+Beachtet werden muss hierbei, dass wegen floating point Arithmetik die Zeilen von \( R \) die 0 sein sollten nur fast null sind (im Bereich von  \( 10^{-14} \)). Allerdings funktioniert das ganze trotzdem, wenn auch die Zeilen welche fast 0 sind, entfernt werden um \( R' \) zu erhalten.
 
-Eine einfache Alternative die allerdings wesentlich schwächer ist, ist durch die Ausnutzung von 
+Eine einfache Alternative die allerdings schwächer ist, ist durch die Ausnutzung von 
 \(\ker(A) = \ker(A^TA)\).
-Wenn \(M\) mehr Zeilen als Spalten hat kann also \(f' = \|M' \cdot P(x, y, z)\|^2\) gewählt werden mit \(M' = M^\top M\). Dadurch wird die Anzahl der Zeilen auf die Anzahl der Spalten limitiert. 
+Wenn \(M\) mehr Zeilen als Spalten hat kann also \(f' = \|M' \cdot P(x, y, z)\|^2\) gewählt werden mit \(M' = M^\top M\). 
+Dabei gilt \(f'(x,y,z)=0 \iff f(x,y,z)=0\). Weiterhinn kann auch \(f = P(x, y, z)^\top M' P(x, y, z)\) berechnet werden.
+Ich habe diesen Alternative allerdings nicht getestet oder weiterverfolgt.
 
+
+Dadurch Beide Mehoden wird die Anzahl der Zeilen der Matrix auf die Anzahl der Spalten limitiert.
+
+\subsubsection{Bessere Nullstellensuche}
 Sei nun \(F_R=R \cdot P(x,y,z)\).
 
-Um die Nullstellensuche entlang eines Strahls zu beschleunigen kann sie erst auf nur einer Zeile von R beschränkt werden,anstatt das ganze Gleichungssystem zu betrachten. Die reellen Nullstellen von f sind der schnitt der Nullstellen der Komponentenpolynome von 
-\(F_R\). Bestimmt man also zunächst die Nullstellen einer einzelnen Komponente \((F_R)_i\)(mit \((F_R)_i\neq 0\)) ,so kann man anschließend prüfen ob dies auch Nullstellen von f sind. Die Nullstellensuche von \((F_R)_i\) ist dabei wesentlich einfacher, da \((F_R)_i\) ein kleineren Grad hat und schneller auszuwerten ist. 
+Um die Nullstellensuche entlang eines Strahls zu beschleunigen kann sie erst auf nur einer Zeile von R beschränkt werden,anstatt das ganze Gleichungssystem zu betrachten. Die reellen Nullstellen von f sind der Schnitt der Nullstellen der Komponentenpolynome von 
+\(F_R\). Es gilt \(f = 0 \iff \forall i\, (F_R)_i = 0\). Bestimmt man also zunächst die Nullstellen einer einzelnen Komponente \((F_R)_i\)(mit \((F_R)_i \not\equiv 0\)) ,so kann man anschließend prüfen ob dies auch Nullstellen von f sind. Die Nullstellensuche von \((F_R)_i\) ist dabei wesentlich einfacher, da \((F_R)_i\) ein kleineren Grad hat und schneller auszuwerten ist. Außerdem sind Nulstellen nicht umbedingt konjugate pairs was zu einer besseren konvergenz der Aberth methode führt.
+
+Weiterhin kann R und P so konstruiert werden, dass \((F_R)_i\) einen von i abhängen Grad hat.
+Vor der Konstruktion von R können die polynome in P so sortiert werden, sodass Polynome mit niedrigerem Grad weiter unten sind. Entsprechend müssen auch die Spalten von M permutiert werden.
+Das bedeutet,dass \(grad((F_R)_i)=grad(P_i)\). Bei der Wahl von \((F_R)_i\) zur Nullstellensuche kann dann das \((F_R)_i\) mit dem niedrigsten grad gewählt werden was die Nulstellensuche theoretisch beschleunigt.
+Ich habe die sortierung Implementiert aber diesen Fakt nicht ausgenutzt da dies die Nulstellensuche im shader wesentlich komplexer machen würde. In der Praxis benutze ich daher immer \((F_R)_1\) und lade immer das ganze R (mit Zeilen die volkommen aus nullen bestehen) in den shader.
+
+
 
 \section{common subexpression elimination}
 \section{polynom entlang des strahls}
 
-In den Raycasting Methoden wird f(ray(t)) sehr häufig ausgewertet. Da f(ray(t)) ein polynom ist kann man die Koeffizienten für dieses polynom berechnen und dann in Zukunft die Funktion anhand dieser Koeffizienten auswerten. Die Auswertung anhand der Koeffizienten kann wesentlich schneller sein da in der Regel wesentlich weniger Multiplikationen benötigt werden.
+In den Raycasting Methoden wird f(ray(t)) sehr häufig ausgewertet. Da f(ray(t)) ein polynom ist kann man die Koeffizienten für dieses polynom berechnen und dann in Zukunft die Funktion anhand dieser Koeffizienten auswerten. Die Auswertung anhand der Koeffizienten kann wesentlich schneller sein da sie in der Regel wesentlich weniger Multiplikationen benötigt werden.
 
-TODO count multiplications and compare
+%TODO count multiplications and compare
 
 Eine einfache Möglichkeit zur Bestimmung der Koeffizienten eines Polynoms besteht in der Verwendung einer Vandermonde-Matrix~$V$. Gegeben seien $n$ Stützstellen $x_1, x_2, \dotsc, x_n$ sowie die zugehörigen Funktionswerte $y_i=f(ray(x_i))$. Dann ergibt sich das Gleichungssystem
 \[
@@ -1312,7 +1340,8 @@ Dann sind die Nullstellen von \(f_\text{aprox}(\frac{x}{k})\) im intervall [-2,2
 
 
 
-Eine Möglichkeit, die verrauschten Ergebnisse nutzbar zu machen, ist, erst eine verrauschte Näherung für die Nullstellen mit \(f_\text{aprox}\) zu berechnen um dann f normal auszuwerten, um mit den angenäherten Nullstellen weiter zu rechnen. Dadurch bleibt die Qualität erhalten und es kann ein kleiner Performance Boost für die arberth method beobachtet werden.
+
+Eine Möglichkeit, die verrauschten Ergebnisse nutzbar zu machen, ist, erst eine verrauschte Näherung für die Nullstellen mit \(f_\text{aprox}\) zu berechnen um dann f normal auszuwerten, um mit den angenäherten Nullstellen weiter zu rechnen. Dadurch bleibt die Qualität erhalten und es kann ein kleiner Performance Boost für die arberth method beobachtet werden. Natürlich kann diese methode auch \((F_R)_i\) benutzt werden.
 
 
 
@@ -1373,7 +1402,12 @@ Das json wird dann von meinem Programm in einen Rechengraph umgewandelt.
 Die Repräsentation als liste von Assignements eignet sich gut zur Codegenerierung und zur Serialisierung. Allerdings ist die Manipulation des Graphen in dieser Form schwierig weshalb ich den Graphen Direkt als ein DAG (directed acyclic graph) repräsentiere.
 Jede Node im Graph steht dabei für eine Operation (Wie Addition,Multiplikation,Division usw.) und kennt andere Operationen als Eltern. (Beispielsweise MulNode(parent1,parent2) )
 
-
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{pictures/daginjs.png}
+    \caption{Der Beispielgraph wie er in js repräsentiert wird.}
+    \label{fig:daginjs}
+\end{figure}
 
 \subsection{Graph splitting}
 
@@ -1442,7 +1476,7 @@ Der vorteil von diesem Ansatz war,dass er wesentlich flexibler ist und einfacher
 Als nächstes habe ich mich entschieden die ableitungsberechnung auf backpropergation und forward mode autodiff umzustellen. Dies hat zwei große vorteile.
 Erstens gibt es nur noch 3 typen: Skalare,komplexe Zahlen und Intervalle was die codegenerierung wesentlich einfacher macht. Und zweitens müsste backpropergation theoretisch bei manchen ansätzen schneller sein da weniger multiplikationen benötigt werden.
 
-Im aktuellen ansatz habe ich versucht die anderen ansätze zu vereinigen.
+Im aktuellen Ansatz habe ich versucht die anderen ansätze zu vereinigen.
 Ich habe mich entschieden die typ propergation während der Codegenerierung zu machen wobei ich den code dafür in die nodes gepackt habe. Das macht den code kleiner, allerdings ist das typisierte auswerten in javascript nicht möglich. 
 \subsection{Vereinfachung}
 Durch die manipulation  des graphen entstehen artefakte wie beispielsweise multiplikation mit 1. Deshalb wird der graph vereinfacht. Zu den vereinfachungen gehören unteranderem:
@@ -1461,10 +1495,12 @@ baut automatisch Die Basis.
 
 In der alten version wird der graph als erstes als polynom über x,y,z ausgewerted. Dabei werden die polynome als monome mit zugehörigen coeffizienten dargestellt.
 Das ergebnis ist also ein polynom für jeden komponente des output multivectors.
-Um diese Polynome in der polynombasis der algebra zu repräsentieren, wird mittels einer basiswechselmatrix die basis von der monom  polynombasis zur Polynombasis der algebra konvertiert. Dann wird die basis
+Um diese Polynome in der polynombasis der algebra zu repräsentieren, wird mittels einer basiswechselmatrix die basis von der monom  polynombasis zur Polynombasis der algebra konvertiert. 
 
-TODO:Kapitel schreiben
-
+%TODO:Kapitel schreiben
+Im neuen ansatz muss als erstes die polynombasis extrahiert werden. 
+Dazu werden alle Nodes aus dem Graph extrahiert die nur von den variablen x,y oder z abhängen. Da mehrere nodes das gleiche polynom oder vielfache darstellen können werden die nodes in Äquivalenzklassen eingeteilt, wobei jede Äquivalenzklasse alle Nodes enthält, die ein Polynom oder ein Vielfaches desselben repräsentieren. Dabei wird Für jede Equivalenzklasse die node mit den wenigsten Vorfahren als repräsentant gewählt. Diese bilden die Basis.
+%TODO:Kapitel schreiben
 
 Repräsentation legt als computational graph vor.
 wie schon gesagt, kann als M*P(x,y,z) repräsentiert werden
@@ -1491,7 +1527,7 @@ Dabei gibt es mehrere parameter die geändert werden können.
 
 Die Matrix Als uniform oder als uniform buffer (ubo) hochgeladen werden. 
 Da R eine obere Dreiecksmatrix ist kann außerdem nur die Obere Rechte Hälfte oder die ganze Matrix hochgeladen werden. Alle mit M gekenzeichneten tests benutzen die volle matrix und alle mit R gekennzeichneten die hälfte.
-Weiterhin kann die Matrix Normal oder Dicht Gepackt als vec4 Hochgeladen werden. Dabei wirdjede zeile mit 0llen gepaddet um eine länge die ein vielfaches von 4 ist zu erhalten. Die dicht gepackten versionen werden dabei als Dense bezeichnet.
+Weiterhin kann die Matrix Normal oder Dicht Gepackt als vec4 Hochgeladen werden. Dabei wirdjede zeile mit Nullen gepaddet um eine länge die ein vielfaches von 4 ist zu erhalten. Die dicht gepackten versionen werden dabei als Dense bezeichnet.
 Außerdem kann die Auswertung ausgerollt werden.
 
 Diese Parameter können beliebig kombiniert werden und Ich habe viele (aber nicht alle) Kombinationen getestet.
@@ -1499,15 +1535,15 @@ Auch der Browser (Ich habe Firefox und Edge getestet) Spielt eine große Rolle.
 
 
 Ich habe Hauptsächlich 4 verschiedene Methoden Ausgewertet. 
-"sus" steht für sum of squares und ist die normale auswertung von f.
-Außerdem gibt es noch "row" was dafür steht das nur die erste zeile der matrix zur auswertung genutzt wird wird (also \((F_R)_1\) ). Diese methode werted das dotproduct von der ersten zeile der matrix mit P aus.
+\enquote{sus} steht für sum of squares und ist die normale auswertung von f.
+Außerdem gibt es noch \enquote{row} was dafür steht das nur die erste zeile der matrix zur auswertung genutzt wird wird (also \((F_R)_1\) ). Diese methode werted das dotproduct von der ersten zeile der matrix mit P aus.
 Weiterhinn wird für die aberth methode auch die auswertung im Komplexen mit ableitung benötigt. Deshal gibt es beide methoden nochmal mit DC was für Dual Complex steht.
 Dann gibt es noch horner was eine auswertung über die mittels der Vandermonde matrix aproximierten koeffizienten des polynoms ist. Weiterhin gibt es bei row noch methoden mit copy im namen. Diese kopieren die erste zeile der matrix in ein array und benutzen dann dieses Array zur auswertung.
 
 Getestet habe ich Auf einem laptop mit einer Geforce gt 730M was eie grafikkarte von 2013 ist.
 Alle tests wurden in einem vertex shader mit 100000 vertices ausgeführt. Um overhead zu vermeiden werden im shader zusätzlich mehrere iterationen ausgeführt. Erst eine, dann 10, dann 100 usw. bis der test länger als 100 ms dauert.
 Das Ergebnis ist die minimale zeit pro Iteration bei 20 Wiederholungen. 
-Berechnet wird immer (außer für horner) P und dann die Multiplikation mit der ersten Zeile der Matrix für "row". Für "sus" wird die sum of squares der multiplikation von P mit der ganzen matrix Berechnet. Die Matrix ist dabei eine 25x25 Matrix was einer monombasis in dcga entspricht.
+Berechnet wird immer (außer für horner) P und dann die Multiplikation mit der ersten Zeile der Matrix für \enquote{row}. Für \enquote{sus} wird die sum of squares der multiplikation von P mit der ganzen matrix Berechnet. Die Matrix ist dabei eine 25x25 Matrix was einer monombasis vierten gerades entspricht.
 Der Testcode ist in unrolled.js und kann mittels speedtestharness.html ausgeführt werden.
 
 
@@ -1517,7 +1553,7 @@ Der Testcode ist in unrolled.js und kann mittels speedtestharness.html ausgefüh
     \caption{Enter Caption}
     \label{fig:enter-label}
 \end{figure}
-Die ergebnisse für row und DCrow sind relativ einfach zu verstehen. Die aproximation durch horner ist am schnellsten da am wenigsten multiplikationen benötigt werden. Weiterhin sind die dichten metoden für row schneller. Das liegt daran , dass für diese dot benutzt werden kann wodurch weniger multiplikationen benutzt werden müssen.
+Die Ergebnisse für row und DCrow sind relativ einfach zu verstehen. Die aproximation durch horner ist am schnellsten da am wenigsten multiplikationen benötigt werden. Weiterhin sind die dichten metoden für row schneller. Das liegt daran , dass für diese dot benutzt werden kann wodurch weniger multiplikationen benutzt werden müssen.
 Weiterhin sind die ausgerollten Methoden genauso schnell wie die anderen weshalb ich vermute das der Compiler die schleife intern ausrollt. Eine interessante sache hierbei sind die Copy Methoden. Diese ermöglichen Das kopieren der nicht dichten Arrays in dichte Arrays und somit schnelle Evaluation egal wie die Matrix hochgeladen wurde.
 
 \begin{figure}

@@ -87,3 +87,35 @@ body {
   flex: 2;
   min-width: 180px;
 }*/
+
+
+/* droparea.css */
+/*css by chatgpt*/
+#dropOverlay {
+  position: fixed;      /* covers the whole viewport */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0,0,0,0.75); /* semi-transparent dark */
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  font-family: sans-serif;
+  text-align: center;
+  z-index: 9999;        /* above everything */
+  pointer-events: none;  /* disables interactions by default */
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+#dropOverlay.active {
+  pointer-events: all;   /* only interactive when active */
+  opacity: 1;
+}
+
+#dropOverlay p {
+  max-width: 80%;
+}

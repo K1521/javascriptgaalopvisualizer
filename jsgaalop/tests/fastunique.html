@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Vertex Deduplication: Der ultimative Vergleich</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; padding: 30px; background: #121212; color: #e0e0e0; }
+        .container { max-width: 1000px; margin: 0 auto; background: #1e1e1e; padding: 30px; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.7); }
+        button { background: #3498db; color: white; border: none; padding: 18px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 18px; transition: 0.3s; }
+        button:hover { background: #2980b9; transform: translateY(-2px); }
+        button:disabled { background: #444; cursor: not-allowed; transform: none; }
+        .result-box { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 30px; }
+        .card { background: #252525; padding: 25px; border-radius: 10px; text-align: center; border: 2px solid transparent; }
+        .card h3 { margin: 0 0 15px 0; color: #3498db; font-size: 14px; text-transform: uppercase; letter-spacing: 1.5px; }
+        .time { font-size: 36px; font-weight: bold; color: #fff; margin-bottom: 5px; }
+        .ms { font-size: 16px; color: #888; }
+        .winner { border-color: #f1c40f; background: #2c2a1a; box-shadow: 0 0 20px rgba(241, 196, 15, 0.2); }
+        .winner h3 { color: #f1c40f; }
+        #status { margin-top: 25px; font-family: 'Courier New', monospace; color: #7f8c8d; text-align: center; font-size: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Vertex Profiler (1.000.000 Points)</h1>
+        <p>Vergleich von 3 Ansätzen (jeweils 10 Durchläufe, gemessen wird das <strong>Minimum</strong>).</p>
+        <button id="runBtn">Benchmark starten</button>
+        
+        <div id="status">Bereit zum Testen...</div>
+
+        <div class="result-box">
+            <!-- Methode 1: String-Hashing -->
+            <div id="card-string" class="card">
+                <h3>String FromChar</h3>
+                <div id="res-string" class="time">--</div>
+                <div class="ms">Best Time</div>
+            </div>
+            <!-- Methode 2: BigInt Shifting (Dein Ansatz) -->
+            <div id="card-shift" class="card">
+                <h3>BigInt Shift</h3>
+                <div id="res-shift" class="time">--</div>
+                <div class="ms">Best Time</div>
+            </div>
+            <!-- Methode 3: DataView (Raw 64+32) -->
+            <div id="card-dv" class="card">
+                <h3>BigInt DataView</h3>
+                <div id="res-dv" class="time">--</div>
+                <div class="ms">Best Time</div>
+            </div>
+        </div>
+    </div>
+
+    <script>//wridden by gemani. i only designed the code
+        const RUNS = 10;
+        const WAIT = 120; // Zeit für Garbage Collection
+
+        // Daten-Generator: 1 Mio Punkte aus 10.000 Uniques
+        function generateData(uCount = 10000, tCount = 1000000) {
+            const uniques = new Float32Array(uCount * 3);
+            for(let i = 0; i < uniques.length; i++) uniques[i] = (Math.random() - 0.5) * 1000;
+            const data = new Float32Array(tCount * 3);
+            for(let i = 0; i < tCount; i++) {
+                const src = Math.floor(Math.random() * uCount) * 3;
+                data[i*3] = uniques[src]; data[i*3+1] = uniques[src+1]; data[i*3+2] = uniques[src+2];
+            }
+            return data;
+        }
+
+        // --- METHODE 1: STRING FROMCHARCODE ---
+        function uniqueString(points) {
+            const total = points.length / 3;
+            const u16 = new Uint16Array(points.buffer, points.byteOffset, points.byteLength / 2);
+            const map = new Map(), indices = new Int32Array(total);
+            let next = 0;
+            
+            const start = performance.now();
+            for (let i = 0; i < total; i++) {
+                const o = i * 6;
+                const k = String.fromCharCode(u16[o], u16[o+1], u16[o+2], u16[o+3], u16[o+4], u16[o+5]);
+                //const k=u16[o]+u16[o+1];
+                let idx = map.get(k);
+                if (idx === undefined) { idx = next++; map.set(k, idx); }
+                indices[i] = idx;
+            }
+            const verts = new Float32Array(next * 3);
+            for (let i = 0, w = 0; i < total; i++) {
+                if (indices[i] === w) {
+                    const s = i * 3, d = w * 3;
+                    verts[d] = points[s]; verts[d+1] = points[s+1]; verts[d+2] = points[s+2];
+                    w++;
+                }
+            }
+            return performance.now() - start;
+        }
+
+        // --- METHODE 2: BIGINT SHIFT (DEIN ANSATZ) ---
+        function uniqueBigIntShift(points) {
+            const total = points.length / 3;
+            const u32 = new Uint32Array(points.buffer, points.byteOffset, points.length);
+            const map = new Map(), indices = new Int32Array(total);
+            let next = 0;
+            const start = performance.now();
+            for (let i = 0; i < total; i++) {
+                const p = i * 3;
+                const k = (BigInt(u32[p]) << 64n) | (BigInt(u32[p+1]) << 32n) | BigInt(u32[p+2]);
+                let idx = map.get(k);
+                if (idx === undefined) { idx = next++; map.set(k, idx); }
+                indices[i] = idx;
+            }
+            const verts = new Float32Array(next * 3);
+            for (let i = 0, w = 0; i < total; i++) {
+                if (indices[i] === w) {
+                    const s = i * 3, d = w * 3;
+                    verts[d] = points[s]; verts[d+1] = points[s+1]; verts[d+2] = points[s+2];
+                    w++;
+                }
+            }
+            return performance.now() - start;
+        }
+
+        // --- METHODE 3: BIGINT DATAVIEW ---
+        function uniqueBigIntDV(points) {
+            const total = points.length / 3;
+            const dv = new DataView(points.buffer, points.byteOffset, points.byteLength);
+            const map = new Map(), indices = new Int32Array(total);
+            let next = 0;
+            const start = performance.now();
+            for (let i = 0; i < total; i++) {
+                const b = i * 12;
+                const k = (dv.getBigUint64(b, true) << 32n) | BigInt(dv.getUint32(b + 8, true));
+                let idx = map.get(k);
+                if (idx === undefined) { idx = next++; map.set(k, idx); }
+                indices[i] = idx;
+            }
+            const verts = new Float32Array(next * 3);
+            for (let i = 0, w = 0; i < total; i++) {
+                if (indices[i] === w) {
+                    const s = i * 3, d = w * 3;
+                    verts[d] = points[s]; verts[d+1] = points[s+1]; verts[d+2] = points[s+2];
+                    w++;
+                }
+            }
+            return performance.now() - start;
+        }
+
+        document.getElementById('runBtn').onclick = async function() {
+            this.disabled = true;
+            const status = document.getElementById('status');
+            const cardIds = ['card-string', 'card-shift', 'card-dv'];
+            cardIds.forEach(id => document.getElementById(id).classList.remove('winner'));
+            
+            status.innerText = "Daten werden generiert...";
+            await new Promise(r => setTimeout(r, WAIT));
+            const data = generateData();
+
+            const results = { string: [], shift: [], dv: [] };
+
+            for(let r = 1; r <= RUNS; r++) {
+                status.innerText = `Lauf ${r}/${RUNS}: String...`;
+                results.string.push(uniqueString(data));
+                await new Promise(r => setTimeout(r, WAIT));
+
+                status.innerText = `Lauf ${r}/${RUNS}: BigInt Shift...`;
+                results.shift.push(uniqueBigIntShift(data));
+                await new Promise(r => setTimeout(r, WAIT));
+
+                status.innerText = `Lauf ${r}/${RUNS}: DataView...`;
+                results.dv.push(uniqueBigIntDV(data));
+                await new Promise(r => setTimeout(r, WAIT));
+            }
+
+            const mins = {
+                string: Math.min(...results.string),
+                shift: Math.min(...results.shift),
+                dv: Math.min(...results.dv)
+            };
+
+            document.getElementById('res-string').innerText = mins.string.toFixed(1);
+            document.getElementById('res-shift').innerText = mins.shift.toFixed(1);
+            document.getElementById('res-dv').innerText = mins.dv.toFixed(1);
+
+            const winner = Object.keys(mins).reduce((a, b) => mins[a] < mins[b] ? a : b);
+            document.getElementById('card-' + winner).classList.add('winner');
+
+            status.innerText = `Benchmark beendet. Gewinner: ${winner.toUpperCase()}`;
+            this.disabled = false;
+        };
+    </script>
+</body>
+</html>

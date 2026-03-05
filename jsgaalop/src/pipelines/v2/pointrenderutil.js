@@ -1,9 +1,8 @@
 import { LazyRenderingPipeline } from "../LazyRenderingPipeline.js";
 import { Shader } from "../../glwrapper/glwrapper.js";
-import { shaderSources } from "../../glwrapper/shaderimporter.js";
+//import { shaderSources } from "../../glwrapper/shaderimporter.js";
 import { Matrix ,Vector} from "../../util/linalg1.js";
 import { ShaderCache } from "../../glwrapper/shadercache.js";
-
 
 const vShader=`#version 300 es
 // Vertex Shader

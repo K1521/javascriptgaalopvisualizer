@@ -1,6 +1,8 @@
 import { LazyRenderingPipeline } from "../LazyRenderingPipeline.js";
 import { Shader } from "../../glwrapper/glwrapper.js";
-import { shaderSources } from "../../glwrapper/shaderimporter.js";
+import { loadWithIncludesRelativeToShadersource } from "../../glwrapper/shaderimporter.js";
+
+const vertRaycastFullscreen=await loadWithIncludesRelativeToShadersource("./vertRaycastFullscreen.glsl")
 export class simplerenderer extends LazyRenderingPipeline{
 
   constructor(ctx,gl,visgraph,fragmentShaderSourceTemplate,color){
@@ -8,7 +10,7 @@ export class simplerenderer extends LazyRenderingPipeline{
       this.ctx=ctx;
       const frag=visgraph.gencodeR(fragmentShaderSourceTemplate);
 
-      this.shader=new Shader(gl, shaderSources.vertRaycastFullscreen,frag );
+      this.shader=new Shader(gl, vertRaycastFullscreen,frag );
       this.shader.use();
       
       gl.uniform4fv(this.shader.getUniformLocation('incolor'), [color.r,color.g,color.b,1.0]);

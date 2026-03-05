@@ -8,26 +8,26 @@ import {GaalopGraph} from "./codegenv4/codegenBackpropergation2.js";
 import { RenderableObject } from "./RenderableObject.js";
 //import { pinv, multiply, transpose ,qr} from 'https://cdn.jsdelivr.net/npm/mathjs@14.5.2/+esm';
 import { RenderContext } from "./RenderContext2.js";
-import { matrixextractor } from "../objectcontext/matrixextractor.js";
-import { BasisConvert } from "../objectcontext/BasisConvert.js";
+//import { matrixextractor } from "../objectcontext/matrixextractor.js";
+//import { BasisConvert } from "../objectcontext/BasisConvert.js";
 
 
-import { pointcloudrenderer } from "../pipelines/pointcloudrenderer.js";
-import { linegridrenderer } from "../pipelines/linegridrenderer.js";
-import { simplerenderer } from "../pipelines/v2/simplerenderer.js";
+//import { pointcloudrenderer } from "../pipelines/pointcloudrenderer.js";
+//import { linegridrenderer } from "../pipelines/linegridrenderer.js";
+//import { simplerenderer } from "../pipelines/v2/simplerenderer.js";
 import { aberthrenderer } from "../pipelines/v2/aberthrenderer.js";
 import { Voxelrenderer } from "../pipelines/v2/Voxelrenderer.js";
 import { VoxelDistRenderer } from "../pipelines/v2/VoxelDistRenderer.js";
 import { VoxelGNRenderer } from "../pipelines/v2/VoxelGNRenderer.js";
-import { matrixrenderer } from "../pipelines/matrixrenderer.js";
+//import { matrixrenderer } from "../pipelines/matrixrenderer.js";
 //import { Voxelrenderer } from "../pipelines/Voxelrenderer.js";
 import { addPipelineSelectorForObject } from "../ui/PipelineSelector.js";
-import { MarchingCubesRenderer } from "../pipelines/MarchingCubesRenderer.js";
+//import { MarchingCubesRenderer } from "../pipelines/MarchingCubesRenderer.js";
 
 import { makeSlider,ReorderableList } from "../ui/sliders.js";
-import { MarchingCubesRenderer2 } from "../pipelines/MarchingCubesRenderer2.js";
+//import { MarchingCubesRenderer2 } from "../pipelines/MarchingCubesRenderer2.js";
 
-import { throwonglerror } from "../glwrapper/glwrapper.js";
+//import { throwonglerror } from "../glwrapper/glwrapper.js";
 
 window.DEBUG_LOG = ["test"];
 
@@ -219,16 +219,9 @@ function init_sliders_and_parameters(context,graph) {
 
 
 let context;
-async function main(){
+async function main(gajson){
 //alert("1")
-    //let gajson=await load("./jsonexport.json");
-    //let gajson=await load("./torus.json");
-    //let gajson=await load("./assets/torus_intersect.json");
-    //let gajson=await load("./assets/torus_intersect_p.json");
-    //let gajson=await load("./assets/jsonexport.json");
-    //let gajson=await load("./assets/torus.json");
-    //let gajson=await load("./assets/torustorusintersect.json");
-    let gajson=await load("./assets/torus_plane_intersect.json");
+
     const graph=GaalopGraph.fromjson(gajson);
     console.log(graph.inputScalars);
     //console.log(graph);
@@ -489,4 +482,50 @@ async function main(){
   const renderLoop = new RenderLoop(gl, animate);
   renderLoop.start();
 }
-main();
+//main();
+
+let jsonfile;
+const dropOverlay = document.getElementById('dropOverlay');
+
+// Show the overlay
+dropOverlay.classList.add('active');
+
+// Wait for a single file drop
+window.addEventListener('dragover', e => {
+  e.preventDefault();            // prevent browser from opening file
+  e.stopPropagation();           // optional but safe
+  //dropOverlay.classList.add('active');
+});
+
+jsonfile = await new Promise((resolve, reject) => {
+  const onDrop = async e => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      window.removeEventListener('drop', onDrop); // remove listener manually
+      resolve(text);
+    } catch (err) {
+      reject(err);
+    }
+  };
+
+  window.addEventListener('drop', onDrop);
+});
+
+// Hide the overlay
+dropOverlay.classList.remove('active');
+
+// Run your main function with the dropped file
+main(jsonfile);
+
+//let gajson=await load("./jsonexport.json");
+//let gajson=await load("./torus.json");
+//let gajson=await load("./assets/torus_intersect.json");
+//let gajson=await load("./assets/torus_intersect_p.json");
+//let gajson=await load("./assets/jsonexport.json");
+//let gajson=await load("./assets/torus.json");
+//let gajson=await load("./assets/torustorusintersect.json");
+//let gajson=await load("./assets/torus_plane_intersect.json");

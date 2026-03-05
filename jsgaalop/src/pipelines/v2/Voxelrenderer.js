@@ -10,7 +10,7 @@
 import { LazyRenderingPipeline } from "../LazyRenderingPipeline.js";
 import { Shader ,throwonglerror} from "../../glwrapper/glwrapper.js";
 import {  TransformFeedbackWrapper} from "../../glwrapper/TransformFeedbackWrapper.js";
-import { shaderSources } from "../../glwrapper/shaderimporter.js";
+//import { shaderSources } from "../../glwrapper/shaderimporter.js";
 import {PointShader} from "./pointrenderutil.js"
 
 function sum(arr){

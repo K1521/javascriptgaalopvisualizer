@@ -114,21 +114,27 @@ export class Cameracontroll{
         this.keysPressed[event.key.toLowerCase()]=false;
       }
     }
+
+    resetKeys() {
+      for (const key in this.keysPressed) {
+          this.keysPressed[key] = false;
+      }
+  }
+
   
-    initeventlisteners(){
-      // Bind event listener functions to maintain 'this' context
-      this.mousemove = this.mousemove.bind(this);
-      this.mousedown = this.mousedown.bind(this);
-      this.mouseup = this.mouseup.bind(this);
-      this.keydown = this.keydown.bind(this);
-      this.keyup = this.keyup.bind(this);
-  
-      window.addEventListener('mousemove', this.mousemove);
-      this.canvas.addEventListener('mousedown', this.mousedown);//uses canvas because moving on other elements shouldnt influence the camera
-      window.addEventListener('mouseup', this.mouseup);
-      window.addEventListener('keydown',this.keydown);
-      window.addEventListener('keyup',this.keyup);
-    }
+initeventlisteners() {
+  // Mouse events
+  window.addEventListener('mousemove', (e) => this.mousemove(e)); 
+  this.canvas.addEventListener('mousedown', (e) => this.mousedown(e)); // uses canvas because moving on other elements shouldn’t influence the camera
+  window.addEventListener('mouseup', (e) => this.mouseup(e));
+
+  // Keyboard events
+  window.addEventListener('keydown', (e) => this.keydown(e));
+  window.addEventListener('keyup', (e) => this.keyup(e)); 
+
+  // Reset keys when leaving window so keys don’t get stuck
+  window.addEventListener('blur', () => this.resetKeys());
+}
     update(deltatime){
       this.c2w=this.c2w.orthogonalize();//orthogonalize only against precision errors. probably unnessesary
       let movementfactor=deltatime;

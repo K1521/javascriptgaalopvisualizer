@@ -1,0 +1,52 @@
+digraph G {
+    /*made by chatgpt*/
+
+  rankdir=LR;
+
+  /* Konstanten */
+  const1 [label="1.0"];
+  const2a [label="2.0"];
+  const2b [label="2.0"];
+
+  /* Eingaben */
+  a;
+  x1;
+
+  /* ===== v[0] = 1.0 + a ===== */
+  add1 [label="Add"];
+  v0   [label="v[0]"];
+
+  const1 -> add1;
+  a      -> add1;
+  add1   -> v0;
+
+  /* ===== S1[0] = x1 ===== */
+  S1_0 [label="S1[0]"];
+  x1 -> S1_0;
+
+  /* ===== S1[4] = -((a * v[0]) / 2.0) ===== */
+  mul4 [label="Mul"];
+  div4 [label="Div"];
+  neg4 [label="Neg"];
+  S1_4 [label="S1[4]"];
+
+  a   -> mul4;
+  v0  -> mul4;
+  mul4 -> div4;
+  const2a -> div4;
+  div4 -> neg4;
+  neg4 -> S1_4;
+
+  /* ===== S1[5] = -((a * v[0]) / 2.0) ===== */
+  mul5 [label="Mul"];
+  div5 [label="Div"];
+  neg5 [label="Neg"];
+  S1_5 [label="S1[5]"];
+
+  a   -> mul5;
+  v0  -> mul5;
+  mul5 -> div5;
+  const2b -> div5;
+  div5 -> neg5;
+  neg5 -> S1_5;
+}

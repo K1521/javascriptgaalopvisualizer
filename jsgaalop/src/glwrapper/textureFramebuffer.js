@@ -1,7 +1,7 @@
 
 import { Shader } from "./glwrapper.js";
 import { ShaderCache } from "./shadercache.js";
-import { shaderSources } from "./shaderimporter.js";
+import { loadWithIncludesRelativeToShadersource } from "./shaderimporter.js";
 
 
 
@@ -23,10 +23,10 @@ void main() {
   gl_FragDepth = depth; // Pass depth manually
 }`;
 
-
+const upscaleshaderfactory=new ShaderCache(null,await loadWithIncludesRelativeToShadersource("./vertRaycastFullscreen.glsl"),upscalefrag);
 export class textureFramebuffer{
 
-  static upscaleshaderfactory=new ShaderCache(null,shaderSources.vertRaycastFullscreen,upscalefrag);
+  
 
   upscale(){
     const gl=this.gl;
@@ -58,7 +58,7 @@ export class textureFramebuffer{
   
   constructor(gl,width=0,height=0){
     this.gl=gl;
-    this.upscaleshader=textureFramebuffer.upscaleshaderfactory.getcached(gl);
+    this.upscaleshader=upscaleshaderfactory.getcached(gl);
 
 
 

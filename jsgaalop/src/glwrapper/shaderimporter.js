@@ -195,6 +195,11 @@ export async function loadWithIncludes(entryUrl,shadersource=undefined) {
 
 const src = new URL('../', import.meta.url);
 const basePath = new URL("./shadersource/",src);//relative to index
+
+
+
+
+//this crashes firefox so i removed it
 /*export const shaderSources  = {//path gets replaced with content
 //  fragTemplateAberth: "shaderlibv1/raycasting_frag_shaders/frag_aberth.glsl",//raycasting using aberth
 //  fragTemplateDualGauss: "shaderlibv1/raycasting_frag_shaders/frag_gauss.glsl",//raycasting using Gauss
@@ -208,6 +213,7 @@ const basePath = new URL("./shadersource/",src);//relative to index
   //vertTemplateVoxelBig:"vert_voxel_bool_generated_big.glsl",
 };*/
 
+/*
 async function loadShaders() {
   const loadedEntries = await Promise.all(
     Object.entries({
@@ -222,7 +228,7 @@ async function loadShaders() {
 }
 
 export const shaderSources = await loadShaders();
-
+*/
 /*await Promise.all(
   Object.entries(shaderSources).map(async ([name, path]) => {
     const source = await loadWithIncludes(basePath + path);
