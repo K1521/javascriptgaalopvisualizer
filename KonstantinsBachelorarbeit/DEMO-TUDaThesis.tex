@@ -59,7 +59,7 @@
 % Language setup
 %%%%%%%%%%%%%%%%%%%
 %\usepackage[main=english]{babel}
-\usepackage[main=german]{babel}
+\usepackage[main=ngerman]{babel}
 \usepackage{microtype}
 \usepackage[autostyle]{csquotes}% \enquote, to simplify use of quotation marks
 
@@ -129,7 +129,7 @@
 % Additional lists like \listoffigures or acronyms might be added here
 
 
-%\addchap{About this file}
+\addchap{About this file}
 
 %\enquote{DEMO-TUDaThesis.tex} is a basic template for theses using the Corporate Design of TU Darmstadt.
 %It is part of TUDa-CI, which is the official template bundle of TU Darmstadt. The original version was inspired by the \enquote{tuddesign} bundle by C.~v.~Loewenich and J.~Werner.
@@ -1113,7 +1113,7 @@ Da diese Transformation nur aus Einsetzen und Vereinfachen besteht, bleibt die m
 \subsubsection{Bound compare}
 \begin{figure}
     \centering
-    \includegraphics[width=1.0\linewidth]{FigureVoxelIntervallCompare.png}
+    \includegraphics[width=1.0\linewidth]{pictures/FigureVoxelIntervallCompare.png}
     \caption{Die beiden Intervallarithmetik Methoden im Vergleich miteinander. Man sieht hier, dass die Transformierte Intervallarithmetik ca 8 mal weniger Voxel hat (also wesentlich bessere Bounds). Die rote Linie dient als Vergleich wenn keine Voxel entfernt würden. %Wie man sieht wird nach 10 subdivisions ca \(0.001\%\) des Raums durch die Voxel für Intersection Transformed abgedeckt. %(generiert mit intercompareplot.py)
     }
     \label{fig:enter-label}
@@ -1188,11 +1188,16 @@ Die implementierung lässt sich in der datei MultiresBuffer3.js finden.
 
 
 \subsubsection{INPS/ONPS als Matrix Vektor Darstellung}
-Dabei ist zu beachten, dass das äußere bzw. innere Produkt jeweils als lineare Transformation aufgefasst werden kann. Der Punkt lässt sich als linearkombination von Polynomen darstellen, sodass das Produkt mit dem Objekt zu einem Gleichungssystem in Form eines Multivektors führt. Dieses System kann alternativ als Matrix-Vektor-Produkt interpretiert werden, wobei \texttt{point}$(x,y,z)$ in einen Vektor $P(x,y,z)$ überführt und das Produkt mit \texttt{obj} als Matrix $M$ dargestellt wird. Daraus ergibt sich die Bedingung:
+Die Multiplikation eines Multivektors mit einem anderen festen Multivektor ist eine lineare Abbildung.
+Für den INPS/ONPS wird also eine durch den zu visualsierenden Multivektor definierte lineare Abbildung auf \(\texttt{point}(x,y,z)\) berechnet.
+Diese lineare Abbildung lässt sich als eine Matrix Darstellen.
+Die Komponenten von \(\texttt{point}(x,y,z)\) sind Polynome über x,y,z.
+Zusammen lässt sich der Nullraum also als ein Gleichungssystem darstellen.
 \[
 M \cdot P(x,y,z) = 0
-\]
-welche mathematisch äquivalent ist.
+\]  
+Dabei kann M direkt aus dem zu visualsierenden Multivektor berechnet werden, während P die Polynome aus \(\texttt{point}(x,y,z)\) darstellt. 
+
 
 %!P ist glaube ich technisch gesehen keine basis
 
@@ -1201,7 +1206,7 @@ Ein konkretes Beispiel für \texttt{point}$(x,y,z)$ in der DCGA ist:
 \texttt{point}(x,y,z) = x^2 e_{16} + xy\, e_{17} + xz\, e_{18} + x\, e_{19} + \tfrac{1}{2}(x^2 + y^2 + z^2)\, x\, e_{41} + \cdots + \tfrac{1}{4}(x^2 + y^2 + z^2)^2 e_{45}
 \]
 \texttt{point}$(x,y,z)$ könnte direkt als Vektor geschrieben werden.
- Allerdings gibt es manche Polynome für blades mehrfach. Dies ist für die Vektor Matrix Darstellung unnötig und jedes Polynom wird nur einmal repräsentiert. M wird entsprechend angepasst indem spalten die zum gleichen Polynom gehören zu einer spalte zusammen addiert werden.
+ Allerdings gibt es manche Polynome für blades mehrfach. Dies ist für das Gleichungssystem jedoch unnötig und jedes Polynom wird nur einmal repräsentiert. M wird entsprechend angepasst indem spalten die zum gleichen Polynom gehören zu einer spalte zusammen addiert werden.
 
 \[
 P(x,y,z) = \left(
@@ -1211,16 +1216,17 @@ x,\ y,\ z,\ x^2,\ y^2,\ z^2,\ xy,\ xz,\ yz,\
 \right)^T
 \]
 
+In Theorie könnte man P zu einer Polynombasis machen um somit ein kleineres Gleichungssystem zu erhalten. Allerdings würde dies die Codegenerierung mit dem aktuellen Ansatz schwerer machen weshalb ich mich dagegen entschieden habe. Wenn die Polynome aus \(\texttt{point}(x,y,z)\) bekannt sind Könnte man einfach ein linear unabhängiges subset der Polynome als Basis wählen.
 
 
 
-In der Software liegt dieses Produkt $M \cdot P(x,y,z)$ nicht explizit als Matrix-Vektor-Produkt vor, sondern wird als Computational Graph umgesetzt. Es ist theoretisch möglich, $M$ und $P$ aus dem Graphen zu extrahieren, allerdings ist dies relativ aufwendig, da Gaalop den Graphen intern umformt, um ihn zu vereinfachen. Deswegen funktioniert dieser ansatz besser wenn vereinfachung durch Maxima in gaalop bei der codegenerierung abgeschaltet wird.
+In der Software liegt dieses Produkt $M \cdot P(x,y,z)$ nicht explizit als Matrix-Vektor-Produkt vor, sondern wird als Computational Graph umgesetzt. Es ist theoretisch möglich, $M$ und $P$ aus dem Graphen zu extrahieren, allerdings ist dies relativ aufwendig, da Gaalop den Graphen intern umformt, um ihn zu vereinfachen. Deswegen funktioniert dieser Ansatz besser, wenn Vereinfachung durch Maxima in gaalop bei der codegenerierung abgeschaltet wird.
 
 Der Vorteil der Darstellung $M \cdot P(x,y,z) = 0$ ist, dass sie Optimierungen erlaubt , insbesondere dann, wenn das Gleichungssystem überdeterminiert ist.
 
 
 %Vormulierung passt nicht
-Wie bereits erwähnt, kann \( f \) geschrieben werden als:
+\( f \) kann geschrieben werden als:
 
 \[
 f = \|F\|^2 = \|M \cdot P(x, y, z)\|^2
@@ -1461,13 +1467,134 @@ Weiterhin macht das Auseinanderschneiden die Codegenerierung einfacher da der su
 \subsection{Graph Manipulationen}
 Bevor der Subgraph auf der GPU ausgewerted werden kann muss er manipuliert werden. Das liegt daran, dass manche der Methoden Ableitungen erfordern oder Auswertung über den komplexen Zahlen.
 
+Der GLSL-Code enthält Funktionsheader, welche dann durch den in JavaScript
+generierten GLSL-Code ersetzt werden.
+
+\subsubsection{Was generiert die Code generierung}
+Die alte Codegenerierung generierte Code für die folgenden Methoden:
+
+\begin{itemize}
+
+\item
+\begin{minted}{glsl}
+float Summofsquares(vec3 rayDir, vec3 rayOrigin, float a)
+\end{minted}
+Diese Methode wertet \(f\) aus.
+
+\item
+\begin{minted}{glsl}
+xyzDual xyzDualSummofsquares(vec3 pos)
+\end{minted}
+Diese Methode wertet \(f\) und \(\nabla f\) aus.
+
+\item
+\begin{minted}{glsl}
+void DualF(vec3 rayDir, vec3 rayOrigin,
+           float a, out Dual[numoutputs] result)
+\end{minted}
+Diese Methode wertet \(F(\text{ray}(a))\) und
+\(\frac{dF(\text{ray}(a))}{da}\) aus.
+
+\item
+\begin{minted}{glsl}
+DualComplex DualComplexSummofsquares(
+    vec3 rayDir, vec3 rayOrigin, Complex a)
+\end{minted}
+Diese Methode wertet \(f(\text{ray}(a))\) und
+\(\frac{df(\text{ray}(a))}{da}\) mit komplexen Zahlen aus.
+Dies wird für die Aberth-Methode benötigt.
+
+\item
+\begin{minted}{glsl}
+Intervall IntervallSummofsquares(
+    Intervall _V_X, Intervall _V_Y, Intervall _V_Z)
+\end{minted}
+Diese Methode wertet \(f\) mittels Intervallarithmetik aus.
+
+\item
+\begin{minted}{glsl}
+bool evaluatevoxelIntervall3d(
+    Intervall x, Intervall y, Intervall z)
+\end{minted}
+Diese Methode wertet \(f\) mittels Intervallarithmetik aus und
+gibt zurück, ob \(0\) im Ergebnisintervall enthalten ist.
+
+\end{itemize}
+
+Dabei muss beachtet werden, dass alle Methoden mit
+\texttt{Summofsquares} im Namen im Fall eines einzelnen Outputs
+nicht das Quadrat berechnen. In diesem Fall gilt
+
+\(
+f = F
+\)
+
+statt
+
+\(
+f = |F|^2.
+\)
+
+Zusätzlich zu den Funktionen werden noch einige Variablen berechnet:
+
+\begin{itemize}
+
+\item
+\begin{minted}{glsl}
+uniform float[?] args;
+\end{minted}
+\texttt{args} sind die Argumente des GPU-Teilgraphs.
+
+\item
+\begin{minted}{glsl}
+int numoutputs = ?;
+\end{minted}
+Die Anzahl der Outputs von \(F\).
+
+\item
+\begin{minted}{glsl}
+int POLYDEGREE = ?;
+\end{minted}
+Der Polynomgrad der \texttt{Summofsquares}-Methoden.
+
+\item
+\begin{minted}{glsl}
+#define USE_DOUBLEROOT
+\end{minted}
+Dieses Makro zeigt an, dass \(f = F\) statt \(f = |F|^2\)
+verwendet wurde.
+
+\end{itemize}
+
+
+Die neue Codegenerierung kann alles generieren was die alte code generierung generieren konte. Zusätzlich wird der Code für die Matrix variante generiert.
+
+void MatmulRDense(vec4[basislength] P,out vec4[basislength] b){?}
+void MatmulRDense(vec2[basislength] P,out vec2[basislength] b){?}
+
+Matrix mul eines Vectors mit R. Diese funktionen müssen generiert werden da der code ausgerollt wird.
+
+void makeDualComplexP(vec3 rayDir, vec3 rayOrigin,Complex a,out DualComplex[basislength] P) {?}
+berechnet P,dPda im komplexen
+void makeP(vec3 pos,out float[basislength] P) {?}
+berechnet  P
+void makexyzDualP(vec3 pos,out xyzDual[basislength] P) {?}
+berechnet P,dPdx,dPdy,dPdz
+void makeDualP(vec3 rayDir, vec3 rayOrigin,float a,out Dual[basislength] P) {?}
+berechnet P,dPda 
+void makeIntervallP(Intervall X,Intervall Y,Intervall Z,out Intervall[basislength] P) {?}
+berechnet P über intervall arithmetik
+float susRDenseUnrolled(vec3 pos){?}
+wertet f aus
+
 %alte ansätze
 Anfangs habe ich zur Ableitungsberechnung dualen Zahlen verwendet. Dies lies sich relativ einfach implementieren, hat aber den Nachteil, dass der Graph typisiert werden muss. Anstatt nur mit Skalaren zu arbeiten gibt es für die komplexe Zahlen,Dual komplexe Zahlen,Skalare,Duale mit mehreren Inputs und Intervalle. Weiterhin müssen auch Interaktionen zwischen verschiedenen Typen (beispielsweise die Multiplikation von einem Skalar mit einer Dual Zahl) Ausprogramiert werden was zu einer kombinatorischen Explosion führt. Und dann muss später für jede der Kombinationen eine Methode zu Codegenerierung zu schreiben. 
 
-Meine erstern Anstz bestand darin für jeden Typ neue Codegenerierung zu schreiben. Dabei Es gab in der Regel zwei Typen pro Codegenerierung. Skalare und den Typ über dem die Codegenerierung stattfindet. Wenn beispielsweise über den Komplexen zahlen ausgewertet wurde, waren die gesplitteten inputs von der cpu Skalare und die sich ändernden Variablen Komplexe Zahlen. Alle Operationen zwischen Skalaren und anderen Typen haben dann den anderen Typen als Output. Also Beispielsweise:
+Meine erstern Ansatz bestand darin für jeden Typ neue Codegenerierung zu schreiben. Dabei Es gab in der Regel zwei Typen pro Codegenerierung. Skalare und den Typ über dem die Codegenerierung stattfindet. Wenn beispielsweise über den Komplexen zahlen ausgewertet wurde, waren die gesplitteten inputs von der cpu Skalare und die sich ändernden Variablen Komplexe Zahlen. Alle Operationen zwischen Skalaren und anderen Typen haben dann den anderen Typen als Output. Also Beispielsweise:
 Mul(skalar a,Complex b)-> Complex
 Dabei habe ich oft den skalar einfach hochkonvertiert. Also statt Mul(skalar a,Complex b) zu implementieren kann Mul(Complex a,Complex b) benutzt werden wobei a zu einer Complexen zahl gecastet wird. Das macht das ganze einfacher aber auch langsamer. 
-Dieser ansatz war relativ unflexibel und unübersichtlich. Anfangs ging es noch , allerdings hatte ich witere ideen und habe dann immer mehr typen hinzugefügt. Allerdings hätte ich wahrscheinlich dabei bleiben sollen weil mich das neu schreiben viel zeit gekostet hat.
+Die typen waren unter anderem:Skalare,Complexe Zahlen,Duale Zahlen, Complexe Duale, Intervalle,3d Duale.
+Dieser ansatz war relativ unflexibel und unübersichtlich. Anfangs ging es noch , allerdings hatte ich witere ideen und habe dann immer mehr typen hinzugefügt. Allerdings hätte ich wahrscheinlich dabei bleiben sollen weil mich das neu schreiben viel zeit gekostet hat. 
 
 %explain type propergation
 Meine nächster Ansatz war es typisierte nodes zu machen. Dabei habe ich den code für codegenerierung und typ propergation  in die nodes gepackt statt eigene Klassen zur Codegenerierung zuschreiben.
@@ -1477,12 +1604,45 @@ Als nächstes habe ich mich entschieden die ableitungsberechnung auf backproperg
 Erstens gibt es nur noch 3 typen: Skalare,komplexe Zahlen und Intervalle was die codegenerierung wesentlich einfacher macht. Und zweitens müsste backpropergation theoretisch bei manchen ansätzen schneller sein da weniger multiplikationen benötigt werden.
 
 Im aktuellen Ansatz habe ich versucht die anderen ansätze zu vereinigen.
-Ich habe mich entschieden die typ propergation während der Codegenerierung zu machen wobei ich den code dafür in die nodes gepackt habe. Das macht den code kleiner, allerdings ist das typisierte auswerten in javascript nicht möglich. 
+Ich habe mich entschieden die typ propergation während der Codegenerierung zu machen wobei ich den code dafür in die nodes gepackt habe. Das macht den code kleiner, allerdings ist das typisierte auswerten in javascript nicht möglich.
+Die neue Codegenerierung ist flexibler und hat weniger bugs. Da es in der alten codegenerierung für jede funktion eine eigene Klasse zur codegenerierung gab,war es wesentlich schwerer bugs zu fixen da sie teilweise in jeder der codegenerierungen gefixt werden müssten. Deshalb habe ich die neue Codegenerierung geschrieben.
+
+Ich habe trotzdem einen kleinen test zum vergleich der Ausführungszeiten gemacht.
+Dieser Findet sich in testcodegenbackproptestall.html.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{pictures/CodegenAltVSNewTimings.png}
+    %\caption{}
+    \label{fig:CodegenAltVSNewTimings}
+\end{figure}
+
+Die Ergebnisse zeigen, dass die neue Codegenerierung manchmal schneller ist und manchmal die alte. Ich bin mir nicht sicher, warum dies so ist. Hier sind meine Theorien:
+
+Ein Vorteil der alten Codegenerierung könnte sein, dass der Compiler durch die vielen Typen ein besseres Memory Layout erzeugen kann und weniger Operationen benötigt. Beispielsweise sieht der Code für die Multiplikation bei \texttt{xyzDual} folgendermaßen aus:
+
+\begin{minted}{glsl}
+xyzDual xyzDualMul(xyzDual a,xyzDual b){
+    return xyzDual(a.w*b.xyz+b.w*a.xyz,a.w*b.w);
+} 
+\end{minted}
+
+Dieser Code berechnet im Prinzip Forwardpropagation für eine Multiplikation mit drei Variablen gleichzeitig. Teilweise kann die Multiplikation mit drei Variablen (\texttt{a.w*b.xyz}) mit nur einer Instruktion passieren.
+Weiterhin sind \texttt{xyzDual} im Grunde umbenannte \texttt{vec4}s, was bedeutet, dass sie oft in ein Register passen.
+Der Code der neuen Codegenerierung benutzt Backpropagation/Forwardpropagation auf der Graph-Ebene und erzeugt danach den Code. Das macht es dem Compiler schwerer, die Multiplikationen zu bündeln.
+Das Ganze ist natürlich stark vom Compiler und der Hardware abhängig.
+Ein Vorteil des neuen Codes könnten bessere Vereinfachungen des Graphen sein.
+
+Ein Problem das in beiden Codegenerierungen besteht, ist das zu großer Code nicht kompilierbar ist.
+Teilweise haben Multivektorprodukte Hunderte an Outputs was bedeutet das der webgl2 Kompiler ohne Fehlermeldung Aufgibt wobei zusätzlich teilweise der webgl2 Context abstürzt. Die matrix version der Neuen Codegenerierung Fixt dieses Problem.
+
+
 \subsection{Vereinfachung}
 Durch die manipulation  des graphen entstehen artefakte wie beispielsweise multiplikation mit 1. Deshalb wird der graph vereinfacht. Zu den vereinfachungen gehören unteranderem:
 eliminierung von konstanten subausdrücken,
 common subexpression elimination und
 entfernen von addition mit 0 und multiplikation mit 1.
+
  
 \subsection{structure of main programm}
 Objects->pipelines-> update/render
@@ -1498,7 +1658,7 @@ Das ergebnis ist also ein polynom für jeden komponente des output multivectors.
 Um diese Polynome in der polynombasis der algebra zu repräsentieren, wird mittels einer basiswechselmatrix die basis von der monom  polynombasis zur Polynombasis der algebra konvertiert. 
 
 %TODO:Kapitel schreiben
-Im neuen ansatz muss als erstes die polynombasis extrahiert werden. 
+Im neuen Ansatz muss als erstes die polynombasis extrahiert werden. 
 Dazu werden alle Nodes aus dem Graph extrahiert die nur von den variablen x,y oder z abhängen. Da mehrere nodes das gleiche polynom oder vielfache darstellen können werden die nodes in Äquivalenzklassen eingeteilt, wobei jede Äquivalenzklasse alle Nodes enthält, die ein Polynom oder ein Vielfaches desselben repräsentieren. Dabei wird Für jede Equivalenzklasse die node mit den wenigsten Vorfahren als repräsentant gewählt. Diese bilden die Basis.
 %TODO:Kapitel schreiben
 

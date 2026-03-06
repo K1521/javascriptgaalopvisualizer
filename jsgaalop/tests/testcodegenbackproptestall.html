@@ -19,7 +19,7 @@ console.log(performance.now()-tstart,"imports and weggl context");
 import { GaalopGraph } from "../src/core/codegenv4/codegenBackpropergation2.js";//new
 import {GaalopGraph as GaalopGraph2} from "../src/core/graph2.js";
 import { TransformFeedbackWrapper } from "../src/glwrapper/TransformFeedbackWrapper.js";
-import { shaderSources,loadWithIncludes } from "../src/glwrapper/shaderimporter.js";
+import { loadWithIncludes } from "../src/glwrapper/shaderimporter.js";
 import { Shader } from "../src/glwrapper/glwrapper.js";
 const mainCanvas = document.getElementById('mainCanvas');
 //const diagramCanvas = document.getElementById('diagramCanvas');
@@ -187,7 +187,7 @@ async function loadshaderdource2(generator,template){
 
 
 const targets=[];//json x vistarget x codegen
-for(const jsonpath of ["../assets/torus_plane_intersect.json","../assets/torustorusintersect.json"]){
+for(const jsonpath of ["../assets/torus_plane_intersect.json",]){//"../assets/torustorusintersect.json"]){
   const json=await load(jsonpath);
   const graph1=GaalopGraph.fromjson(json);//new
   const graph2=new GaalopGraph2();graph2.fromjson(json);
@@ -246,7 +246,7 @@ gl.vertexAttribPointer(
 
 // ===== BEFORE THE LOOP =====
 const comparisonResults = []; // stores all function/target old vs new stats
-
+document.comparisonResults=comparisonResults;
 function pushComparisonResult(functionName, targetName, oldStats, newStats,jsonpath) {
     comparisonResults.push({
         functionName,
@@ -350,8 +350,10 @@ void main() {
   const source1=await loadshaderdource2(target.target1,vertexshader);
   const source2=await loadshaderdource2(target.target2,vertexshader);
   
-  let tf1=new TransformFeedbackWrapper(gl,source1, ["result"]);//new
-  let tf2=new TransformFeedbackWrapper(gl,source2, ["result"]);
+  let tfnew=new TransformFeedbackWrapper(gl,source1, ["result"]);//new
+
+  let tfold=null;
+  try{tfold=new TransformFeedbackWrapper(gl,source2, ["result"]);}catch{}
 
   if(!setsEqual(new Set(target.graph1.inputScalars.keys()),new Set(target.graph2.inputScalars.keys())))throw Error("bad");
   console.log(shaderpart);
@@ -363,24 +365,26 @@ void main() {
     const variables=new Map([...target.graph1.inputScalars.keys()].map(x=>[x,Math.random()]));
     ["_V_X", "_V_Y", "_V_Z"].forEach((v)=>variables.delete(v));
 
-    tf1.shader.use();
+    tfnew.shader.use();
     target.ctx1.paramsChanged(variables);
-    target.target1.setuniforms(tf1.shader,target.ctx1);
+    target.target1.setuniforms(tfnew.shader,target.ctx1);
     /*const cache=new Map();
     target.target1.generatecode2cached().nodetosubgraphname.entries().forEach(([node,name]) => {
       const value=node.eval(variables,cache);
       //console.log(name,value)
       tf1.shader.uniform1f(name,value);
     });*/
-
-    tf2.shader.use();
-    target.target2.setuniforms(new Map(variables),tf2.shader);
-    //console.log(gen2.parameters(new Map(variables)));
+    if(tfold){
+      tfold.shader.use();
+      target.target2.setuniforms(new Map(variables),tfold.shader);
+      //console.log(gen2.parameters(new Map(variables)));
+    }
   }
 
-  {
-    const a1=tf1.run(arraylength)[0];
-    const a2=tf2.run(arraylength)[0];
+  if(tfold){
+    
+    const a1=tfnew.run(arraylength)[0];
+    const a2=tfold.run(arraylength)[0];
 
     /*console.log(
       zip(a1,a2)
@@ -408,15 +412,19 @@ void main() {
     gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(Array.from({ length: arraylength*7 }, () => Math.random())),gl.DYNAMIC_DRAW);
     gl.finish();
     const t0 = performance.now();
-    const result1 = tf1.run(arraylength)[0];
+    const result1 = tfnew.run(arraylength)[0];
     const t1 = performance.now();
     gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(Array.from({ length: arraylength*7 }, () => Math.random())),gl.DYNAMIC_DRAW);
     gl.finish()
-    const t2 = performance.now();
-    const result2 = tf2.run(arraylength)[0];
-    const t3 = performance.now();
     times[0].push(t1-t0);
-    times[1].push(t3-t2);
+    
+    if(tfold){
+        const t2 = performance.now();
+      const result2 = tfold.run(arraylength)[0];
+      const t3 = performance.now();
+      times[1].push(t3-t2);
+    }else times[1].push(NaN );
+    await new Promise(resolve=>setTimeout(resolve,1));
     }
     console.log(target);
     console.log(stats(times[0]));
