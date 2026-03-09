@@ -455,7 +455,7 @@ Die Iterationsvorschrift lautet dabei:
 \[x^\text{neu}=x-\frac{f(x)}{f'(x)}\]
 
 \subsection{Gauß-Newton Verfahren}
-Das Gauß-Newton Verfahren ist eine Methode für die Suche des minimums der summe der quadrate einer mehrwertigen Funktion.
+Das Gauß-Newton Verfahren ist ein iteratives Optimierungsverfahren für die Suche des minimums der summe der quadrate einer mehrwertigen Funktion.
 \[
 \min _{x\in \mathbb {R} ^{n}}\left\{{\frac {1}{2}}\sum _{i=1}^{m}\left(f_{i}(x)\right)^{2}\right\}
 \]
@@ -466,6 +466,17 @@ Eine erweiterung des verfahrens ist:
 \[x^\text{neu}=x-\alpha (J^\top J+\beta I)^{-1} J^\top f(x)\]
 Dabei sorgt \(\beta I\) dafür das \(J^\top J+\beta I\) invertierbar ist.
 Dies ist ein variante des Levenberg Marquardt Iterationsschritts.
+
+\subsubsection{Gauss-Newton}
+Das Gauß-Newton-Verfahren ist ein numerisches Iteratives Optimierungsverfahren, das zur Lösung von nichtlinearen Problemen der kleinsten Fehlerquadrate verwendet wird. 
+Die Update-Formel für das Verfahren lautet
+\[
+\mathbf{x}_{\text{neu}} = \mathbf{x} - \alpha \left( J(\mathbf{x})^\top J(\mathbf{x}) \right)^{-1} J(\mathbf{x})^\top \mathbf{F}(\mathbf{x}),
+\]
+wobei $J(\mathbf{x})$ die Jacobi-Matrix der Vektorfunktion $\mathbf{F}$ an der Stelle~$\mathbf{x}$ bezeichnet und $\alpha \in \mathbb{R}$ eine Schrittweite ist.
+
+
+
 
 \subsection{Aberth Method}
 Die Aberth Methode ist ein Verfahren zur Suche der komplexen Nullstellen von Polynomen. 
@@ -553,7 +564,38 @@ dass \( f \) eine Nullstelle auf dem Intervall hat, besteht darin,
 die Intervalle \( I_x, I_y, I_z \) schrittweise zu unterteilen, 
 bis sie klein genug sind.
 
+\section{Vandermonde Matrix}
+Eine einfache Möglichkeit zur Bestimmung der Koeffizienten eines Polynoms \(f\) besteht in der Verwendung einer Vandermonde-Matrix~$V$. Gegeben seien $n$ Stützstellen $x_1, x_2, \dotsc, x_n$ sowie die zugehörigen Funktionswerte $y_i=f(ray(x_i))$. Dann ergibt sich das Gleichungssystem
+\[
+V \cdot \mathbf{c} = \mathbf{y},
+\]
+wobei
+\[
+V = 
+\begin{pmatrix}
+1 & x_1 & x_1^2 & \cdots & x_1^{n-1} \\
+1 & x_2 & x_2^2 & \cdots & x_2^{n-1} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+1 & x_n & x_n^2 & \cdots & x_n^{n-1}
+\end{pmatrix},
+\quad
+\mathbf{c} = 
+\begin{pmatrix}
+c_0 \\ c_1 \\ \vdots \\ c_{n-1}
+\end{pmatrix},
+\quad
+\mathbf{y} = 
+\begin{pmatrix}
+y_1 \\ y_2 \\ \vdots \\ y_n
+\end{pmatrix}.
+\]
+Löst man dieses Gleichungssystem durch Invertieren der Matrix $V$, so ergeben sich die Koeffizienten $\mathbf{c}$ und die dazugehörige Approximation.
+\[
+\mathbf{c} = V^{-1} \cdot \mathbf{y},\quad f_\text{aprox}(x)=\sum_{i=0}^{n-1}{c_ix^i}
+\]
 
+Die Inverse $V^{-1}$ kann dabei vorab berechnet werden, solange sich die Stützstellen $x_i$ nicht ändern.
+Das bedeutet, es wird nur noch das Auswerten von \(f\) an degree(f)+1 stützstellen und eine Matrixmultiplikation benötigt, um die Koeffizienten zu erhalten.
 \section{Duale Zahlen}
 Duale Zahlen (nicht zu verwechseln zu Zahlen im Dualsystem) sind ein einfacher weg um Ableitungen zu berechnen.
 Sie definieren ähnlich zu den Komplexen zahlen eine nicht Reelle Einheit \(\varepsilon\) mit der Eigenschaft \(\varepsilon^2=0\).
@@ -1126,21 +1168,18 @@ Eine weitere Möglichkeit zu testen, ob ein Voxel leer ist, ist durch eine UDF. 
 \text{UDF}(\text{Mittelpunkt}) > \frac{\sqrt{3}}{2} \cdot \text{Kantenlänge} \implies \text{Voxel leer} 
 \]
 
-Wie schon gesagt haben wir keine UDF für f. Deshalb wird wieder eine Aproximation genutzt. 
-Anders als bei der Intervallarithmetik bietet die aproximation keine mathematische garantie und kann zu falschem entfernen von Voxeln führen.
+Wie schon gesagt haben wir keine UDF für f. Deshalb wird wieder eine Aproximation genutzt.
+Eine einfache möglichkeit für eine Aproximation sind multivariate Verfahren für itterative Nullstellensuche wie das Gauss Newton Verfahren oder Levenberg Marquad.
+Als Startpunkt wird Der voxelmittelpunkt gewählt.
+Dann werden ein oder mehrere itterationen des verfahrens berechnet und zum schluss wird der Abstand zum Startpunkt berechnet.
+Anders als bei der Intervallarithmetik bietet die aproximation keine mathematische garantie da das die numerischen verfahre meist und kann zu falschem entfernen von Voxeln führen.
 Um dem entgegenzuwirken kann ein Sicherheisfaktor eingeführt werden:
 \[
 \text{UDFAprox}(\text{Mittelpunkt}) > \frac{\sqrt{3}}{2} \cdot \text{Kantenlänge} \cdot \text{Sicherheisfaktor} \implies \text{Voxel leer} 
 \]
-\subsubsection{Gauss-Newton}
-Das Gauß-Newton-Verfahren ist ein numerisches Iteratives Optimierungsverfahren, das zur Lösung von nichtlinearen Problemen der kleinsten Fehlerquadrate verwendet wird. 
-Die Update-Formel für das Verfahren lautet
-\[
-\mathbf{x}_{\text{neu}} = \mathbf{x} - \alpha \left( J(\mathbf{x})^\top J(\mathbf{x}) \right)^{-1} J(\mathbf{x})^\top \mathbf{F}(\mathbf{x}),
-\]
-wobei $J(\mathbf{x})$ die Jacobi-Matrix der Vektorfunktion $\mathbf{F}$ an der Stelle~$\mathbf{x}$ bezeichnet und $\alpha \in \mathbb{R}$ eine Schrittweite ist.
 
-Um aus diesem verfahren eine Udf zu machen werden einfach ein paar Iterationen des Verfahrens berechnet und dann wird der Abstand zum Startpunkt berechnet.
+Dabei muss beachtet werden,dass die meisten verfahren nur lokal konvergieren. Deshalb funktioniert diese methode am besten um das ergebnis der Intervall arethmetic voxel zu filtern.
+
 
 
 \section{Modifyed Marching Cubes}
@@ -1156,8 +1195,7 @@ Der normale Marching Cubes Algorithmus werted die Funktion \( f(\mathbf{x}) \) w
 
 
 \section{curve extraction}
-TODO
-
+Als
 \chapter{Optimizations (Maybe not as a extra chapter)}
 \section{Adaptive resolution}
 %Tile based
@@ -1216,7 +1254,7 @@ x,\ y,\ z,\ x^2,\ y^2,\ z^2,\ xy,\ xz,\ yz,\
 \right)^T
 \]
 
-In Theorie könnte man P zu einer Polynombasis machen um somit ein kleineres Gleichungssystem zu erhalten. Allerdings würde dies die Codegenerierung mit dem aktuellen Ansatz schwerer machen weshalb ich mich dagegen entschieden habe. Wenn die Polynome aus \(\texttt{point}(x,y,z)\) bekannt sind Könnte man einfach ein linear unabhängiges subset der Polynome als Basis wählen.
+In Theorie könnte man P zu einer Polynombasis machen um somit ein kleineres Gleichungssystem zu erhalten.  Wenn die Polynome aus \(\texttt{point}(x,y,z)\) bekannt sind könnte man ein maximales linear unabhängiges subset der Polynome als Basis wählen. Allerdings würde dies die Codegenerierung mit dem aktuellen Ansatz schwerer machen weshalb ich mich dagegen entschieden habe. Außerdem könnte das ganze numerisch instabieler werden und auch die wahl des maximalen subsets ist nicht Trivial. Im fall in dem Gaalop keine Optimierungen nutzt müsste dies allerdings relativ einfach möglich sein.
 
 
 
@@ -1299,39 +1337,10 @@ Ich habe die sortierung Implementiert aber diesen Fakt nicht ausgenutzt da dies 
 
 In den Raycasting Methoden wird f(ray(t)) sehr häufig ausgewertet. Da f(ray(t)) ein polynom ist kann man die Koeffizienten für dieses polynom berechnen und dann in Zukunft die Funktion anhand dieser Koeffizienten auswerten. Die Auswertung anhand der Koeffizienten kann wesentlich schneller sein da sie in der Regel wesentlich weniger Multiplikationen benötigt werden.
 
+Die Koeffizeienten berechne ich dabei mit einer Vandermonde Matrix.  
 %TODO count multiplications and compare
 
-Eine einfache Möglichkeit zur Bestimmung der Koeffizienten eines Polynoms besteht in der Verwendung einer Vandermonde-Matrix~$V$. Gegeben seien $n$ Stützstellen $x_1, x_2, \dotsc, x_n$ sowie die zugehörigen Funktionswerte $y_i=f(ray(x_i))$. Dann ergibt sich das Gleichungssystem
-\[
-V \cdot \mathbf{c} = \mathbf{y},
-\]
-wobei
-\[
-V = 
-\begin{pmatrix}
-1 & x_1 & x_1^2 & \cdots & x_1^{n-1} \\
-1 & x_2 & x_2^2 & \cdots & x_2^{n-1} \\
-\vdots & \vdots & \vdots & \ddots & \vdots \\
-1 & x_n & x_n^2 & \cdots & x_n^{n-1}
-\end{pmatrix},
-\quad
-\mathbf{c} = 
-\begin{pmatrix}
-c_0 \\ c_1 \\ \vdots \\ c_{n-1}
-\end{pmatrix},
-\quad
-\mathbf{y} = 
-\begin{pmatrix}
-y_1 \\ y_2 \\ \vdots \\ y_n
-\end{pmatrix}.
-\]
-Löst man dieses Gleichungssystem durch Invertieren der Matrix $V$, so ergeben sich die Koeffizienten $\mathbf{c}$ und die dazugehörige Approximation.
-\[
-\mathbf{c} = V^{-1} \cdot \mathbf{y},\quad f_\text{aprox}(x)=\sum_{i=0}^{n-1}{c_ix^i}
-\]
-
-Die Inverse $V^{-1}$ kann dabei vorab berechnet werden, solange sich die Stützstellen $x_i$ nicht ändern.
-Das bedeutet, es wird nur noch das Auswerten von f an degree(f)+1 stützstellen und eine Matrixmultiplikation benötigt, um die Koeffizienten zu erhalten. Leider scheint diese Optimierung sehr numerisch instabil zu sein, was zu einem sehr verrauschten Bild führt. In der Nähe der Kamera ist das Rauschen kleiner, aber immer noch relativ groß. Ich vermutete, dass das daran liegt das ich die equidistante Stützstellen nahe der Kamera gewählt habe.
+ Leider scheint diese Optimierung sehr numerisch instabil zu sein, was zu einem sehr verrauschten Bild führt. In der Nähe der Kamera ist das Rauschen kleiner, aber immer noch relativ groß. Ich vermutete, dass das daran liegt das ich die equidistante Stützstellen nahe der Kamera gewählt habe.
 
 Eine andere Möglichkeit für das Berechnen der Koeffizienten ist das Ausmultiplizieren. Diese Methode ist wesentlich aufwändiger zu implementieren und hat leider auch nicht zu wesentlich besseren Ergebnissen geführt.  Wahrscheinlich könnte eine bessere Wahl für eine Polynombasis zu wesentlich besseren Ergebnissen führen.
 
@@ -1344,7 +1353,7 @@ k = \frac{1}{\max\left\{ |\frac{a_{n-1}}{a_n}|,\; |\frac{a_{n-2}}{a_n}|^{1/2},\;
 Dann sind die Nullstellen von \(f_\text{aprox}(\frac{x}{k})\) im intervall [-2,2]. Allerdings ist diese version nur ein bischen stabieler weshalb ich sie nicht benutzt habe.
 
 
-
+Ich habe Anfangs auch mit closed form lösungen experimentiert, allerdings funktionieren diese nur bis zum 4ten grad und weiterhin haben sie das gleiche problem wie die aberth methode basiert auf den Koeffizienten. Die ergebnisse sind verrauscht.
 
 
 Eine Möglichkeit, die verrauschten Ergebnisse nutzbar zu machen, ist, erst eine verrauschte Näherung für die Nullstellen mit \(f_\text{aprox}\) zu berechnen um dann f normal auszuwerten, um mit den angenäherten Nullstellen weiter zu rechnen. Dadurch bleibt die Qualität erhalten und es kann ein kleiner Performance Boost für die arberth method beobachtet werden. Natürlich kann diese methode auch \((F_R)_i\) benutzt werden.
@@ -1600,14 +1609,14 @@ Dieser ansatz war relativ unflexibel und unübersichtlich. Anfangs ging es noch 
 Meine nächster Ansatz war es typisierte nodes zu machen. Dabei habe ich den code für codegenerierung und typ propergation  in die nodes gepackt statt eigene Klassen zur Codegenerierung zuschreiben.
 Der vorteil von diesem Ansatz war,dass er wesentlich flexibler ist und einfacher zu erweitern. Weiterhinn ist ermöglicht dieser ansatz die auswertung des ganzen auf der cpu. Der Nachteil von diesem ansatz war , dass er wesentlich größer ist weshalb ich irgentwann abgebrochen habe.
 
-Als nächstes habe ich mich entschieden die ableitungsberechnung auf backpropergation und forward mode autodiff umzustellen. Dies hat zwei große vorteile.
+Als nächstes habe ich mich entschieden die ableitungsberechnung auf Backpropergation und Forward-mode-autodiff umzustellen. Dies hat zwei große vorteile.
 Erstens gibt es nur noch 3 typen: Skalare,komplexe Zahlen und Intervalle was die codegenerierung wesentlich einfacher macht. Und zweitens müsste backpropergation theoretisch bei manchen ansätzen schneller sein da weniger multiplikationen benötigt werden.
 
-Im aktuellen Ansatz habe ich versucht die anderen ansätze zu vereinigen.
-Ich habe mich entschieden die typ propergation während der Codegenerierung zu machen wobei ich den code dafür in die nodes gepackt habe. Das macht den code kleiner, allerdings ist das typisierte auswerten in javascript nicht möglich.
+Im aktuellen Ansatz habe ich versucht die anderen Ansätze zu vereinigen.
+Ich habe mich entschieden die Typ Propergation während der Codegenerierung zu machen wobei ich den code dafür in die nodes gepackt habe. Das macht den code kleiner, allerdings ist das typisierte auswerten in javascript nicht möglich.
 Die neue Codegenerierung ist flexibler und hat weniger bugs. Da es in der alten codegenerierung für jede funktion eine eigene Klasse zur codegenerierung gab,war es wesentlich schwerer bugs zu fixen da sie teilweise in jeder der codegenerierungen gefixt werden müssten. Deshalb habe ich die neue Codegenerierung geschrieben.
 
-Ich habe trotzdem einen kleinen test zum vergleich der Ausführungszeiten gemacht.
+Ich habe trotzdem einen kleinen Test zum Vergleich der Ausführungszeiten gemacht.
 Dieser Findet sich in testcodegenbackproptestall.html.
 
 \begin{figure}
@@ -1658,8 +1667,14 @@ Das ergebnis ist also ein polynom für jeden komponente des output multivectors.
 Um diese Polynome in der polynombasis der algebra zu repräsentieren, wird mittels einer basiswechselmatrix die basis von der monom  polynombasis zur Polynombasis der algebra konvertiert. 
 
 %TODO:Kapitel schreiben
-Im neuen Ansatz muss als erstes die polynombasis extrahiert werden. 
-Dazu werden alle Nodes aus dem Graph extrahiert die nur von den variablen x,y oder z abhängen. Da mehrere nodes das gleiche polynom oder vielfache darstellen können werden die nodes in Äquivalenzklassen eingeteilt, wobei jede Äquivalenzklasse alle Nodes enthält, die ein Polynom oder ein Vielfaches desselben repräsentieren. Dabei wird Für jede Equivalenzklasse die node mit den wenigsten Vorfahren als repräsentant gewählt. Diese bilden die Basis.
+Im neuen Ansatz müssen als erstes die Polynome von P extrahiert werden. 
+Dazu werden alle Nodes aus dem Graph extrahiert die nur von den variablen x,y oder z abhängen. Da mehrere nodes das gleiche polynom oder vielfache darstellen können werden die nodes in Äquivalenzklassen eingeteilt, wobei jede Äquivalenzklasse alle Nodes enthält, die ein Polynom oder ein Vielfaches desselben repräsentieren. Dabei wird Für jede Equivalenzklasse die Node mit den wenigsten Vorfahren als repräsentant gewählt. Diese bilden die Polynome von P. Falls Vereinfachungen in Gaalop deaktiviert ist P nun volständig. Andernfalls wird P später Nachträglich noch erweitert.
+
+Als nächstes werden die outputs als polynome über dem Vorläufigen P erzeugt. Dabei können nicht lineare terme entstehen. Deshalb werden im nächsten Schritt die Terme linearisiert und P wird entsprechend erweitert.
+
+Im letzten schritt wird P werden die nodes in eine matrix gepackt.
+
+Dann können 
 %TODO:Kapitel schreiben
 
 Repräsentation legt als computational graph vor.

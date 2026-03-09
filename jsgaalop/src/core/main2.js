@@ -16,6 +16,7 @@ import { RenderContext } from "./RenderContext2.js";
 //import { linegridrenderer } from "../pipelines/linegridrenderer.js";
 //import { simplerenderer } from "../pipelines/v2/simplerenderer.js";
 import { aberthrenderer } from "../pipelines/v2/aberthrenderer.js";
+import { udfrenderer } from "../pipelines/v2/udfrenderer.js";
 import { Voxelrenderer } from "../pipelines/v2/Voxelrenderer.js";
 import { VoxelDistRenderer } from "../pipelines/v2/VoxelDistRenderer.js";
 import { VoxelGNRenderer } from "../pipelines/v2/VoxelGNRenderer.js";
@@ -306,6 +307,13 @@ async function main(gajson){
     const gaussnewtonitersource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGaussNewtonIterGrid.glsl");
     obj.addPipeline("RGaussNewtonGridIter",new VoxelGNRenderer(context,gl,visgraph,gaussnewtonitersource,color));
 
+    const newtonsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/newton.glsl");
+    obj.addPipeline("newton",new udfrenderer(context,gl,visgraph,newtonsource,color));
+
+    const udfaproxsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/udfaprox.glsl");
+    obj.addPipeline("udfaprox",new udfrenderer(context,gl,visgraph,udfaproxsource,color));
+
+    
     //obj.setActivePipeline("voxelpoint2");
     //context.updateParams();
     //obj.setActivePipeline("aberth");

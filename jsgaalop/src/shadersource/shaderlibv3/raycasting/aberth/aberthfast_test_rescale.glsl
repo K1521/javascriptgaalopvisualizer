@@ -6,8 +6,8 @@ precision mediump float;
 
 
 
-#include "../common/utilfrag.glsl"
-#include "../common/RevalGenerator.glsl"
+#include "../../common/utilfrag.glsl"
+#include "../../common/RevalGenerator.glsl"
 
 
 const int ABERTH_MAXITER = 40;
@@ -257,4 +257,4 @@ if (quadrant == QUAD_TOP_LEFT) {
    
 }
 
-#include "../common/raycastingmain.glsl"
+#include "../../common/raycastingmain.glsl"

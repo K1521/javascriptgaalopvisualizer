@@ -6,8 +6,8 @@ precision mediump float;
 
 
 
-#include "../common/utilfrag.glsl"
-#include "../common/RevalGenerator.glsl"
+#include "../../common/utilfrag.glsl"
+#include "../../common/RevalGenerator.glsl"
 
 
 
@@ -427,4 +427,4 @@ Complex[NUM_ROOTS] roots;
 
 
 
-#include "../common/raycastingmain.glsl"
+#include "../../common/raycastingmain.glsl"

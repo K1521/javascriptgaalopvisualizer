@@ -16,7 +16,7 @@
     box-sizing: border-box;
 }
 
-#sliderPanel {
+.sliderholder {
     display: table;
 
     border-spacing: 20px 8px;

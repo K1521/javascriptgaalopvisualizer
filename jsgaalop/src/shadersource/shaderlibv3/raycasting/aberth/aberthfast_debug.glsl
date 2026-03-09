@@ -6,8 +6,8 @@ precision mediump float;
 
 
 
-#include "../common/utilfrag.glsl"
-#include "../common/RevalGenerator.glsl"
+#include "../../common/utilfrag.glsl"
+#include "../../common/RevalGenerator.glsl"
 
 
 const int ABERTH_MAXITER = 40;
@@ -235,4 +235,4 @@ void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_
 
 }
 
-#include "../common/raycastingmain.glsl"
+#include "../../common/raycastingmain.glsl"

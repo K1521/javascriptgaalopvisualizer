@@ -76,6 +76,17 @@ vec4 DCsusR(vec3 ro,vec3 rd,Complex a){
     return res;
 }
 
+vec2 DualsusR(vec3 ro,vec3 rd,float a){
+  	vec2[basislength] P;
+    makeDualP(ro,rd,a,P);
+    vec2[basislength] b;
+    MatmulRDense(P,b);
+  	vec2 res=vec2(0.);
+    for(int i=0;i<basislength;i++){
+      res+=DualSquare(b[i]);
+    }
+    return res;
+}
 
 float GaussNewtonStepR(vec3 ro,vec3 rd,float a,float eps){
   	vec2[basislength] P;

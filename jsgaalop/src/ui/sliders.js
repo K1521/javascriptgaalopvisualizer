@@ -80,7 +80,23 @@ export function makeSlider(template, name, callback = undefined, { min = 0, max 
     return item;
 }
 
+export function makeLogSlider(template, name, callback, options = {}) {
+  const { min = 1e-10, max = 1, value = 1e-3 } = options;
 
+  const fn = (logx) => {
+    const x = Math.pow(10, logx);
+    return callback?.(x) ?? x.toExponential(2);
+  };
+
+  const newoptions = {
+    ...options,
+    min: Math.log10(min),
+    max: Math.log10(max),
+    value: Math.log10(value),
+  };
+
+  return makeSlider(template, name, fn, newoptions);
+}
 /*
 const sliderPanel = new ReorderableList(document.getElementById("sliderPanel"));
 const sliderinfos = [{ name: "longname", min: 0, max: 1, value: 1 }, { name: "a2", min: 0, max: 1, value: 0.5 }];

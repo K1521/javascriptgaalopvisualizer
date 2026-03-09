@@ -12,15 +12,22 @@
 <body>
 
 
+
+<div id="dropOverlay">
+  <p>Drag & drop your GA JSON file here</p>
+  <input type="file" id="FileInput" accept=".json" hidden />
+</div>
+
+
   <canvas id="mainCanvas" tabindex="0"></canvas>
 
 
 
-<div id="uiContainerLeft"> 
+<div id="uiContainerLeft" style="height: auto;"> 
     <div id="fpsCounter">FPS: 0</div>
 
   <div id="sliderscroll">
-    <div id="sliderPanel">
+    <div class="sliderholder" id="sliderPanel">
         <template data-type="slider">
             <div class="slideritem">
                 <label>placeholderlabel</label>
@@ -38,9 +45,31 @@
   </div>
   <div id="shaderControls" style="position: absolute; bottom: 10px; right: 10px; background-color: rgba(0,0,0,0.7); padding: 10px; border-radius: 10px; color: white; max-height: 40%; overflow-y: auto;">
     <strong>Shaders</strong><br>
-    <div id="object-visualization-controls"></div>
-    <!-- checkboxes will be inserted here dynamically -->
+    <div id="object-visualization-controls">
+      <!-- checkboxes will be inserted here dynamically -->
+       <template id="pipeline-selector-template">
+          <div class="object-visualization-mode">
+            <!-- Header row: label + selector + collapse button -->
+            <div class="header-row" style="display: flex; gap: 8px; align-items: center;">
+              <label class="object-label" style="flex: 1;">Object Name</label>
+              <select class="pipeline-select" style="flex: 1;">
+                <option value="">no_visualization</option>
+              </select>
+              <span class="arrow" >▶</span>
+            </div>
+
+            <!-- Collapsible content -->
+            <div class="pipeline-controls" style="display: none; margin-top: 4px;">
+              <div class="controls-content">
+                <!-- Sliders or other controls will be appended here -->
+                loading
+              </div>
+            </div>
+          </div>
+        </template>
+    </div>
+    
   </div>
-  <script type="module" src="./src/core/main.js"></script>
+  <script type="module" src="./src/core/main2.js"></script>
 </body>
 </html>
