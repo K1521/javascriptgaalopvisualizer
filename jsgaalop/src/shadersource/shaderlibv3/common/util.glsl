@@ -29,3 +29,14 @@ float vmax(vec3 v) {
 }
 
 
+float solveLinearThreshold(//inverse of lerp
+    float x1, float y1,
+    float x2, float y2,
+    float threshold
+){
+    float dy = y2 - y1;
+    //if(abs(dy) < 1e-12) return x1; // avoid division by zero
+
+    float t = (threshold - y1) / dy;
+    return x1 + t * (x2 - x1);
+}

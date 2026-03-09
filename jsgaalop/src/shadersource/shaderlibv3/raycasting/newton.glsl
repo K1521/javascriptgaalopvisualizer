@@ -22,13 +22,28 @@ void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_
     
     xmin=0.;
     error=inf;
-    for(int i=0;i<100;i++){
+    /*for(int i=0;i<100;i++){
         Dual fa=DualsusR(rayDir,rayOrigin,xmin);
         float stepsize=min(maxstep,abs(fa.x)/(1e-12 +abs(fa.y))*.5);
         if(threshold>stepsize){
             error=abs(fa.x);
             return;
         }
+        xmin+=stepsize;
+    }*/
+    float xlast=0.;
+    float slast=0.;
+    for(int i=0;i<100;i++){
+        Dual fa=DualsusR(rayDir,rayOrigin,xmin);
+        float stepsize=min(maxstep,abs(fa.x)/(1e-12 +abs(fa.y))*.5);
+        if(threshold>stepsize){
+            error=abs(fa.x);
+
+            xmin=solveLinearThreshold(xlast,slast,xmin,stepsize,threshold);
+            return;
+        }
+        xlast=xmin;
+        slast=stepsize;
         xmin+=stepsize;
     }
 
