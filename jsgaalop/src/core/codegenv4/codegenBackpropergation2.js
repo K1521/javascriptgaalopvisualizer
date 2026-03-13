@@ -44,7 +44,7 @@ export class GaalopGraph {
         const json=JSON.parse(jsonstring);
         graph.name=json.name;
     
-        const Multivectors=new Map(); // name -> Multivector of nodes
+        const Multivectors=new Map([["inputsVector",new Map()]]); // name -> Multivector of nodes
         const scalars=new Map(); // name -> node
     
         for(const [index, inputScalar] of json.inputScalars.entries()){
@@ -55,6 +55,7 @@ export class GaalopGraph {
             graph.inputScalars.set(inputScalar, node);
             scalars.set(inputScalar, node);
             scalars.set("inputsVector["+index+"]", node);//gapp behaves weirdly and uses inputsVector[index] instead of name
+            Multivectors.get("inputsVector").set(index,node);
         }
     
         for (const renderingExpression of json.renderingExpressions) {
@@ -76,16 +77,12 @@ export class GaalopGraph {
                 case "MathFunctionCall":
                     const func = node.function;
                     const operand = parseExpression(node.operand);
-                    if (func === "abs") {
-                        //return new GraphNode(AbsOperand.instance,[operand]);
-                        return new AbsNode(operand);
-                        //throw new Error(`i havent implementedthis node yet`);
-                    } else if (func === "sqrt") {
-                        //return new GraphNode(SqrtOperand.instance,[operand]);
-                        //throw new Error(`i havent implementedthis node yet`);
-                        return new SqrtNode(operand);
-                    } else {
-                        throw new Error(`Unknown function: ${func}`);
+                    switch (func) {
+                        case "abs":return new AbsNode(operand);
+                        case "sqrt":return new SqrtNode(operand);
+                        case "sin":return new sinNode(operand);
+                        case "cos":return new cosNode(operand);
+                        default:throw new Error(`Unknown function: ${func}`);
                     }
                 case "Pow":
                     const exponent=parseExpression(node.right).eval();
@@ -164,7 +161,7 @@ export class GaalopGraph {
             const innerProductResultNodes=[...this.outputMultivectors.get(innerProductResultName).values()];
             const color=this.objectcolormap.get(outputMultivectorName);
             //VisualisationGraphs.push(new VisualisationGraph2(innerProductResultNodes,outputMultivectorName));
-            VisualisationGraphs.push(new visualizationtargetnode(innerProductResultNodes,outputMultivectorName,color))
+            VisualisationGraphs.push(new visualizationtargetnode(innerProductResultNodes,outputMultivectorName,color,this))
         }
         return VisualisationGraphs;
     }
@@ -461,6 +458,9 @@ class VarNode extends ExpressionNode {
     codegenGLSL(parentResults) {
         return {code:this.varname,type:this.type};
     }
+    isxyz(){
+        return ["_V_X", "_V_Y", "_V_Z"].includes(this.varname);
+    }
 }
 
 class AddNode extends ExpressionNode {
@@ -712,6 +712,9 @@ class SqrtNode extends ExpressionNode {
         return Math.sqrt(parentresults[0]);
     }
 }
+
+
+
 class AbsNode extends ExpressionNode {
     constructor(x) {
         super([x]);
@@ -729,6 +732,42 @@ class AbsNode extends ExpressionNode {
         throw Error("unknown sub codegen case");
     }
 }
+class cosNode extends ExpressionNode {
+    constructor(x) {
+        super([x]);
+    }
+    clonewithnewparents(newparents) {
+        return new this.constructor(...newparents);
+    }
+    compute(parentresults, variables) {
+        return Math.cos(parentresults[0]);
+    }
+    codegenGLSL(parentResults) {
+        // parentResults: [{ code, type }]
+        const [a]=parentResults;
+        if(a.type==NodeTypes.SCALAR){return{type:NodeTypes.SCALAR,code:`cos(${a.code})`};}
+        throw Error("unknown sub codegen case");
+    }
+}
+class sinNode extends ExpressionNode {
+    constructor(x) {
+        super([x]);
+    }
+    clonewithnewparents(newparents) {
+        return new this.constructor(...newparents);
+    }
+    compute(parentresults, variables) {
+        return Math.sin(parentresults[0]);
+    }
+    codegenGLSL(parentResults) {
+        // parentResults: [{ code, type }]
+        const [a]=parentResults;
+        if(a.type==NodeTypes.SCALAR){return{type:NodeTypes.SCALAR,code:`sin(${a.code})`};}
+        throw Error("unknown sub codegen case");
+    }
+}
+
+
 
 
 
@@ -1003,7 +1042,7 @@ class SubgraphNode extends Node {
         const splitnodes = new Set();//these nodes are the gpu inputs which are precomputed on cpu
         subgraphoutput.visitnodesrec((node, parentresults) => {
             if (node instanceof VarNode) {
-                if (["_V_X", "_V_Y", "_V_Z"].includes(node.varname)) return { dependsonxyz: true, dependsonvariables: false };
+                if (node.isxyz()) return { dependsonxyz: true, dependsonvariables: false };
                 else return { dependsonxyz: false, dependsonvariables: true };
             } else {
                 const dependsonxyz = parentresults.some(item => item.dependsonxyz);//reduce((a,b)=> a||b.dependsonxyz,false);
@@ -1125,11 +1164,12 @@ class custumStatementNode extends Node{
 
 
 export class visualizationtargetnode extends Node {
-    constructor(nodes, name, color) {
+    constructor(nodes, name, color,gagraph) {
         super(nodes);
         this.color = color;
         this.nodes = nodes,
-            this.name = name;
+        this.name = name;
+        this.gagraph=gagraph;
     }
 
     clonewithnewparents(newparents) {
@@ -1388,7 +1428,10 @@ const int numoutputs=?;
         const rayify=visualizationtargetnode.#rayify;
 
         const replacements=new Map();
-        const{basis,matrix,basispolys}=matrixextractor2.extractbasis3(new BundlenodeNode(this.parents));
+        const{basis,matrix,basispolys}=matrixextractor2.ultimateSolution(new BundlenodeNode(this.parents));
+        //const{basis,matrix,basispolys}=matrixextractor2.extractbasis3(new BundlenodeNode(this.parents));
+        //const{basis,matrix,basispolys}=matrixextractor2.extractmonomM(new BundlenodeNode(this.parents));
+        //const{basis,matrix,basispolys}=matrixextractor2.extractbasis4(new BundlenodeNode(this.parents),this.gagraph);
         const matrixsize=matrix[0].length;
 
         replacements.set("basislength=?",`basislength=${matrixsize}`);
@@ -2153,7 +2196,7 @@ class matrixextractor2{
         root.visitnodesrec((node, parentResults) => {
             // skip nodes that are undefined or not xyz
             if (parentResults.some(x => x === undefined)) return undefined;
-            if (node instanceof VarNode && !["_V_X", "_V_Y", "_V_Z"].includes(node.varname))return undefined;
+            if (node instanceof VarNode && !node.isxyz())return undefined;
 
             // compute parent set (for ops)
             const parentSet = new Set([node]);
@@ -2265,7 +2308,7 @@ class matrixextractor2{
     static extractbasis3(root,forcemonomialbasis=false){
         
         
-        
+        matrixextractor2.extractBasisMSG(root);
 
         const basisPolys = [{ node: ConstNode.one, poly: Poly.one, ops: 1 }]; // list of {node, poly, ops}. I added 1 already
         const equivalenceClassIndex = new Map(); // node => index of basisPolys
@@ -2279,7 +2322,7 @@ class matrixextractor2{
             root.visitnodesrec((node, parentResults) => {//null means not bart of basis
                 // skip nodes that are dependant on variables which are not xyz and therefore not part of the basis
                 if (parentResults.some(x => x === null)) return null;
-                if (node instanceof VarNode && !["_V_X", "_V_Y", "_V_Z"].includes(node.varname))return null;
+                if (node instanceof VarNode && !node.isxyz())return null;
 
                 // compute parent set (for ops)
                 const parentSet = new Set([node]);
@@ -2448,6 +2491,359 @@ class matrixextractor2{
     }
 
 
+    static extractbasis4(root,gagraph,forcemonomialbasis=false){
+        const point=gagraph.allMultivectors.get("_V_POINT");//
+        if(!point || forcemonomialbasis)return matrixextractor2.extractbasis3(root,forcemonomialbasis);//try the old code
+
+        //lets first make P
+        const P=new Map();//handle->{node,poly} 
+        //the first element is always "P[0]"->{node:ConstNode.one,poly:Poly.one} 
+
+        const linearmappings=new Map();//node->linmap
+        //linmap: poly of handles
+        const nodetoxyzpolycache=new Map();
+        let phandelidcounter=0;
+        for(const pointbladenode of [ConstNode.one,...point.values()]){
+            const xyzpoly=pointbladenode.visitnodesrec((node,parentResults)=>{
+                if(node instanceof VarNode && !node.isxyz())throw new Error("point contains bad variable");
+                return matrixextractor2.applyoptopolys(node, parentResults);
+            },nodetoxyzpolycache);
+
+            let multiplyer=1;
+            let handle=null;
+            for(const [h,{n,poly}]of P.entries()){
+                const m=xyzpoly.isMultipleOf(poly);
+                //xyzpoly = m * poly or m is false
+                if(m){multiplyer=m;handle=h;break;}
+            }
+            if(handle===null){
+                handle=`P[${phandelidcounter++}]`;
+                P.set(handle,{node:pointbladenode,poly:xyzpoly});
+            }
+
+            linearmappings.set(pointbladenode,Poly.var(handle,multiplyer));//populate the thing for elements of P
+        }
+
+        const handletonode=new Map();//handletonode
+        const nodetohandle=new Map();
+        let handelidcounter=0;
+        function makehandlepoly(node){
+            if(nodetohandle.has(node))return Poly.var(nodetohandle.get(node));
+            const handle=`node[${handelidcounter++}]`;
+            handletonode.set(handle,node);
+            nodetohandle.set(node,handle);
+            return Poly.var(handle);
+        }
+
+        const nodedependencies=new Map();
+        root.visitnodesrec((node,parentResults)=>{
+            if(node instanceof VarNode){
+                if(node.isxyz())return {xyz:true,const:false,var:false};
+                else return {xyz:false,const:false,var:true};
+            }else if(node instanceof ConstNode)  return {xyz:false,const:true,var:false};
+            return {
+                xyz:parentResults.some(x=>x.xyz),
+                const:parentResults.some(x=>x.const),
+                var:parentResults.some(x=>x.var)
+            }
+        },nodedependencies);
+        
+
+        
+
+        /*root.visitnodesrec((node,parentResults)=>{
+            if(node instanceof VarNode){
+                if(node.isxyz())throw new Error("multiplikation isnt linear.try without optimizations or modify this function to always use the old code lol");
+                return makehandlepoly(node);
+            } 
+            return matrixextractor2.applyoptopolys(node, parentResults);
+        },linearmappings);*/
+        const usedbasishandles=new Set();
+
+        const rowmaps=root.parents.map((n)=>{
+            const linearmap=n.visitnodesrec((node,parentResults)=>{
+                if(node instanceof VarNode && node.isxyz())throw new Error("multiplikation isnt linear.try without optimizations or modify this function to always use the old code lol");
+                const dependencies=nodedependencies.get(node);
+                if(!dependencies.xyz)makehandlepoly(node);
+                return matrixextractor2.applyoptopolys(node, parentResults);
+            },linearmappings);
+
+            const rowmapofsums=new Map();
+            for(const [monom,coeff] of linearmap.entries()){
+                let monomprod=[];
+                let basises=[];
+                for(const [varname,exponent] of Object.entries(monom)){
+                    
+                    //const monompartnode=handles.get(varname);
+                    //const isbasis=basisextraction(monompartnode);
+
+                    if(varname.startsWith("P")){
+                        if(exponent!=1)throw new Error("non linear");
+                        basises.push(varname);                    
+                    }else{
+                        monomprod.push(powNode(handles.get(varname),exponent));
+                        //monomacc=monomacc.mul(Poly.monom(varname,exponent));
+                    }
+             
+                }
+                if(basises.length>1)throw new Error("non linear");
+                const basis=basises.filter(x=>x!="P[0]")[0]??"P[0]";
+                if(!rowmapofsums.has(basis))rowmapofsums.set(basis,[]);
+                rowmapofsums.get(basis).push(MulNode.of(...monomprod,new ConstNode(coeff)));
+                usedbasishandles.add(basis);
+                
+            }
+            const rowmap=new Map(rowmapofsums.entries().map(([k,v])=>[k,AddNode.of(...v)]));
+
+            return rowmap;
+        });
+
+         const basishandles=[...usedbasishandles].sort((a, b) => {
+            const degA = P.get(a).poly.degree();
+            const degB = P.get(b).poly.degree();
+            return degB - degA; // higher degree first
+        });
+        const basis=new BundlenodeNode(basishandles.map(h=>P.get(h).node));
+        const matrix=rowmaps.map((rowmap)=>basishandles.map(h=>rowmap.get(h)??ConstNode.zero));
+        const basispolys=basishandles.map(h=>P.get(h).poly);
+
+        return {basis,matrix,basispolys};
+
+
+
+    }
+
+    static extractBasisMSG(root,monomialkeysfilter=undefined){
+
+        const xyzpolys=new Map();
+        
+
+        let monomialkeys=new Set();
+        for(const bladenode of root.parents)
+            bladenode.visitnodesrec((node,parentResults)=>{
+                //discard polys independant of xyz
+                if(parentResults.some(x=>x===undefined))return undefined;
+                if(node instanceof VarNode && !node.isxyz())return undefined;
+
+                //compute new poly
+                const poly=matrixextractor2.applyoptopolys(node,parentResults.map(p=>p.poly));
+
+                //collect monomial basis keys
+                for(const k of poly.coeffs.keys())monomialkeys.add(k);
+
+                
+                //calc ops
+                const parentSet = new Set([node]);
+                for (const p of parentResults) for (const x of p.parentSet) parentSet.add(x);//merge sets
+                const ops = parentSet.size;
+
+                return {poly,ops,parentSet};
+            },xyzpolys);
+        
+        //optionally i could add a constant factor of 1
+        
+        monomialkeys=[...monomialkeys];
+        //const S=[];
+        //const xyznodes=[];
+
+
+        const monomialbasisfilter=new Set(monomialkeysfilter??monomialkeys);
+
+        const xyzpolyslist=[]
+        for(const [node,candidate]of xyzpolys){
+            if(candidate===undefined)continue;
+
+            const isSubset = [...candidate.poly.coeffs.keys()].every(m => monomialbasisfilter.has(m));
+            if(!isSubset)continue;
+
+            const coeffs=candidate.poly.coeffs; const ops=candidate.ops;
+            const coefflist=monomialkeys.map(monomkey=>coeffs.get(monomkey)??0);
+            //S.push(coefflist);
+            //xyznodes.push(node);
+            xyzpolyslist.push({coefflist,node,ops});
+        }
+
+        xyzpolyslist.sort((a,b)=>(a.ops-b.ops));
+
+        const {E,keep}=MSG(xyzpolyslist.map(x=>x.coefflist));
+
+        const basisnodes=keep.map(i=>xyzpolyslist[i].node);
+        const basispolys=basisnodes.map(n=>xyzpolys.get(n).poly);
+        const basispolycoeffs=keep.map(i=>xyzpolyslist[i].coefflist);
+
+        for(let i=0;i<basisnodes.length;i++){
+            console.log(i);
+            const basisnode=basisnodes[i];
+            const {poly,ops,parentSet}=xyzpolys.get(basisnode);
+            console.log("ops ",ops); 
+            console.log("poly ",poly.toString());
+            console.log(codegenGLSLTyped(new custumStatementNode([basisnode],(code)=>code)));
+            console.log("-----------------------------");
+        }
+
+        return {basisnodes,basispolys,basispolycoeffs,monomialkeys};
+    }
+
+
+    static extractmonomM(root){
+
+        const cache=new Map();
+        const handletonode=new Map();
+        let handleid=0;
+
+        function newhandle(node){
+            const h=`node[${handleid++}]`;
+            handletonode.set(h,node);
+            return h;
+        }
+
+        const rowmaps = root.parents.map(bladenode=>{
+            const rowpoly=bladenode.visitnodesrec((node,parentResults)=>{
+
+                const dependsonxyz =
+                    parentResults.some(x => x.dependsonxyz) ||
+                    (node instanceof VarNode && node.isxyz());
+
+                let poly;
+                if(node instanceof VarNode && node.isxyz())
+                    poly=Poly.var(node.varname);
+                else if(node instanceof ConstNode)
+                    poly=Poly.constant(node.value);
+                else if(!dependsonxyz)
+                    poly=Poly.var(newhandle(node));
+                else
+                    poly=matrixextractor2.applyoptopolys(node,parentResults.map(p=>p.poly));
+
+                return {poly,dependsonxyz};
+
+            },cache).poly;
+
+            const rowmapofsums=new Map();
+
+            for (const [monom, coeff] of rowpoly.entries()) {
+
+                let nodeprod=[];
+                let xyzmonom={};
+
+                if(coeff!=1) nodeprod.push(new ConstNode(coeff));
+
+                for(const [varname,exponent] of Object.entries(monom)){
+                    if(varname.startsWith("node"))
+                        nodeprod.push(powNode(handletonode.get(varname),exponent));
+                    else
+                        xyzmonom[varname]=exponent;
+                }
+
+                const key=Poly.monomialToKey(xyzmonom);
+
+                if(!rowmapofsums.has(key)) rowmapofsums.set(key,[]);
+                rowmapofsums.get(key).push(MulNode.of(...nodeprod));
+            }
+
+            return new Map(
+                rowmapofsums.entries().map(([k,v])=>[k,AddNode.of(...v)])
+            );
+        });
+
+
+        // -----------------------------
+        // collect monomial basis
+        // -----------------------------
+
+        const basiskmap=new Map();
+
+        for(const rowmap of rowmaps){
+            for(const key of rowmap.keys()){
+                if(!basiskmap.has(key)){
+                    basiskmap.set(key,new Poly(new Map([[key,1]])));
+                }
+            }
+        }
+
+
+
+        const monomialkeys=[...basiskmap.keys()].sort((a,b)=>{
+            const da=basiskmap.get(a).degree();
+            const db=basiskmap.get(b).degree();
+            return db-da;
+        });
+
+        const basispolys=monomialkeys.map(k=>basiskmap.get(k));
+
+        // -----------------------------
+        // build DAG nodes for basis
+        // -----------------------------
+
+        function monomToNode(monom){
+            const factors=[];
+            for(const [v,e] of Object.entries(monom)){
+                factors.push(powNode(new VarNode(v),e));
+            }
+            return MulNode.of(...factors);
+        }
+
+        const basisnodes=basispolys.map(p=>{
+            const [[monom,_]]=[...p.entries()];
+            return monomToNode(monom);
+        });
+
+        const basis=new BundlenodeNode(basisnodes);
+
+        // -----------------------------
+        // build matrix
+        // -----------------------------
+
+        const matrix=rowmaps.map(rowmap =>
+            monomialkeys.map(k => rowmap.get(k) ?? ConstNode.zero)
+        );
+
+        return {basis,matrix,basispolys,monomialkeys};
+    }
+
+    static ultimateSolution(root){
+        const {matrix,monomialkeys}=matrixextractor2.extractmonomM(root);
+        const {basisnodes,basispolys}=matrixextractor2.extractBasisMSG(root,monomialkeys);
+        
+        const coefflist=basispolys.map(p=>monomialkeys.map(monomkey=>p.coeffs.get(monomkey)??0));//rebuld in correct order
+
+        const basisswitchmat=mathjs.transpose(mathjs.pinv( mathjs.transpose(coefflist)));
+
+
+        const transformedmat=matrixextractor2.matmulNodes(matrix,basisswitchmat);
+
+        return {basis:new BundlenodeNode(basisnodes),basispolys,matrix:transformedmat};
+    }
+
+    static matmulNodes(A, B) {//by chatgpt
+        const rows = A.length;
+        const k = A[0].length;
+        const cols = B[0].length;
+
+        const C = Array.from({length: rows}, () => Array(cols));
+
+        for (let i = 0; i < rows; i++) {
+            for (let j = 0; j < cols; j++) {
+
+                const terms = [];
+
+                for (let t = 0; t < k; t++) {
+                    const a = A[i][t];
+                    const b = B[t][j];
+
+                    if (b === 0) continue;
+
+                    const coeff = new ConstNode(b);
+                    terms.push(MulNode.of(coeff, a));
+                }
+
+                C[i][j] = AddNode.of(...terms);
+            }
+        }
+
+        return C;
+    }
+
+
 }
 
 
@@ -2518,4 +2914,55 @@ export class evalContext {
 
     
 
+}
+
+
+/**
+ * Docstring by chatgpt
+ * Modified Gram-Schmidt process for extracting a linearly independent set of vectors.
+ * 
+ * @param {Array<Array<number>>} S - Input array of vectors (each vector is an array of numbers).
+ * @param {number} [tol=1e-10] - Tolerance for detecting linear dependence. Vectors with residual
+ *                               norm <= tol are considered dependent and rejected.
+ * @param {boolean} [reltol=true] - If true, tolerance is relative to the vector norm (scale-invariant).
+ *                                  If false, absolute tolerance is used.
+ * 
+ * @returns {Object} An object containing:
+ *   - E: Array of orthonormal vectors (arrays of numbers) forming the independent set.
+ *   - keep: Array of indices of input vectors in S that were kept as independent.
+ * 
+ * @example
+ * const S = [[1,0,0],[1,1,0],[2,0,0]];
+ * const {E, keep} = MSG(S);
+ * // E contains orthonormal basis vectors
+ * // keep contains indices of independent vectors from S
+ */
+function MSG(S,tol=1e-10,reltol=true){
+    //https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process#Algorithm
+    //https://dkenefake.github.io/blog/Orthoginalization
+    const len=(v)=>Math.sqrt(v.reduce((prev,x)=>prev+x*x,0));
+    //const scale=(v,s)=>v.map(x=>x*s);
+    //const normalize=(v)=>scale(v,1/len(v));
+    const dot=(u,v)=>u.reduce((prev,ui,i)=>prev+ui*v[i],0);
+    //const sub=(u,v)=>u.map((ui,i)=>ui-v[i]);
+    //S=S.map(normalize);
+    const keep=[];
+    const E=[];
+    for(let i=0;i<S.length;i++){
+        const r=S[i].slice();
+        for(const e of E){
+            //r=sub(r,scale(e,dot(r,e)));
+            const d=dot(r,e); 
+            for(let j=0;j<r.length;j++)r[j]-=e[j]*d;
+        }
+        const l=len(r);
+        if(l>tol*(reltol?len(S[i]):1)){
+            keep.push(i);
+            //E.push(normalize(r));
+            //E.push(scale(r,1/l));//lets make it fast why not
+            for(let j=0;j<r.length;j++)r[j]/=l;
+            E.push(r);
+        }
+    }
+    return {E,keep};
 }

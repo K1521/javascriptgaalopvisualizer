@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{Intervall}\PYG{+w}{ }\PYG{n}{IntervallSummofsquares}\PYG{p}{(}
+\PYG{+w}{    }\PYG{n}{Intervall}\PYG{+w}{ }\PYG{n}{\PYGZus{}V\PYGZus{}X}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Intervall}\PYG{+w}{ }\PYG{n}{\PYGZus{}V\PYGZus{}Y}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Intervall}\PYG{+w}{ }\PYG{n}{\PYGZus{}V\PYGZus{}Z}\PYG{p}{)}
+\end{MintedVerbatim}

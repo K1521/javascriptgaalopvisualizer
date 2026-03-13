@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{DualComplex}\PYG{+w}{ }\PYG{n}{DualComplexSummofsquares}\PYG{p}{(}
+\PYG{+w}{    }\PYG{k+kt}{vec3}\PYG{+w}{ }\PYG{n}{rayDir}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kt}{vec3}\PYG{+w}{ }\PYG{n}{rayOrigin}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Complex}\PYG{+w}{ }\PYG{n}{a}\PYG{p}{)}
+\end{MintedVerbatim}

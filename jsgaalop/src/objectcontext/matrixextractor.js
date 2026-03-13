@@ -76,6 +76,10 @@ export class matrixextractor{
 
 
   extractPolynomials(basisconverter){
+    //GPU graph Ausmultiplizieren-> outputs x Monombasis x variables 
+    //basistransform-> outputs x P x variables 
+    // und später in M(nodecache,useqr=true) werden die cpu graph output variablen eingesetzt
+    //  setvariables-> M=outputs x P
 
     //first convert gpu code to a polynom
     /*const nametovar=new Map([

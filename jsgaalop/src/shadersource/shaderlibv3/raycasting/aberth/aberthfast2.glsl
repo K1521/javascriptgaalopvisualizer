@@ -11,7 +11,7 @@ precision mediump float;
 
 
 //const int ABERTH_MAXITER = 40;
-const float ABERTH_THRESHOLD = 1e-4;
+const float ABERTH_THRESHOLD = 1e-6;//this sthreshold is nessesary so the shader compiles faster because it prevents loop unrolling i think
 const float ROOT_ZERRO_THRESHOLD = 1e-4;
 
 uniform float eps;
@@ -54,10 +54,10 @@ void aberth_method_poly(inout Complex[NUM_ROOTS] roots, vec3 rayDir, vec3 rayOri
         
 
         // If the maximum change is smaller than the threshold, stop early
-        /*if (max_change < ABERTH_THRESHOLD) {
+        if (max_change < ABERTH_THRESHOLD) {
             //debugcolor(vec3(float(iter+1)/float(ABERTH_MAXITER)));
             break; // Converged, exit the loop
-        }*/
+        }
     }
 }
 
@@ -96,10 +96,10 @@ void aberth_method_sus(inout Complex[NUM_ROOTS] roots, vec3 rayDir, vec3 rayOrig
         
 
         // If the maximum change is smaller than the threshold, stop early
-        /*if (max_change < ABERTH_THRESHOLD) {
+        if (max_change < ABERTH_THRESHOLD) {
             //debugcolor(vec3(float(iter+1)/float(ABERTH_MAXITER)));
             break; // Converged, exit the loop
-        }*/
+        }
     }
 }
 
@@ -138,10 +138,10 @@ void aberth_method_horner(inout Complex[NUM_ROOTS] roots,float[NUM_ROOTS+1] coef
         
 
         // If the maximum change is smaller than the threshold, stop early
-        /*if (max_change < ABERTH_THRESHOLD) {
+        if (max_change < ABERTH_THRESHOLD) {
             //debugcolor(vec3(float(iter+1)/float(ABERTH_MAXITER)));
             break; // Converged, exit the loop
-        }*/
+        }
     }
 }
 

@@ -1,0 +1,4 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k+kt}{bool}\PYG{+w}{ }\PYG{n}{evaluatevoxelIntervall3d}\PYG{p}{(}
+\PYG{+w}{    }\PYG{n}{Intervall}\PYG{+w}{ }\PYG{n}{x}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Intervall}\PYG{+w}{ }\PYG{n}{y}\PYG{p}{,}\PYG{+w}{ }\PYG{n}{Intervall}\PYG{+w}{ }\PYG{n}{z}\PYG{p}{)}
+\end{MintedVerbatim}

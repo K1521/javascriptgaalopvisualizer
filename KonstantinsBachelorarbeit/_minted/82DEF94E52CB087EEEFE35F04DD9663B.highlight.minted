@@ -1,0 +1,8 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{applyMatrix}\PYG{p}{(}\PYG{n}{matrix}\PYG{p}{,} \PYG{n}{B}\PYG{p}{):}
+    \PYG{n}{result} \PYG{o}{=} \PYG{n}{defaultdict}\PYG{p}{(}\PYG{n+nb}{int}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{row} \PYG{o+ow}{in} \PYG{n}{allBlades}\PYG{p}{:}
+        \PYG{k}{for} \PYG{n}{col}\PYG{p}{,} \PYG{n}{coeffB} \PYG{o+ow}{in} \PYG{n}{B}\PYG{o}{.}\PYG{n}{items}\PYG{p}{():}
+            \PYG{n}{result}\PYG{p}{[}\PYG{n}{row}\PYG{p}{]} \PYG{o}{+=} \PYG{n}{matrix}\PYG{p}{[}\PYG{n}{row}\PYG{p}{,} \PYG{n}{col}\PYG{p}{]} \PYG{o}{*} \PYG{n}{coeffB}
+    \PYG{k}{return} \PYG{n}{result}
+\end{MintedVerbatim}

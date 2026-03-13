@@ -1,0 +1,3 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{xyzDual}\PYG{+w}{ }\PYG{n}{xyzDualSummofsquares}\PYG{p}{(}\PYG{k+kt}{vec3}\PYG{+w}{ }\PYG{n}{pos}\PYG{p}{)}
+\end{MintedVerbatim}

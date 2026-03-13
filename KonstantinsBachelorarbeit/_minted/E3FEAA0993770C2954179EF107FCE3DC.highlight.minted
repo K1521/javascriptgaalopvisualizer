@@ -1,0 +1,5 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{xyzDual}\PYG{+w}{ }\PYG{n}{xyzDualMul}\PYG{p}{(}\PYG{n}{xyzDual}\PYG{+w}{ }\PYG{n}{a}\PYG{p}{,}\PYG{n}{xyzDual}\PYG{+w}{ }\PYG{n}{b}\PYG{p}{)\PYGZob{}}
+\PYG{+w}{    }\PYG{k}{return}\PYG{+w}{ }\PYG{n}{xyzDual}\PYG{p}{(}\PYG{n}{a}\PYG{p}{.}\PYG{n}{w}\PYG{o}{*}\PYG{n}{b}\PYG{p}{.}\PYG{n}{xyz}\PYG{o}{+}\PYG{n}{b}\PYG{p}{.}\PYG{n}{w}\PYG{o}{*}\PYG{n}{a}\PYG{p}{.}\PYG{n}{xyz}\PYG{p}{,}\PYG{n}{a}\PYG{p}{.}\PYG{n}{w}\PYG{o}{*}\PYG{n}{b}\PYG{p}{.}\PYG{n}{w}\PYG{p}{);}
+\PYG{p}{\PYGZcb{}}
+\end{MintedVerbatim}
