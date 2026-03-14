@@ -1,0 +1,22 @@
+ // Cylinder intersected by a tilted plane
+ // Tests non-symmetric quadric intersection
+
+/*angle = 45;
+*/
+
+?C = CylinderZ(0,0,0,1,1,1);
+
+R = Rotor(1,0,0,angle);
+?P = Plane(0,1,0,0);
+?Pm = R * P * ~R;
+
+?CurveCP = C ^ Pm;
+
+:Blue;
+:C;
+
+:Red;
+:Pm;
+
+:Green;
+:CurveCP;

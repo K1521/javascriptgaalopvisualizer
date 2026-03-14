@@ -43,6 +43,7 @@ export class GaalopGraph {
         const graph=new GaalopGraph();
         const json=JSON.parse(jsonstring);
         graph.name=json.name;
+        
     
         const Multivectors=new Map([["inputsVector",new Map()]]); // name -> Multivector of nodes
         const scalars=new Map(); // name -> node
@@ -54,7 +55,7 @@ export class GaalopGraph {
             
             graph.inputScalars.set(inputScalar, node);
             scalars.set(inputScalar, node);
-            scalars.set("inputsVector["+index+"]", node);//gapp behaves weirdly and uses inputsVector[index] instead of name
+            scalars.set("inputsVector["+index+"]", node);//gapp behaves weirdly and uses inputsVector[index] instead of name. currently it works only with tba
             Multivectors.get("inputsVector").set(index,node);
         }
     
@@ -140,7 +141,7 @@ export class GaalopGraph {
         }
     
         for (const name of json.outputMultivectors) {
-            graph.outputMultivectors.set(name, Multivectors.get(name));
+            graph.outputMultivectors.set(name, Multivectors.get(name)??new Map([[0,ConstNode.zero]]));
         }
 
         graph.allMultivectors=Multivectors;
@@ -316,7 +317,7 @@ class Node {
         const children = new Map();
 
         if (typeof variable === "string") {
-            variable = allnodes.find(x => x instanceof VarNode && x.varname == variable);
+            variable = allnodes.find(x => x instanceof VarNode && x.varname == variable) ?? new VarNode(variable);
         }
         const derivs = new Map([[variable, ConstNode.one]]);//d(...)/d(variable)
 
@@ -445,6 +446,8 @@ class VarNode extends ExpressionNode {
         super([]);
         this.varname = varname;
         this.type=type;
+        if(varname===undefined) throw new Error("varname undefined");
+        
     }
     clonewithnewparents(newparents) {
         return new VarNode(this.varname,this.type);
@@ -2619,7 +2622,7 @@ class matrixextractor2{
         
 
         let monomialkeys=new Set();
-        for(const bladenode of root.parents)
+        for(const bladenode of [ConstNode.one,...root.parents])//i add 1 because otherwise this is buggy :>
             bladenode.visitnodesrec((node,parentResults)=>{
                 //discard polys independant of xyz
                 if(parentResults.some(x=>x===undefined))return undefined;
@@ -2641,6 +2644,8 @@ class matrixextractor2{
             },xyzpolys);
         
         //optionally i could add a constant factor of 1
+
+
         
         monomialkeys=[...monomialkeys];
         //const S=[];
@@ -2801,7 +2806,16 @@ class matrixextractor2{
     }
 
     static ultimateSolution(root){
+        const emptyresult={
+            basis: new BundlenodeNode([ConstNode.zero]),
+            basispolys: [Poly.constant(0)],
+            matrix: [[ConstNode.zero]]
+        };
+        const matempty=(m)=>m.length==0 || m[0].length==0;
+
+        if(root.parents.length==0)return emptyresult;
         const {matrix,monomialkeys}=matrixextractor2.extractmonomM(root);
+        if(matempty(matrix))return emptyresult;
         const {basisnodes,basispolys}=matrixextractor2.extractBasisMSG(root,monomialkeys);
         
         const coefflist=basispolys.map(p=>monomialkeys.map(monomkey=>p.coeffs.get(monomkey)??0));//rebuld in correct order
@@ -2937,7 +2951,7 @@ export class evalContext {
  * // E contains orthonormal basis vectors
  * // keep contains indices of independent vectors from S
  */
-function MSG(S,tol=1e-10,reltol=true){
+function MSG(S,tol=1e-9,reltol=true){
     //https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process#Algorithm
     //https://dkenefake.github.io/blog/Orthoginalization
     const len=(v)=>Math.sqrt(v.reduce((prev,x)=>prev+x*x,0));

@@ -1,0 +1,32 @@
+ // Intersection of two spheres with rotation + translation
+ // Tests motor transformations and dynamic intersection
+
+/*tx = 1;
+ty = 0;
+tz = 0;
+
+ax = 0;
+ay = 1;
+az = 0;
+angle = 30;
+*/
+
+?S1 = Sphere(0,0,0,2);
+?S2 = Sphere(2,0,0,2);
+
+Tr = Translator(tx,ty,tz);
+R = Rotor(ax,ay,az,angle);
+M = R * Tr;
+
+?S2m = M * S2 * ~M;
+
+?CurveSS = S1 ^ S2m;
+
+:Blue;
+:S1;
+
+:Red;
+:S2m;
+
+:Green;
+:CurveSS;

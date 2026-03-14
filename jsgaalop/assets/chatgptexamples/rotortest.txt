@@ -1,0 +1,21 @@
+ // Dupin cyclide intersecting a sphere
+ // Tests complicated quartic surfaces
+
+/*R = 2;
+r1 = 1;
+r2 = 0.5;
+*/
+
+?D = DupinCyclide(R,r1,r2);
+?S = Sphere(0,0,0,1.5);
+
+?Curve = D ^ S;
+
+:Blue;
+:D;
+
+:Red;
+:S;
+
+:Green;
+:Curve;

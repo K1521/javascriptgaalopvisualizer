@@ -1,0 +1,16 @@
+// Join of two parallel lines
+// Tests degeneracy and normalization
+
+?L1 = Line(0,0,0,1,0,0);
+?L2 = Line(0,1,0,1,0,0);
+
+?Join = L1 ^ L2;
+
+:Blue;
+:L1;
+
+:Red;
+:L2;
+
+:Green;
+:Join;

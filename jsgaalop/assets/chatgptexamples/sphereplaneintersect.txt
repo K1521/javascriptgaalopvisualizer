@@ -1,0 +1,27 @@
+// Sphere-plane intersection producing a circle
+// Tests: basic primitives, translation, intersection curve
+
+/*px = 0;
+py = 0;
+pz = 0;
+r = 2;
+
+dx = 0;
+dy = 0;
+dz = 1;
+dist = 0.5;
+*/
+
+?S = Sphere(px,py,pz,r);
+?P = Plane(dx,dy,dz,dist);
+
+?Curve = S ^ P;
+
+:Blue;
+:S;
+
+:Red;
+:P;
+
+:Green;
+:Curve;

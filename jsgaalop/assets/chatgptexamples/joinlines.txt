@@ -1,0 +1,16 @@
+// Join of two points producing a line
+// Tests basic outer product behavior
+
+?P1 = EV(0,0,0);
+?P2 = EV(1,1,0);
+
+?L = P1 ^ P2;
+
+:Blue;
+:P1;
+
+:Red;
+:P2;
+
+:Green;
+:L;

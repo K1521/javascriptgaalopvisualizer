@@ -1,0 +1,19 @@
+ // Hyperboloid cut with a plane
+ // Tests stability of more complex quadrics
+
+/*dist = 0.2;
+*/
+
+?H = Hyperboloid1(0,0,0,1,1,1);
+?P = Plane(0,0,1,dist);
+
+?Curve = H ^ P;
+
+:Blue;
+:H;
+
+:Red;
+:P;
+
+:Green;
+:Curve;
