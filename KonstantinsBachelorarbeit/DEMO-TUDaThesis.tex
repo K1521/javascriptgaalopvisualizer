@@ -141,13 +141,17 @@
 
 
 \chapter{Motivation}
-Geometrische Algebra hat den großen Vorteil, dass die algebraischen Ausdrücke üblicherweise geometrischen Objekten und Operationen entsprechen. Deshalb können Algorithmen gut durch Visualisierungen ausgedrückt werden. Auch \textsc{Gaalop} und das web-basierte GAALOPWeb nutzen diese Möglichkeit zur Unterstützung von Geometrische Algebra Algorithmen. Gerade bei der Arbeit mit höheren Dimensionen, die in letzter Zeit immer wichtiger wird, weisen diese Visualisierungen allerdings eine Reihe von Nachteilen auf.
-Das Ziel dieser Bachelorarbeit ist deshalb, eine neue Art der Visualisierung von geometrischen Objekten zu entwickeln und in \textsc{Gaalop}/GAALOPWeb zu integrieren, bei der auch problemlos mit höheren Dimensionen gearbeitet werden kann. Neben der korrekten Visualisierung ist eine niedrige Laufzeit wichtig, da die Tools üblicherweise interaktiv bei der Entwicklung von Algorithmen genutzt werden.
+Geometrische Algebra hat den großen Vorteil, dass die algebraischen Ausdrücke üblicherweise geometrischen Objekten und Operationen entsprechen. Deshalb können Algorithmen gut durch Visualisierungen ausgedrückt werden. Auch \textsc{Gaalop} und das web-basierte \textsc{Gaalop}Web nutzen diese Möglichkeit zur Unterstützung von Geometrische Algebra Algorithmen. Gerade bei der Arbeit mit höheren Dimensionen, die in letzter Zeit immer wichtiger wird, weisen diese Visualisierungen allerdings eine Reihe von Nachteilen auf.
+Das Ziel dieser Bachelorarbeit ist deshalb, eine neue Art der Visualisierung von geometrischen Objekten zu entwickeln und in \textsc{Gaalop}/\textsc{Gaalop}Web zu integrieren, bei der auch problemlos mit höheren Dimensionen gearbeitet werden kann. Neben der korrekten Visualisierung ist eine niedrige Laufzeit wichtig, da die Tools üblicherweise interaktiv bei der Entwicklung von Algorithmen genutzt werden.
 
 \IMRADlabel{introduction}
-
-Worum geht es in dieser Arbeit? Warum das Ganze?
 \chapter{Einleitung}
+%Worum geht es in dieser Arbeit? Warum das Ganze?
+Aktuelle Methoden können nur Niedrigdimensionale Algebren Visualisieren oder sind langsam.
+
+Die Arbeit beginnt mit einem Grundlagenkapitel, in dem relevante bekannte Algorithmen und Konzepte der Computergrafik und Mathematik vorgestellt werden. Dann folgt ein Kapitel zum stand der Technik in dem die aktuellen Visualisierungsmethoden vorgestellt werden.
+Als Nächstes folgen zwei Kapitel die meine Visualisierungsansätze vorstellen. Diese sind unterteilt in auf Raycasting aufbauende Methoden und Volumenbasierte Methoden die versuchen Primitive zu erzeugen. Dann folgt ein Kapitel zur Implementierung und eingesetzten Optimierungen. Dabei wird im ersten Unterkapitel ein Verfahren vorgestellt das ermöglicht den IPNS/OPNS von höher dimensionalen Algebren auf der GPU auszuwerten.
+%Schreibe rest wenn etwas in dem entsprechenden kapitel steht.
 
 
 \chapter{Grundlagen}
@@ -695,7 +699,7 @@ Diese Methode wird in \textsc{Gaalop} in der Klasse \texttt{DiscreteCubeMethod} 
 
 Alle Punkte, für die der Funktionswert unterhalb eines gewählten Schwellwerts liegt, werden direkt visualisiert. Auf diese Weise ergibt sich eine Punktwolke, die die Nullstellenmenge \( f(\mathbf{x}) = 0 \) näherungsweise beschreibt.
 
-%Gaalops Klasse DiscreteCubeMethod evaluiert f im Raum in einem Dichten Gitter. Dann werden alle Punkte viesualisiert deren wert unter einem threshold liegt.
+%\textsc{Gaalop}s Klasse DiscreteCubeMethod evaluiert f im Raum in einem Dichten Gitter. Dann werden alle Punkte viesualisiert deren wert unter einem threshold liegt.
 \subsection{RayMethod}
 Diese Methode wird in \textsc{Gaalop} in der Klasse \texttt{RayMethod} implementiert. Sie erzeugt ein 2d Gitter mit \(y,z \in [-a,a]\) und \(x=-a\). Für jeden Punkt des Gitters wird eine Strecke in x Richtung erzeugt auf der mittels Intervallarithmetik Nullstellen gesucht werden. Wie beim Raycasting wird also das Problem der Nullstellensuche in 3d also auf eine Nullstellensuche in 1d reduziert.
 %(Also f(x,y,-a+t) t=[0,2*a])
@@ -788,17 +792,19 @@ Auch dieses Verfahren hat ein kleines Problem. Durch die Normalisierung ist der 
 
 \chapter{Anforderungen}
 
-Warum GA auf diese Weise visualisieren? Warum Raycasting, warum nicht? Welche Vor-/Nachteile hat das?
-Mein Beitrag.
-Warum Javascript, warum OpenGL? Was wären die Alternativen gewesen?
 
+Die Arbeit soll eine neue Visualisierungsmethode für kontinuierliche Flächen liefern, die in \textsc{Gaalop} und \textsc{Gaalop}Web eingebunden werden kann. Außerdem sollte die software mit hochdimensionaler geometrischer Algebra umgehen können und bietet eine interaktive Darstellung mit niedrigen Laufzeiten.
 
-%Ursprünglich habe ich angefangen den visualisierer in python zu schreiben. 
+Dabei übernimmt \textsc{Gaalop} die Umwandlung von ausdrücken in geometrischer Algebra zu Rechengraphen die dann von meiner Software weiterverarbeitet weren.
 
-Warum Javascript, warum OpenGL?
-Der Visualisierer soll später mit GAALOPWeb zusammen genutzt werden können. Deshalb habe ich mich entschieden, das ganze als Webseite zu schreiben (also HTML und JavaScript). Davor hatte ich schon Experimente zur Visualisierung in Python gemacht wobei ich OpenGL, Numpy und Pyvista genutzt hatte. Deshalb habe ich mich entschieden WebGL2 zu nutzen als Alternative zu OpenGL.
 
 \chapter{Konzeption}
+
+\section{Libraries und Frameworks}
+Der Visualisierer soll später mit \textsc{Gaalop}Web zusammen genutzt werden können. Deshalb habe ich mich entschieden, das ganze hauptsächlich als Webseite zu schreiben (also HTML und JavaScript). Davor hatte ich schon Experimente zur Visualisierung von geometrischer Algebra in Python gemacht wobei ich OpenGL, Numpy,CuPy,Sympy und Pyvista genutzt hatte. Dabei habe ich OpenGL Computeshader, CuPy und Numpy zum Numbercrunching genutzt, während zur Visualisierung von Primitiven Pyvista genutzt wurden, und zur Visualisierung von Raycasting OpenGL. 
+Da OpenGL sowohl zum Numbercrunching als auch zur Visualisierung genutzt werden kann, habe ich mich entschieden WebGL2 zu nutzen was im Prinzip die OpenGL Variante in JavaScript ist. Zudem benötige ich noch eine Library für lineare Algebra wie Matrix Inverse und QR-Zerlegung, wobei ich mich für mathjs entscheiden habe da diese Library weit verbreitet ist. Außerdem hatte ich eine Library zum plotten benötigt. Dabei habe ich mich für Plotty entschieden da es ähnlich zu Pyplot ist, was ich schon kannte.
+Der zweite Teil der Software ist ein Plugin für \textsc{Gaalop}, das wie der Rest von \textsc{Gaalop} in Java geschrieben ist.
+Zudem habe ich noch ein paar kleine Python Scripts mit Pandas benutzt, um daten auszuwerten.
 
 \chapter{Auf Raycasting basierende Methoden}
 In diesem Kapitel werden Methoden vorgestellt, die wie Ganja auf Raycasting aufbauen, um implizite Flächen effizient zu visualisieren. Dabei konzentriert sich das Kapitel auf Methoden zur Findung der ersten Nullstelle entlang eines Strahls. 
@@ -865,8 +871,8 @@ Damit folgt für die UDF-Approximation:
 \]
 
 Dies entspricht genau dem Ausdruck für die UDF-Approximation mit Multiplizität 2.
-Da das Verfahren eine lineare Näherung nutzt, ist es nur lokal konvergent. Deshalb lohnt es sich eine maximale Schrittweite einzuführen. Diese kann die Stabilität des Verfahrens verbessern.
-
+Da das Verfahren eine lineare Näherung nutzt, ist es nur lokal konvergent. Deshalb lohnt es sich eine maximale Schrittweite einzuführen. Diese kann die Stabilität des Verfahrens stark verbessern.
+ 
 %TODOvorteile nschteile
 
     \subsection{Newtonverfahren}
@@ -1030,7 +1036,7 @@ Um das Aberth-Verfahren zu benutzen, muss eigentlich die Anzahl der komplexen Nu
 
 Bei einer zu kleinen Annahme können Lücken entstehen, da manche Nullstellen nicht
 gefunden werden. Bei zu großer Anzahl explodieren manche \( z_j \), aber das Verfahren bleibt stabil, da sich die divergierenden Komponenten nicht auf die anderen auswirken. Der einzige Nachteil
-ist, dass das Ganze langsamer ist, da das Konvergenzkriterium nie erreicht wird.
+ist, dass das Ganze langsamer ist, da das Konvergenzkriterium nie erreicht wird und unnötige Berechnungen durchgeführt werden.
 
 Die maximale Anzahl der Nullstellen ist durch den Grad von \( f \) gegeben.
 % TODO: Grad bestimmen
@@ -1081,7 +1087,7 @@ Auch hier zeigen die Normalen wieder in Richtung Kamera.
 
 Der Vorteil von dieser Methode ist, dass kein weiterer Berechnungsaufwand benötigt wird und sie sehr einfach zu implementieren ist. 
 Ein Nachteil besteht jedoch darin, dass benachbarte Pixel in 2x2-Blöcken identische Normalen erhalten (zumindest bei mir, das Verhalten ist implementationsabhängig). Das bedeutet, dass die Beleuchtung bei dieser Methode effektiv nur mit halber Auflösung berechnet wird.  
-Ein weiterer Nachteil ist, das dieses Verfahren viel stärker vom rauschen von \(p\) beeinflusst wird.
+Ein weiterer Nachteil ist, das dieses Verfahren viel stärker vom rauschen von \(p\) beeinflusst wird. Ich habe mich trotzdem für diese Methode entschieden.
 
 %Bilder
 
@@ -1223,15 +1229,23 @@ Dabei muss beachtet werden, dass die meisten Verfahren nur lokal konvergieren. D
 \section{Modifyed Marching Cubes}
 TODO
 
-Meine erste Idee zur Visualisierung von Geometric Algebra war Marching Cubes zu benutzen. 
-Marching Cubes ist ein häufig genutzter Algorithmus zur Isoflächenerzeugung der den Vorzeichen Übergang von Funktionen ausnutzt. Leider gibt es in f keinen Vorzeichen Übergang, da \(f\) immer positiv ist. 
+Meine erste Idee zur Visualisierung von geometrischer Algebra war Marching Cubes zu benutzen. 
+Marching Cubes ist ein häufig genutzter Algorithmus zur Mesh Erzeugung von Isoflächen der den Vorzeichen Übergang von Funktionen ausnutzt. Leider gibt es in f keinen Vorzeichen Übergang, da \(f\) immer positiv ist. 
 
-Deswegen habe ich eine modifizierte Variante des Algorithmus implementiert.
+Deswegen habe ich eine modifizierte Variante des Algorithmus ausgedacht.
 
-Der normale Marching Cubes Algorithmus wertet die Funktion \( f(\mathbf{x}) \) wie die DiscreteCubeMethod auf einem äquidistanten 3D Gitter aus. Dann wird das Gitter in würfel zerteilt, sodass die Funktionsauswertungen auf den Eckpunkten der würfel liegen.
+Der normale Marching Cubes Algorithmus wertet die Funktion \( f(\mathbf{x}) \) wie die DiscreteCubeMethod auf einem äquidistanten 3D Gitter aus. Dann wird das Gitter in Würfel zerteilt, sodass die Funktionsauswertungen auf den Eckpunkten der Würfel liegen.
 
+%mobile
+Für die Meshgenerierung wird jeder Würfel einzeln betrachtet.
 
+Auf jeder Würfelkante, die zwischen einem positiv negativ Übergang liegt, wird ein Vertex generiert. Dann wird anhand der Eckenkonfiguration (also je nachdem welche ecken positiv oder negativ sind) mittels eines lookup tables entschieden zwischen welchen Vertices Dreiecke erzeugt werden müssen. 
 
+In meiner modifizierten Variante werden die Eckpunkte mit Ableitung betrachtet. 
+
+Die erste Ecke wird als positive Ecke gelabelt. Dann wird zu einer benachbarten Ecke übergegangen. Falls das Skalarprodukt der Ableitungen negativ ist, wird die Ecke als negativ gelabelt und sonst als positiv. So wird auf einem Pfad durch alle Ecken gegangen bis man wieder beim Startpunkt ist. Diese angenommenen positiv/negativ Label können dann genutzt werden, um wie bei der normalen Variante das Mesh zu generieren.
+
+Eine besondere Betrachtung ist für die Ecken mit 0 als Ableitung erforderlich. Für diese wird einfach die Ableitung der vorherigen Ecke kopiert.
 
 \section{curve extraction}
 Als
@@ -1241,8 +1255,22 @@ Als
 
 
 \chapter{Implementierung}
-
+%mobile
+In diesem Kapitel geht es um die Implementierungsdetails.
+Das Kapitel beginnt mit einem Überblick über die Systemarchitektur. Dann folgt im Unterkapitel QR-Zerlegung eine wichtige mathematische Optimierung zum Beschleunigen. Als Nächstes folgt, das Unterkapitel Codegenerierung in dem beschrieben wird, wie man vom \textsc{Gaalop} Output zur Evaluierung von f auf der GPU kommt. Dann erfolgen ein paar Performance Tests die ich zur Analyse und zum Treffen von Designentscheidungen geschrieben habe.
+Zum Schluss folgen noch ein paar einfachere Optimierung.
 \section{Systemarchitektur}
+%mobile
+In einem Progrogrammdurchlauf wird immer als Erstes das von \textsc{Gaalop} generierte JSON eingelesen und als Graph deserialisiert. Dieser Graph enthält Definition der Nullräume der zu visualisierenden Objekte. Der Code dafür ist in der Klasse \textsc{Gaalop}Graph.
+Dann wird in main für jedes zu visualisierende Objekte die Pipelines erstellt. Dabei steht jede Pipeline für eine Visualisierungsmethode. Die Pipelines werden dann gruppiert nach Objekt im RenderContext gespeichert. Die Pipelines besitzen jeweils ein oder mehrere Shader. Dabei haben die Raycasting Methoden jeweils einen Shader während die Volumenbasierten methoden jeweils mehrere haben. Ein oder mehrere zur generierung der primitive und dann ein weiterer zur visualisierung der primitive.  
+Der Shadercode wird mittels Shaderimporter eingelesen. Normalerweise hat glsl keine Imports. Deshalb habe ich Imports implementiert. Alle aktuell genutzten Shader sind in shaderlibv3.
+Alle Shader welche den Nullraum auswerten sind nur Templates. Deshalb wird mittels der Codegenerierung Shadercode zur Auswertung des Nullraums aus dem eingelesenen Graph erzeugt und in den Shader eingefügt. Dies passiert in der Methode gencode.
+
+Immer wenn sich Parameter ändern, müssen die primitive für die volumenbasierten Pipelines neu generiert werden und auch für die Raycasting Methoden müssen teile des Graphs neu ausgewertet werden und Parameter auf die entsprechend aktualisiert werden. Dies passiert in der Methode 
+
+
+
+
 \section{QR-Zerlegung}
 
 
@@ -1269,24 +1297,14 @@ Ein konkretes Beispiel für \(\texttt{point}(x,y,z)\) in der DCGA ist:
 \]
 
 \texttt{point}$(x,y,z)$ könnte direkt als Vektor geschrieben werden.
- Allerdings gibt es manche Polynome für Blades mehrfach. Dies ist für das Gleichungssystem jedoch unnötig und jedes Polynom wird nur einmal repräsentiert. M wird entsprechend angepasst, indem spalten die zum gleichen Polynom gehören zu einer spalte zusammen addiert werden.
-
-\[
-P(x,y,z) = \left(
-x,\ y,\ z,\ x^2,\ y^2,\ z^2,\ xy,\ xz,\ yz,\ 
-\tfrac{x^2+y^2+z^2}{2},\ \tfrac{x^2+y^2+z^2}{2}x,\ 
-\ldots,\ \left(\tfrac{x^2+y^2+z^2}{2}\right)^2
-\right)^T
-\]
-
-In Theorie könnte man P zu einer Polynombasis machen, um somit ein kleineres Gleichungssystem zu erhalten.  Wenn die Polynome aus \(\texttt{point}(x,y,z)\) bekannt sind, könnte man eine maximale linear unabhängige Untermenge der Polynome als Basis wählen. Allerdings würde dies die Codegenerierung mit dem aktuellen Ansatz schwerer machen, weshalb ich mich dagegen entschieden habe. Im fall in dem \textsc{Gaalop} keine Optimierungen nutzt müsste dies jedoch relativ einfach möglich sein. Auch die Wahl der maximalen Untermenge ist nicht trivial.
 
 
+In der Software liegt dieses Produkt $M \cdot P(x,y,z)$ nicht explizit als Matrix-Vektor-Produkt vor, sondern wird als Computational Graph umgesetzt. Es ist theoretisch möglich, $M$ und $P$ aus dem Graphen zu extrahieren, allerdings ist dies relativ aufwendig, da P nicht von \textsc{Gaalop} synthetisiert wird.
 
-In der Software liegt dieses Produkt $M \cdot P(x,y,z)$ nicht explizit als Matrix-Vektor-Produkt vor, sondern wird als Computational Graph umgesetzt. Es ist theoretisch möglich, $M$ und $P$ aus dem Graphen zu extrahieren, allerdings ist dies relativ aufwendig, da \textsc{Gaalop} den Graphen intern umformt, um ihn zu vereinfachen. Deswegen funktioniert dieser Ansatz besser, wenn Vereinfachung durch Maxima in \textsc{Gaalop} bei der Codegenerierung abgeschaltet wird.
+Deswegen extrahiere ich ein maximales linear unabhängiges Subset der Polynome die nur von x,y,z abhängen. Dies funktioniert sehr gut, allerdings ist es eine relative komplexe Lösung. 
 
 Der Vorteil der Darstellung $M \cdot P(x,y,z) = 0$ ist, dass sie Optimierungen erlaubt, insbesondere dann, wenn das Gleichungssystem überdeterminiert ist.
-
+\subsubsection{optimierung des gleichungssystems}
 
 %Vormulierung passt nicht
 \( f \) kann geschrieben werden als:
@@ -1372,7 +1390,7 @@ Um den von \textsc{Gaalop} generierten Rechengraph (eng computational Graph) auf
 
 Das ganze passiert in mehreren schritten.
 Als Erstes wird der Graph in \textsc{Gaalop} erzeugt und durch ein Plugin als json exportiert.
-Dann wird das json in Javascript eingelesen und wieder zu einem Graph deserialisiert.
+Dann wird das json in JavaScript eingelesen und wieder zu einem Graph deserialisiert.
 Als Nächstes wird der Graph manipuliert. Dazu gehören Vereinfachung, Ableitungsberechnungen und Splitting.
 Zum Schluss wird dann aus daraus Code in glsl generiert.
 %json zu graph
@@ -1466,8 +1484,8 @@ Weiterhin macht das Auseinanderschneiden die Codegenerierung einfacher da der Su
 \subsection{Graph Manipulationen}
 Bevor der Subgraph auf der GPU ausgewertet werden kann, muss er manipuliert werden. Das liegt daran, dass manche der Methoden Ableitungen erfordern oder Auswertung über den komplexen Zahlen.
 
-Der glsl Code enthält Funktionsheader, welche dann durch den in JavaScript
-generierten glsl Code ersetzt werden.
+Der Shadercode enthält Funktionsheader, welche dann durch den in JavaScript
+generierten Shadercode ersetzt werden.
 
 \subsubsection{Was generiert die Codegenerierung}
 Die alte Codegenerierung generierte Code für die folgenden Methoden:
@@ -1595,7 +1613,7 @@ Als Nächstes habe ich mich entschieden die Ableitungsberechnung auf Backproperg
 Erstens gibt es nur noch 3 typen: Skalare, komplexe Zahlen und Intervalle was die Codegenerierung wesentlich einfacher macht. Und zweitens müsste Backpropergation theoretisch bei manchen Ansätzen schneller sein da weniger Multiplikationen benötigt werden.
 
 Im aktuellen Ansatz habe ich versucht die anderen Ansätze zu vereinigen.
-Ich habe mich entschieden die Typ Propergation während der Codegenerierung zu machen wobei ich den code dafür in die nodes gepackt habe. Das macht den code kleiner, allerdings ist das typisierte auswerten in Javascript nicht möglich.
+Ich habe mich entschieden die Typ Propergation während der Codegenerierung zu machen wobei ich den code dafür in die nodes gepackt habe. Das macht den code kleiner, allerdings ist das typisierte auswerten in JavaScript nicht möglich.
 Die neue Codegenerierung ist flexibler und hat weniger Bugs. Da es in der alten Codegenerierung für jede Funktion eine eigene Klasse zur Codegenerierung gab, war es wesentlich schwerer Bugs zu fixen da sie teilweise in jeder der Codegenerierungen gefixt werden müssten. Deshalb habe ich die neue Codegenerierung geschrieben.
 
 Ein Problem, das in beiden Codegenerierungen besteht, ist der zu große Code nicht kompilierbar ist.
@@ -1625,13 +1643,20 @@ Um diese Polynome in der Polynombasis der Algebra zu repräsentieren, wird mitte
 
 %TODO:Kapitel schreiben
 Im neuen Ansatz müssen als Erstes die Polynome von \(P\) extrahiert werden. 
-Dazu werden alle Nodes aus dem Graph extrahiert die nur von den Variablen x,y oder z abhängen. Da mehrere nodes das gleiche Polynom oder vielfache darstellen können werden die nodes in Äquivalenzklassen eingeteilt, wobei jede Äquivalenzklasse alle Nodes enthält, die ein Polynom oder ein Vielfaches desselben repräsentieren. Dabei wird für jede Äquivalenzklasse die Node mit den wenigsten Vorfahren als Repräsentant gewählt. Diese bilden die Polynome von P. Falls Vereinfachungen in \textsc{Gaalop} deaktiviert ist P nun vollständig. Andernfalls wird P später nachträglich noch erweitert.
+Dazu werden alle Nodes aus dem Graph extrahiert die nur von den Variablen x,y oder z abhängen. 
 
-Als Nächstes werden die Outputs als Polynome über dem Vorläufigen P erzeugt. Dabei können nicht lineare Terme entstehen. Deshalb werden im nächsten Schritt diese Terme linearisiert und P wird entsprechend erweitert.
+%mobile
+Der nächste Schritt ist die Auswahl einer maximal linear unabhängigen Untermenge dieser nodes. Dafür wird für jede node ein Koeffizientenvektor in einer Monombasis und die Anzahl der vorfahren berechnet.
+Die nodes werden sortiert nach Anzahl der vorfahren und dann der Reihe nach zu P hinzugefügt, falls sie linear unabhängig von den schon hinzugefügten Polynomen sind. Ich nutze dazu eine modifizierte Version des Modifizerten Gram-Schmidtschen Orthogonalisierungsverfahren.
+%https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
 
-Im letzten Schritt werden die nodes in eine Matrix gepackt.
+Nachdem P vollständig ist, wird im Prinzip der alte Ansatz genutzt, um M zu erhalten.
+
+Durch das ausmultiplizieren und Multiplikation mit der Basiswechselmatrix kann der CPU Teilgraph wesentlich größer werden. Deshalb ist dieser Ansatz schnell auf der GPU aber langsam auf der CPU.
 
 
+
+Zwischendurch habe ich einfach eine Monombasis genutzt. Dies funktioniert auch, ist aber langsamer.
 
 
 
@@ -1667,12 +1692,12 @@ Ein Vorteil des neuen Codes könnten bessere Vereinfachungen des Graphen sein.
 
 
 \subsection{Matrixmul in Glsl}
-Um \(R*P(x,y,z)\) auszuwerten wird Matrixmultiplikation in glsl benötigt, die möglichst performant sein muss. Kleine Änderungen im glsl Code machen große Performance Unterschiede.
+Um \(R*P(x,y,z)\) für den Matrixansatz auszuwerten wird Matrixmultiplikation in glsl benötigt, die möglichst performant sein muss. Kleine Änderungen im Shadercode machen große Performance Unterschiede.
 Dabei gibt es mehrere Parameter die geändert werden können. 
 
 Die Matrix als uniform oder als uniform Buffer (ubo) hochgeladen werden. 
 Da \(R\) eine obere Dreiecksmatrix ist, kann außerdem nur die Obere Rechte Hälfte oder die ganze Matrix hochgeladen werden. Alle mit M gekennzeichneten Tests benutzen die volle Matrix und alle mit \(R\) gekennzeichneten die Hälfte.
-Weiterhin kann die Matrix Normal oder dicht gepackt als vec4 hochgeladen werden. Dabei wird jede Zeile mit Nullen gepaddet um eine Länge die ein Vielfaches von 4 ist zu erhalten. Die dicht gepackten Versionen werden dabei als Dense bezeichnet.
+Weiterhin kann die Matrix normal oder dicht gepackt als vec4 hochgeladen werden. Dabei wird jede Zeile mit Nullen aufgefüllt, um eine Länge die ein Vielfaches von 4 ist zu erhalten. Die dicht gepackten Versionen werden dabei als Dense bezeichnet.
 Zudem kann die Auswertung ausgerollt werden.
 
 Diese Parameter können beliebig kombiniert werden und Ich habe viele (aber nicht alle) Kombinationen getestet.
@@ -1681,7 +1706,7 @@ Auch der Browser (Ich habe Firefox und Edge getestet) spielt eine große Rolle.
 
 Ich habe hauptsächlich 4 verschiedene Methoden ausgewertet. 
 \enquote{sus} steht für sum of squares und ist die normale Auswertung von f.
-Außerdem gibt es noch \enquote{row} was dafür steht das nur die erste Zeile der Matrix zur Auswertung genutzt wird (also \((F_R)_1\)). Diese Methode wertet das dotproduct von der ersten Zeile der Matrix mit \(P\) aus.
+Außerdem gibt es noch \enquote{row} was dafür steht das nur die erste Zeile der Matrix zur Auswertung genutzt wird (also \((F_R)_1\)). Diese Methode wertet das Skalarprodukt von der ersten Zeile der Matrix mit \(P\) aus.
 Weiterhin wird für die Aberth-Verfahren auch die Auswertung im Komplexen mit Ableitung benötigt. Deshalb gibt es beide Methoden nochmal mit DC was für Dual Complex steht.
 Dann gibt es noch horner was eine Auswertung über die mittels der Vandermonde Matrix approximierten Koeffizienten des Polynoms ist. Weiterhin gibt es bei row noch Methoden mit \enquote{copy} im Namen. Diese kopieren die erste Zeile der Matrix in ein Array und benutzen dann dieses Array zur Auswertung.
 
