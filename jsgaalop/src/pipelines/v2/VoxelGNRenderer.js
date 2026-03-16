@@ -12,7 +12,7 @@ import { Shader ,throwonglerror} from "../../glwrapper/glwrapper.js";
 import {  TransformFeedbackWrapper} from "../../glwrapper/TransformFeedbackWrapper.js";
 //import { loadWithIncludesRelativeToShadersource } from "../../glwrapper/shaderimporter.js";
 import {PointShader} from "./pointrenderutil.js"
-import { makeSlider } from "../../ui/sliders.js";
+import { makeSlider ,makeLogSlider} from "../../ui/sliders.js";
 
 function sum(arr){
   let acc=0;
@@ -106,13 +106,34 @@ export class VoxelGNRenderer extends LazyRenderingPipeline{
  
 makeOptions(element){
   const slidertemplate=document.querySelector(`template[data-type=slider]`);
-  element.appendChild(makeSlider(slidertemplate,"epsilon",
+  element.appendChild(makeLogSlider(slidertemplate,"epsilon",
     (x)=>{
-      this.eps=Math.pow(10,(x-1)*15);
+      this.eps=x;
       this.ctx?.requestRender();
       this.paramsversion=null;
-      return this.eps.toExponential(2);
-    }));
+    },{min:1e-15,max:1e0,value:1e-5}));
+    element.appendChild(makeSlider(slidertemplate,"gridsize",
+    (x)=>{
+      this.scale=x;
+      this.ctx?.requestRender();
+      this.paramsversion=null;
+    },{min:1,max:10,value:4}));
+    element.appendChild(makeSlider(slidertemplate,"samples",
+    (x)=>{
+      this.samples=x;
+      this.ctx?.requestRender();
+      this.paramsversion=null;
+      return x.toString();
+    },{min:10,max:100,value:50,step:1}));
+    element.appendChild(makeSlider(slidertemplate,"pointsize",
+    (x)=>{
+      if (this.pointrenderer) {
+          this.pointrenderer.pointsize = x;
+      }
+      this.ctx?.requestRender();
+      this.paramsversion=null;
+      return x.toString();
+    },{min:-5,max:10,value:-3,step:1}));
   
 }
   

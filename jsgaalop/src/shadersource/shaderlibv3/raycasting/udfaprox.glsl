@@ -41,7 +41,7 @@ void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_
     float slast=0.;
     for(int i=0;i<100;i++){
         xyzDual xyzf=xyzDualsusR(ray(xmin,rayOrigin,rayDir));
-        float stepsize=min(maxstep,xyzf.w/(1e-12+length(xyzf.xyz)));
+        float stepsize=xyzf.w/(1e-12+length(xyzf.xyz));
         if(threshold>stepsize){
             error=stepsize;
             xmin=solveLinearThreshold(xlast,slast,xmin,stepsize,threshold);
@@ -49,7 +49,7 @@ void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_
         }
         xlast=xmin;
         slast=stepsize;
-        xmin+=stepsize;
+        xmin+=min(maxstep,stepsize);
     }
     error=inf;
     xmin=inf;

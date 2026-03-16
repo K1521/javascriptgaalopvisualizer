@@ -237,14 +237,28 @@ void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_
 
         //float e=length(cross(p, rayDir)) / length(rayDir);
         //float e=abs(f.w)/sqrt(dot(f.xyz,f.xyz)+1e-10);
-        vec4 gn=GaussNewtonStepR(rayDir*a+rayOrigin,beta);
-        float e=length(gn.xyz);
-        float f=gn.w;
-        //e*=1./(a*a);
-        if(a<xmin && e<eps && a>=0. && abs(f)<1.){
-                error=e;
-                xmin=a;
+        #define UseGN
+        #ifdef UseGN
+            vec4 gn=GaussNewtonStepR(rayDir*a+rayOrigin,beta);
+            float e=length(gn.xyz);
+            float f=gn.w;
+            //e*=1./(a*a);
+            if(a<xmin && e<eps && a>=0. && abs(f)<1.){
+                    error=e;
+                    xmin=a;
             }
+        #else
+            vec4 xyzf=xyzDualsusR(rayDir*a+rayOrigin);
+            float e=xyzf.w/(beta+length(xyzf.xyz));
+            float f=xyzf.w;
+            //e*=1./(a*a);
+            if(a<xmin && e<eps && a>=0. && abs(f)<1.){
+                    error=e;
+                    xmin=a;
+                }
+            }
+        #endif
+
         /*if(v_rayDirXY.x>0.){
             a=raySphereIntersect(rayOrigin,rayDir,rayDir*a+rayOrigin+gn.xyz,eps);
             if(a<xmin && a>=0. && abs(f)<1.){

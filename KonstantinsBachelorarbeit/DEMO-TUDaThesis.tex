@@ -147,10 +147,19 @@ Das Ziel dieser Bachelorarbeit ist deshalb, eine neue Art der Visualisierung von
 \IMRADlabel{introduction}
 \chapter{Einleitung}
 %Worum geht es in dieser Arbeit? Warum das Ganze?
-Aktuelle Methoden können nur Niedrigdimensionale Algebren Visualisieren oder sind langsam.
+Geometrische Algebra ist ein mathematischer Rahmen, der viele klassische algebraische Strukturen vereinigt. Dabei entsprechen algebraische Ausdrücke geometrischen Objekten.
 
-Die Arbeit beginnt mit einem Grundlagenkapitel, in dem relevante bekannte Algorithmen und Konzepte der Computergrafik und Mathematik vorgestellt werden. Dann folgt ein Kapitel zum stand der Technik in dem die aktuellen Visualisierungsmethoden vorgestellt werden.
-Als Nächstes folgen zwei Kapitel die meine Visualisierungsansätze vorstellen. Diese sind unterteilt in auf Raycasting aufbauende Methoden und Volumenbasierte Methoden die versuchen Primitive zu erzeugen. Dann folgt ein Kapitel zur Implementierung und eingesetzten Optimierungen. Dabei wird im ersten Unterkapitel ein Verfahren vorgestellt das ermöglicht den IPNS/OPNS von höher dimensionalen Algebren auf der GPU auszuwerten.
+Aktuelle Methoden zur Visualisierung von geometrischer Algebra können nur niedrigdimensionale Algebren visualisieren oder sind langsam in höher dimensionalen Algebren.
+In dieser Arbeit wird eine Methode zur schnellen Auswertung des IPNS/OPNS mittels GPU-Shadern entwickelt und darauf aufbauend Visualisierungsmethoden.
+
+
+
+
+Die Arbeit beginnt mit einem Grundlagenkapitel, in dem relevante bekannte Algorithmen und Konzepte der Computergrafik und Mathematik vorgestellt werden. Dann folgt ein Kapitel zum Stand der Technik in dem die aktuellen Visualisierungsmethoden vorgestellt werden.
+
+Als Nächstes folgt ein Kapitel zur Konzeption und Anforderungen dieser Arbeit.
+
+Dann folgen zwei Kapitel die meine Visualisierungsansätze vorstellen. Diese sind unterteilt in auf Raycasting aufbauende Methoden und Volumenbasierte Methoden die versuchen Primitive zu erzeugen. Dann folgt ein Kapitel zur Implementierung und eingesetzten Optimierungen. Dabei wird im ersten Unterkapitel ein Verfahren vorgestellt das ermöglicht den IPNS/OPNS von höher dimensionalen Algebren auf der GPU auszuwerten.
 %Schreibe rest wenn etwas in dem entsprechenden kapitel steht.
 
 
@@ -161,7 +170,7 @@ Die Inhalte dieses Kapitels stammen aus der Fachliteratur und dem allgemeinen Wi
 
 \section{Was ist geometrische Algebra? }
 
-\textbf{Geometrische Algebra} ist ein mathematischer Rahmen, der klassische Zahlensysteme und Vektorräume zu einem einheitlichen algebraischen Konzept zusammenfasst. Viele algebraische Strukturen wie komplexe Zahlen, Quaternionen oder duale Zahlen lassen sich als spezielle geometrische Algebren konstruieren.
+Geometrische Algebra ist ein mathematischer Rahmen, der klassische Zahlensysteme und Vektorräume zu einem einheitlichen algebraischen Konzept zusammenfasst. Viele algebraische Strukturen wie komplexe Zahlen, Quaternionen oder duale Zahlen lassen sich als spezielle geometrische Algebren konstruieren.
 
 Geometrische Algebra wird über einem Vektorraum aufgebaut. 
 Die Basisvektoren einer \( n \)-dimensionalen geometrischen Algebra werden dabei als \( e_1, \dots, e_n \) dargestellt.
@@ -651,6 +660,9 @@ f(x,y,z)
 
 \chapter{Stand der Technik}
 \section{Ganja}
+Ganja ist eine Library für geometrische Algebra die von vielen anderen Libraries zur Visualisierung benutzt wird. 
+Dabei benutzt Ganja zwei Ansätze zur Visualisierung. Erstens versucht Ganja die Objekte der Algebra zu interpretieren und so darzustellen. Beispielsweise wird erkannt, dass ein bestimmter Multivektor eine Kugel darstellt und diese wird dann visualisiert.
+Da dieser Ansatz nur für niedrigdimensionale Algebren gut  funktioniert konzentriere ich mich auf den zweiten Ansatz.
 
 Ganja benutzt unter anderem Raycasting, um Objekte zu visualisieren.
 Hier ist der Code den Ganja benutzt, um iterativ die erste Nullstelle zu finden:
@@ -676,7 +688,7 @@ t=0
 def findroot(ray,thresh):
     for i in range(count):
         d=sqrt(f(ray(t)))
-        diff=2*d+0.0001
+        diff=(2*d+0.0001)*stepsize
         if(d<thresh):
             #es gilt f(ray(tlast))=dlast und f(ray(tlast+diff))=d da t=tlast+diff
             #gesucht ist taprox mit f(ray(taprox))=thresh
@@ -790,15 +802,17 @@ Auch dieses Verfahren hat ein kleines Problem. Durch die Normalisierung ist der 
 
 
 
-\chapter{Anforderungen}
-
-
-Die Arbeit soll eine neue Visualisierungsmethode für kontinuierliche Flächen liefern, die in \textsc{Gaalop} und \textsc{Gaalop}Web eingebunden werden kann. Außerdem sollte die software mit hochdimensionaler geometrischer Algebra umgehen können und bietet eine interaktive Darstellung mit niedrigen Laufzeiten.
-
-Dabei übernimmt \textsc{Gaalop} die Umwandlung von ausdrücken in geometrischer Algebra zu Rechengraphen die dann von meiner Software weiterverarbeitet weren.
-
-
 \chapter{Konzeption}
+
+\section{Anforderungen}
+Die Arbeit soll eine neue Visualisierungsmethode für kontinuierliche Flächen liefern, die in \textsc{Gaalop} und \textsc{Gaalop}Web eingebunden werden kann. Außerdem sollte die Software mit hochdimensionaler geometrischer Algebra umgehen können und sollte eine interaktive Darstellung mit niedrigen Laufzeiten bieten.
+Dabei übernimmt \textsc{Gaalop} die Umwandlung von ausdrücken in geometrischer Algebra zu Rechengraphen die dann von meiner Software weiterverarbeitet werden.
+
+
+\section{Überblick über die Lösungsansätze}
+Zur Visualisierung von Objekten in geometrischer Algebra gibt es hauptsächlich zwei Ansätze.
+Im ersten Ansatz wird versucht zu interpretieren, ob das Objekt ein Punkt, Linie, Ebene, Kugel etc. darstellt und dann entsprechend visualisiert. Dieser Ansatz funktioniert vor allem in niedrig dimensionalen Algebren da in höherdimensionalen die Anzahl der möglichen geometrischen Objekte wächst. Deshalb benutze ich den zweiten Ansatz.
+Der zweite Ansatz funktioniert über die Nullstellensuche des Inner/Outer-Product-Nullraums des Objektes. Dabei kann versucht werden die Nullstellen als Primitive zu extrahieren oder Raycasting zu nutzen. Ich habe beide Ansätze getestet. 
 
 \section{Libraries und Frameworks}
 Der Visualisierer soll später mit \textsc{Gaalop}Web zusammen genutzt werden können. Deshalb habe ich mich entschieden, das ganze hauptsächlich als Webseite zu schreiben (also HTML und JavaScript). Davor hatte ich schon Experimente zur Visualisierung von geometrischer Algebra in Python gemacht wobei ich OpenGL, Numpy,CuPy,Sympy und Pyvista genutzt hatte. Dabei habe ich OpenGL Computeshader, CuPy und Numpy zum Numbercrunching genutzt, während zur Visualisierung von Primitiven Pyvista genutzt wurden, und zur Visualisierung von Raycasting OpenGL. 
@@ -806,21 +820,24 @@ Da OpenGL sowohl zum Numbercrunching als auch zur Visualisierung genutzt werden 
 Der zweite Teil der Software ist ein Plugin für \textsc{Gaalop}, das wie der Rest von \textsc{Gaalop} in Java geschrieben ist.
 Zudem habe ich noch ein paar kleine Python Scripts mit Pandas benutzt, um daten auszuwerten.
 
+
 \chapter{Auf Raycasting basierende Methoden}
 In diesem Kapitel werden Methoden vorgestellt, die wie Ganja auf Raycasting aufbauen, um implizite Flächen effizient zu visualisieren. Dabei konzentriert sich das Kapitel auf Methoden zur Findung der ersten Nullstelle entlang eines Strahls. 
 Zum Schluss kommt noch ein Unterkapitel zur Tiefendarstellung, in dem es unter anderem um Normalgenberechnung geht. 
 
 \subsubsection{\(f\) entlang eines Strahls}
 
-Wenn man $f$ entlang eines Strahls betrachtet, erhält man:
+Wenn man die Summe der Quadrate des Nullraums $f$ entlang eines Strahls betrachtet, erhält man:
 \[
 f(\text{ray}(t))
 \]
 Dies ist ein univariates Polynom mit dem gleichen Grad wie $f$, aber nur abhängig von der Variable $t$.
+Bei den Raytracing-Methoden geht es darum, das kleinste positive $t$ zu finden, sodass
+\[
+f(\mathrm{ray}(t)) = 0.
+\]
 
-
-  
-  \section{Methoden zur Nullstellensuche}
+\section{Methoden zur Nullstellensuche}
     
 \subsection{Spheretracing Approximation}
 
