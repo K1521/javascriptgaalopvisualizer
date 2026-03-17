@@ -1,0 +1,9 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{toMatrix}\PYG{p}{(}\PYG{n}{A}\PYG{p}{,} \PYG{n}{table}\PYG{p}{):}
+    \PYG{n}{matrix} \PYG{o}{=} \PYG{n}{defaultdict}\PYG{p}{(}\PYG{n+nb}{int}\PYG{p}{)}
+    \PYG{k}{for} \PYG{n}{coeffA}\PYG{p}{,} \PYG{n}{bladeA} \PYG{o+ow}{in} \PYG{n}{A}\PYG{o}{.}\PYG{n}{items}\PYG{p}{():}
+        \PYG{k}{for} \PYG{n}{bladeB} \PYG{o+ow}{in} \PYG{n}{allBlades}\PYG{p}{:}
+            \PYG{n}{sign}\PYG{p}{,} \PYG{n}{bladeO} \PYG{o}{=} \PYG{n}{table}\PYG{p}{[}\PYG{n}{bladeA}\PYG{p}{,} \PYG{n}{bladeB}\PYG{p}{]}
+            \PYG{n}{matrix}\PYG{p}{[}\PYG{n}{bladeO}\PYG{p}{,} \PYG{n}{bladeB}\PYG{p}{]} \PYG{o}{=} \PYG{n}{sign} \PYG{o}{*} \PYG{n}{coeffA}
+    \PYG{k}{return} \PYG{n}{matrix}
+\end{MintedVerbatim}

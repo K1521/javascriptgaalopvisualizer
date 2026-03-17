@@ -104,7 +104,7 @@
 \title{Visualisierung des Innenprodukt-Nullraums (IPNS) von geometrischer Algebra als Iso-Oberflächen}
 %\subtitle{3D-Visualisierung von Oberflächenhüllkurven an polynomialen Nullstellen mittels geometrischer Algebra}
 \author{Konstantin Bachem}
-\reviewer{Reviewer 1 \and Reviewer 2 \and …}
+\reviewer{Dietmar Hildenbrand \and Andr\'e Stork}
 
 % The following elements will be placed on the title page
 \department{inf}% If defined the shorthand will be replaced by the full name otherwhise it's used directly.
@@ -132,7 +132,7 @@
 % Additional lists like \listoffigures or acronyms might be added here
 
 
-\addchap{About this file}
+%\addchap{About this file}
 
 %\enquote{DEMO-TUDaThesis.tex} is a basic template for theses using the Corporate Design of TU Darmstadt.
 %It is part of TUDa-CI, which is the official template bundle of TU Darmstadt. The original version was inspired by the \enquote{tuddesign} bundle by C.~v.~Loewenich and J.~Werner.
@@ -141,7 +141,7 @@
 
 
 \chapter{Motivation}
-Geometrische Algebra hat den großen Vorteil, dass die algebraischen Ausdrücke üblicherweise geometrischen Objekten und Operationen entsprechen. Deshalb können Algorithmen gut durch Visualisierungen ausgedrückt werden. Auch \textsc{Gaalop} und das web-basierte \textsc{Gaalop}Web nutzen diese Möglichkeit zur Unterstützung von Geometrische Algebra Algorithmen. Gerade bei der Arbeit mit höheren Dimensionen, die in letzter Zeit immer wichtiger wird, weisen diese Visualisierungen allerdings eine Reihe von Nachteilen auf.
+Geometrische Algebra hat den großen Vorteil, dass die algebraischen Ausdrücke in vielen Fällen geometrische Objekten und Operationen entsprechen. Deshalb können Algorithmen gut visualisiert werden. Auch \textsc{Gaalop} und das web-basierte \textsc{Gaalop}Web bietet diese Möglichkeit. Insbesondere im Kontext von Algebren höherer Dimensionen, die in letzter Zeit immer wichtiger wird, weisen diese Visualisierungen allerdings eine Reihe von Nachteilen auf.
 Das Ziel dieser Bachelorarbeit ist deshalb, eine neue Art der Visualisierung von geometrischen Objekten zu entwickeln und in \textsc{Gaalop}/\textsc{Gaalop}Web zu integrieren, bei der auch problemlos mit höheren Dimensionen gearbeitet werden kann. Neben der korrekten Visualisierung ist eine niedrige Laufzeit wichtig, da die Tools üblicherweise interaktiv bei der Entwicklung von Algorithmen genutzt werden.
 
 \IMRADlabel{introduction}
@@ -287,7 +287,7 @@ def product(A, B, table):
 
 Für die Umwandlung in eine Matrixform, wobei der linke Faktor \( A \) fest ist:
 
-\begin{verbatim}
+\begin{minted}{python}
 def toMatrix(A, table):
     matrix = defaultdict(int)
     for coeffA, bladeA in A.items():
@@ -295,7 +295,7 @@ def toMatrix(A, table):
             sign, bladeO = table[bladeA, bladeB]
             matrix[bladeO, bladeB] = sign * coeffA
     return matrix
-\end{verbatim}
+\end{minted}
 
 Diese Matrix kann nun als lineare Abbildung auf beliebige rechte Faktoren \( B \) angewendet werden, wobei die Multiplikation \( A \cdot B \) als gewöhnliches Matrix-Vektor-Produkt umgesetzt wird.
 
@@ -353,7 +353,7 @@ schwerer, da es keinen Nulldurchgang gibt. Stattdessen muss ein Schwellwert hinz
 werden, welcher entscheidet, ob eine Nullstelle erreicht ist.
 
 \subsection{IPNS/OPNS}
-Um ein Objekt \texttt{obj} in der Geometrischen Algebra als Isofläche darzustellen, wird der sogenannte \textbf{IPNS} und \textbf{OPNS} (Inner/Outer Product Null Space) verwendet. Dieser stellt Objekte der geometrischen Algebra als eine implizite Darstellung da.
+Um ein Objekt \texttt{obj} in der Geometrischen Algebra als Isofläche darzustellen, wird der sogenannte IPNS und OPNS (Inner/Outer Product Null Space) verwendet. Dieser stellt Objekte der geometrischen Algebra als eine implizite Darstellung dar.
 
 Für OPNS gilt:
 \[
@@ -399,7 +399,7 @@ Da \( f(x,y,z) \) die quadrierte Norm von \( F(x,y,z) \) ist, gilt:
 F(x,y,z) = 0 \quad \Leftrightarrow \quad f(x,y,z) = 0
 \]
 
-Die Arbeit mit \( f \) ist in vielen Fällen einfacher als mit \( F \). Auch Ganja und \textsc{Gaalop} nutzen die Summe der Quadrate zur Visualisierung.
+Die Arbeit mit \( f \) ist in vielen Fällen einfacher als mit \( F \), da das ursprüngliche vektorwertige Problem auf die Bestimmung der Nullstellen einer skalarwertigen Funktion reduziert wird. Auch Ganja und \textsc{Gaalop} nutzen die Summe der Quadrate zur Visualisierung.
 
 
 Da $f$ die Summe der Quadrate von $F$ ist, ist $f \geq 0$ für alle $x,y,z$. Es handelt sich also nicht um eine Distanzfunktion im klassischen Sinne. $f$ ist weder eine SDF noch eine UDF. 
@@ -423,7 +423,7 @@ Diese Fragmente werden in der nächsten Stufe, dem Fragment-Shader, verarbeitet.
 \subsection{Was ist Raycasting? }
 
 Die Visualisierungsmethoden für geometrische Objekte auf der GPU basieren in dieser Arbeit auf Raycasting.
-Beim Raycasting ist der Input für die Pipeline zwei Dreiecke, die den gesamten Bildschirm abdecken. Der Vertex-Shader wird nicht wirklich benutzt. Da er allerdings angegeben werden muss, ist er einfach ein Programm, das die Vertices unverändert weitergibt. Die eigentliche Arbeit beim Raycasting passiert im Fragment-Shader. Die beiden bildschirmfüllenden Dreiecke erzeugen für jedes Pixel auf dem Bildschirm ein Fragment. Der Fragment-Shader wird also dazu genutzt, um für jedes Pixel anhand seiner Position auf dem Bildschirm seine Farbe zu berechnen.
+Beim Raycasting besteht der Input für die Pipeline aus zwei Dreiecke, die den gesamten Bildschirm abdecken. Der Vertex-Shader wird nicht wirklich benutzt. Da er allerdings angegeben werden muss, ist er einfach ein Programm, das die Vertices unverändert weitergibt. Die eigentliche Arbeit beim Raycasting passiert im Fragment-Shader. Die beiden bildschirmfüllenden Dreiecke erzeugen für jedes Pixel auf dem Bildschirm ein Fragment. Der Fragment-Shader wird also dazu genutzt, um für jedes Pixel anhand seiner Position auf dem Bildschirm seine Farbe zu berechnen.
 
 Beim Raycasting wird für jedes Pixel ein Strahl generiert. In dieser Arbeit habe ich perspektivische
 Projektion benutzt, was bedeutet, dass für jedes Pixel auf der Projektionsebene ein Strahl
@@ -518,7 +518,7 @@ Statt mit exakten Werten zu rechnen, wird, wie der Name schon sagt, mit Interval
 Das Hauptaugenmerk bei der Intervallarithmetik liegt darin, obere und untere Schranken für den Wertebereich einer Funktion in einer oder mehreren Variablen zu bestimmen.
 
 Z.B. haben wir zwei Variablen $x \in [x_1,x_2]$ und $y \in [y_1,y_2]$. $x+y$ muss also im Intervall $[x_1+y_1,x_2+y_2]$ sein.
-Das ganze kann so geschrieben werden:
+Das Ganze kann so geschrieben werden:
 \[
 [x_1,x_2]+[y_1,y_2]=[x_1+y_1,x_2+y_2]
 \]
@@ -633,7 +633,7 @@ Die Inverse $V^{-1}$ kann dabei vorab berechnet werden, solange sich die Stützs
 Das bedeutet, es wird nur noch das Auswerten von \(f\) an \(\deg(f) + 1\) Stützstellen und eine Matrixmultiplikation benötigt, um die Koeffizienten zu erhalten.
 
 \section{Duale Zahlen}
-Duale Zahlen (nicht zu verwechseln zu Zahlen im Dualsystem) sind ein einfacher weg um Ableitungen zu berechnen.
+Duale Zahlen (nicht zu verwechseln zu Zahlen im Dualsystem) sind ein einfacher Weg um Ableitungen zu berechnen.
 Sie definieren ähnlich zu den Komplexen zahlen eine nicht reelle Einheit \(\varepsilon\) mit der Eigenschaft \(\varepsilon^2=0\).
 Daraus ergeben sich wie auch bei den komplexen Zahlen die entsprechenden Rechenregeln.
 Beispielsweise erhält man durch einfaches Ausmultiplizieren die Regeln für Multiplikation:
@@ -660,13 +660,13 @@ f(x,y,z)
 
 \chapter{Stand der Technik}
 \section{Ganja}
-Ganja ist eine Library für geometrische Algebra die von vielen anderen Libraries zur Visualisierung benutzt wird. 
+Ganja ist eine Library für geometrische Algebra die von vielen anderen Libraries zur Visualisierung benutzt wird. Auch \textsc{Gaalop}Web nutz Ganja zur Visualisierung.
 Dabei benutzt Ganja zwei Ansätze zur Visualisierung. Erstens versucht Ganja die Objekte der Algebra zu interpretieren und so darzustellen. Beispielsweise wird erkannt, dass ein bestimmter Multivektor eine Kugel darstellt und diese wird dann visualisiert.
-Da dieser Ansatz nur für niedrigdimensionale Algebren gut  funktioniert konzentriere ich mich auf den zweiten Ansatz.
+Da dieser Ansatz nur für niedrigdimensionale Algebren gut funktioniert konzentriere ich mich auf den zweiten Ansatz.
 
 Ganja benutzt unter anderem Raycasting, um Objekte zu visualisieren.
 Hier ist der Code den Ganja benutzt, um iterativ die erste Nullstelle zu finden:
-\begin{verbatim}
+\begin{minted}{glsl}
 vec3 find_root (in vec3 start, vec3 dir, in float thresh) {
     vec3 orig=start;
     float lastd = 1000.0;
@@ -679,11 +679,11 @@ vec3 find_root (in vec3 start, vec3 dir, in float thresh) {
     }
     return orig;
 }
-\end{verbatim}
+\end{minted}
          	
 
 Vereinfacht würde der code so aussehen:
-\begin{verbatim}
+\begin{minted}{python}
 t=0
 def findroot(ray,thresh):
     for i in range(count):
@@ -696,18 +696,22 @@ def findroot(ray,thresh):
             return ray(taprox)
         t+=diff
     return ray(0)
-\end{verbatim}
+\end{minted}
 
 Ganja nimmt also einfach an, dass \(\sqrt{f}\) eine SDF ist und benutzt dann im Prinzip Spheretracing. Das Problem dabei ist, dass die Funktion keine UDF ist. 
-Deshalb kann es passieren, dass der Schritt zu groß ist und die Nullstelle übersprungen wird. Mithilfe eines größeren Schwellwerts und kleinerer Schrittweite kann dem entgegengewirkt werden. Allerdings bedeutet ein größerer Schwellwert, dass \(f=thresh\) visualisiert wird statt \(f=0\) was zu großen unterschieden in der Visualisierung führen kann. Kleine Schrittweiten hingegen haben das Problem von schlechterer Konvergenz.
+Deshalb kann es passieren, dass der Schritt zu groß ist und die Nullstelle übersprungen wird. Mithilfe eines größeren Schwellwerts und kleinerer Schrittweite kann dem entgegengewirkt werden. Allerdings bedeutet ein größerer Schwellwert, dass \(f=thresh\) visualisiert wird statt \(f=0\) was zu großen Unterschieden in der Visualisierung führen kann. Kleine Schrittweiten hingegen führen zu schlechterer Konvergenz.
 
 \section{\textsc{Gaalop}}
+\textsc{Gaalop} ist eine Software zur Codegenerierung von geometrischer Algebra. Das bedeutet \textsc{Gaalop} bekommt als Input einen Ausdruck in geometrischer Algebra und kann dann daraus Code zur Auswertung des Ausdrucks in verschiedenen Sprachen erzeugen.   
+Unter anderem hat \textsc{Gaalop} auch einen integrierten Visualisierer der die Ausdrücke visualisieren kann.
 
-Anders als Ganja visualisiert \textsc{Gaalop} die Objekte als Punktwolken die auf der CPU berechnet werden. Dabei hat \textsc{Gaalop} 3 verschiedene Strategien um die Punktwolken zu erzeugen.
+\textsc{Gaalop}Web ist ein Web Interface für \textsc{Gaalop}. Für die Visualisierung wird hierbei jedoch Ganja genutzt.
+
+Anders als Ganja visualisiert \textsc{Gaalop} die Objekte als Punktwolken die auf der CPU berechnet werden. Dabei bietet \textsc{Gaalop} 3 verschiedene Strategien an, um die Punktwolken zu erzeugen. Diese werde ich im Folgenden vorstellen.
 
 \subsection{DiscreteCubeMethod}
 
-Diese Methode wird in \textsc{Gaalop} in der Klasse \texttt{DiscreteCubeMethod} implementiert. Dabei wird die Funktion \( f(\mathbf{x}) \) innerhalb eines Würfels \( [-a, a]^3 \) auf einem äquidistanten 3D Gitter ausgewertet. 
+Diese Methode wird in \textsc{Gaalop} in der Klasse \texttt{DiscreteCubeMethod} implementiert. Dabei wird der Nullraum \( f(\mathbf{x}) \) innerhalb eines Würfels \( [-a, a]^3 \) auf einem äquidistanten 3D Gitter ausgewertet. 
 
 Alle Punkte, für die der Funktionswert unterhalb eines gewählten Schwellwerts liegt, werden direkt visualisiert. Auf diese Weise ergibt sich eine Punktwolke, die die Nullstellenmenge \( f(\mathbf{x}) = 0 \) näherungsweise beschreibt.
 
@@ -716,7 +720,7 @@ Alle Punkte, für die der Funktionswert unterhalb eines gewählten Schwellwerts 
 Diese Methode wird in \textsc{Gaalop} in der Klasse \texttt{RayMethod} implementiert. Sie erzeugt ein 2d Gitter mit \(y,z \in [-a,a]\) und \(x=-a\). Für jeden Punkt des Gitters wird eine Strecke in x Richtung erzeugt auf der mittels Intervallarithmetik Nullstellen gesucht werden. Wie beim Raycasting wird also das Problem der Nullstellensuche in 3d also auf eine Nullstellensuche in 1d reduziert.
 %(Also f(x,y,-a+t) t=[0,2*a])
 Hier ist eine vereinfachte Version des \textsc{Gaalop} Quellcode:
-\begin{verbatim}
+\begin{minted}{python}
 
 def isolation(t):
     f= f(-a+t,y,z)
@@ -725,11 +729,11 @@ def isolation(t):
         df=dfdx(-a+t,y,z) 
         if 0 in df:
             if (t.hi-t.lo > 0.05):
-                center =t.mid();
-                isolation(RealInterval(t.lo, center));
-                isolation(RealInterval(center, t.hi()));
+                center =t.mid()
+                isolation(RealInterval(t.lo, center))
+                isolation(RealInterval(center, t.hi()))
             else:
-                center =t.mid();
+                center =t.mid()
                 f=f(-a+RealInterval(center),y,z)
                 if abs(f.mid())<epsilon:
                     points.append(Point(-a+center,y,z))
@@ -741,10 +745,10 @@ isolation(Intervall(0,2*a))
 
 def refinement(t):
     while (true):
-        center = t.mid();
+        center = t.mid()
         lo = f(-a+t.lo,y,z)
         
-        ce =  f(-a+center,y,z);
+        ce =  f(-a+center,y,z)
         
         if (Math.abs(ce) <= epsilon):
             points.append(Point(-a+center,y,z))
@@ -754,22 +758,25 @@ def refinement(t):
             return
     
         if (ce*lo < 0) 
-            t = RealInterval(t.lo(),center);
+            t = RealInterval(t.lo(),center)
         else
-            t = RealInterval(center,t.hi());
-\end{verbatim}
+            t = RealInterval(center,t.hi())
+\end{minted}
 
 \textsc{Gaalop} nutzt also Intervall Arithmetik um zu prüfen, ob auf einem Intervall eine Nullstelle ist und unterteilt die Intervalle rekursiv um sich der Nullstelle anzunähern.
-Die "refinement" Methode ist eine Variante des Intervallhalbierungsverfahren  (auch Bisection-Methode genannt) zur Nullstellensuche.
+Die \enquote{refinement} Methode ist eine Variante des Intervallhalbierungsverfahren  (auch Bisection-Methode genannt) zur Nullstellensuche.
 Das Verfahren beginnt mit einem Intervall \([a,b]\), in dem ein Vorzeichenwechsel von \( f_{\text{ray}}(t) \) stattfindet:
 \[
 f_{\text{ray}}(a) \cdot f_{\text{ray}}(b) < 0.
 \]
-Durch den aufrufenden Code wissen wir, dass \( f_{\text{ray}}'([a,b]) > 0 \) oder \( f_{\text{ray}}'([a,b]) < 0 \), was bedeutet, dass es maximal eine Nullstelle auf dem Intervall geben kann. Dann wird das Intervall halbiert, und es wird geprüft, in welchem Abschnitt ein Vorzeichenwechsel stattfindet. Dieser Abschnitt wird dann gewählt, und das Ganze wird wiederholt, bis der Abschnitt klein genug ist.
+Durch den aufrufenden Code wissen wir, dass \( f_{\text{ray}}'([a,b]) > 0 \) oder \( f_{\text{ray}}'([a,b]) < 0 \), was bedeutet, dass die Funktion monoton ist und es maximal eine Nullstelle auf dem Intervall geben kann. Dann wird das Intervall halbiert, und es wird geprüft, in welchem Abschnitt ein Vorzeichenwechsel stattfindet. Dieser Abschnitt wird dann gewählt, und das Ganze wird wiederholt, bis der Abschnitt klein genug ist.
 
 Allerdings hat dieser Code mehrere Probleme. Erstens wird nicht am Anfang geprüft, ob tatsächlich ein Vorzeichenwechsel vorliegt, was zu unnötiger Berechnung führt. Und zweitens sollte mathematisch gesehen auf dem Intervall nie eine Nullstelle liegen.
 
-Da \textsc{Gaalop} auch die Summe der Quadrate für \( f_{\text{ray}} \) nutzt (soweit ich das aus dem Quellcode lesen kann), muss \( f_{\text{ray}} > 0 \) sein, was bedeutet, dass es nie einen Nullstellenübergang gibt. Der Code sollte trotzdem funktionieren, mit der Einschränkung, dass \texttt{refinement} nie Nullstellen finden sollte.
+Da \textsc{Gaalop} auch die Summe der Quadrate für \( f_{\text{ray}} \) nutzt (soweit ich das aus dem Quellcode lesen kann), muss \( f_{\text{ray}} \geq 0 \) sein, was bedeutet, dass es nie einen Vorzeichenwechsel gibt. 
+\texttt{refinement} findet also nie Nullstellen. 
+
+Der Code sollte trotzdem funktionieren, mit der Einschränkung, dass \enquote{refinement} nie Nullstellen finden sollte.
 
 \subsection{GradientMethod}
 Die Gradientmethode erzeugt wie die DiscreteCubeMethod ein dichtes 3D Gitter. Diese Punkte werden dann iterativ mittels eines Gradienten Abstiegsverfahren verfeinert.
@@ -780,7 +787,7 @@ def searchInNeighborhood(p):
     lastderiv=nablaf(p)
     stepsize=1
     
-    while abs(f(p)>epsilon and n<=max_n):
+    while abs(f(p))>epsilon and n<=max_n:
         eval=normalize(nablaf(p))
         if(dot(lastderiv,eval)<0):
             stepsize/=2
@@ -788,7 +795,7 @@ def searchInNeighborhood(p):
         p-=eval*stepsize
 
         n+=1
-    if(abs(f(p))<epsilon):
+    if abs(f(p))<epsilon:
         return p
     else:
         return None
@@ -796,29 +803,29 @@ def searchInNeighborhood(p):
 \end{verbatim}
 
 
-        
-Auch dieses Verfahren hat ein kleines Problem. Durch die Normalisierung ist der erste Schritt immer Länge 1. Da der gesamte abgetastete Raum eine Kantenlänge von 10 hat, ist dieser Schritt relativ groß und der Punkt landet nicht unbedingt in der Nähe des Startpunktes. Dies ist für die Visualisierung jedoch nicht unbedingt ein Problem. 
+Auch dieses Verfahren hat einen kleinen Nachteil. Durch die Normalisierung ist der erste Schritt immer Länge 1. Da der gesamte abgetastete Raum eine Kantenlänge von 10 hat, ist dieser Schritt relativ groß und der Punkt landet nicht unbedingt in der Nähe des Startpunktes. Außerdem konvergiert das verfahren nicht besonders schnell. Dies ist für die Visualisierung jedoch nicht unbedingt ein Problem. 
 %TODO time mesurements
-
-
+\subsection{Stärken und Schwächen}
+\textsc{Gaalop} hat einen Ansatz der gewählt der auch gut in höheren Dimensionen funktioniert. Der Nachteil von \textsc{Gaalop}s Visualisierung ist, das die Methoden nicht gut optimiert sind und unnötige Berechnungen durchführen. Ein weiterer Nachteil ist die Darstellung als Punktwolken.
+Punktwolken lassen sich nur schlecht als statische Bilder darstellen da Bewegung für einen guten 3d Eindruck nötig ist. Dies ist für Paper und Bücher in denen \textsc{Gaalop} zur Visualisierung genutzt wird ein Problem.
 
 \chapter{Konzeption}
 
 \section{Anforderungen}
-Die Arbeit soll eine neue Visualisierungsmethode für kontinuierliche Flächen liefern, die in \textsc{Gaalop} und \textsc{Gaalop}Web eingebunden werden kann. Außerdem sollte die Software mit hochdimensionaler geometrischer Algebra umgehen können und sollte eine interaktive Darstellung mit niedrigen Laufzeiten bieten.
-Dabei übernimmt \textsc{Gaalop} die Umwandlung von ausdrücken in geometrischer Algebra zu Rechengraphen die dann von meiner Software weiterverarbeitet werden.
+Die Arbeit soll eine neue Visualisierungsmethode für kontinuierliche Flächen liefern, die in \textsc{Gaalop} und \textsc{Gaalop}Web eingebunden werden kann. Zudem sollte die Software mit hochdimensionaler geometrischer Algebra umgehen können und sollte eine interaktive Darstellung mit geringen Laufzeiten bieten.
+Dabei übernimmt \textsc{Gaalop} die Umwandlung von Ausdrücken in geometrischer Algebra zu Rechengraphen die dann von meiner Software weiterverarbeitet werden.
 
 
 \section{Überblick über die Lösungsansätze}
 Zur Visualisierung von Objekten in geometrischer Algebra gibt es hauptsächlich zwei Ansätze.
-Im ersten Ansatz wird versucht zu interpretieren, ob das Objekt ein Punkt, Linie, Ebene, Kugel etc. darstellt und dann entsprechend visualisiert. Dieser Ansatz funktioniert vor allem in niedrig dimensionalen Algebren da in höherdimensionalen die Anzahl der möglichen geometrischen Objekte wächst. Deshalb benutze ich den zweiten Ansatz.
+Im ersten Ansatz wird versucht zu interpretieren, ob das Objekt ein Punkt, Linie, Ebene, Kugel etc. darstellt und dann entsprechend visualisiert. Dieser Ansatz funktioniert vor allem in niedrigdimensionalen Algebren da in höherdimensionalen die Anzahl der möglichen geometrischen Objekte wächst. Deshalb benutze ich den zweiten Ansatz.
 Der zweite Ansatz funktioniert über die Nullstellensuche des Inner/Outer-Product-Nullraums des Objektes. Dabei kann versucht werden die Nullstellen als Primitive zu extrahieren oder Raycasting zu nutzen. Ich habe beide Ansätze getestet. 
 
 \section{Libraries und Frameworks}
-Der Visualisierer soll später mit \textsc{Gaalop}Web zusammen genutzt werden können. Deshalb habe ich mich entschieden, das ganze hauptsächlich als Webseite zu schreiben (also HTML und JavaScript). Davor hatte ich schon Experimente zur Visualisierung von geometrischer Algebra in Python gemacht wobei ich OpenGL, Numpy,CuPy,Sympy und Pyvista genutzt hatte. Dabei habe ich OpenGL Computeshader, CuPy und Numpy zum Numbercrunching genutzt, während zur Visualisierung von Primitiven Pyvista genutzt wurden, und zur Visualisierung von Raycasting OpenGL. 
-Da OpenGL sowohl zum Numbercrunching als auch zur Visualisierung genutzt werden kann, habe ich mich entschieden WebGL2 zu nutzen was im Prinzip die OpenGL Variante in JavaScript ist. Zudem benötige ich noch eine Library für lineare Algebra wie Matrix Inverse und QR-Zerlegung, wobei ich mich für mathjs entscheiden habe da diese Library weit verbreitet ist. Außerdem hatte ich eine Library zum plotten benötigt. Dabei habe ich mich für Plotty entschieden da es ähnlich zu Pyplot ist, was ich schon kannte.
+Der Visualisierer soll später mit \textsc{Gaalop}Web zusammen genutzt werden können. Deshalb habe ich mich entschieden, das Ganze hauptsächlich als Webseite zu schreiben (also HTML und JavaScript). Davor hatte ich schon Experimente zur Visualisierung von geometrischer Algebra in Python gemacht wobei ich OpenGL, Numpy,CuPy,Sympy und Pyvista genutzt hatte. Dabei habe ich OpenGL Computeshader, CuPy und Numpy zum Numbercrunching genutzt, während zur Visualisierung von Primitiven Pyvista genutzt wurden, und zur Visualisierung von Raycasting OpenGL. 
+Da OpenGL sowohl zum Numbercrunching als auch zur Visualisierung genutzt werden kann, habe ich mich entschieden WebGL2 zu nutzen was im Prinzip die OpenGL Variante in JavaScript ist. Zudem benötige ich noch eine Library für lineare Algebra wie Matrix Inverse und QR-Zerlegung, wobei ich mich für mathjs entscheiden habe da diese Library weit verbreitet ist. Außerdem benötige ich eine Library zum plotten. Dabei habe ich mich für Plotty entschieden da es ähnlich zu Pyplot ist, was ich schon kannte.
 Der zweite Teil der Software ist ein Plugin für \textsc{Gaalop}, das wie der Rest von \textsc{Gaalop} in Java geschrieben ist.
-Zudem habe ich noch ein paar kleine Python Scripts mit Pandas benutzt, um daten auszuwerten.
+Zudem habe ich noch ein paar kleine Python Scripts mit Pandas benutzt, um Daten auszuwerten.
 
 
 \chapter{Auf Raycasting basierende Methoden}
@@ -939,7 +946,7 @@ Auch hier habe ich eine maximale Schrittweite eingeführt.
 \subsection{Aberth-Verfahren}
 Im Gegensatz zum Newtonverfahren und der UDF-Aproximation findet das Aberth-Verfahren alle Nullstellen. Das Verfahren ist deshalb stabiler, allerdings auch wesentlich langsamer.
 
-Ich habe Zwei Varianten des Verfahrens entwickelt, wobei die Zweite Variante einfacher und schneller ist. Dabei basiert die Zweite Variante auf der Matrix Variante die im Kapitel Implementierung eingeführt wird.
+Ich habe Zwei Varianten des Verfahrens entwickelt, wobei die Zweite Variante einfacher und schneller ist. Dabei basiert die Zweite Variante auf der Matrix Variante die im Kapitel Implementierung eingeführt wird und wird im Abschnitt~\ref{sec:Schnelle_Nullstellensuche} beschrieben.
 %TODO Symbolic link
 
 Eine interessante Eigenschaft dieses Polynoms, die ich später ausnutzen werde, ist, dass alle seine komplexen Nullstellen als konjugierte Paare auftreten.
@@ -1037,9 +1044,9 @@ Ich habe in dieser Arbeit trotzdem den Immigrantenanteil zur Prüfung verwendet.
 %bild der komplexen Nullstellen eines torus
 %explore udf_aprox as threshold
 
-\subsubsection*{Ghosting-Artefakte}
+\subsubsection*{Wahl der Nullstellen}
 
-Meine erste Idee für die Visualisierung war, das \( z_j \) mit dem kleinsten Imaginärteil-Quadrat zu wählen, da dieses am ehesten einer reellen Nullstelle entspricht. Das führt jedoch zu Ghosting-Artefakten:
+Meine erste Idee für die Visualisierung war, das \( z_j \) mit dem kleinsten Imaginärteil-Quadrat zu wählen, da dieses am ehesten einer reellen Nullstelle entspricht. Das führt jedoch zu einer fehlerhaften Darstellung.
 % TODO: Bild
 
 Diese Artefakte entstehen, weil bei mehreren echten Nullstellen eventuell nicht die erste, sondern die welche besser konvergiert gewählt wird.
@@ -1274,7 +1281,7 @@ Als
 \chapter{Implementierung}
 %mobile
 In diesem Kapitel geht es um die Implementierungsdetails.
-Das Kapitel beginnt mit einem Überblick über die Systemarchitektur. Dann folgt im Unterkapitel QR-Zerlegung eine wichtige mathematische Optimierung zum Beschleunigen. Als Nächstes folgt, das Unterkapitel Codegenerierung in dem beschrieben wird, wie man vom \textsc{Gaalop} Output zur Evaluierung von f auf der GPU kommt. Dann erfolgen ein paar Performance Tests die ich zur Analyse und zum Treffen von Designentscheidungen geschrieben habe.
+Das Kapitel beginnt mit einem Überblick über die Systemarchitektur. Dann folgt im Unterkapitel Matrixversion eine wichtige mathematische Optimierung zum Beschleunigen. Als Nächstes folgt, das Unterkapitel Codegenerierung in dem beschrieben wird, wie man vom \textsc{Gaalop} Output zur Evaluierung von f auf der GPU kommt. Dann erfolgen ein paar Performance Tests die ich zur Analyse und zum Treffen von Designentscheidungen geschrieben habe.
 Zum Schluss folgen noch ein paar einfachere Optimierung.
 \section{Systemarchitektur}
 %mobile
@@ -1288,7 +1295,7 @@ Immer wenn sich Parameter ändern, müssen die primitive für die volumenbasiert
 
 
 
-\section{QR-Zerlegung}
+\section{Matrixvariante}
 
 
 \subsubsection{INPS/ONPS als Matrix Vektor Darstellung}
@@ -1368,7 +1375,7 @@ f = \left\|\begin{bmatrix} R' \\ 0 \end{bmatrix} \cdot P(x, y, z)\right\|^2 = \|
 
 Das bedeutet, es kann \( M' = R' \) gewählt werden.
 
-Beachtet werden muss hierbei, dass wegen Gleitkommaarithmetik die Zeilen von \( R \) die 0 sein sollten nur fast null sind (im Bereich von  \( 10^{-14} \)). Allerdings funktioniert das ganze trotzdem, wenn auch die Zeilen welche fast 0 sind, entfernt werden, um \( R' \) zu erhalten.
+Beachtet werden muss hierbei, dass wegen Gleitkommaarithmetik die Zeilen von \( R \) die 0 sein sollten nur fast null sind (im Bereich von  \( 10^{-14} \)). Allerdings funktioniert das Ganze trotzdem, wenn auch die Zeilen welche fast 0 sind, entfernt werden, um \( R' \) zu erhalten.
 
 Eine einfache Alternative, die allerdings schwächer ist, ist durch die Ausnutzung von 
 \(\ker(A) = \ker(A^TA)\).
@@ -1379,20 +1386,21 @@ Ich habe diese Alternative allerdings nicht getestet oder weiterverfolgt.
 
 Durch beide Methoden wird die Anzahl der Zeilen der Matrix auf die Anzahl der Spalten limitiert.
 
-\subsubsection{Bessere Nullstellensuche}
+\subsubsection{Schnelle Nullstellensuche}
+\label{sec:Schnelle_Nullstellensuche}
+
 Sei nun \(F_R=R \cdot P(x,y,z)\).
 
-Um die Nullstellensuche entlang eines Strahls zu beschleunigen, kann sie erst auf nur einer Zeile von \(R\) beschränkt werden, anstatt das ganze Gleichungssystem zu betrachten. Die reellen Nullstellen von f sind der Schnitt der Nullstellen der Komponentenpolynome von 
-\(F_R\). Es gilt \(f = 0 \iff \forall i\, (F_R)_i = 0\). Bestimmt man also zunächst die Nullstellen einer einzelnen Komponente \((F_R)_i\)(mit \((F_R)_i \not\equiv 0\)), so kann man anschließend prüfen, ob dies auch Nullstellen von f sind. Die Nullstellensuche von \((F_R)_i\) ist dabei wesentlich einfacher, da \((F_R)_i\) einen kleineren Grad hat und schneller auszuwerten ist. Außerdem sind Nullstellen nicht unbedingt konjugate pairs was zu einer besseren Konvergenz des Aberth-Verfahrens führt.
+Um die Nullstellensuche entlang eines Strahls zu beschleunigen, kann sie erst auf nur einer Zeile von \(R\) beschränkt werden, anstatt das ganze Gleichungssystem zu betrachten. Die reellen Nullstellen von \(f\) sind der Schnitt der Nullstellen der Komponentenpolynome von 
+\(F_R\). Es gilt \(f = 0 \iff \forall i\, (F_R)_i = 0\). Bestimmt man also zunächst die Nullstellen einer einzelnen Komponente \((F_R)_i\)(mit \((F_R)_i \not\equiv 0\)), so kann man anschließend prüfen, ob dies auch Nullstellen von \(f\) sind. Die Nullstellensuche von \((F_R)_i\) ist dabei wesentlich einfacher, da \((F_R)_i\) einen kleineren Grad hat und schneller auszuwerten ist. Außerdem sind Nullstellen nicht unbedingt konjugate pairs was zu einer besseren Konvergenz des Aberth-Verfahrens führt.
+
+Die Prüfung ob die Nulstellen von \((F_R)_i\) auch Nulstellen von \(F_R\) sind ist allerdings komplizierter. Ich habe mich entschieden an der potientiellen Nullstelle einen Levenberg Marquad schritt auszuwerten, um dann zu prüfen ob die länge dieses Schritts unter einem Schwellwert liegt. Alternativ könnte man auch die UDFAprox oder \(F_R\) an der Nullstelle auswerten und testen ob dies unter einem Schwellwert liegt.
 
 Weiterhin kann \(R\) und P so konstruiert werden, dass \((F_R)_i\) einen von i abhängen Grad hat.
 Vor der Konstruktion von \(R\) können die Polynome in P so sortiert werden, sodass Polynome mit niedrigerem Grad weiter unten sind. Entsprechend müssen auch die Spalten von M permutiert werden.
 Das bedeutet, dass \(grad((F_R)_i)=grad(P_i)\). Bei der Wahl von \((F_R)_i\) zur Nullstellensuche kann dann das \((F_R)_i\) mit dem niedrigsten grad gewählt werden, was die Nullstellensuche theoretisch beschleunigt.
 Ich habe die Sortierung implementiert, aber diesen Fakt nicht ausgenutzt da dies die Nullstellensuche im Shader wesentlich komplexer machen würde. In der Praxis benutze ich daher immer \((F_R)_1\) und lade immer das ganze \(R\) (mit Zeilen die vollkommen aus Nullen bestehen) in den Shader.
 
-
-
-Struktur (Klassen von Funktionen und Datenelementen), ...
 
 
 
@@ -1405,7 +1413,7 @@ Struktur (Klassen von Funktionen und Datenelementen), ...
 Um den von \textsc{Gaalop} generierten Rechengraph (eng computational Graph) auf der GPU auszuwerten, muss dieser zu glsl (OpenGL Code) konvertiert werden.
 %i chose a dag because of memory leaks
 
-Das ganze passiert in mehreren schritten.
+Dies passiert in mehreren Schritten.
 Als Erstes wird der Graph in \textsc{Gaalop} erzeugt und durch ein Plugin als json exportiert.
 Dann wird das json in JavaScript eingelesen und wieder zu einem Graph deserialisiert.
 Als Nächstes wird der Graph manipuliert. Dazu gehören Vereinfachung, Ableitungsberechnungen und Splitting.
@@ -1454,7 +1462,7 @@ Jede Node im Graph steht dabei für eine Operation (Wie Addition, Multiplikation
 Um die Auswertung auf der GPU zu beschleunigen, wird der Graph in mehrere Teile geschnitten.
 Auf der GPU wird der Graph zur Visualisierung später vielfach ausgewertet wobei sich aber nur manche variablen während der Visualisierung ändern.
 
-Das ganze lässt sich gut an einem Beispiel verdeutlichen. 
+Das Ganze lässt sich gut an einem Beispiel verdeutlichen. 
 Im Beispiel wird die SDF einer Kugel zwischen 2 punkten konstruiert.
 
 
@@ -1624,7 +1632,7 @@ Dieser Ansatz war relativ unflexibel und unübersichtlich. Anfangs ging es noch,
 
 %explain type propergation
 Mein nächster Ansatz war es typisierte nodes zu machen. Dabei habe ich den Code für Codegenerierung und typ propergation in die nodes gepackt statt eigene Klassen zur Codegenerierung zuschreiben.
-Der Vorteil von diesem Ansatz war, dass er wesentlich flexibler ist und einfacher zu erweitern. Weiterhin ist ermöglicht dieser Ansatz die Auswertung des ganzen auf der CPU. Der Nachteil von diesem Ansatz war, dass er wesentlich größer ist, weshalb ich irgendwann abgebrochen habe.
+Der Vorteil von diesem Ansatz war, dass er wesentlich flexibler ist und einfacher zu erweitern. Weiterhin ist ermöglicht dieser Ansatz die Auswertung des Ganzen auf der CPU. Der Nachteil von diesem Ansatz war, dass er wesentlich größer ist, weshalb ich irgendwann abgebrochen habe.
 
 Als Nächstes habe ich mich entschieden die Ableitungsberechnung auf Backpropergation und Forward-mode-autodiff umzustellen. Dies hat zwei große Vorteile.
 Erstens gibt es nur noch 3 typen: Skalare, komplexe Zahlen und Intervalle was die Codegenerierung wesentlich einfacher macht. Und zweitens müsste Backpropergation theoretisch bei manchen Ansätzen schneller sein da weniger Multiplikationen benötigt werden.
@@ -1664,7 +1672,7 @@ Dazu werden alle Nodes aus dem Graph extrahiert die nur von den Variablen x,y od
 
 %mobile
 Der nächste Schritt ist die Auswahl einer maximal linear unabhängigen Untermenge dieser nodes. Dafür wird für jede node ein Koeffizientenvektor in einer Monombasis und die Anzahl der vorfahren berechnet.
-Die nodes werden sortiert nach Anzahl der vorfahren und dann der Reihe nach zu P hinzugefügt, falls sie linear unabhängig von den schon hinzugefügten Polynomen sind. Ich nutze dazu eine modifizierte Version des Modifizerten Gram-Schmidtschen Orthogonalisierungsverfahren.
+Die nodes werden sortiert nach Anzahl der vorfahren und dann der Reihe nach zu P hinzugefügt, falls sie linear unabhängig von den schon hinzugefügten Polynomen sind. Ich nutze dazu eine modifizierte Version des Modifizierten Gram-Schmidtschen Orthogonalisierungsverfahren.
 %https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
 
 Nachdem P vollständig ist, wird im Prinzip der alte Ansatz genutzt, um M zu erhalten.
@@ -1781,11 +1789,11 @@ Die Implementierung lässt sich in der Datei MultiresBuffer3.js finden.
 %Todo implement tile based
 
 
-\subsection{Polynom entlang des Strahls}
+\subsection{Polynom Auswertung über Koeffizienten}
 
-In den Raycasting Methoden wird f(ray(t)) sehr häufig ausgewertet. Da f(ray(t)) ein Polynom ist, kann man die Koeffizienten für dieses Polynom berechnen und dann in Zukunft die Funktion anhand dieser Koeffizienten auswerten. Die Auswertung anhand der Koeffizienten kann wesentlich schneller sein da sie in der Regel wesentlich weniger Multiplikationen benötigt werden.
+In den Raycasting Methoden wird \(f(\text{ray}(a))\) sehr häufig ausgewertet. Da \(f(\text{ray}(a))\) ein Polynom ist, kann man die Koeffizienten für dieses Polynom berechnen und dann in Zukunft die Funktion anhand dieser Koeffizienten auswerten. Die Auswertung anhand der Koeffizienten kann wesentlich schneller sein, da in der Regel wesentlich weniger Multiplikationen benötigt werden.
 
-Die Koeffizienten berechne ich dabei mit einer Vandermonde Matrix.  
+Die Koeffizienten berechne ich dabei mittels einer Vandermonde Matrix.  
 %TODO count multiplications and compare
 
 Leider scheint diese Optimierung sehr numerisch instabil zu sein, was zu einem sehr verrauschten Bild führt. In der Nähe der Kamera ist das Rauschen kleiner, aber immer noch relativ groß. Ich vermutete, dass das daran liegt, das Ich die Äquidistante Stützstellen nahe der Kamera gewählt habe.
@@ -1805,7 +1813,9 @@ Dann sind die Nullstellen von \(f_\text{aprox}(\frac{x}{k})\) im Intervall \([-2
 Ich habe Anfangs auch mit closed form Lösungen experimentiert, allerdings funktionieren diese nur bis zum 4ten Grad und weiterhin haben sie das gleiche Problem wie das auf die Koeffizienten basierte Aberth-Verfahren. Die Ergebnisse sind verrauscht.
 
 
-Eine Möglichkeit, die verrauschten Ergebnisse nutzbar zu machen, ist, erst eine verrauschte Näherung für die Nullstellen mit \(f_\text{aprox}\) zu berechnen, um dann \(f\) normal auszuwerten, um mit den angenäherten Nullstellen weiter zu rechnen. Dadurch bleibt die Qualität erhalten und es kann ein kleiner Performance Boost für das Aberth-Verfahren beobachtet werden.
+Eine Möglichkeit, die verrauschten Ergebnisse nutzbar zu machen, ist, erst eine verrauschte Näherung für die Nullstellen mit \(f_\text{aprox}\) zu berechnen, um dann \(f\) normal auszuwerten, um mit den angenäherten Nullstellen weiter zu rechnen. Dadurch bleibt die Qualität erhalten und es kann ein kleiner Performance Boost für das Aberth-Verfahren beobachtet werden. 
+Dabei passt dieses Verfahren besonders gut zu der im Abschnitt~\ref{sec:Schnelle_Nullstellensuche} beschriebenen Methode da diese mit Polynomen kleineren Gerades arbeitet. Dies macht die Vandermonde Matrix kleiner und das Verfahren stabieler.
+
 
 
 \begin{figure}

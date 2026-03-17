@@ -14,14 +14,18 @@
 
 // These options are used in raycastingmain.glsl to control lighting.
 // Define LIGHTING_MODE to select a option
-#define LIGHTING_MODE_POINTLIGHT_PHONG 1
+#define LIGHTING_MODE_ORTHOGRAPHIC_PHONG 1
 #define LIGHTING_MODE_OFF 2
+#define LIGHTING_MODE_POINTLIGHT_PHONG_CAM 3
 
 // These options are used in raycastingmain.glsl to control how normals for color are computed.
 // normals are only computed if COLOR_MODE_NORMALS or not LIGHTING_MODE_OFF
 // Define NORMALS_MODE to select a option
 #define NORMALS_MODE_PIXEL_GRADIENTS 1
 #define NORMALS_MODE_FIRST_DERIV 2
+#define NORMALS_MODE_FIRST_DERIV_R 3
+
+
 
 #include "./util.glsl"
 

@@ -1,0 +1,42 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{isolation}\PYG{p}{(}\PYG{n}{t}\PYG{p}{):}
+    \PYG{n}{f}\PYG{o}{=} \PYG{n}{f}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{a}\PYG{o}{+}\PYG{n}{t}\PYG{p}{,}\PYG{n}{y}\PYG{p}{,}\PYG{n}{z}\PYG{p}{)}
+
+    \PYG{k}{if} \PYG{l+m+mi}{0} \PYG{o+ow}{in} \PYG{n}{f}\PYG{p}{:} \PYG{c+c1}{\PYGZsh{}  if (f.lo() \PYGZlt{}= 0 \PYGZam{}\PYGZam{} 0 \PYGZlt{}= f.hi())}
+        \PYG{n}{df}\PYG{o}{=}\PYG{n}{dfdx}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{a}\PYG{o}{+}\PYG{n}{t}\PYG{p}{,}\PYG{n}{y}\PYG{p}{,}\PYG{n}{z}\PYG{p}{)}
+        \PYG{k}{if} \PYG{l+m+mi}{0} \PYG{o+ow}{in} \PYG{n}{df}\PYG{p}{:}
+            \PYG{k}{if} \PYG{p}{(}\PYG{n}{t}\PYG{o}{.}\PYG{n}{hi}\PYG{o}{\PYGZhy{}}\PYG{n}{t}\PYG{o}{.}\PYG{n}{lo} \PYG{o}{\PYGZgt{}} \PYG{l+m+mf}{0.05}\PYG{p}{):}
+                \PYG{n}{center} \PYG{o}{=}\PYG{n}{t}\PYG{o}{.}\PYG{n}{mid}\PYG{p}{()}
+                \PYG{n}{isolation}\PYG{p}{(}\PYG{n}{RealInterval}\PYG{p}{(}\PYG{n}{t}\PYG{o}{.}\PYG{n}{lo}\PYG{p}{,} \PYG{n}{center}\PYG{p}{))}
+                \PYG{n}{isolation}\PYG{p}{(}\PYG{n}{RealInterval}\PYG{p}{(}\PYG{n}{center}\PYG{p}{,} \PYG{n}{t}\PYG{o}{.}\PYG{n}{hi}\PYG{p}{()))}
+            \PYG{k}{else}\PYG{p}{:}
+                \PYG{n}{center} \PYG{o}{=}\PYG{n}{t}\PYG{o}{.}\PYG{n}{mid}\PYG{p}{()}
+                \PYG{n}{f}\PYG{o}{=}\PYG{n}{f}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{a}\PYG{o}{+}\PYG{n}{RealInterval}\PYG{p}{(}\PYG{n}{center}\PYG{p}{),}\PYG{n}{y}\PYG{p}{,}\PYG{n}{z}\PYG{p}{)}
+                \PYG{k}{if} \PYG{n+nb}{abs}\PYG{p}{(}\PYG{n}{f}\PYG{o}{.}\PYG{n}{mid}\PYG{p}{())}\PYG{o}{\PYGZlt{}}\PYG{n}{epsilon}\PYG{p}{:}
+                    \PYG{n}{points}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{Point}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{a}\PYG{o}{+}\PYG{n}{center}\PYG{p}{,}\PYG{n}{y}\PYG{p}{,}\PYG{n}{z}\PYG{p}{))}
+        \PYG{k}{else}\PYG{p}{:}
+            \PYG{n}{refinement}\PYG{p}{(}\PYG{n}{t}\PYG{p}{)}
+\PYG{n}{isolation}\PYG{p}{(}\PYG{n}{Intervall}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{a}\PYG{p}{))}
+
+
+
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{refinement}\PYG{p}{(}\PYG{n}{t}\PYG{p}{):}
+    \PYG{k}{while} \PYG{p}{(}\PYG{n}{true}\PYG{p}{):}
+        \PYG{n}{center} \PYG{o}{=} \PYG{n}{t}\PYG{o}{.}\PYG{n}{mid}\PYG{p}{()}
+        \PYG{n}{lo} \PYG{o}{=} \PYG{n}{f}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{a}\PYG{o}{+}\PYG{n}{t}\PYG{o}{.}\PYG{n}{lo}\PYG{p}{,}\PYG{n}{y}\PYG{p}{,}\PYG{n}{z}\PYG{p}{)}
+
+        \PYG{n}{ce} \PYG{o}{=}  \PYG{n}{f}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{a}\PYG{o}{+}\PYG{n}{center}\PYG{p}{,}\PYG{n}{y}\PYG{p}{,}\PYG{n}{z}\PYG{p}{)}
+
+        \PYG{k}{if} \PYG{p}{(}\PYG{n}{Math}\PYG{o}{.}\PYG{n}{abs}\PYG{p}{(}\PYG{n}{ce}\PYG{p}{)} \PYG{o}{\PYGZlt{}=} \PYG{n}{epsilon}\PYG{p}{):}
+            \PYG{n}{points}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{Point}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{n}{a}\PYG{o}{+}\PYG{n}{center}\PYG{p}{,}\PYG{n}{y}\PYG{p}{,}\PYG{n}{z}\PYG{p}{))}
+            \PYG{k}{return}
+
+        \PYG{k}{if} \PYG{p}{(}\PYG{n}{t}\PYG{o}{.}\PYG{n}{hi}\PYG{o}{\PYGZhy{}}\PYG{n}{t}\PYG{o}{.}\PYG{n}{lo} \PYG{o}{\PYGZlt{}} \PYG{l+m+mf}{0.001}\PYG{p}{):}
+            \PYG{k}{return}
+
+        \PYG{k}{if} \PYG{p}{(}\PYG{n}{ce}\PYG{o}{*}\PYG{n}{lo} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{0}\PYG{p}{)}
+            \PYG{n}{t} \PYG{o}{=} \PYG{n}{RealInterval}\PYG{p}{(}\PYG{n}{t}\PYG{o}{.}\PYG{n}{lo}\PYG{p}{(),}\PYG{n}{center}\PYG{p}{)}
+        \PYG{k}{else}
+            \PYG{n}{t} \PYG{o}{=} \PYG{n}{RealInterval}\PYG{p}{(}\PYG{n}{center}\PYG{p}{,}\PYG{n}{t}\PYG{o}{.}\PYG{n}{hi}\PYG{p}{())}
+\end{MintedVerbatim}

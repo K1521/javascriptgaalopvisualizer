@@ -14,6 +14,7 @@
 //all the ? get generated in codegenBackpropergation2 in class visualisationtargetnode in method gencodeR
 const int basislength=?;
 const int basismaxdegree=?;
+const int numoutputs=?;
 const int basislength4=(basislength+3)/4;
 
 uniform vec4[(basislength-(basislength/4)*2)*(basislength/4+1)] RDense;
@@ -157,6 +158,15 @@ vec4 DCrowR(vec3 ro,vec3 rd,Complex a){
       acc+=RDense[k/4][k%4]*P[j];
     }
     return acc;
+}
+
+
+vec4 xyzDualrowR(vec3 pos){//not optimized but i needed  it
+  	vec4[basislength] P;
+	  makexyzDualP(pos,P);
+    vec4[basislength] b;
+    MatmulRDense(P,b);
+    return b[0];
 }
 
 float rowR(vec3 pos){

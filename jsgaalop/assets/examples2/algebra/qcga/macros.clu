@@ -1,0 +1,39 @@
+// QCGA Korrektur-Makros für die eo-Vektoren (da CSV keine 0.5 erlaubt)
+q_eo1 = { 0.5 * eo1 }
+q_eo2 = { 0.5 * eo2 }
+q_eo3 = { 0.5 * eo3 }
+q_eo4 = { 0.5 * eo4 }
+q_eo5 = { 0.5 * eo5 }
+q_eo6 = { 0.5 * eo6 }
+
+// Der QCGA Punkt-Konstruktor (x,y,z)
+// Erzeugt einen Vektor in der 15D QCGA
+createPoint = { 
+  x = _P(1); y = _P(2); z = _P(3);
+  x*e1 + y*e2 + z*e3 + 
+  0.5*x*x*ei1 + 0.5*y*y*ei2 + 0.5*z*z*ei3 + 
+  x*y*ei4 + x*z*ei5 + y*z*ei6 + 
+  (q_eo1() + q_eo2() + q_eo3() + q_eo4() + q_eo5() + q_eo6())
+}
+
+// Hilfselemente für die Repräsentation von Quadriken (Wedge-Basis)
+pIi = { ei1^ei2^ei3^ei4^ei5^ei6 }
+pIo = { q_eo1()^q_eo2()^q_eo3()^q_eo4()^q_eo5()^q_eo6() }
+
+// Pseudoskalare für die Dualisierung
+IQC = { e1^e2^e3^e4^e5^e6^e7^e8^e9^e10^e11^e12^e13^e14^e15 }
+
+// Dual-Operator (Wichtig für Schnitte/Intersektionen)
+Dual = { -_P(1).IQC() }
+
+// Meet-Operator (Schnitt von zwei Quadriken)
+Meet = { Dual(Dual(_P(1)) ^ Dual(_P(2))) }
+
+// Beispiel für eine Kugel-Quadrik (GIPNS)
+// Parameter: x,y,z (Zentrum) und r (Radius)
+Sphere = {
+  cx = _P(1); cy = _P(2); cz = _P(3); r = _P(4);
+  -2*cx*e1 - 2*cy*e2 - 2*cz*e3 + 
+  ei1 + ei2 + ei3 + 
+  (cx*cx + cy*cy + cz*cz - r*r) * (q_eo1() + q_eo2() + q_eo3())
+}

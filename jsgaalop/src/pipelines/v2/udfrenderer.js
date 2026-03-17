@@ -12,6 +12,9 @@ export class udfrenderer extends simplerenderer{
     element.appendChild(makeLogSlider(slidertemplate,"threshold",
       (x)=>{this.threshold=x;this.ctx?.requestRender();
     }));
+    element.appendChild(makeLogSlider(slidertemplate,"m",
+      (x)=>{this.m=x;this.ctx?.requestRender();},
+    {min:0.1,max:10,value:1}));
 
   }
 
@@ -20,6 +23,7 @@ export class udfrenderer extends simplerenderer{
     this.shader.use();
     this.shader.uniform1f("threshold",this.threshold||1e-3);
     this.shader.uniform1f("maxstep",this.maxstep||1e-3);
+    this.shader.uniform1f("m",this.m||1);
     super.render(ctx);
   }
 }

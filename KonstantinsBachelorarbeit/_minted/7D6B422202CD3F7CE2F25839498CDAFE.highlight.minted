@@ -1,0 +1,14 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{n}{t}\PYG{o}{=}\PYG{l+m+mi}{0}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{findroot}\PYG{p}{(}\PYG{n}{ray}\PYG{p}{,}\PYG{n}{thresh}\PYG{p}{):}
+    \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n}{count}\PYG{p}{):}
+        \PYG{n}{d}\PYG{o}{=}\PYG{n}{sqrt}\PYG{p}{(}\PYG{n}{f}\PYG{p}{(}\PYG{n}{ray}\PYG{p}{(}\PYG{n}{t}\PYG{p}{)))}
+        \PYG{n}{diff}\PYG{o}{=}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{o}{*}\PYG{n}{d}\PYG{o}{+}\PYG{l+m+mf}{0.0001}\PYG{p}{)}\PYG{o}{*}\PYG{n}{stepsize}
+        \PYG{k}{if}\PYG{p}{(}\PYG{n}{d}\PYG{o}{\PYGZlt{}}\PYG{n}{thresh}\PYG{p}{):}
+            \PYG{c+c1}{\PYGZsh{}es gilt f(ray(tlast))=dlast und f(ray(tlast+diff))=d da t=tlast+diff}
+            \PYG{c+c1}{\PYGZsh{}gesucht ist taprox mit f(ray(taprox))=thresh}
+            \PYG{c+c1}{\PYGZsh{}taprox wird linear approximiert}
+            \PYG{k}{return} \PYG{n}{ray}\PYG{p}{(}\PYG{n}{taprox}\PYG{p}{)}
+        \PYG{n}{t}\PYG{o}{+=}\PYG{n}{diff}
+    \PYG{k}{return} \PYG{n}{ray}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{)}
+\end{MintedVerbatim}

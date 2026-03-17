@@ -21,7 +21,7 @@ uniform vec4 incolor;//only rgb are used currently (not alpha)
 #endif
 
 #ifndef LIGHTING_MODE
-#define LIGHTING_MODE LIGHTING_MODE_POINTLIGHT_PHONG
+#define LIGHTING_MODE LIGHTING_MODE_POINTLIGHT_PHONG_CAM
 #endif
 
 #ifndef NORMALS_MODE
@@ -40,8 +40,16 @@ vec3 getNormal(vec3 p,vec3 rayDir){
 }
 #endif
 
+#if NORMALS_MODE==NORMALS_MODE_FIRST_DERIV_R
+vec3 getNormal(vec3 p,vec3 rayDir){
+    vec3 res=xyzDualsusR(p-0.01*rayDir).xyz;
+    res*=sign(dot(res,rayDir));
+    return -normalize(res);
+}
+#endif
 
-vec3 applyLighting(
+
+vec3 applyLighting(//written by chatgpt i belive
     vec3 baseColor,
     vec3 normal,
     vec3 lightDir,
@@ -118,13 +126,13 @@ void main() {
 
 
 
-
+    //normals are in worldspace
     #if !(COLOR_MODE==COLOR_MODE_NORMALS || LIGHTING_MODE!=LIGHTING_MODE_OFF)
         //in tis case we dont need normals
     #elif NORMALS_MODE==NORMALS_MODE_PIXEL_GRADIENTS
-        vec3 normal=transpose(cameraMatrix)*getNormalPixelGradients(p);
+        vec3 normal=getNormalPixelGradients(p);
     #elif NORMALS_MODE==NORMALS_MODE_FIRST_DERIV
-        vec3 normal=transpose(cameraMatrix)*getNormal(p,rayDir);
+        vec3 normal=getNormal(p,rayDir);
     #else
       #error "Unknown NORMALS_MODE"
     #endif
@@ -133,7 +141,7 @@ void main() {
     #if COLOR_MODE==COLOR_MODE_INCOLOR
         vec3 col=incolor.rgb;
     #elif COLOR_MODE==COLOR_MODE_NORMALS
-        vec3 col=normaltocol(normal);
+        vec3 col=normaltocol(transpose(cameraMatrix)*normal);
     #else
         #error "Unknown COLOR_MODE"
     #endif
@@ -152,12 +160,14 @@ void main() {
     col*=pattern;
     //if(pattern<0.9)col.xyz=col.yzx;
 
-    
+    //i did lighting in worldspace
     #if LIGHTING_MODE==LIGHTING_MODE_OFF
        //nothing
-    #elif LIGHTING_MODE==LIGHTING_MODE_POINTLIGHT_PHONG
-        //col=applyLighting(col,normal,vec3(1,1,1),-rayDir,0.4,0.3,32.);
-        col=applyLighting(col,normal,-rayDir,-camDir,0.4,0.3,32.);
+    #elif LIGHTING_MODE==LIGHTING_MODE_ORTHOGRAPHIC_PHONG
+        col=applyLighting(col,normal,vec3(1,1,1),-rayDir,0.5,0.2,32.);
+       
+    #elif LIGHTING_MODE==LIGHTING_MODE_POINTLIGHT_PHONG_CAM
+         col=applyLighting(col,normal,-rayDir,-rayDir,0.5,0.2,32.);
     #else
         #error "Unknown LIGHTING_MODE"
     #endif

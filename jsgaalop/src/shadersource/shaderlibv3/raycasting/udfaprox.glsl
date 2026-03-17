@@ -13,6 +13,7 @@ precision mediump float;
 
 uniform float threshold;
 uniform float maxstep;
+uniform float m;
 
 vec3 ray(float t,vec3 rayOrigin,vec3 rayDir){
     return t*rayDir+rayOrigin;
@@ -39,17 +40,38 @@ void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_
     error=inf;
     float xlast=0.;
     float slast=0.;
+    const float eps=0.;//1e-15;
     for(int i=0;i<100;i++){
         xyzDual xyzf=xyzDualsusR(ray(xmin,rayOrigin,rayDir));
-        float stepsize=xyzf.w/(1e-12+length(xyzf.xyz));
-        if(threshold>stepsize){
+        float stepsize=xyzf.w/(eps+length(xyzf.xyz));
+        if(threshold>stepsize && xyzf.w<1e10){
             error=stepsize;
-            xmin=solveLinearThreshold(xlast,slast,xmin,stepsize,threshold);
+
+            //xmin=solveLinearThreshold(xlast,slast,xmin,stepsize,threshold);
+            float x1=xlast;
+            float x2=xmin;
+            float y1=slast;//>threshold
+            float y2=stepsize;//<threshold
+
+            for(int j=0;j<2;j++){
+                float x=solveLinearThreshold(x1,y1,x2,y2,threshold);
+                xyzf=xyzDualsusR(ray(x,rayOrigin,rayDir));
+                float y=xyzf.w/(eps+length(xyzf.xyz));
+                if(y>threshold){
+                    y1=y;
+                    x1=x;
+                }else{
+                    y2=y;
+                    x2=x;
+                }
+            }
+            xmin=solveLinearThreshold(x1,y1,x2,y2,threshold);
+
             return;
         }
         xlast=xmin;
         slast=stepsize;
-        xmin+=min(maxstep,stepsize);
+        xmin+=min(maxstep,m*stepsize);
     }
     error=inf;
     xmin=inf;

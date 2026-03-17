@@ -1,0 +1,12 @@
+// -a qcga
+p1 = createPoint(0,1,0);
+p2 = createPoint(0,-1,0);
+p3 = createPoint(1,0,0);
+p4 = createPoint(0,0,1);
+
+// Eine Quadrik durch Wedge von Punkten + pIi/pIo
+?Sphere = p1^p2^p3^p4^pIi()^pIo();
+
+
+:Red;
+:Sphere;

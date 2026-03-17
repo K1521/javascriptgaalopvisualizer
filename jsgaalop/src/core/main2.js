@@ -27,7 +27,7 @@ import { addPipelineSelectorForObject } from "../ui/PipelineSelector.js";
 
 import { makeSlider,ReorderableList } from "../ui/sliders.js";
 //import { MarchingCubesRenderer2 } from "../pipelines/MarchingCubesRenderer2.js";
-
+import { MarchingCubesRenderer } from '../pipelines/v2/MarchingCubesRenderer2.js';
 //import { throwonglerror } from "../glwrapper/glwrapper.js";
 
 window.DEBUG_LOG = ["test"];
@@ -313,6 +313,8 @@ async function main(gajson){
     const udfaproxsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/udfaprox.glsl");
     obj.addPipeline("udfaprox",new udfrenderer(context,gl,visgraph,udfaproxsource,color));
 
+    const Rgn=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGaussNewton.glsl");
+    obj.addPipeline("MC",new MarchingCubesRenderer(gl,visgraph,Rintervallsource,Rgn,color))
     
     //obj.setActivePipeline("voxelpoint2");
     //context.updateParams();
@@ -335,7 +337,7 @@ async function main(gajson){
   for(const visgraph of visgraphs){
     let vert=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/R.glsl");
     vert=visgraph.gencodeR(vert);
-    const tf=new TransformFeedbackWrapper(gl,vert,["sus","row"]);
+    const tf=new TransformFeedbackWrapper(gl,vert,["sus","row","udfaprox"]);
     const color=graph.objectcolormap.get(visgraph.name).toCss(); 
     const trace={
       x: [],y: [],
@@ -349,8 +351,14 @@ async function main(gajson){
       name: visgraph.name+"Sus",
       marker: {color,size: 4,opacity: 0.6}
     }
-    traces.push(trace,trace2);
-    traceinfos.push({tf,visgraph,row:trace,sus:trace2});
+    const trace3={
+      x: [],y: [],
+      mode: "lines",
+      name: visgraph.name+"udfaprox",
+      marker: {color,size: 4,opacity: 0.6}
+    }
+    traces.push(trace,trace2,trace3);
+    traceinfos.push({tf,visgraph,row:trace,sus:trace2,udfaprox:trace3});
   }
   Plotly.newPlot('plotlyDiagram',traces , { title: 'ROW AND SUS' ,margin:{l:40,r:20,b:40,t:40}},{responsive:true});
 
@@ -375,6 +383,7 @@ async function main(gajson){
   function drawplot(camera){
     const raydir=camera.c2w.mul(new Vector([0,0,1]));
     const xValues=[...Array(1000).keys()].map(i=>i/100);
+    //const xValues=[...Array(1000).keys()].map(i=>i);
     const positions=new Float32Array(xValues.flatMap(x=>{
       const pos=camera.cameraPos.add(raydir.mul(x));
       return pos.array;
@@ -387,9 +396,11 @@ async function main(gajson){
     for(const t of traceinfos){
       t.tf.shader.use();
       t.visgraph.setuniformsR(t.tf.shader,context.evalContext);
-      const [sus,row]=t.tf.run(xValues.length);
-      t.row.x=xValues;t.sus.x=xValues;
-      t.row.y=row;t.sus.y=sus;//maybe wee need a cast because run returns float32array
+      const [sus,row,udfaprox]=t.tf.run(xValues.length);
+      t.row.x=xValues;t.sus.x=xValues;t.udfaprox.x=xValues;
+      t.row.y=row;//.map(x=>Math.log(x));
+      t.sus.y=sus;//.map(x=>Math.log(x));//maybe wee need a cast because run returns float32array
+      t.udfaprox.y=udfaprox;//.map(x=>Math.log(x));
     }
     gl.bindVertexArray(null);
 

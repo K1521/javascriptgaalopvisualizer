@@ -1437,6 +1437,7 @@ const int numoutputs=?;
         //const{basis,matrix,basispolys}=matrixextractor2.extractbasis4(new BundlenodeNode(this.parents),this.gagraph);
         const matrixsize=matrix[0].length;
 
+        replacements.set("numoutputs=?",`numoutputs=${this.parents.length}`);
         replacements.set("basislength=?",`basislength=${matrixsize}`);
         //replacements.set("Rflat=?",`basislength=${matrixsize}`);
 
