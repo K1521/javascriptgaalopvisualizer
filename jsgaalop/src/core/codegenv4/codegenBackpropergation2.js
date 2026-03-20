@@ -2911,10 +2911,12 @@ export class evalContext {
                 this.variables.set(k, v);
             }
         }
-        if (changed) {
-            this.nodecache.clear();
-            this.paramsversion = (this.paramsversion + 1) % Number.MAX_SAFE_INTEGER;//the modulo is useless because it wont overflow for years if you call this thousends of times per seccond
-        }
+        if (changed) this.clear();
+    }
+
+    clear(){
+        this.nodecache.clear();
+        this.paramsversion = (this.paramsversion + 1) % Number.MAX_SAFE_INTEGER;//the modulo is useless because it wont overflow for years if you call this thousends of times per seccond
     }
 
     /**

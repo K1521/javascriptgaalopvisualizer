@@ -65,11 +65,12 @@ function grideval(tf,low,high,dim,m=1){
 
 export class VoxelDistRenderer extends LazyRenderingPipeline{
 
-  constructor(gl,visgraph, vertexshader,color) {
+  constructor(context,gl,visgraph, vertexshader,color) {
     super(() => {
-
+      this.ctx=context;
       this.scale=4;
       this.samples=200;
+
       //this.maxvoxel=375000;//max vertCount is 30000000 so definetly dont subdivide if there are more than 30000000/8=3750000
 
       this.visgraph=visgraph;

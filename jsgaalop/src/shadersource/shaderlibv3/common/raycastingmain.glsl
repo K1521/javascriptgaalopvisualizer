@@ -148,6 +148,7 @@ void main() {
 
 
 
+
     #if TEXTURE_MODE == TEXTURE_MODE_CHECKER
         float pattern= checker(p,TEXTURE_SCALE)?1.0:0.5;
     #elif TEXTURE_MODE == TEXTURE_MODE_ISOLINES
@@ -157,6 +158,7 @@ void main() {
     #else
         #error "Unknown TEXTURE_MODE"
     #endif
+    
     col*=pattern;
     //if(pattern<0.9)col.xyz=col.yzx;
 

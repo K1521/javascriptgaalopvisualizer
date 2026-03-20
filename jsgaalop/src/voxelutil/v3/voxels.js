@@ -172,7 +172,7 @@ export class Voxels {
         return {verts,indices};
     }
 
-    subdivideAndFilter(maxVoxel = 10000, maxSubdivisions = 8, filterFunc) {
+    subdivideAndFilter(filterFunc,maxSubdivisions = 8,maxVoxel = 10000) {
         for (let i = 0; i < maxSubdivisions; i++) {
             if (this.count > maxVoxel || this.count === 0) break;
 

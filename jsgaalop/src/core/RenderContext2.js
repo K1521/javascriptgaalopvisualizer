@@ -1,5 +1,6 @@
 
-import { Cameracontroll,throwonglerror } from "../glwrapper/glwrapper.js";
+import { throwonglerror } from "../glwrapper/glwrapper.js";
+import { Cameracontroll } from "../glwrapper/cameracontroll.js";
 import {MultiResBuffer3} from "../multires/MultiResBuffer3.js";
 import {evalContext} from "./codegenv4/codegenBackpropergation2.js";
 

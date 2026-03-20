@@ -1,5 +1,5 @@
 
-import { Cameracontroll } from "../glwrapper/glwrapper.js";
+import { Cameracontroll } from "../glwrapper/cameracontroll.js";
 import {MultiResBuffer3} from "../multires/MultiResBuffer3.js";
 
 function radians(degrees) {

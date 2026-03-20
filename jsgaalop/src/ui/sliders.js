@@ -57,7 +57,7 @@ export class ReorderableList {
 }
 
 
-export function makeSlider(template, name, callback = undefined, { min = 0, max = 1, value = 1, step = 0.01 } = {}) {
+export function makeSlider(template, name, callback = undefined, { min = 0, max = 1, value = 1, step = null, numsteps=200 } = {}) {
     const item = template.content.cloneNode(true).firstElementChild;
     const label = item.querySelector("label");
     const slider = item.querySelector(`input[type="range"]`);
@@ -66,7 +66,7 @@ export function makeSlider(template, name, callback = undefined, { min = 0, max 
     label.textContent = `${name}:`;
     slider.min = min;
     slider.max = max;
-    slider.step = step;
+    slider.step = step??(max-min)/(numsteps);
     slider.value = value;
 
     function updatespanandcallback() {

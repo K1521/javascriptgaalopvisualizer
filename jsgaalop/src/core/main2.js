@@ -28,6 +28,7 @@ import { addPipelineSelectorForObject } from "../ui/PipelineSelector.js";
 import { makeSlider,ReorderableList } from "../ui/sliders.js";
 //import { MarchingCubesRenderer2 } from "../pipelines/MarchingCubesRenderer2.js";
 import { MarchingCubesRenderer } from '../pipelines/v2/MarchingCubesRenderer2.js';
+import { TopGridRenderer } from '../pipelines/v2/TopGrid.js';
 //import { throwonglerror } from "../glwrapper/glwrapper.js";
 
 window.DEBUG_LOG = ["test"];
@@ -219,7 +220,7 @@ function init_sliders_and_parameters(context,graph) {
 
 
 
-let context;
+
 async function main(gajson){
 //alert("1")
 
@@ -229,7 +230,7 @@ async function main(gajson){
 
 
   const evalcontext=graph.makeEvalcontext();
-  context=new RenderContext(mainCanvas,evalcontext,gl);
+  let context=new RenderContext(mainCanvas,evalcontext,gl);
   window.context =context;
   
   //let funmat=new Matrix([[-3.2,0., 0., 0., 0.,-3.2,0., 0., 0., 0., 0., 0., 1.5125, -5.225,   4.5125]]);
@@ -294,15 +295,22 @@ async function main(gajson){
     obj.addPipeline("marching_cubes",new MarchingCubesRenderer(gl,visgraph,shaderSources.vertTemplateVoxelBool,shaderSources.computeTemplatexyzDual,color));
     obj.addPipeline("marching_cubes2",new MarchingCubesRenderer2(gl,visgraph,shaderSources.vertTemplateVoxelBig,shaderSources.computeTemplatexyzDual,color));*/
     
+
+    //i found a firefox bug :(
+
     const aberthsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/aberth.glsl");
     obj.addPipeline("aberth",new aberthrenderer(context,gl,visgraph,aberthsource,color));
     
 
     const Rintervallsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/Rintervall.glsl");
-    obj.addPipeline("voxelpoint",new Voxelrenderer(gl,visgraph,Rintervallsource,color));
+    obj.addPipeline("voxelpoint",new Voxelrenderer(context,gl,visgraph,Rintervallsource,color));
 
     const gaussnewtondistsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGaussNewtonGrid.glsl");
-    obj.addPipeline("RGaussNewtonGrid",new VoxelDistRenderer(gl,visgraph,gaussnewtondistsource,color));
+    obj.addPipeline("RGaussNewtonGrid",new VoxelDistRenderer(context,gl,visgraph,gaussnewtondistsource,color));
+
+    const Rgridsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGrid.glsl");
+    obj.addPipeline("TopGrid",new TopGridRenderer(context,gl,visgraph,Rgridsource,color));
+    
     
     const gaussnewtonitersource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGaussNewtonIterGrid.glsl");
     obj.addPipeline("RGaussNewtonGridIter",new VoxelGNRenderer(context,gl,visgraph,gaussnewtonitersource,color));
@@ -314,7 +322,7 @@ async function main(gajson){
     obj.addPipeline("udfaprox",new udfrenderer(context,gl,visgraph,udfaproxsource,color));
 
     const Rgn=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGaussNewton.glsl");
-    obj.addPipeline("MC",new MarchingCubesRenderer(gl,visgraph,Rintervallsource,Rgn,color))
+    obj.addPipeline("MC",new MarchingCubesRenderer(context,gl,visgraph,Rintervallsource,Rgn,color))
     
     //obj.setActivePipeline("voxelpoint2");
     //context.updateParams();
@@ -443,60 +451,69 @@ async function main(gajson){
 
   
   //main programm
+  
   let deltatimeavg=0
   let lastTime = 0;
   function animate(timestamp){
     let deltatime = (timestamp - lastTime) / 1000; // Convert to seconds
     lastTime = timestamp;
+      
+    const t0 = performance.now(); 
+    const interval = 2; // switch every 2 seconds
     
-  const now = performance.now() / 1000; // convert ms to seconds
-  const interval = 2; // switch every 2 seconds
-  
-  /*if (Math.floor(now) % (interval * 2) < interval) {
-    torus.setActivePipeline("aberth");
-    //context.updateParams();
-    //torus.setActivePipeline("point");
-  } else {
-    torus.setActivePipeline("point");
-  }*/
+    /*if (Math.floor(now) % (interval * 2) < interval) {
+      torus.setActivePipeline("aberth");
+      //context.updateParams();
+      //torus.setActivePipeline("point");
+    } else {
+      torus.setActivePipeline("point");
+    }*/
 
-  if(false){
-    context.updateParams();
+      if(context.camera.keysPressed["r"]){
+        context.evalContext.clear();
+      }
+      
+
+    if(false){
+      context.updateParams();
 
 
-    const start = performance.now();
-    const scale = Math.random() * 0.35 + 0.05;
-    context.update(deltatime)
-    context.setScale(scale); // adjust your scale logic accordingly
-    context.render();
-    const end = performance.now();
-    const frameTime = end - start;
-    xValues.push(scale);
-    yValues.push(1000/frameTime);
+      const start = performance.now();
+      const scale = Math.random() * 0.35 + 0.05;
+      context.update(deltatime)
+      context.setScale(scale); 
+      context.render();
+      const end = performance.now();
+      const frameTime = end - start;
+      xValues.push(scale);
+      yValues.push(1000/frameTime);
 
-    Plotly.redraw('plotlyDiagram');
-  }else{
-    
-    
-    context.updateParams();
-    const status=context.render(deltatime);
-    if(status!=RenderContext.UNCHANGED){
-      //drawplot(camera,funmat.array);
-      //
-      deltatimeavg=deltatimeavg*0.90+deltatime*0.10;
-      fpscounter.innerText = `FPS: ${Math.ceil(1/deltatimeavg)}`;
-    } 
-    if(status==RenderContext.FINISHED){
-      drawplot(context.camera);
+      Plotly.redraw('plotlyDiagram');
+    }else{
+      
+      
+      context.updateParams();
+       if(context.camera.keysPressed["r"]){
+        console.log(performance.now()-t0); 
+      }
+      const status=context.render(deltatime);
+      if(status!=RenderContext.UNCHANGED){
+        //drawplot(camera,funmat.array);
+        //
+        deltatimeavg=deltatimeavg*0.90+deltatime*0.10;
+        fpscounter.innerText = `FPS: ${Math.ceil(1/deltatimeavg)}`;
+      } 
+      if(status==RenderContext.FINISHED){
+        drawplot(context.camera);
+      }
+      console.log(status);
     }
-    console.log(status);
-  }
 
-  
     
-    //renderer.render();
-    
-    
+      
+      //renderer.render();
+      
+      
   }
   const renderLoop = new RenderLoop(gl, animate);
   renderLoop.start();

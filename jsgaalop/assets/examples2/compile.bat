@@ -25,7 +25,7 @@ for %%F in ("%INPUT_DIR%\*.txt") do (
 
     :: Gaalop Aufruf mit dynamischen Argumenten aus der Datei
     java -jar "%GAALOP_JAR%" --cli ^
-        --codeGeneratorPlugin de.gaalop.cpp.Plugin ^
+        --codeGeneratorPlugin de.gaalop.jsonexport.Plugin ^
         --algebraBaseDir "%ALGEBRA_DIR%" ^
         !EXTRA_ARGS! ^
         --input "%%F" ^

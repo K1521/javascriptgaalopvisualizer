@@ -1,0 +1,21 @@
+// -a gac
+P1=createPoint(-0.3,0,0);
+P2=createPoint(-0.2,p2y,0);
+P3=createPoint(-0.1,0.3,0);
+P4=createPoint( 0.3,-0.1,0);
+P5=createPoint( 0.2,-0.3,0);
+?Conic=DualOI(P1^P2^P3^P4^P5);
+
+
+factor=500;
+factor2=5000000;
+:Red;
+:P1V=P1*scale*factor;
+:Green;
+:P2V=P2*scale*factor;
+:Red;
+:P3V=P3*scale*factor;
+:P4V=P4*scale*factor;
+:P5V=P5*scale*factor;
+:Blue;
+:ConicV=DualOI(P1^P2^P3^P4^P5);

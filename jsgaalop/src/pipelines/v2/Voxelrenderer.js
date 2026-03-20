@@ -12,7 +12,8 @@ import { Shader ,throwonglerror} from "../../glwrapper/glwrapper.js";
 import {  TransformFeedbackWrapper} from "../../glwrapper/TransformFeedbackWrapper.js";
 //import { shaderSources } from "../../glwrapper/shaderimporter.js";
 import {PointShader} from "./pointrenderutil.js"
-
+import { Voxels } from "../../voxelutil/v3/voxels.js";
+import { makeSlider ,makeLogSlider} from "../../ui/sliders.js";
 function sum(arr){
   let acc=0;
   for(let x of arr)acc+=x;
@@ -21,12 +22,11 @@ function sum(arr){
 
 export class Voxelrenderer extends LazyRenderingPipeline{
 
-  constructor(gl,visgraph, vertexshader,color) {
+  constructor(context,gl,visgraph, vertexshader,color) {
     super(() => {
+      this.ctx=context;
 
-      this.scale=4;
-      this.maxlevel=9;//dont set higher than 10
-      this.maxvoxel=3750000;//max vertCount is 30000000 so definetly dont subdivide if there are more than 30000000/8=3750000
+     
 
       this.visgraph=visgraph;
       this.gl = gl;
@@ -47,45 +47,20 @@ export class Voxelrenderer extends LazyRenderingPipeline{
       gl.bindVertexArray(null);
       gl.bindBuffer(gl.ARRAY_BUFFER,  null);
     });
+
+    this.scale=4;
+    this.maxlevel=12;
+    this.maxvoxel=50000;//3750000;//max vertCount is 30000000 so definetly dont subdivide if there are more than 30000000/8=3750000
   }
 
   
 
     
   render(ctx) {
-
-    /*const gl = this.gl;
-    gl.depthFunc(gl.LESS);
-    gl.enable(gl.DEPTH_TEST);
-    this.pointshader.use();
-    gl.uniform4fv(this.pointshader.getUniformLocation('incolor'), [this.color.r,this.color.g,this.color.b,1.0]);
-    ctx.updateUniforms(this.pointshader); // sets cameraPos and cameraMatrix and windowsize
-    gl.bindVertexArray(this.pointvao);
-    gl.drawArrays(gl.POINTS, 0, this.pointbuffer_size);
-    gl.bindVertexArray(null);*/
-    //ctx.updateUniforms(this.pointrenderer.shader);// sets cameraPos and cameraMatrix and windowsize
     this.pointrenderer.render(ctx);
   }
   
-  /*updateParams(ctx) {
-    if (this.paramsversion === ctx.paramsversion) return;
-    this.paramsversion = ctx.paramsversion;
-
-    const gl = this.gl;
-    //voxel to points
-    const voxelGrid=new PackedVoxelGrid([[-this.scale,this.scale],[-this.scale,this.scale],[-this.scale,this.scale]]);
-    this.voxelfilter.useshader();
-    this.visgraph.setuniforms(ctx.nodecache, this.voxelfilter.shader);
-    this.voxelfilter.apply(voxelGrid,ctx);
-
-    const points=voxelGrid.getPositions(0.5,0.5,0.5);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.pointbuffer);
-    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(points) , gl.STATIC_DRAW);
-    this.pointbuffer_size=voxelGrid.length;
-
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-  }*/
+ 
   updateParams(ctx){
     if(this.paramsversion==ctx.evalContext.paramsversion)return;
     this.paramsversion=ctx.evalContext.paramsversion;
@@ -99,17 +74,9 @@ export class Voxelrenderer extends LazyRenderingPipeline{
     gl.bindBuffer(gl.ARRAY_BUFFER,  this.voxelbuffer);
 //throwonglerror(gl);
 
-    let voxelsflat=new Float32Array([-this.scale,this.scale,-this.scale,this.scale,-this.scale,this.scale]);
-    for(let i=0;i<this.maxlevel;i++){
-      const voxelCount = voxelsflat.length / 6;
-      if(voxelCount>this.maxvoxel||voxelCount==0)break;
-      const filter=this.makevoxelsfilter(voxelsflat);
-      voxelsflat=this.subdivide(voxelsflat,filter);
-    }
-
-
-    const filter=this.makevoxelsfilter(voxelsflat);
-    const points=this.topoint(voxelsflat,filter);
+    const voxels=new Voxels(this.scale);
+    voxels.subdivideAndFilter((v)=>this.makevoxelsfilter(v),this.maxlevel,this.maxvoxel);
+    const points=voxels.toPoints();
     
     
     //throwonglerror(gl);
@@ -143,49 +110,58 @@ export class Voxelrenderer extends LazyRenderingPipeline{
       for(let j=0;j<6;j++) result[offset++]=voxelsflat[i*6+j];
     return result;
   }
+
+
+   makeOptions(element) {
+      element.classList.add("sliderholder");
+      const slidertemplate = document.querySelector(`template[data-type=slider]`);
   
-
-  /**
-   * 
-   * @param {Float32Array} voxelsflat 
-   * @param {Int32Array} filter 
-   */
-  subdivide(voxelsflat,filter=null){
-    const voxelCount = voxelsflat.length / 6;
-    const result = new Float32Array((filter?sum(filter):voxelCount) * 6 * 8);
-    let offset = 0;
-
-    for (let i = 0; i < voxelCount; i++)if (!filter || filter[i]) {
-      const base = i*6;
-      const xmin = voxelsflat[base+0], xmax = voxelsflat[base+1], xmid = (xmin + xmax) * 0.5;
-      const ymin = voxelsflat[base+2], ymax = voxelsflat[base+3], ymid = (ymin + ymax) * 0.5;
-      const zmin = voxelsflat[base+4], zmax = voxelsflat[base+5], zmid = (zmin + zmax) * 0.5;
-
-      for (let xi=0; xi<2; xi++) for (let yi=0; yi<2; yi++) for (let zi=0; zi<2; zi++) {
-        result[offset++] = xi===0? xmin:xmid; result[offset++] = xi===0? xmid:xmax;
-        result[offset++] = yi===0? ymin:ymid; result[offset++] = yi===0? ymid:ymax;
-        result[offset++] = zi===0? zmin:zmid; result[offset++] = zi===0? zmid:zmax;
-      }
+      
+      // Grid Size Slider (samples: 16..512)
+      element.appendChild(makeSlider(
+        slidertemplate,
+        "maxlevel",
+        (value) => {
+          this.maxlevel = Math.round(value);
+          this.paramsversion=null;
+          this.ctx?.requestRender();
+           return value.toString();
+        },
+        { min: 5, max: 15, value: this.maxlevel ,step:1}
+      ));
+  
+      // Scale Slider (grid bounds: 1..20)
+      element.appendChild(makeSlider(
+        slidertemplate,
+        "scale",
+        (value) => {
+          this.scale = value;
+          this.paramsversion=null;
+          this.ctx?.requestRender();
+        },
+        { min: 1, max: 10, value: this.scale }
+      ));
+      element.appendChild(makeLogSlider(
+        slidertemplate,
+        "maxvoxel",
+        (value) => {
+          this.maxvoxel = value;
+          this.paramsversion=null;
+          this.ctx?.requestRender();
+        },
+        { min: 100, max: 500000, value: this.maxvoxel }
+      ));
+  
+      element.appendChild(makeSlider(slidertemplate,"pointsize",
+          (x)=>{
+            if (this.pointrenderer) {
+                this.pointrenderer.pointsize = -x;
+            }
+            this.ctx?.requestRender();
+            this.paramsversion=null;
+            return x.toString();
+          },{min:1,max:10,value:3,step:1}));
     }
-    return result;
-  }
-  topoint(voxelsflat,filter=null){
-    const voxelCount = voxelsflat.length / 6;
-    const result = new Float32Array((filter?sum(filter):voxelCount) * 3);
-    let offset = 0;
-
-    for (let i = 0; i < voxelCount; i++)if (!filter || filter[i]) {
-      const base = i*6;
-      const xmin = voxelsflat[base+0], xmax = voxelsflat[base+1], xmid = (xmin + xmax) * 0.5;
-      const ymin = voxelsflat[base+2], ymax = voxelsflat[base+3], ymid = (ymin + ymax) * 0.5;
-      const zmin = voxelsflat[base+4], zmax = voxelsflat[base+5], zmid = (zmin + zmax) * 0.5;
-      result[offset++] = xmid;
-      result[offset++] = ymid;
-      result[offset++] = zmid;
-    }
-    return result;
-  }
-
 
   isTilable(){return false;}
 }

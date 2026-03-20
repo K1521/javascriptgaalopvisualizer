@@ -307,8 +307,9 @@ class Voxelfilter{
 
 
 export class MarchingCubesRenderer extends LazyRenderingPipeline{
-  constructor(gl,visgraph, vertexshaderfilter,vertexshadergaussnewton,color) {
+  constructor(context,gl,visgraph, vertexshaderfilter,vertexshadergaussnewton,color) {
     super(() => {
+      this.ctx=context;
       this.scale=4;
       this.visgraph=visgraph;
       this.gl = gl;
@@ -372,7 +373,7 @@ export class MarchingCubesRenderer extends LazyRenderingPipeline{
     const voxelGrid=new Voxels(this.scale);
     
     this.voxelfilter.use(ctx);
-    voxelGrid.subdivideAndFilter(this.maxvoxel,this.maxlevel,(voxels)=>this.voxelfilter.filter(voxels));
+    voxelGrid.subdivideAndFilter((voxels)=>this.voxelfilter.filter(voxels),this.maxlevel,this.maxvoxel);
     
   
 

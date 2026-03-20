@@ -362,7 +362,7 @@ Für OPNS gilt:
 
 Für IPNS gilt entsprechend:
 \[
-\text{point}(x,y,z) \cdot \texttt{obj} = 0
+\text{point}(x,y,z) \cdot \texttt{obj} = 0 
 \]
 
 \text{point}, das innere und das äußere Produkt sind dabei abhängig von der Algebra. Die Funktion \(\text{point}(x, y, z)\) erzeugt dabei einen Punkt in der Algebra und wird unter anderem auch als \enquote{up} bezeichnet.
@@ -487,6 +487,9 @@ Diese Methode funktioniert, da für einen Punkt \( p = \text{ray}(t) \) die Entf
 Das Newtonverfahren ist ein iteratives Verfahren zur Suche von Nullstellen einer Funktion. 
 Die Iterationsvorschrift lautet dabei:
 \[x^\text{neu}=x-\frac{f(x)}{f'(x)}\]
+
+Ist die Multiplizität \(m\) der gesuchten Nullstelle bekannt, kann die Konvergenzgeschwindigkeit durch eine angepasste Iteration verbessert werden. In diesem Fall ergibt sich:
+\[x^\text{neu}=x-m*\frac{f(x)}{f'(x)}\]
 
 
 \subsection{Aberth-Verfahren}
@@ -895,8 +898,11 @@ Damit folgt für die UDF-Approximation:
 \]
 
 Dies entspricht genau dem Ausdruck für die UDF-Approximation mit Multiplizität 2.
-Da das Verfahren eine lineare Näherung nutzt, ist es nur lokal konvergent. Deshalb lohnt es sich eine maximale Schrittweite einzuführen. Diese kann die Stabilität des Verfahrens stark verbessern.
- 
+
+Da das Verfahren eine lineare Näherung nutzt, ist es nur lokal konvergent. Deshalb lohnt es sich eine maximale Schrittweite einzuführen. Diese kann die Stabilität des Verfahrens stark verbessern. Außerdem ist das Verfahren bei einer zu großen Multiplizität auch instabil.  Die reellen Nullstellen von \(f\) haben alle mindestens eine Multiplizität von 2. 
+Ich habe trotzdem eine default Multiplizität 1 gewählt da so Artefakte reduziert werden.
+
+
 %TODOvorteile nschteile
 
     \subsection{Newtonverfahren}
@@ -939,7 +945,7 @@ Daraus folgt:
 
 
 Das bedeutet, dass das UDF-Approximation-Verfahren stabiler ist, allerdings gibt es Situationen in denen es nicht konvergiert. In diesen Fällen ist das Newtonverfahren die bessere Alternative.
-Auch hier habe ich eine maximale Schrittweite eingeführt.
+Auch hier macht eine maximale Schrittweite das Verfahren stabiler.
 %TODO multiplicität + bilder
 
 
@@ -972,7 +978,7 @@ f(r) = \sum_i F_i(\text{ray}(r))^2 = 0
 \Rightarrow \forall i: F_i(\text{ray}(r)) = 0
 \]
 
-Da alle $F_i$ an $r$ null sind und $f$ aus quadrierten Ausdrücken besteht, ist $r$ eine \textbf{mehrfache Nullstelle}, genauer: eine doppelte Nullstelle.
+Da alle $F_i$ an $r$ null sind und $f$ aus quadrierten Ausdrücken besteht, ist $r$ eine mehrfache Nullstelle, genauer: eine doppelte Nullstelle.
 
 Dies bedeutet, dass auch alle reellen Nullstellen von $f(\text{ray}(t))$ mindestens doppelt vorkommen. Somit treten alle Nullstellen (sowohl reelle als auch komplexe) in Paaren auf.
 
@@ -1131,7 +1137,21 @@ Gegenüber des Beleuchtungsmodells erzeugen diese Texturen einen starken 3D-Eind
 
 %Bilder
 
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{pictures/texturundphong.png}
+    \caption{Hier sieht man einen Torus mit/ohne Textur/Beleuchtung.}
 
+    \label{fig:texturundphong}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{pictures/checkerandiso.png}
+    \caption{Hier sieht man \enquote{iso} Textur (links) und \enquote{checker} Textur (rechts).}
+
+    \label{fig:checkerandiso}
+\end{figure}
 
 
 
@@ -1140,7 +1160,7 @@ Gegenüber des Beleuchtungsmodells erzeugen diese Texturen einen starken 3D-Eind
 
 
 \chapter{Non Raycasting Based}
-Die Nicht auf Raycasting basierenden Methoden Konzentrieren sich darauf graphische Primitive (Punkte, Dreiecke und Linien) zu generieren und diese dann zu visualisieren. Anders als bei \textsc{Gaalop} passiert die Auswertung des Nullraums dabei auf der GPU.   
+Die Nicht auf Raycasting basierenden Methoden Konzentrieren sich darauf grafische Primitive (Punkte, Dreiecke und Linien) zu generieren und diese dann zu visualisieren. Anders als bei \textsc{Gaalop} passiert die Auswertung des Nullraums dabei auf der GPU. Dabei ist das Anzeigen von Primitiven oft Schneller als die Raycasting Methoden. 
 
 \section{raybased pointcloudrenderer}
 Die Punktwolken-Methode besteht aus zwei Shadern: einem Shader, der die Punktwolke generiert, und einem weiteren, der sie anzeigt.
@@ -1155,7 +1175,7 @@ Der Vorteil dieser Methode liegt darin, dass das Rendern deutlich schneller ist 
 
 \section{Voxel-Subdivision}
 Wenn der Raum dicht abgetastet wird, muss $f$ sehr oft evaluiert werden. Die Anzahl der Auswertungen wächst dabei kubisch mit der Größe des Gitters.
-Bei einer Auflösung von 100 müsste man schon $10^6$ Punkte evaluieren. Objekte, deren Größe nahe der Auflösung ist, verlieren alle Details.
+Bei einer Auflösung von 100 müsste man schon $10^6$ Punkte evaluieren. Außerdem verlieren Objekte, deren Größe nahe der Auflösung ist, alle Details.
 
 Anstatt den ganzen Raum abzutasten, ist es deshalb sinnvoll, den Raum nur grob abzutasten und nur in der Nähe des zu visualisierenden Objektes feiner abzutasten. Dazu wird der Raum in Voxel unterteilt. Für jeden Voxel wird entschieden, ob sich Teile des Objektes im Voxel befinden, und alle Voxel, die leer sind, werden entfernt.
 Dann werden die verbleibenden Voxel jeweils in 8 kleinere Voxel aufgeteilt und der Vorgang wird wiederholt, bis die Auflösung hoch genug ist.
@@ -1169,6 +1189,8 @@ z \in [z_{\text{low}}, z_{\text{high}}]
 \}
 \]
 
+Zur Darstellung der Voxel habe ich einfache Punktwolken genutzt, die den Mittelpunkt Visualisieren.
+
 \subsection{Intervallarithmetik}
 Eine Möglichkeit um festzustellen, ob ein Voxel leer ist, ist Intervallarithmetik. 
 
@@ -1181,9 +1203,18 @@ Diese Methode kann Mathematisch garantieren kann das ein Voxel leer ist. Wenn 0 
 Durch die Voxel-Subdivision werden die Intervalle in der nächsten Iteration kleiner. Das bedeutet das auch die Ergebnisse besser werden und mehr Voxel können entfernt werden.
 Leider können die Bounds sehr groß sein was zu vielen unnötig berechneten Voxeln führt.
 
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{pictures/voxeldist2.png}
+    \caption{Hier sieht man einen Torusausschnitt (Blau), ein Ebenenausschnitt (Grün) und den Schnitt von Ebene und Torus (Rot).
+    Dabei sieht man, dass der Ebenenauschnitt wegen der großen Bounds sehr dick ist, obwohl dieser in Realität eine ebene sein müsste. Außerdem kann man sehen, dass die Punkte sehr klein sind.}
+
+    \label{fig:texturundphong}
+\end{figure}
+
 \subsubsection{Better Intervall arethmetic bounds}
 Um die Bounds der Intervallarithmetik zu verbessern kann \(f\) symbolisch umgeformt werden. 
-Beim Testen habe ich festgestellt das die Bounds um 0 herum kleiner sind. Deshalb habe ich ein Verfahren entwickelt, dass die Funktion "verschiebt" um sie dann um 0 herum auszuwerten.
+Beim Testen habe ich festgestellt das die Bounds um 0 herum kleiner sind. Deshalb habe ich ein Verfahren entwickelt, dass die Funktion "verschiebt" um sie dann um 0 herum auszuwerten. Aktuell habe ich diese Methode jedoch nicht für die aktuellste Codegenerierung reimplementiert.
 
 
 
@@ -1217,7 +1248,6 @@ f(x_0 + I_x \delta_x,\, y_0 + I_y \delta_y,\, z_0 + I_z \delta_z) = \sum c_{a,b,
 Die Koeffizienten \( c_{a,b,c} \) hängen von den ursprünglichen Koeffizienten des Polynoms sowie von \( x_0, y_0, z_0 \) und den Skalierungen \( \delta_x, \delta_y, \delta_z \) ab. Dabei ist \(c_{0,0,0}=f(x_0,y_0,z_0)\).
 Zur Auswertung wird einfach  \( I_x=[-1,1], I_y=[-1,1], I_z=[-1,1]\) eingesetzt und die Funktion kann mit den normalen Intervallarithmetikregeln ausgewertet werden.
 Da diese Transformation nur aus Einsetzen und Vereinfachen besteht, bleibt die mathematische Bedeutung der Funktion exakt erhalten. Allerdings sind die Bounds des Ergebnisses oft besser. 
-
 % die bounds sind meiner meinung deshalb besser, da subtraktionen simbolisch gecancelt werden können. x*x-x*x mit x=x0+[-1,1]->[-4*x,4*x] if  not in x, aber mit ausmultiplizieren haben wir nur c_{a,b,c}=0
 
 \subsubsection{Bound compare}
@@ -1246,15 +1276,16 @@ Um dem entgegenzuwirken, kann ein Sicherheisfaktor eingeführt werden:
 \text{UDFAprox}(\text{Mittelpunkt}) > \frac{\sqrt{3}}{2} \cdot \text{Kantenlänge} \cdot \text{Sicherheisfaktor} \implies \text{Voxel leer} 
 \]
 
-Dabei muss beachtet werden, dass die meisten Verfahren nur lokal konvergieren. Deshalb funktioniert diese Methode am besten, um das Ergebnis der Intervallarithmetik Voxel zu filtern.
+Dabei muss beachtet werden, dass die meisten Verfahren nur lokal konvergieren. Deshalb funktioniert diese Methode am besten, um das Ergebnis der Intervallarithmetik Voxel zu filtern. Auch dieses Verfahren habe ich aktuell nicht vollständig implementiert.
+Stattdessen habe ich eine vereinfachte Version des Verfahrens zur Demonstration implementiert. Diese ist ohne Subdivision implementiert, und macht nur eine Iteration macht.
 
 
 
 \section{Modifyed Marching Cubes}
-TODO
+
 
 Meine erste Idee zur Visualisierung von geometrischer Algebra war Marching Cubes zu benutzen. 
-Marching Cubes ist ein häufig genutzter Algorithmus zur Mesh Erzeugung von Isoflächen der den Vorzeichen Übergang von Funktionen ausnutzt. Leider gibt es in f keinen Vorzeichen Übergang, da \(f\) immer positiv ist. 
+Marching Cubes ist ein häufig genutzter Algorithmus zur Mesh Erzeugung von Isoflächen der den Vorzeichen Übergang von Funktionen ausnutzt. Leider gibt es in \(f\) keinen Vorzeichen Übergang, da \(f\) immer positiv ist. 
 
 Deswegen habe ich eine modifizierte Variante des Algorithmus ausgedacht.
 
@@ -1271,7 +1302,9 @@ Die erste Ecke wird als positive Ecke gelabelt. Dann wird zu einer benachbarten 
 
 Eine besondere Betrachtung ist für die Ecken mit 0 als Ableitung erforderlich. Für diese wird einfach die Ableitung der vorherigen Ecke kopiert.
 
-\section{curve extraction}
+Dabei baut die Marching Cubes Variante auf den Intervallarithmetik-Voxeln auf. Das bedeutet, die Voxel werden erst unterteilt und gefiltert und dann wird auf den restlichen Voxeln das Verfahren berechnet.
+
+section{curve extraction}
 Als
 
 
@@ -1285,15 +1318,16 @@ Das Kapitel beginnt mit einem Überblick über die Systemarchitektur. Dann folgt
 Zum Schluss folgen noch ein paar einfachere Optimierung.
 \section{Systemarchitektur}
 %mobile
-In einem Progrogrammdurchlauf wird immer als Erstes das von \textsc{Gaalop} generierte JSON eingelesen und als Graph deserialisiert. Dieser Graph enthält Definition der Nullräume der zu visualisierenden Objekte. Der Code dafür ist in der Klasse \textsc{Gaalop}Graph.
-Dann wird in main für jedes zu visualisierende Objekte die Pipelines erstellt. Dabei steht jede Pipeline für eine Visualisierungsmethode. Die Pipelines werden dann gruppiert nach Objekt im RenderContext gespeichert. Die Pipelines besitzen jeweils ein oder mehrere Shader. Dabei haben die Raycasting Methoden jeweils einen Shader während die Volumenbasierten methoden jeweils mehrere haben. Ein oder mehrere zur generierung der primitive und dann ein weiterer zur visualisierung der primitive.  
-Der Shadercode wird mittels Shaderimporter eingelesen. Normalerweise hat glsl keine Imports. Deshalb habe ich Imports implementiert. Alle aktuell genutzten Shader sind in shaderlibv3.
-Alle Shader welche den Nullraum auswerten sind nur Templates. Deshalb wird mittels der Codegenerierung Shadercode zur Auswertung des Nullraums aus dem eingelesenen Graph erzeugt und in den Shader eingefügt. Dies passiert in der Methode gencode.
+In einem Progrogrammdurchlauf wird immer als Erstes das von \textsc{Gaalop} generierte JSON eingelesen und als Graph deserialisiert. Dieser Graph enthält Definitionen der Nullräume der zu visualisierenden Objekte. Der Code dafür ist in der Klasse GaalopGraph.
+Anschließend werden in main2.js für jedes zu visualisierende Objekt sogenannte Pipelines erstellt und gruppiert nach Objekt im RenderContext gespeichert. Dabei implementiert jede Pipeline eine Visualisierungsmethode. Die Pipelines besitzen jeweils ein oder mehrere Shader. Dabei haben die Raycasting Methoden jeweils einen Shader während die Volumenbasierten Methoden jeweils mehrere Shader zur Generierung der Primitive und dann ein weiterer zur Visualisierung der Primitive haben.  
+Der Shadercode wird mittels Shaderimporter eingelesen. Dieser erweitert glsl und fügt Imports hinzu. Die meisten aktuell genutzten Shader sind im Ordner shaderlibv3.
+Alle Shader welche den Nullraum auswerten sind nur Templates. Deshalb wird mittels der Codegenerierung Shadercode zur Auswertung des Nullraums aus dem eingelesenen Graph erzeugt und in den Shader eingefügt. Dies passiert in den Methoden gencode und gencodeR (Mateixvariante). Die gesamte Codegenerierung ist in der Datei codegenBackpropergation2.js.
 
-Immer wenn sich Parameter ändern, müssen die primitive für die volumenbasierten Pipelines neu generiert werden und auch für die Raycasting Methoden müssen teile des Graphs neu ausgewertet werden und Parameter auf die entsprechend aktualisiert werden. Dies passiert in der Methode 
+Als Nächstes wird die Gameloop gestartet.
+In jedem Gameloop Durchlauf wird zuerst die Methode updateParams des RenderContextes aufgerufen. Diese Methode ruft die update Methoden der aktiven Pipelines auf. Immer wenn sich Parameter ändern, müssen die primitive für die Volumenbasierten Pipelines neu generiert werden und auch für die Raycasting Methoden müssen teile des Graphs neu ausgewertet werden und die Shader uniforms entsprechend aktualisiert werden. 
 
-
-
+Dann kommt die Methode Render welche die entsprechenden render Methoden der Pipelines aufruft. Es wird nur neu gerendert, wenn sich die Parameter oder die Kamera geändert haben.
+Beim Rendern wird erst ein Bild mit niedriger Auflösung gerendert und dann über mehrere Frames ein hochauflösendes Bild. Dies wird im Abschnitt \ref{sec:tilebased} näher beschrieben.
 
 \section{Matrixvariante}
 
@@ -1600,7 +1634,7 @@ verwendet wurde.
 \end{itemize}
 
 
-Die neue Codegenerierung kann alles generieren, was die alte Codegenerierung generieren konnte. Zusätzlich wird der Code für die Matrix Variante generiert.
+Die neue Codegenerierung kann alles generieren, was die alte Codegenerierung generieren konnte. Zusätzlich wird der Code für die Matrix Variante generiert. Dabei hat die Matrixvariante ähnliche Methoden mit leicht anderen Namen die praktisch das Gleiche berechnen.
 
 %void MatmulRDense(vec4[basislength] P,out vec4[basislength] b){?}
 %void MatmulRDense(vec2[basislength] P,out vec2[basislength] b){?}
@@ -1738,7 +1772,7 @@ Dann gibt es noch horner was eine Auswertung über die mittels der Vandermonde M
 Getestet habe ich auf einem Laptop mit einer Geforce gt 730M was eine Grafikkarte von 2013 ist.
 Alle Tests wurden in einem Vertex-Shader mit 100000 Vertices ausgeführt. Um Overhead zu vermeiden, werden im Shader zusätzlich mehrere Iterationen ausgeführt. Erst eine, dann 10, dann 100 usw. bis der Test länger als 100 ms dauert.
 Das Ergebnis ist die minimale Zeit pro Iteration bei 20 Wiederholungen. 
-Berechnet wird immer (außer für horner) \(P\) und dann die Multiplikation mit der ersten Zeile der Matrix für \enquote{row}. Für \enquote{sus} wird die Dumme der Quadrate der Multiplikation von \(P\) mit der ganzen Matrix berechnet. Die Matrix ist dabei eine 25x25 Matrix was einer Monombasis vierten Grades entspricht.
+Berechnet wird immer (außer für horner) \(P\) und dann die Multiplikation mit der ersten Zeile der Matrix für \enquote{row}. Für \enquote{sus} wird die Summe der Quadrate der Multiplikation von \(P\) mit der ganzen Matrix berechnet. Die Matrix ist dabei eine 25x25 Matrix was einer Monombasis vierten Grades entspricht.
 Der Testcode ist in unrolled.js und kann mittels speedtestharness.html ausgeführt werden.
 
 
@@ -1769,6 +1803,7 @@ Teilweise konnten Frames über eine Sekunde dauern. Dies kann zu einem Timeout u
 Deshalb hatte ich anfangs die Auflösung verringert, solange der Nutzer die Kamera bewegt, um stattdessen wesentlich mehr fps zu generieren. Diese Optimierung ist relativ einfach zu implementieren und führt zu wesentlich angenehmerer Kamerabewegung. Auch die maximale Auflösung war reduziert, um Abstürzten des OpenGL Kontextes zu verhindern.
 
 \subsection{Tile based rendering}
+\label{sec:tilebased}
 Um trotzdem mit hoher Auflösung rendern zu können, habe ich dann einen Tile based rendering Ansatz implementiert. 
 Dazu wird der Bildschirm in rechteckige Tiles unterteilt, die dann nacheinander gerendert werden können. Der Vorteil dieses Ansatzes ist, dass so mit voller Auflösung gerendert werden kann, ohne den OpenGL Context zu crashen. Weiterhin kann das rendern zwischendrin abgebrochen und von neu begonnen werden, falls sich die Kamera bewegt oder sich Parameter ändern, was zu einer schnellen Reaktion führt. Wie auch bei dem vorherigen Ansatz wird auch bei diesem Ansatz vor dem Tile based rendering das Bild in niedriger Auflösung gerendert, damit der Nutzer schnell ein neues Bild erhält.
 
