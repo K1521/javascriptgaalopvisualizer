@@ -1,3 +1,4 @@
+import { Matrix,Vector } from "../util/linalg1.js";
 function radians(degrees){return degrees*Math.PI/180;}
 
 
@@ -9,6 +10,7 @@ export class Cameracontroll{
       this.colorpicker=true;
       this.c2w=Matrix.eye(3);
       this.cameraPos = new Vector([0,0,0]);
+      this.basecampos = new Vector([0,0,0]);
       this.gl=gl;
       this.mouse = {
         x: undefined,
@@ -129,6 +131,8 @@ export class Cameracontroll{
       window.addEventListener('keyup',this.keyup);
     }
     update(deltatime){
+      const posold=this.cameraPos;
+
       this.c2w=this.c2w.orthogonalize();//orthogonalize only against precision errors. probably unnessesary
       let movementfactor=deltatime*4;
       let deltapos=new Vector([0,0,0]);
@@ -140,6 +144,8 @@ export class Cameracontroll{
       if(this.keysPressed.w)deltapos=deltapos.add(new Vector([0,0,1]));
       if(this.keysPressed.x)deltapos=deltapos.add(new Vector([0,1,0]));
       if(this.keysPressed.y)deltapos=deltapos.add(new Vector([0,-1,0]));
+      this.basecampos = this.basecampos.add(this.c2w.mul(deltapos.mul(movementfactor)));
+      
       if(this.keysPressed.q){
         this.c2w=this.c2w.mul(Matrix.rotationMatrix(new Vector([0,1,0]),radians(-movementfactor*30)));
         this.camChanged();
@@ -148,11 +154,26 @@ export class Cameracontroll{
         this.c2w=this.c2w.mul(Matrix.rotationMatrix(new Vector([0,1,0]),radians(movementfactor*30)));
         this.camChanged();
       };
-      deltapos=deltapos.mul(movementfactor);
-      if(deltapos.length()>0){
+      
+
+      if(this.keysPressed.f){
+        if(this.rollAngle===null){this.rollAngle = 0;}
+        const speed=this.keysPressed.space?9:3;
+        const radius=this.keysPressed.shift?0.2:1;
+        this.rollAngle+=deltatime*speed;
+
+        this.cameraPos = this.basecampos.add(this.c2w.mul(new Vector([Math.cos(this.rollAngle),Math.sin(this.rollAngle),0]).mul(radius)));
         this.camChanged();
-        this.cameraPos = this.cameraPos.add(this.c2w.mul(deltapos));
+      }else {
+        this.rollAngle = null;
+        this.cameraPos = this.basecampos;
       }
+
+
+      if(posold.sub(this.cameraPos).length()>0){
+        this.camChanged();
+      }
+
     }
     updateuniforms(shader){
       const cameraPosLocation = shader.getUniformLocation('cameraPos');

@@ -8,7 +8,7 @@ precision mediump float;
 
 in vec4 pos;
 out vec4 result;
-
+uniform int MAX_ITERS;
 
 /* myy pseudocode 
 posatbest=true;
@@ -31,7 +31,7 @@ for i in range(10)
 
 vec4 FindZero(vec3 pos)
 {
-    const int MAX_ITERS = 10;
+    //onst int MAX_ITERS = 10;
     const float damping=2.;//must be >1
     float beta=0.5;
 

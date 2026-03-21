@@ -1,6 +1,6 @@
 
 import { LazyRenderingPipeline } from "../pipelines/LazyRenderingPipeline.js";
-import { RenderContext } from "./RenderContextold.js";
+import { RenderContext } from "./RenderContext.js";
 
 export class RenderableObject {
   constructor(name,context) {

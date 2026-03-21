@@ -1,0 +1,1 @@
+{"rule":"FRAGEZEICHEN_STATT_PUNKT","sentence":"^\\QIst die Multiplizität \\E(?:Dummy|Ina|Jimmy-|Dummy-|Maniquí-|Maniquíes-|Dummy\\+|Dummy's\\+)[0-9]+\\Q der gesuchten Nullstelle bekannt, kann die Konvergenzgeschwindigkeit durch eine angepasste Iteration verbessert werden.\\E$"}

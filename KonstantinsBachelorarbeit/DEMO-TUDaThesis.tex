@@ -155,11 +155,11 @@ In dieser Arbeit wird eine Methode zur schnellen Auswertung des IPNS/OPNS mittel
 
 
 
-Die Arbeit beginnt mit einem Grundlagenkapitel, in dem relevante bekannte Algorithmen und Konzepte der Computergrafik und Mathematik vorgestellt werden. Dann folgt ein Kapitel zum Stand der Technik in dem die aktuellen Visualisierungsmethoden vorgestellt werden.
+Die Arbeit beginnt mit einem Grundlagenkapitel, in dem relevante bekannte Algorithmen und Konzepte der Computergrafik und Mathematik vorgestellt werden. Dann folgt ein Kapitel zum Stand der Technik, in dem die aktuellen Visualisierungsmethoden vorgestellt werden.
 
 Als Nächstes folgt ein Kapitel zur Konzeption und Anforderungen dieser Arbeit.
 
-Dann folgen zwei Kapitel die meine Visualisierungsansätze vorstellen. Diese sind unterteilt in auf Raycasting aufbauende Methoden und Volumenbasierte Methoden die versuchen Primitive zu erzeugen. Dann folgt ein Kapitel zur Implementierung und eingesetzten Optimierungen. Dabei wird im ersten Unterkapitel ein Verfahren vorgestellt das ermöglicht den IPNS/OPNS von höher dimensionalen Algebren auf der GPU auszuwerten.
+Dann folgen zwei Kapitel die meine Visualisierungsansätze vorstellen. Diese sind unterteilt in auf Raycasting aufbauende Methoden und volumenbasierte Methoden, die versuchen Primitive zu erzeugen. Dann folgt ein Kapitel zur Implementierung und eingesetzten Optimierungen. Dabei wird im ersten Unterkapitel ein Verfahren vorgestellt, das ermöglicht den IPNS/OPNS von höher dimensionalen Algebren auf der GPU auszuwerten.
 %Schreibe rest wenn etwas in dem entsprechenden kapitel steht.
 
 
@@ -246,7 +246,7 @@ Durch Anwendung der Axiome kann man Produkte beliebiger Basis-Blades berechnen. 
 \]
 Dies ergibt sich durch Anwendung der Antisymmetrie und Assoziativität des geometrischen Produkts.
 
-Um Produkte von zwei Multivektoren in der Praxis zu berechnen werden sogenannte Cayley-Tabellen genutzt.
+Um Produkte von zwei Multivektoren in der Praxis zu berechnen, werden sogenannte Cayley-Tabellen genutzt.
 Diese sind einfach Lookup-Tabellen für die Produkte der Basis-Blades.
 
 
@@ -308,7 +308,7 @@ def applyMatrix(matrix, B):
     return result
 \end{minted}
 
-Ich habe hier die Matrix, die Multivektoren und den Calley-Table der Übersichtlichkeit halber als Dictionary repräsentiert. Allerdings könnte man natürlich auch gewöhnliche Arrays verwenden.
+Ich habe hier die Matrix, die Multivektoren und den Calley-Tabelle der Übersichtlichkeit halber als Dictionary repräsentiert. Allerdings könnte man natürlich auch gewöhnliche Arrays verwenden.
 
 %\chapter{Grundlagen}
 
@@ -371,7 +371,7 @@ Statt die Ergebnisse dieser Produkte als Multivektoren zu interpretieren,
 kann man sie auch als konventionelle vektorwertige Funktion
 \[
 F : \mathbb{R}^3 \to \mathbb{R}^n, 
-\quad (x,y,z) \mapsto F(x,y,z)
+\quad (x,y,z) \mapsto \mathbf{F}(x,y,z)
 \]
 auffassen.
 
@@ -389,14 +389,14 @@ bzw.
 
 
 \subsubsection{F als Skalar}
-Um das Ergebnis von \( F(x,y,z) \) zu einem Skalar zu überführen, wird die Summe der Quadrate verwendet:
+Um das Ergebnis von \( \mathbf{F}(x,y,z) \) zu einem Skalar zu überführen, wird die Summe der Quadrate verwendet:
 \[
-f(x,y,z) = \|F(x,y,z)\|^2
+f(x,y,z) = \|\mathbf{F}(x,y,z)\|^2
 \]
 
-Da \( f(x,y,z) \) die quadrierte Norm von \( F(x,y,z) \) ist, gilt:
+Da \( f(x,y,z) \) die quadrierte Euklidische Norm von \( \mathbf{F}(x,y,z) \) ist, gilt:
 \[
-F(x,y,z) = 0 \quad \Leftrightarrow \quad f(x,y,z) = 0
+\mathbf{F}(x,y,z) = 0 \quad \Leftrightarrow \quad f(x,y,z) = 0
 \]
 
 Die Arbeit mit \( f \) ist in vielen Fällen einfacher als mit \( F \), da das ursprüngliche vektorwertige Problem auf die Bestimmung der Nullstellen einer skalarwertigen Funktion reduziert wird. Auch Ganja und \textsc{Gaalop} nutzen die Summe der Quadrate zur Visualisierung.
@@ -404,15 +404,15 @@ Die Arbeit mit \( f \) ist in vielen Fällen einfacher als mit \( F \), da das u
 
 Da $f$ die Summe der Quadrate von $F$ ist, ist $f \geq 0$ für alle $x,y,z$. Es handelt sich also nicht um eine Distanzfunktion im klassischen Sinne. $f$ ist weder eine SDF noch eine UDF. 
 
-Ein Nachteil der Skalarisierten Darstellung ist, dass \( f \) ein Polynom ist, dessen Grad durch das Quadrieren der Terme in \( F \) verdoppelt wird. 
+Ein Nachteil der skalarisierten Darstellung ist, dass \( f \) ein Polynom ist, dessen Grad durch das Quadrieren der Terme in \( F \) verdoppelt wird. 
 
-Zum Beispiel enthält \( F \) in der DCGA Polynome vierten Grades, sodass \( f \) in diesem Fall ein Polynom bis zum achten Grad sein kann.
+Zum Beispiel enthält \( F \) in der DCGA (Double Conformal Geometric Algebra) Polynome vierten Grades, sodass \( f \) in diesem Fall ein Polynom bis zum achten Grad sein kann.
 
 \section{Raycasting}
 \subsection{OpenGL-Pipeline}
 
 Ein OpenGL-Programm besteht normalerweise aus einem Vertex-Shader und einem Fragment-Shader.
-Der Input für die GPU-Pipeline sind normalerweise grafische Primitive wie zum Beispiel Dreiecke. 
+Die Inputdaten für die GPU-Pipeline sind normalerweise grafische Primitive wie zum Beispiel Dreiecke. 
 
 Die erste Stufe der Pipeline ist der Vertex-Shader. Dieser manipuliert die Vertices (also Eckpunkte) der Primitive. Beispielsweise transformiert er die Eckpunkte von Dreiecken mit einer Kameramatrix. 
 
@@ -435,22 +435,22 @@ den Hintergrund), und entsprechend wird dem Pixel eine Farbe zugeordnet.
 Um ein Objekt zu visualisieren, muss also der erste Schnittpunkt zwischen dem Strahl und
 unserem Objekt berechnet werden.
 Der Strahl wird beschrieben durch:
-\[\text{ray}(t)= \mathbf{r}_o + t \cdot \mathbf{r}_d \]
+\[\mathbf{ray}(t)= \mathbf{r}_o + t \cdot \mathbf{r}_d \]
 wobei $\mathbf{r}_o$ der Ursprung des Strahls (ray origin) und $rd$ die Richtung (ray direction) ist. Zur
-Vereinfachung wird $rd$ normalisiert (d.h. $|rd|=1$). Dies hat den Vorteil, dass ein Punkt $ p=\text{ray}(t) $
+Vereinfachung wird $ \mathbf{r}_d$ normalisiert (d.h. $|\mathbf{r}_d|=1$). Dies hat den Vorteil, dass ein Punkt $ p=\mathbf{ray}(t) $
 genau um $t$ von der Kamera entfernt ist. Da wir einen Strahl haben, muss zusätzlich $t>0$
 gelten.
     
-Die implizite Funktion wird als $f(x, y, z) = 0$ beschrieben. Damit ein Punkt $p = \text{ray}(t)$ in $f$ liegt,
+Die implizite Funktion wird als $f(x, y, z) = 0$ beschrieben. Damit ein Punkt $p = \mathbf{ray}(t)$ in $f$ liegt,
 muss also gelten:
 \[
-f(p) = f(\text{ray}(t)) = 0
+f(p) = f_{\text{ray}}(t) = 0
 \]
 
 Gefordert ist zusätzlich der erste Schnittpunkt, was bedeutet, dass das kleinste $t$ gesucht
 wird, für das die anderen Bedingungen erfüllt sind.
 
-Gesucht ist also das kleinste $t$, für das gilt: $t > 0$ und $f(\text{ray}(t)) = 0$.
+Gesucht ist also das kleinste $t$, für das gilt: $t > 0$ und $f_{\text{ray}}(t) = 0$.
 
 %Um dieses t zu finden, habe ich mehrere iterative Verfahren getestet.
 %Die meisten verfahren habe ich auf der shadertoy gefunden
@@ -471,7 +471,7 @@ return t
 
 
 
-Diese Methode funktioniert, da für einen Punkt \( p = \text{ray}(t) \) die Entfernung zum Objekt mindestens  
+Diese Methode funktioniert, da für einen Punkt \( p = \mathbf{ray}(t) \) die Entfernung zum Objekt mindestens  
 \( d = \text{UDF}(p) \) beträgt. Das bedeutet, man kann sich von \( p \) aus um eine Distanz \( d \) entlang des Strahls weiterbewegen, ohne das Objekt zu treffen.
 
 \begin{figure}
@@ -508,11 +508,11 @@ Die Update-Formel für den Newton-Schritt lautet:
 z_k^{\text{neu}} = z_k-\frac{G_k(z_k)}{G_k'(z_k)}= z_k - \frac{\frac{p(z_k)}{p'(z_k)}}{  1 - \frac{p(z_k)}{p'(z_k)} \sum_{j \neq k} \frac{1}{z_k - z_j} }
 \]
 
-Da die Nullstellen von \( f(\text{ray}(t)) \) gesucht werden, ist \( p(t) = f(\text{ray}(t)) \). Mit diesem Verfahren werden die Nullstellen iterativ angepasst, bis alle \( z_k \) konvergiert sind.
+Da die Nullstellen von \( f_{\text{ray}}(t) \) gesucht werden, ist \( p(t) = f_{\text{ray}}(t) \). Mit diesem Verfahren werden die Nullstellen iterativ angepasst, bis alle \( z_k \) konvergiert sind.
 
 Als Konvergenzkriterium wird üblicherweise die maximale Änderung der Nullstellen zwischen zwei Iterationen verwendet:
 \[
-\max_k \left| z_k^{(\text{neu})} - z_k^{(\text{alt})} \right| < \varepsilon
+\max_k \left| z_k^{\text{neu}} - z_k^{\text{alt}} \right| < \varepsilon
 \]
 
 \subsection{Intervall Arithmetik}
@@ -583,19 +583,19 @@ bis sie klein genug sind.
 \subsection{Gauß-Newton Verfahren}
 Das Gauß-Newton Verfahren ist ein iteratives Optimierungsverfahren für die Suche des Minimums der Summe der Quadrate einer mehrwertigen Funktion.
 \[
-\min _{x\in \mathbb {R} ^{n}}\left\{{\frac {1}{2}}\sum _{i=1}^{m}\left(f_{i}(x)\right)^{2}\right\}
+\min _{x\in \mathbb {R} ^{n}}\left\{{\frac {1}{2}}\sum _{i=1}^{m}\left(f_{i}(\mathbf{x})\right)^{2}\right\}
 \]
 
 Der update Schritt für dieses Verfahren ist:
 \[
-\mathbf{x}_{\text{neu}} = \mathbf{x} - \alpha \left( J(\mathbf{x})^\top J(\mathbf{x}) \right)^{-1} J(\mathbf{x})^\top \mathbf{F}(\mathbf{x}),
+\mathbf{x}^{\text{neu}} = \mathbf{x} - \alpha \left( J(\mathbf{x})^\top J(\mathbf{x}) \right)^{-1} J(\mathbf{x})^\top \mathbf{F}(\mathbf{x}),
 \]
 wobei $J(\mathbf{x})$ die Jacobi-Matrix der Vektorfunktion $\mathbf{F}$ an der Stelle~$\mathbf{x}$ bezeichnet und $\alpha \in \mathbb{R}$ eine Schrittweite ist.
 
 
 
 Eine Erweiterung des Verfahrens ist:
-\[x^\text{neu}=x-\alpha (J^\top J+\beta I)^{-1} J^\top f(x)\]
+\[\mathbf{x}^\text{neu} = \mathbf{x} - \alpha \left(J^\top J + \beta I\right)^{-1} J^\top f(\mathbf{x})\]
 
 Dabei sorgt \(\beta I\) dafür das \(J^\top J+\beta I\) invertierbar ist.
 Dies ist eine Variante des Levenberg-Marquardt-Iterationsschritts.
@@ -782,7 +782,7 @@ Da \textsc{Gaalop} auch die Summe der Quadrate für \( f_{\text{ray}} \) nutzt (
 Der Code sollte trotzdem funktionieren, mit der Einschränkung, dass \enquote{refinement} nie Nullstellen finden sollte.
 
 \subsection{GradientMethod}
-Die Gradientmethode erzeugt wie die DiscreteCubeMethod ein dichtes 3D Gitter. Diese Punkte werden dann iterativ mittels eines Gradienten Abstiegsverfahren verfeinert.
+Die GradientMethod erzeugt wie die DiscreteCubeMethod ein dichtes 3D-Gitter. Diese Punkte werden dann iterativ mittels eines Gradienten Abstiegsverfahren verfeinert.
 
 \begin{verbatim}
 def searchInNeighborhood(p):
@@ -806,7 +806,7 @@ def searchInNeighborhood(p):
 \end{verbatim}
 
 
-Auch dieses Verfahren hat einen kleinen Nachteil. Durch die Normalisierung ist der erste Schritt immer Länge 1. Da der gesamte abgetastete Raum eine Kantenlänge von 10 hat, ist dieser Schritt relativ groß und der Punkt landet nicht unbedingt in der Nähe des Startpunktes. Außerdem konvergiert das verfahren nicht besonders schnell. Dies ist für die Visualisierung jedoch nicht unbedingt ein Problem. 
+Auch dieses Verfahren weist eine kleine Inkonsistenz auf. Durch die Normalisierung ist der erste Schritt immer Länge 1. Da der gesamte abgetastete Raum eine Kantenlänge von 10 hat, ist dieser Schritt relativ groß und der Punkt landet nicht unbedingt in der Nähe des Startpunktes. Der Methodennahme \enquote{searchInNeighborhood} ist also nicht wirklich korrekt. Dies ist für die Visualisierung jedoch nicht unbedingt ein Problem. 
 %TODO time mesurements
 \subsection{Stärken und Schwächen}
 \textsc{Gaalop} hat einen Ansatz der gewählt der auch gut in höheren Dimensionen funktioniert. Der Nachteil von \textsc{Gaalop}s Visualisierung ist, das die Methoden nicht gut optimiert sind und unnötige Berechnungen durchführen. Ein weiterer Nachteil ist die Darstellung als Punktwolken.
@@ -825,7 +825,7 @@ Im ersten Ansatz wird versucht zu interpretieren, ob das Objekt ein Punkt, Linie
 Der zweite Ansatz funktioniert über die Nullstellensuche des Inner/Outer-Product-Nullraums des Objektes. Dabei kann versucht werden die Nullstellen als Primitive zu extrahieren oder Raycasting zu nutzen. Ich habe beide Ansätze getestet. 
 
 \section{Libraries und Frameworks}
-Der Visualisierer soll später mit \textsc{Gaalop}Web zusammen genutzt werden können. Deshalb habe ich mich entschieden, das Ganze hauptsächlich als Webseite zu schreiben (also HTML und JavaScript). Davor hatte ich schon Experimente zur Visualisierung von geometrischer Algebra in Python gemacht wobei ich OpenGL, Numpy,CuPy,Sympy und Pyvista genutzt hatte. Dabei habe ich OpenGL Computeshader, CuPy und Numpy zum Numbercrunching genutzt, während zur Visualisierung von Primitiven Pyvista genutzt wurden, und zur Visualisierung von Raycasting OpenGL. 
+Der Visualisierer soll später mit \textsc{Gaalop}Web zusammen genutzt werden können. Deshalb habe ich mich entschieden, das Ganze hauptsächlich als Webseite zu schreiben (also HTML und JavaScript). Davor hatte ich schon Experimente zur Visualisierung von geometrischer Algebra in Python gemacht wobei ich OpenGL, Numpy, CuPy, Sympy und Pyvista genutzt hatte. Dabei habe ich OpenGL Computeshader, CuPy und Numpy zum Numbercrunching genutzt, während zur Visualisierung von Primitiven Pyvista genutzt wurden, und zur Visualisierung von Raycasting OpenGL. 
 Da OpenGL sowohl zum Numbercrunching als auch zur Visualisierung genutzt werden kann, habe ich mich entschieden WebGL2 zu nutzen was im Prinzip die OpenGL Variante in JavaScript ist. Zudem benötige ich noch eine Library für lineare Algebra wie Matrix Inverse und QR-Zerlegung, wobei ich mich für mathjs entscheiden habe da diese Library weit verbreitet ist. Außerdem benötige ich eine Library zum plotten. Dabei habe ich mich für Plotty entschieden da es ähnlich zu Pyplot ist, was ich schon kannte.
 Der zweite Teil der Software ist ein Plugin für \textsc{Gaalop}, das wie der Rest von \textsc{Gaalop} in Java geschrieben ist.
 Zudem habe ich noch ein paar kleine Python Scripts mit Pandas benutzt, um Daten auszuwerten.
@@ -839,12 +839,12 @@ Zum Schluss kommt noch ein Unterkapitel zur Tiefendarstellung, in dem es unter a
 
 Wenn man die Summe der Quadrate des Nullraums $f$ entlang eines Strahls betrachtet, erhält man:
 \[
-f(\text{ray}(t))
+f_{\text{ray}}(t)=f(\mathbf{ray}(t))
 \]
 Dies ist ein univariates Polynom mit dem gleichen Grad wie $f$, aber nur abhängig von der Variable $t$.
 Bei den Raytracing-Methoden geht es darum, das kleinste positive $t$ zu finden, sodass
 \[
-f(\mathrm{ray}(t)) = 0.
+f_{\text{ray}}(t) = 0.
 \]
 
 \section{Methoden zur Nullstellensuche}
@@ -900,7 +900,7 @@ Damit folgt für die UDF-Approximation:
 Dies entspricht genau dem Ausdruck für die UDF-Approximation mit Multiplizität 2.
 
 Da das Verfahren eine lineare Näherung nutzt, ist es nur lokal konvergent. Deshalb lohnt es sich eine maximale Schrittweite einzuführen. Diese kann die Stabilität des Verfahrens stark verbessern. Außerdem ist das Verfahren bei einer zu großen Multiplizität auch instabil.  Die reellen Nullstellen von \(f\) haben alle mindestens eine Multiplizität von 2. 
-Ich habe trotzdem eine default Multiplizität 1 gewählt da so Artefakte reduziert werden.
+Ich habe trotzdem eine Default Multiplizität 1 gewählt da so Artefakte reduziert werden.
 
 
 %TODOvorteile nschteile
@@ -908,39 +908,38 @@ Ich habe trotzdem eine default Multiplizität 1 gewählt da so Artefakte reduzie
     \subsection{Newtonverfahren}
 
 
-Für das Newtonverfahren wird die Funktion entlang des Strahls betrachtet.  
-Sei dazu \( g(t) = f(\text{ray}(t)) \).  
+Für das Newtonverfahren wird die Funktion entlang des Strahls betrachtet.   
 
 Ein gewöhnlicher Newton-Schritt ist gegeben durch  
 \[
-t_{\text{neu}} = t - \frac{g(t)}{g'(t)}.
+t^{\text{neu}} = t - \frac{f_{\text{ray}}(t)}{f_{\text{ray}}'(t)}.
 \]  
 Ich verwende jedoch stattdessen  
 \[
-t_{\text{neu}} = t + \left| \frac{g(t)}{g'(t)} \right|,
+t^{\text{neu}} = t + \left| \frac{f_{\text{ray}}(t)}{f_{\text{ray}}'(t)} \right|,
 \]  
 da \( t \) nicht rückwärts gehen soll. Dadurch bleibt sichergestellt, dass stets \( t > 0 \) gilt.  
 
 Die Newton-Iteration ist mathematisch gesehen sehr ähnlich zur UDF-Approximation. Tatsächlich gilt sogar, dass der Newton-Schritt stets größer oder gleich der UDF-Approximation ist:
 \[
-\left| \frac{g(t)}{g'(t)} \right| \geq \text{UDF}_\text{Approx}(\text{ray}(t)).
+\left| \frac{f_{\text{ray}}(t)}{f_{\text{ray}}'(t)} \right| \geq \text{UDF}_\text{Approx}(\mathbf{ray}(t)).
 \]
 
 \paragraph{Beweis:}  
 Für die Ableitung gilt:
 \[
-g'(t) = \nabla f(\text{ray}(t)) \cdot \text{rd}
+f_{\text{ray}}'(t) = \nabla f_{\text{ray}}(t) \cdot \text{r}_d
 \]
 und somit
 \[
-|g'(t)| = |\nabla f(\text{ray}(t)) \cdot \text{rd}| < \left\lVert \nabla f(\text{ray}(t))\right\rVert.
+|f_{\text{ray}}'(t)| = |\nabla f_{\text{ray}}(t) \cdot \text{r}_d| < \left\lVert \nabla f_{\text{ray}}(t)\right\rVert.
 \]  
 Daraus folgt:
 \[
-\left| \frac{g(t)}{g'(t)} \right| =
-\frac{f(\text{ray}(t))}{|\nabla f(\text{ray}(t)) \cdot \text{rd}|} > 
-\frac{f(\text{ray}(t))}{\left\lVert \nabla f(\text{ray}(t)) \right\rVert} = 
-\text{UDF}_\text{Approx}(\text{ray}(t)).
+\left| \frac{f_{\text{ray}}(t)}{f_{\text{ray}}'(t)} \right| =
+\frac{f_{\text{ray}}(t)}{|\nabla f_{\text{ray}}(t) \cdot \text{r}_d|} > 
+\frac{f_{\text{ray}}(t)}{\left\lVert \nabla f_{\text{ray}}(t) \right\rVert} = 
+\text{UDF}_\text{Approx}(\mathbf{ray}(t)).
 \]
 
 
@@ -961,36 +960,36 @@ Eine interessante Eigenschaft dieses Polynoms, die ich später ausnutzen werde, 
 
 Der \textit{Satz über konjugiert komplexe Nullstellen} (engl. \textit{Complex Conjugate Root Theorem}) besagt, dass alle nicht-reellen Nullstellen (d.h. komplexe Nullstellen mit $\operatorname{Im}(z) \neq 0$) eines univariaten reellen Polynoms stets in konjugierten Paaren auftreten müssen.
 
-Da $f(\text{ray}(t))$ ein reelles Polynom ist, folgt sofort, dass alle komplexen Nullstellen paarweise auftreten.
+Da $f_{\text{ray}}(t)$ ein reelles Polynom ist, folgt sofort, dass alle komplexen Nullstellen paarweise auftreten.
 
 Es bleibt zu zeigen, dass auch alle reellen Nullstellen doppelt sind.
 
-Da $f$ die Summe der Quadrate der $F_i$ ist, gilt:
+Da $f$ die Summe der Quadrate der $\mathbf{F}_i$ ist, gilt:
 \[
-f(\text{ray}(r)) = \sum_i F_i(\text{ray}(r))^2
+f(\mathbf{ray}(r)) = \sum_i \mathbf{F}_i(\mathbf{ray}(r))^2
 \]
 
 Sei $r \in \mathbb{R}$ eine reelle Nullstelle von $f$.
 
 Dann:
 \[
-f(r) = \sum_i F_i(\text{ray}(r))^2 = 0
-\Rightarrow \forall i: F_i(\text{ray}(r)) = 0
+f(r) = \sum_i \mathbf{F}_i(\mathbf{ray}(r))^2 = 0
+\Rightarrow \forall i: \mathbf{F}_i(\mathbf{ray}(r)) = 0
 \]
 
-Da alle $F_i$ an $r$ null sind und $f$ aus quadrierten Ausdrücken besteht, ist $r$ eine mehrfache Nullstelle, genauer: eine doppelte Nullstelle.
+Da alle $\mathbf{F}_i$ an $r$ null sind und $f$ aus quadrierten Ausdrücken besteht, ist $r$ eine mehrfache Nullstelle, genauer: eine doppelte Nullstelle.
 
-Dies bedeutet, dass auch alle reellen Nullstellen von $f(\text{ray}(t))$ mindestens doppelt vorkommen. Somit treten alle Nullstellen (sowohl reelle als auch komplexe) in Paaren auf.
-
-
-
-
-Ein Nachteil des Aberth-Verfahrens ist, dass sie bei mehrfachen Nullstellen deutlich langsamer konvergiert. Da \( f(\text{ray}(t)) \) im Schnittpunkt mit der Oberfläche immer eine doppelte Nullstelle besitzt, konvergiert dieses Verfahren vor allem an den gesuchten reellen Nullstellen langsam. 
+Dies bedeutet, dass auch alle reellen Nullstellen von $f_{\text{ray}}(t)$ mindestens doppelt vorkommen. Somit treten alle Nullstellen (sowohl reelle als auch komplexe) in Paaren auf.
 
 
 
 
-Da die komplexen Nullstellen von \( f(\text{ray}(t)) \) stets konjugiert zueinander auftreten, können diese Paare gemeinsam aktualisiert werden. Seien \( z_1 \) und \( z_2 \) ein konjugiertes Paar, so wird zunächst die Update-Formel für \( z_1 \) angewendet, und anschließend einfach \( z_2 = \overline{z_1} \) gesetzt. Dies spart Rechenaufwand da \( f(\text{ray}(t)) \) nur halb so oft per Iteration ausgewertet werden muss.
+Ein Nachteil des Aberth-Verfahrens ist, dass sie bei mehrfachen Nullstellen deutlich langsamer konvergiert. Da \( f_{\text{ray}}(t) \) im Schnittpunkt mit der Oberfläche immer eine doppelte Nullstelle besitzt, konvergiert dieses Verfahren vor allem an den gesuchten reellen Nullstellen langsam. 
+
+
+
+
+Da die komplexen Nullstellen von \( f_{\text{ray}}(t) \) stets konjugiert zueinander auftreten, können diese Paare gemeinsam aktualisiert werden. Seien \( z_1 \) und \( z_2 \) ein konjugiertes Paar, so wird zunächst die Update-Formel für \( z_1 \) angewendet, und anschließend einfach \( z_2 = \overline{z_1} \) gesetzt. Dies spart Rechenaufwand da \( f_{\text{ray}}(t) \) nur halb so oft per Iteration ausgewertet werden muss.
 
 Dies lässt sich in eine neue Update-Formel umformen, in der jede Zahl \( z_k \) für ein Paar steht:
 \[
@@ -1002,12 +1001,12 @@ Diese modifizierte Update-Formel ist ungefähr doppelt so schnell wie die Standa
 
 \subsubsection*{Bedeutung der berechneten Nullstellen}
 
-Das Ergebnis des Aberth-Verfahrens sind approximierte Nullstellen \( z_1, \dots, z_n \) von \( f(\text{ray}(t)) \), also:
+Das Ergebnis des Aberth-Verfahrens sind approximierte Nullstellen \( z_1, \dots, z_n \) von \( f_{\text{ray}}(t) \), also:
 %\[
-%f(\text{ray}(t)) \approx c \cdot \prod_i \left( (t - \Re(z_i))^2 + \Im(z_i)^2 \right)
+%f_{\text{ray}}(t) \approx c \cdot \prod_i \left( (t - \Re(z_i))^2 + \Im(z_i)^2 \right)
 %\]
 \[
-f(\text{ray}(t)) \approx 
+f_{\text{ray}}(t) \approx 
 c \cdot \prod_j \left( (t - z_j)(t - \overline{z_j}) \right) = 
 c \cdot \prod_j \left( (t - \text{Re}(z_j))^2 + \text{Im}(z_j)^2 \right)
 \]
@@ -1017,7 +1016,7 @@ Jedes \( z_j \) beschreibt eine Parabel als Faktor des Polynoms. Der Realteil be
 
 
 Um zu entscheiden, ob eine Nullstelle reell ist, müsste man mathematisch gesehen einfach prüfen ob \( \text{Im}(z_j) = 0 \). Da es sich jedoch nur um eine numerische Näherung handelt, welche zusätzlich bei den reellen Nullstellen langsamer konvergiert, ist dies praktisch nie exakt der Fall.
-Alternativ könnte man prüfen, ob \( f(\text{ray}(\text{Re}(z_j))) = 0 \) gilt, aber auch das leidet unter numerischer Ungenauigkeit.
+Alternativ könnte man prüfen, ob \( f(\mathbf{ray}(\text{Re}(z_j))) = 0 \) gilt, aber auch das leidet unter numerischer Ungenauigkeit.
 
 Ein Vorteil der Betrachtung des Imaginärteils ist, dass dieser unabhängig  
 von der Skalierung von \( f \) ist. Beispielsweise wäre der berechnete Imaginärteil für \( f' = 2 \cdot f \)  
@@ -1032,19 +1031,19 @@ Ein weiterer Vorteil ist, dass der Imaginärteil nicht zusätzlich berechnet wer
 
 
 Ein Nachteil bei der Nutzung des Immigrantenanteils ist, dass die komplexen Nullstellen von der Richtung des Strahls abhängen.  
-Sei \( z = a + b \cdot i \) eine komplexe Nullstelle von \( f(\text{ray}(t)) \).  
+Sei \( z = a + b \cdot i \) eine komplexe Nullstelle von \( f_{\text{ray}}(t) \).  
 Das bedeutet, dass
 \[
-f(\text{ray}(z)) = f(ro + rd \cdot z) = f(ro + rd \cdot (a + b \cdot i)) = f((ro + rd \cdot a) + rd \cdot b \cdot i) = 0.
+f(\mathbf{ray}(z)) = f(\mathbf{r}_o + \mathbf{r}_d \cdot z) = f(\mathbf{r}_o + \mathbf{r}_d \cdot (a + b \cdot i)) = f((\mathbf{r}_o + \mathbf{r}_d \cdot a) + \mathbf{r}_d \cdot b \cdot i) = 0.
 \]
 
 Das Problem ist nun, dass
 \[
-f((ro + rd \cdot a) + rd' \cdot b' \cdot i) \neq 0
+f((\mathbf{r}_o + \mathbf{r}_d \cdot a) + \mathbf{r}_d' \cdot b' \cdot i) \neq 0
 \]
 gilt.
 
-Ein Strahl \(\text{ray}'\), der \(\text{ray}\) bei \(\text{ray}(a)\) schneidet, hat an diesem Schnittpunkt also nicht unbedingt eine komplexe Nullstelle. Das bedeutet, dass sich die Form des zu visualisierenden Objektes ändern kann, wenn sich die Kamera bewegt.
+Ein Strahl \(\mathbf{ray}'\), der \(\mathbf{ray}\) bei \(\mathbf{ray}(a)\) schneidet, hat an diesem Schnittpunkt also nicht unbedingt eine komplexe Nullstelle. Das bedeutet, dass sich die Form des zu visualisierenden Objektes ändern kann, wenn sich die Kamera bewegt.
 
 Ich habe in dieser Arbeit trotzdem den Immigrantenanteil zur Prüfung verwendet.
 %bild der komplexen Nullstellen eines torus
@@ -1079,61 +1078,61 @@ Ich habe zwei Methoden ausprobiert: Beleuchtung und ein „Schachbrett“-Muster
 
 
 Für ein einfaches Beleuchtungsmodell werden Oberflächennormalen benötigt.  
-Wenn eine SDF vorhanden ist, ergibt sich die Normale an einem Punkt \( p \) auf der Oberfläche durch  
+Wenn eine SDF vorhanden ist, ergibt sich die Normale an einem Punkt \( \mathbf{p} \) auf der Oberfläche durch  
 \[
-\text{normalize}(\nabla\,\text{SDF}(p))
+\mathbf{normalize}(\nabla\,\text{SDF}(\mathbf{p}))
 \]  
 
 Da \( f \) jedoch auf der Oberfläche eine doppelte Nullstelle besitzt, gilt  
 \[
-\nabla f(p) = 0.
+\nabla f(\mathbf{p}) = 0.
 \]  
-Stattdessen wird ein Punkt \( p' = p - \varepsilon \cdot \text{rd} \) knapp über der Oberfläche in Richtung Kamera gewählt, und die Funktion wird dort ausgewertet:  
+Stattdessen wird ein Punkt \( \mathbf{p}' = \mathbf{p} - \varepsilon \cdot \mathbf{r}_d \) knapp über der Oberfläche in Richtung Kamera gewählt, und die Funktion wird dort ausgewertet:  
 \[
-\text{normalize}(\nabla f(p'))
+\mathbf{normalize}(\nabla f(\mathbf{p}'))
 \]  
 
 Dabei wird davon ausgegangen, dass die betrachtete Oberfläche von außen betrachtet wird, sodass die Normale in Richtung der Kamera zeigt. Diese Annahme ist jedoch nicht immer erfüllt, zum Beispiel, wenn sich die Kamera innerhalb des Objekts befindet und auf die Innenseite der Oberfläche blickt. In diesem Fall zeigt die berechnete Normale von der Kamera weg, was zu fehlerhafter Beleuchtung führt (oder zumindest nicht klassischen Beleuchtungsmodellen entspricht).
 
-Da der Punkt \( p \) durch numerische Verfahren bestimmt wird, kann er stark verrauscht sein. Es ist daher möglich, dass selbst \( p' \) noch unterhalb der Oberfläche liegt. In diesem Fall würde die berechnete Normale in die falsche Richtung (also von der Kamera weg) zeigen.
+Da der Punkt \( \mathbf{p} \) durch numerische Verfahren bestimmt wird, kann er stark verrauscht sein. Es ist daher möglich, dass selbst \( \mathbf{p}' \) noch unterhalb der Oberfläche liegt. In diesem Fall würde die berechnete Normale in die falsche Richtung (also von der Kamera weg) zeigen.
 Um dies zu vermeiden, wird die Normale in diesem Fall einfach umgekehrt.
  Die endgültige Formel lautet:
 \[
-- \text{normalize}(\nabla f(p')) \cdot \text{sign}(\nabla f(p') \cdot \text{rd})
+- \mathbf{normalize}(\nabla f(\mathbf{p}')) \cdot \text{sign}(\nabla f(\mathbf{p}') \cdot \mathbf{r}_d)
 \]
 
 %TODO iterationen vlt eschreiben
 
 
 Eine andere Möglichkeit um Oberflächennormalen zu berechnen, sind die Funktionen \\
-\texttt{dFdx(p)} und \texttt{dFdy(p)} in GLSL. 
-Diese ermöglichen die Berechnung der partiellen Ableitungen von \( p \) nach der Fensterkoordinate \( x \) bzw. \( y \).  
+\(\mathbf{dFdx}(\mathbf{p})\) und \(\mathbf{dFdy}(\mathbf{p})\) in GLSL. 
+Diese ermöglichen die Berechnung der partiellen Ableitungen von \( \mathbf{p} \) nach der Fensterkoordinate \( x \) bzw. \( y \).  
 Die Normale ergibt sich dann als:
 \[
-\text{normalize}(-\text{cross}(\text{dFdx}(p), \text{dFdy}(p)))
+\mathbf{normalize}(-\mathbf{cross}(\mathbf{dFdx}(\mathbf{p}), \mathbf{dFdy}(\mathbf{p})))
 \]
 
 Auch hier zeigen die Normalen wieder in Richtung Kamera.
 
 Der Vorteil von dieser Methode ist, dass kein weiterer Berechnungsaufwand benötigt wird und sie sehr einfach zu implementieren ist. 
 Ein Nachteil besteht jedoch darin, dass benachbarte Pixel in 2x2-Blöcken identische Normalen erhalten (zumindest bei mir, das Verhalten ist implementationsabhängig). Das bedeutet, dass die Beleuchtung bei dieser Methode effektiv nur mit halber Auflösung berechnet wird.  
-Ein weiterer Nachteil ist, das dieses Verfahren viel stärker vom rauschen von \(p\) beeinflusst wird. Ich habe mich trotzdem für diese Methode entschieden.
+Ein weiterer Nachteil ist, das dieses Verfahren viel stärker vom Rauschen von \(\mathbf{p}\) beeinflusst wird. Ich habe mich trotzdem für diese Methode entschieden.
 
 %Bilder
 
 \subsection{Texturierung}
 
-Um zusätzliche Tiefenhinweise zu erzeugen, können einfache Muster auf das Objekt projiziert werden. Diese Muster sind keine echten Texturen im klassischen Sinn, sondern entstehen direkt aus der Position des Punktes \( p \) im Raum. Sie sind also einfache 3D Texturen.  
+Um zusätzliche Tiefenhinweise zu erzeugen, können einfache Muster auf das Objekt projiziert werden. Diese Muster sind keine echten Texturen im klassischen Sinn, sondern entstehen direkt aus der Position des Punktes \( \mathbf{p} \) im Raum. Sie sind also einfache 3D Texturen.  
 
 Im Folgenden stelle ich zwei solcher Muster vor: ein Schachbrett-Muster in 3D und ein Gitter aus Isolinien entlang der Koordinatenachsen.
 
-Für das Schachbrett Muster wird der Raum in helle und dunkle Würfel eingeteilt (also wie bei einem Schachbrett aber in 3D). Für den Punkt p wird geguckt, ob er in einem hellen oder dunklen Würfel landet und er wird dementsprechend heller oder dunkler eingefärbt.
+Für das Schachbrett Muster wird der Raum in helle und dunkle Würfel eingeteilt (also wie bei einem Schachbrett aber in 3D). Für den Punkt \( \mathbf{p} \) wird geguckt, ob er in einem hellen oder dunklen Würfel landet und er wird dementsprechend heller oder dunkler eingefärbt.
 
-Das Isolinien Muster erzeugt ein einfaches Gittermuster entlang der drei Achsen. Ähnlich wie bei dem Schachbrett muster wird für den Punkt p geprüft, ob er auf dem Gitter landet und dementsprechend eingefärbt. 
+Das Isolinien Muster erzeugt ein einfaches Gittermuster entlang der drei Achsen. Ähnlich wie bei dem Schachbrett muster wird für den Punkt \( \mathbf{p} \) geprüft, ob er auf dem Gitter landet und dementsprechend eingefärbt. 
 
 Ich finde das Isolinien muster normalerweise schöner, allerdings hat es ein paar Artefakte was es hässlich macht.
 
-Gegenüber des Beleuchtungsmodells erzeugen diese Texturen einen starken 3D-Eindruck und sind einfacher zu implementieren. Natürlich kann man auch Texturierung und Beleuchtungsmodell gleichzeitig verwenden. Wie auch bei dem Beleuchtungsmodell wird durch das Rauschen von \(p\) Rauschen in der Textur erzeugt. 
+Gegenüber des Beleuchtungsmodells erzeugen diese Texturen einen starken 3D-Eindruck und sind einfacher zu implementieren. Natürlich kann man auch Texturierung und Beleuchtungsmodell gleichzeitig verwenden. Wie auch bei dem Beleuchtungsmodell wird durch das Rauschen von \(\mathbf{p}\) Rauschen in der Textur erzeugt. 
 
 %Bilder
 
@@ -1163,6 +1162,7 @@ Gegenüber des Beleuchtungsmodells erzeugen diese Texturen einen starken 3D-Eind
 Die Nicht auf Raycasting basierenden Methoden Konzentrieren sich darauf grafische Primitive (Punkte, Dreiecke und Linien) zu generieren und diese dann zu visualisieren. Anders als bei \textsc{Gaalop} passiert die Auswertung des Nullraums dabei auf der GPU. Dabei ist das Anzeigen von Primitiven oft Schneller als die Raycasting Methoden. 
 
 \section{raybased pointcloudrenderer}
+Diese Methode
 Die Punktwolken-Methode besteht aus zwei Shadern: einem Shader, der die Punktwolke generiert, und einem weiteren, der sie anzeigt.
 
 Der Punktwolken-Erzeuger generiert achsenparallele Strahlen und verwendet das Aberth-Verfahren, um die Nullstellen entlang dieser Strahlen zu finden. Er funktioniert im Prinzip genauso wie die Raycasting-Aberth-Verfahren, allerdings mit einer orthografischen Projektion. Da WebGL2 keine Compute-Shader unterstützt, können die Punkte nicht direkt als Array ausgegeben werden (Man kann stattdessen transform feedback nutzen, allerdings hatte ich das zu diesem Zeitpunkt noch nicht implementiert). Stattdessen werden mehrere Output-Texturen verwendet, in denen die Nullstellen als komplexe Zahlen gespeichert werden. Eine Textur kann maximal vier Kanäle enthalten, und es können bis zu vier Output-Texturen verwendet werden. Das bedeutet, dass pro Fragment maximal 16 Floats ausgegeben werden können. Also bis zu 8 komplexe Nullstellen.
@@ -1171,6 +1171,7 @@ Die komplexen Nullstellen werden anschließend auf der CPU gefiltert, wieder in 
 
 
 Der Vorteil dieser Methode liegt darin, dass das Rendern deutlich schneller ist als bei den auf Raycasting basierenden Verfahren. Ein Nachteil ist, dass Punktwolken nur wirklich erkennbar sind, solange sie sich bewegen.
+
 
 
 \section{Voxel-Subdivision}
@@ -1242,7 +1243,7 @@ Beispielsweise ist \([-1,1]-[-1,1]=[-2,2]\) aber \(I_x-I_x=0\).
 Die umgeschriebenen \(x,y,z\) Ausdrücke werden dann in die Funktion eingesetzt und die Funktion wird ausmultipliziert:
 
 \[
-f(x_0 + I_x \delta_x,\, y_0 + I_y \delta_y,\, z_0 + I_z \delta_z) = \sum c_{a,b,c} \cdot (I_x)^a (I_y)^b (I_z)^c
+f(x_0 + I_x \delta_x,\, y_0 + I_y \delta_y,\, z_0 + I_z \delta_z) = \sum_{a,b,c} c_{a,b,c} \cdot (I_x)^a (I_y)^b (I_z)^c
 \]
 
 Die Koeffizienten \( c_{a,b,c} \) hängen von den ursprünglichen Koeffizienten des Polynoms sowie von \( x_0, y_0, z_0 \) und den Skalierungen \( \delta_x, \delta_y, \delta_z \) ab. Dabei ist \(c_{0,0,0}=f(x_0,y_0,z_0)\).
@@ -1304,12 +1305,20 @@ Eine besondere Betrachtung ist für die Ecken mit 0 als Ableitung erforderlich. 
 
 Dabei baut die Marching Cubes Variante auf den Intervallarithmetik-Voxeln auf. Das bedeutet, die Voxel werden erst unterteilt und gefiltert und dann wird auf den restlichen Voxeln das Verfahren berechnet.
 
-section{curve extraction}
-Als
-
-
-
-
+\section{Iterative Verfahren}
+Ich habe mich entschieden die GradientMethod aus \textsc{Gaalop} nachzuimplementieren. Zusätzlich habe ich noch drei weitere iterative Verfahren hinzugefügt.
+Die Verfahren starten alle auf einem voll besetzten äquidistanten 3D-Gitter an Punkten. Dann werden mehrere Iterationen berechnet, und zum Schluss werden die Punkte über einen Schwellwert gefiltert und dann als Punkte visualisiert.
+Die implementierten Verfahren sind:
+GradientMethod,
+Newton-like:
+\(\mathbf{x}^{\text{neu}} = \mathbf{x} - \frac{f(\mathbf{x})}{\|\nabla f(\mathbf{x})\|^2} \nabla f(\mathbf{x})\)
+GradNewton:
+\(\mathbf{x}_{k+1} = \mathbf{x}_k - \alpha_k \frac{f(\mathbf{x}_k)}{\|\nabla f(\mathbf{x}_k)\|^2} \nabla f(\mathbf{x}_k)\)
+Dies ist ein hybrid aus Newton-like und GradientMethod. Die Schrittweite wird immer verringert, wenn das Skalarprodukt der Ableitung und der vorherigen Ableitung kleiner null ist, und sonst erhöht.
+Außerdem habe ich noch ein auf dem Levenberg Marquad Schritt basierendes verfahren implementiert.
+\section{Grid basierte Verfahren}
+TopGrid ist im Prinzip eine Reimplementierung der Discrete Cube Method aus Gaalop. Dabei wird nicht der Schwellwert für \(f\) eingestellt. Stattdessen werden die Punkte anhand der Größe des Nullraums an der jeweiligen Position sortiert, und es werden die Punkte mit den kleinsten Werten entsprechend eines einstellbaren Perzentils dargestellt.
+Außerdem gibt es noch die GaussNewtonGrid Methode. Diese macht einfach für jeden Punkt im Gitter einen Gauss Newton Schritt und visualisiert die Punkte, bei denen die Länge des Schrittes unter einem Schwellwert liegt.
 
 \chapter{Implementierung}
 %mobile
@@ -1328,6 +1337,7 @@ In jedem Gameloop Durchlauf wird zuerst die Methode updateParams des RenderConte
 
 Dann kommt die Methode Render welche die entsprechenden render Methoden der Pipelines aufruft. Es wird nur neu gerendert, wenn sich die Parameter oder die Kamera geändert haben.
 Beim Rendern wird erst ein Bild mit niedriger Auflösung gerendert und dann über mehrere Frames ein hochauflösendes Bild. Dies wird im Abschnitt \ref{sec:tilebased} näher beschrieben.
+Nachdem das Bild vollständig gerendert ist, werden die Diagramme eventuell upgedated.
 
 \section{Matrixvariante}
 
@@ -1341,10 +1351,10 @@ Diese lineare Abbildung lässt sich als eine Matrix Darstellen.
 Die Komponenten von \(\texttt{point}(x,y,z)\) sind Polynome über x, y, z.
 Zusammen lässt sich der Nullraum also als ein Gleichungssystem darstellen.
 \[
-M \cdot P(x,y,z) = 0
+M \cdot \mathbf{P}(x,y,z) = 0
 \]  
 
-Dabei kann M direkt aus dem zu visualisierenden Multivektor berechnet werden, während P die Polynome aus \(\texttt{point}(x,y,z)\) darstellt. 
+Dabei kann M direkt aus dem zu visualisierenden Multivektor berechnet werden, während \( \mathbf{P}\) die Polynome aus \(\texttt{point}(x,y,z)\) darstellt. 
 
 
 %!P ist glaube ich technisch gesehen keine basis
@@ -1354,21 +1364,21 @@ Ein konkretes Beispiel für \(\texttt{point}(x,y,z)\) in der DCGA ist:
 \texttt{point}(x,y,z) = x^2 e_{16} + xy\, e_{17} + xz\, e_{18} + x\, e_{19} + \tfrac{1}{2}(x^2 + y^2 + z^2)\, x\, e_{41} + \cdots + \tfrac{1}{4}(x^2 + y^2 + z^2)^2 e_{45}
 \]
 
-\texttt{point}$(x,y,z)$ könnte direkt als Vektor geschrieben werden.
+$\texttt{point}(x,y,z)$ könnte direkt als Vektor geschrieben werden.
 
 
-In der Software liegt dieses Produkt $M \cdot P(x,y,z)$ nicht explizit als Matrix-Vektor-Produkt vor, sondern wird als Computational Graph umgesetzt. Es ist theoretisch möglich, $M$ und $P$ aus dem Graphen zu extrahieren, allerdings ist dies relativ aufwendig, da P nicht von \textsc{Gaalop} synthetisiert wird.
+In der Software liegt dieses Produkt $M \cdot  \mathbf{P}(x,y,z)$ nicht explizit als Matrix-Vektor-Produkt vor, sondern wird als Computational Graph umgesetzt. Es ist theoretisch möglich, $M$ und $P$ aus dem Graphen zu extrahieren, allerdings ist dies relativ aufwendig, da P nicht von \textsc{Gaalop} synthetisiert wird.
 
 Deswegen extrahiere ich ein maximales linear unabhängiges Subset der Polynome die nur von x,y,z abhängen. Dies funktioniert sehr gut, allerdings ist es eine relative komplexe Lösung. 
 
-Der Vorteil der Darstellung $M \cdot P(x,y,z) = 0$ ist, dass sie Optimierungen erlaubt, insbesondere dann, wenn das Gleichungssystem überdeterminiert ist.
+Der Vorteil der Darstellung $M \cdot  \mathbf{P}(x,y,z) = 0$ ist, dass sie Optimierungen erlaubt, insbesondere dann, wenn das Gleichungssystem überdeterminiert ist.
 \subsubsection{optimierung des gleichungssystems}
 
 %Vormulierung passt nicht
 \( f \) kann geschrieben werden als:
 
 \[
-f = \|F\|^2 = \|M \cdot P(x, y, z)\|^2
+f = \|F\|^2 = \|M \cdot  \mathbf{P}(x, y, z)\|^2
 \]
 
 Das Interessante hierbei ist, dass die Matrix \( M \) stark verkleinert werden kann, falls sie keinen vollen Rang hat. Dadurch lässt sich auch der Auswertungsaufwand deutlich reduzieren. Gesucht ist also eine Matrix \( M' \) mit vollem Rang, für die gilt:
@@ -1404,7 +1414,7 @@ f = \|R \cdot P(x, y, z)\|^2
 Setzt man nun die Blockstruktur von \( R \) ein, ergibt sich:
 
 \[
-f = \left\|\begin{bmatrix} R' \\ 0 \end{bmatrix} \cdot P(x, y, z)\right\|^2 = \|R' \cdot P(x, y, z)\|^2
+f = \left\|\begin{bmatrix} R' \\ 0 \end{bmatrix} \cdot  \mathbf{P}(x, y, z)\right\|^2 = \|R' \cdot  \mathbf{P}(x, y, z)\|^2
 \]
 
 Das bedeutet, es kann \( M' = R' \) gewählt werden.
@@ -1413,8 +1423,8 @@ Beachtet werden muss hierbei, dass wegen Gleitkommaarithmetik die Zeilen von \( 
 
 Eine einfache Alternative, die allerdings schwächer ist, ist durch die Ausnutzung von 
 \(\ker(A) = \ker(A^TA)\).
-Wenn \(M\) mehr Zeilen als Spalten hat, kann also \(f' = \|M' \cdot P(x, y, z)\|^2\) gewählt werden mit \(M' = M^\top M\). 
-Dabei gilt \(f'(x,y,z)=0 \iff f(x,y,z)=0\). Weiterhin kann auch \(f = P(x, y, z)^\top M' P(x, y, z)\) berechnet werden.
+Wenn \(M\) mehr Zeilen als Spalten hat, kann also \(f' = \|M' \cdot  \mathbf{P}(x, y, z)\|^2\) gewählt werden mit \(M' = M^\top M\). 
+Dabei gilt \(f'(x,y,z)=0 \iff f(x,y,z)=0\). Weiterhin kann auch \(f =  \mathbf{P}(x, y, z)^\top M'  \mathbf{P}(x, y, z)\) berechnet werden.
 Ich habe diese Alternative allerdings nicht getestet oder weiterverfolgt.
 
 
@@ -1423,17 +1433,17 @@ Durch beide Methoden wird die Anzahl der Zeilen der Matrix auf die Anzahl der Sp
 \subsubsection{Schnelle Nullstellensuche}
 \label{sec:Schnelle_Nullstellensuche}
 
-Sei nun \(F_R=R \cdot P(x,y,z)\).
+Sei nun \(\mathbf{F}_R=R \cdot  \mathbf{P}(x,y,z)\).
 
 Um die Nullstellensuche entlang eines Strahls zu beschleunigen, kann sie erst auf nur einer Zeile von \(R\) beschränkt werden, anstatt das ganze Gleichungssystem zu betrachten. Die reellen Nullstellen von \(f\) sind der Schnitt der Nullstellen der Komponentenpolynome von 
-\(F_R\). Es gilt \(f = 0 \iff \forall i\, (F_R)_i = 0\). Bestimmt man also zunächst die Nullstellen einer einzelnen Komponente \((F_R)_i\)(mit \((F_R)_i \not\equiv 0\)), so kann man anschließend prüfen, ob dies auch Nullstellen von \(f\) sind. Die Nullstellensuche von \((F_R)_i\) ist dabei wesentlich einfacher, da \((F_R)_i\) einen kleineren Grad hat und schneller auszuwerten ist. Außerdem sind Nullstellen nicht unbedingt konjugate pairs was zu einer besseren Konvergenz des Aberth-Verfahrens führt.
+\(\mathbf{F}_R\). Es gilt \(f = 0 \iff \forall i\, (\mathbf{F}_R)_i = 0\). Bestimmt man also zunächst die Nullstellen einer einzelnen Komponente \((\mathbf{F}_R)_i\)(mit \((\mathbf{F}_R)_i \not\equiv 0\)), so kann man anschließend prüfen, ob dies auch Nullstellen von \(f\) sind. Die Nullstellensuche von \((\mathbf{F}_R)_i\) ist dabei wesentlich einfacher, da \((\mathbf{F}_R)_i\) einen kleineren Grad hat und schneller auszuwerten ist. Außerdem sind Nullstellen nicht unbedingt konjugate pairs was zu einer besseren Konvergenz des Aberth-Verfahrens führt.
 
-Die Prüfung ob die Nulstellen von \((F_R)_i\) auch Nulstellen von \(F_R\) sind ist allerdings komplizierter. Ich habe mich entschieden an der potientiellen Nullstelle einen Levenberg Marquad schritt auszuwerten, um dann zu prüfen ob die länge dieses Schritts unter einem Schwellwert liegt. Alternativ könnte man auch die UDFAprox oder \(F_R\) an der Nullstelle auswerten und testen ob dies unter einem Schwellwert liegt.
+Die Prüfung, ob die Nullstellen von \((\mathbf{F}_R)_i\) auch Nullstellen von \(\mathbf{F}_R\) sind ist allerdings komplizierter. Ich habe mich entschieden an den potenziellen Nullstellen einen Levenberg Marquad Schritt auszuwerten, um dann zu prüfen, ob die Länge dieses Schritts unter einem Schwellwert liegt. Alternativ könnte man auch die UDFAprox oder \(\mathbf{F}_R\) an den Nullstellen auswerten und testen, ob dies unter einem Schwellwert liegt.
 
-Weiterhin kann \(R\) und P so konstruiert werden, dass \((F_R)_i\) einen von i abhängen Grad hat.
-Vor der Konstruktion von \(R\) können die Polynome in P so sortiert werden, sodass Polynome mit niedrigerem Grad weiter unten sind. Entsprechend müssen auch die Spalten von M permutiert werden.
-Das bedeutet, dass \(grad((F_R)_i)=grad(P_i)\). Bei der Wahl von \((F_R)_i\) zur Nullstellensuche kann dann das \((F_R)_i\) mit dem niedrigsten grad gewählt werden, was die Nullstellensuche theoretisch beschleunigt.
-Ich habe die Sortierung implementiert, aber diesen Fakt nicht ausgenutzt da dies die Nullstellensuche im Shader wesentlich komplexer machen würde. In der Praxis benutze ich daher immer \((F_R)_1\) und lade immer das ganze \(R\) (mit Zeilen die vollkommen aus Nullen bestehen) in den Shader.
+Weiterhin kann \(R\) und \( \mathbf{P}\) so konstruiert werden, dass \((\mathbf{F}_R)_i\) einen von i abhängen Grad hat.
+Vor der Konstruktion von \(R\) können die Polynome in \( \mathbf{P}\) so sortiert werden, sodass Polynome mit niedrigerem Grad weiter unten sind. Entsprechend müssen auch die Spalten von M permutiert werden.
+Das bedeutet, dass \(\deg((\mathbf{F}_R)_i)=\deg(P_i)\). Bei der Wahl von \((\mathbf{F}_R)_i\) zur Nullstellensuche kann dann das \((\mathbf{F}_R)_i\) mit dem niedrigsten Grad gewählt werden, was die Nullstellensuche theoretisch beschleunigt.
+Ich habe die Sortierung implementiert, aber diesen Fakt nicht ausgenutzt da dies die Nullstellensuche im Shader wesentlich komplexer machen würde. In der Praxis benutze ich daher immer \((\mathbf{F}_R)_1\) und lade immer das ganze \(R\) (mit Zeilen die vollkommen aus Nullen bestehen) in den Shader.
 
 
 
@@ -1461,7 +1471,7 @@ Zum Schluss wird dann aus daraus Code in glsl generiert.
 Der erste Schritt der Code Generierung ist das \textsc{Gaalop} Plugin.
 Der Input für \textsc{Gaalop} ist ein Ausdruck in geometrischer Algebra.
 \textsc{Gaalop} transformiert den geometrischen Ausdruck in eine äquivalente arithmetische Form, die aus Skalaren und klassischen Operationen besteht.
-Intern wird der Ausdruck in der geometrischen Form als eine liste von assignement nodes repräsentiert.
+Intern wird der Ausdruck in der geometrischen Form als eine liste von assignement Nodes repräsentiert.
 Also etwa:
 %TODO BETTER EXAMPLE
 \begin{verbatim}
@@ -1568,16 +1578,16 @@ Diese Methode wertet \(f\) und \(\nabla f\) aus.
 void DualF(vec3 rayDir, vec3 rayOrigin,
            float a, out Dual[numoutputs] result)
 \end{minted}
-Diese Methode wertet \(F(\text{ray}(a))\) und
-\(\frac{dF(\text{ray}(a))}{da}\) aus.
+Diese Methode wertet \(\mathbf{F}(\mathbf{ray}(a))\) und
+\(\frac{dF(\mathbf{ray}(a))}{da}\) aus.
 
 \item
 \begin{minted}{glsl}
 DualComplex DualComplexSummofsquares(
     vec3 rayDir, vec3 rayOrigin, Complex a)
 \end{minted}
-Diese Methode wertet \(f(\text{ray}(a))\) und
-\(\frac{df(\text{ray}(a))}{da}\) mit komplexen Zahlen aus.
+Diese Methode wertet \(f(\mathbf{ray}(a))\) und
+\(\frac{df(\mathbf{ray}(a))}{da}\) mit komplexen Zahlen aus.
 Dies wird für die Aberth-Verfahren benötigt.
 
 \item
@@ -1599,7 +1609,8 @@ gibt zurück, ob \(0\) im Ergebnisintervall enthalten ist.
 
 Dabei muss beachtet werden, dass alle Methoden mit
 \texttt{Summofsquares} im Namen im Fall eines einzelnen Outputs
-nicht das Quadrat berechnen. In diesem Fall gilt \(f = F\) statt \(f = |F|^2\).
+nicht das Quadrat berechnen. In diesem Fall gilt \(f =  \mathbf{F}\) statt \(f = |\mathbf{F}|^2\).
+Ich hatte dies anfangs implementiert um das normale Abert-Verfahren zur schnelleren Konvergenz nutzen zu können.
 
 
 Zusätzlich zu den Funktionen werden noch einige Variablen berechnet:
@@ -1616,7 +1627,7 @@ uniform float[?] args;
 \begin{minted}{glsl}
 int numoutputs = ?;
 \end{minted}
-Die Anzahl der Outputs von \(F\).
+Die Anzahl der Outputs von \(\mathbf{F}\).
 
 \item
 \begin{minted}{glsl}
@@ -1628,7 +1639,7 @@ Der Polynomgrad der \texttt{Summofsquares}-Methoden.
 \begin{minted}{glsl}
 #define USE_DOUBLEROOT
 \end{minted}
-Dieses Makro zeigt an, dass \(f = F\) statt \(f = |F|^2\)
+Dieses Makro zeigt an, dass \(f = \mathbf{F}\) statt \(f = |\mathbf{F}|^2\)
 verwendet wurde.
 
 \end{itemize}
@@ -1662,17 +1673,17 @@ Mul(skalar a,Complex b)-> Complex
 
 Dabei habe ich oft den skalar einfach hochkonvertiert. Also statt Mul(skalar a,Complex b) zu implementieren kann Mul(Complex a,Complex b) benutzt werden wobei a zu einer komplexen Zahl gecastet wird. Das macht das Ganze einfacher aber auch langsamer. 
 Die typen waren unter anderem: Skalare, Complexe Zahlen, Duale Zahlen, Complexe Duale, Intervalle,3d Duale.
-Dieser Ansatz war relativ unflexibel und unübersichtlich. Anfangs ging es noch, allerdings hatte ich weitere Ideen und habe dann immer mehr Typen hinzugefügt. Allerdings hätte ich wahrscheinlich dabei bleiben sollen, weil mich das neu schreiben viel Zeit gekostet hat. 
+Dieser Ansatz war relativ unflexibel und unübersichtlich. Anfangs ging es noch, allerdings hatte ich weitere Ideen und habe dann immer mehr Typen hinzugefügt. 
 
 %explain type propergation
-Mein nächster Ansatz war es typisierte nodes zu machen. Dabei habe ich den Code für Codegenerierung und typ propergation in die nodes gepackt statt eigene Klassen zur Codegenerierung zuschreiben.
+Mein nächster Ansatz war es typisierte Nodes zu machen. Dabei habe ich den Code für Codegenerierung und typ propergation in die Nodes gepackt statt eigene Klassen zur Codegenerierung zuschreiben.
 Der Vorteil von diesem Ansatz war, dass er wesentlich flexibler ist und einfacher zu erweitern. Weiterhin ist ermöglicht dieser Ansatz die Auswertung des Ganzen auf der CPU. Der Nachteil von diesem Ansatz war, dass er wesentlich größer ist, weshalb ich irgendwann abgebrochen habe.
 
 Als Nächstes habe ich mich entschieden die Ableitungsberechnung auf Backpropergation und Forward-mode-autodiff umzustellen. Dies hat zwei große Vorteile.
 Erstens gibt es nur noch 3 typen: Skalare, komplexe Zahlen und Intervalle was die Codegenerierung wesentlich einfacher macht. Und zweitens müsste Backpropergation theoretisch bei manchen Ansätzen schneller sein da weniger Multiplikationen benötigt werden.
 
 Im aktuellen Ansatz habe ich versucht die anderen Ansätze zu vereinigen.
-Ich habe mich entschieden die Typ Propergation während der Codegenerierung zu machen wobei ich den code dafür in die nodes gepackt habe. Das macht den code kleiner, allerdings ist das typisierte auswerten in JavaScript nicht möglich.
+Ich habe mich entschieden die Typ Propergation während der Codegenerierung zu machen wobei ich den code dafür in die Nodes gepackt habe. Das macht den code kleiner, allerdings ist das typisierte auswerten in JavaScript nicht möglich.
 Die neue Codegenerierung ist flexibler und hat weniger Bugs. Da es in der alten Codegenerierung für jede Funktion eine eigene Klasse zur Codegenerierung gab, war es wesentlich schwerer Bugs zu fixen da sie teilweise in jeder der Codegenerierungen gefixt werden müssten. Deshalb habe ich die neue Codegenerierung geschrieben.
 
 Ein Problem, das in beiden Codegenerierungen besteht, ist der zu große Code nicht kompilierbar ist.
@@ -1687,26 +1698,26 @@ entfernen von Addition mit 0 und Multiplikation mit 1.
 
 
 \subsection{Matrix Extraktion}
-Für die Matrixvariante muss die \(M\) und \(P(x,y,z)\) aus dem Graphen extrahiert werden.
+Für die Matrixvariante muss die \(M\) und \(\mathbf{P}(x,y,z)\) aus dem Graphen extrahiert werden.
 
 Ich habe zwei Versionen der Matrixextraktion aus dem Graph geschrieben. 
 
 
-Die alte Version berechnet nur \(M\) und nimmt an, dass \(P\) gegeben ist. Der Nachteil dabei ist, dass \(P\) von der Algebra abhängt was bedeutet, dass für jede Algebra \(P\)  vordefiniert werden müsste. Die neue Version hat dieses Problem nicht und 
-baut \(P\) automatisch. 
+Die alte Version berechnet nur \(M\) und nimmt an, dass \(\mathbf{P}\) gegeben ist. Der Nachteil dabei ist, dass \(\mathbf{P}\) von der Algebra abhängt was bedeutet, dass für jede Algebra \(\mathbf{P}\)  vordefiniert werden müsste. Die neue Version hat dieses Problem nicht und 
+baut \(\mathbf{P}\) automatisch. 
 
 
 In der alten Version wird der GPU-Teilgraph als Erstes im Prinzip symbolisch ausmultipliziert. Dabei werden die Polynome als Summe von Monomen mit zugehörigen Koeffizienten dargestellt.
 Das Ergebnis ist also ein Polynom für jede Komponente des Output Multivectors.
-Um diese Polynome in der Polynombasis der Algebra zu repräsentieren, wird mittels einer Basiswechselmatrix von der Monombasis zur Polynombasis \(P\) der Algebra konvertiert. Somit erhält man \(M\).
+Um diese Polynome in der Polynombasis der Algebra zu repräsentieren, wird mittels einer Basiswechselmatrix von der Monombasis zur Polynombasis \(\mathbf{P}\) der Algebra konvertiert. Somit erhält man \(M\).
 
 %TODO:Kapitel schreiben
-Im neuen Ansatz müssen als Erstes die Polynome von \(P\) extrahiert werden. 
+Im neuen Ansatz müssen als Erstes die Polynome von \(\mathbf{P}\) extrahiert werden. 
 Dazu werden alle Nodes aus dem Graph extrahiert die nur von den Variablen x,y oder z abhängen. 
 
 %mobile
-Der nächste Schritt ist die Auswahl einer maximal linear unabhängigen Untermenge dieser nodes. Dafür wird für jede node ein Koeffizientenvektor in einer Monombasis und die Anzahl der vorfahren berechnet.
-Die nodes werden sortiert nach Anzahl der vorfahren und dann der Reihe nach zu P hinzugefügt, falls sie linear unabhängig von den schon hinzugefügten Polynomen sind. Ich nutze dazu eine modifizierte Version des Modifizierten Gram-Schmidtschen Orthogonalisierungsverfahren.
+Der nächste Schritt ist die Auswahl einer maximal linear unabhängigen Untermenge dieser Nodes. Dafür wird für jede Node ein Koeffizientenvektor in einer Monombasis und die Anzahl der vorfahren berechnet.
+Die Nodes werden sortiert nach Anzahl der vorfahren und dann der Reihe nach zu P hinzugefügt, falls sie linear unabhängig von den schon hinzugefügten Polynomen sind. Ich nutze dazu eine modifizierte Version des Modifizierten Gram-Schmidtschen Orthogonalisierungsverfahren.
 %https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
 
 Nachdem P vollständig ist, wird im Prinzip der alte Ansatz genutzt, um M zu erhalten.
@@ -1751,7 +1762,7 @@ Ein Vorteil des neuen Codes könnten bessere Vereinfachungen des Graphen sein.
 
 
 \subsection{Matrixmul in Glsl}
-Um \(R*P(x,y,z)\) für den Matrixansatz auszuwerten wird Matrixmultiplikation in glsl benötigt, die möglichst performant sein muss. Kleine Änderungen im Shadercode machen große Performance Unterschiede.
+Um \(\mathbf{F}_R=R*\mathbf{P}(x,y,z)\) für den Matrixansatz auszuwerten wird Matrixmultiplikation in glsl benötigt, die möglichst performant sein muss. Kleine Änderungen im Shadercode machen große Performance Unterschiede.
 Dabei gibt es mehrere Parameter die geändert werden können. 
 
 Die Matrix als uniform oder als uniform Buffer (ubo) hochgeladen werden. 
@@ -1764,27 +1775,27 @@ Auch der Browser (Ich habe Firefox und Edge getestet) spielt eine große Rolle.
 
 
 Ich habe hauptsächlich 4 verschiedene Methoden ausgewertet. 
-\enquote{sus} steht für sum of squares und ist die normale Auswertung von f.
-Außerdem gibt es noch \enquote{row} was dafür steht das nur die erste Zeile der Matrix zur Auswertung genutzt wird (also \((F_R)_1\)). Diese Methode wertet das Skalarprodukt von der ersten Zeile der Matrix mit \(P\) aus.
+\enquote{sus} steht für sum of squares und ist die normale Auswertung von \(f\).
+Außerdem gibt es noch \enquote{row} was dafür steht das nur die erste Zeile der Matrix zur Auswertung genutzt wird (also \((\mathbf{F}_R)_1\)). Diese Methode wertet das Skalarprodukt von der ersten Zeile der Matrix mit \(\mathbf{P}\) aus.
 Weiterhin wird für die Aberth-Verfahren auch die Auswertung im Komplexen mit Ableitung benötigt. Deshalb gibt es beide Methoden nochmal mit DC was für Dual Complex steht.
 Dann gibt es noch horner was eine Auswertung über die mittels der Vandermonde Matrix approximierten Koeffizienten des Polynoms ist. Weiterhin gibt es bei row noch Methoden mit \enquote{copy} im Namen. Diese kopieren die erste Zeile der Matrix in ein Array und benutzen dann dieses Array zur Auswertung.
 
 Getestet habe ich auf einem Laptop mit einer Geforce gt 730M was eine Grafikkarte von 2013 ist.
 Alle Tests wurden in einem Vertex-Shader mit 100000 Vertices ausgeführt. Um Overhead zu vermeiden, werden im Shader zusätzlich mehrere Iterationen ausgeführt. Erst eine, dann 10, dann 100 usw. bis der Test länger als 100 ms dauert.
 Das Ergebnis ist die minimale Zeit pro Iteration bei 20 Wiederholungen. 
-Berechnet wird immer (außer für horner) \(P\) und dann die Multiplikation mit der ersten Zeile der Matrix für \enquote{row}. Für \enquote{sus} wird die Summe der Quadrate der Multiplikation von \(P\) mit der ganzen Matrix berechnet. Die Matrix ist dabei eine 25x25 Matrix was einer Monombasis vierten Grades entspricht.
+Berechnet wird immer (außer für horner) \(\mathbf{P}\) und dann die Multiplikation mit der ersten Zeile der Matrix für \enquote{row}. Für \enquote{sus} wird die Summe der Quadrate der Multiplikation von \(\mathbf{P}\) mit der ganzen Matrix berechnet. Die Matrix ist dabei eine 25x25 Matrix was einer Monombasis vierten Grades entspricht.
 Der Testcode ist in unrolled.js und kann mittels speedtestharness.html ausgeführt werden.
 
 
 \begin{figure}
     \centering
     \includegraphics[width=0.5\linewidth]{pictures/row_times_cleaned.png}
-    \caption{Enter Caption}
+    %\caption{Enter Caption}
     \label{fig:row_times_cleaned}
 \end{figure}
 
 Die Ergebnisse für row und DCrow sind relativ einfach zu verstehen. Die Approximation durch horner ist am schnellsten, da am wenigsten Multiplikationen benötigt werden. Weiterhin sind die dichten Metoden für row schneller. Das liegt daran, dass für diese dot benutzt werden kann wodurch weniger Multiplikationen benutzt werden müssen.
-Weiterhin sind die ausgerollten Methoden genauso schnell wie die anderen weshalb ich vermute das der Compiler die Schleife intern ausrollt. Eine interessante Sache hierbei sind die Copy Methoden. Diese ermöglichen Das Kopieren der nicht dichten Arrays in dichte Arrays und somit schnelle Evaluation egal wie die Matrix hochgeladen wurde.
+Weiterhin sind die ausgerollten Methoden genauso schnell wie die anderen weshalb ich vermute das der Compiler die Schleife intern ausrollt. Eine interessante Sache hierbei sind die Copy Methoden. Diese ermöglichen das Kopieren der nicht dichten Arrays in dichte Arrays und somit schnelle Evaluation egal wie die Matrix hochgeladen wurde.
 
 \begin{figure}
     \centering
@@ -1792,7 +1803,7 @@ Weiterhin sind die ausgerollten Methoden genauso schnell wie die anderen weshalb
     \caption{Enter Caption}
     \label{fig:sustimes_cleaned}
 \end{figure}
-Ich habe die Timings für "DCsus" und "sus" in 2 Diagramme aufgeteilt wobei das untere Diagramm ein Ausschnitt des oberen Diagramms ist. Die Ausgerollten Versionen sind wesentlich schneller als die nicht ausgerollten Versionen und für "sus" sind die Dichten Versionen wie auch bei "row" schneller. Die dichten Versionen sind komplizierter zu programmieren, weshalb es auch die Reversed Versionen gibt welche die Multiplikation mit einer gespiegelten Version von \(R\) berechnen, was die Schleifenlogik einfacher macht. Ein Ausreißer für DCsus scheint Runrolled\_ubo zu sein. Ich vermute, das liegt daran, dass \(R\) auf dem ubo 4-mal größer ist (da WebGL2 nur std140 unterstützt) und deshalb die Matrix in einen anderen Speicherbereich lädt. Allerdings bin ich mir nicht sicher. Weiterhin ist noch MDenseUnrolled2 interessant. Diese Methode macht erst die Matrix Multiplikation in einer separaten Funktion und dann die Akkumulation der Summe der Quadrate. Dies ist etwas langsamer aber der Code lässt sich besser wiederverwenden. Letztendlich habe ich mich für eine Kombination aus MDenseUnrolled2 und RDenseUnrolled entschieden. Das bedeutet ich benutze RDense und habe eine Funktion für eine Multiplikation mit einem Vektor. 
+Ich habe die Timings für \enquote{DCsus} und \enquote{sus} in 2 Diagramme aufgeteilt wobei das untere Diagramm ein Ausschnitt des oberen Diagramms ist. Die ausgerollten Versionen sind wesentlich schneller als die nicht ausgerollten Versionen und für \enquote{sus} sind die Dichten Versionen wie auch bei \enquote{row} schneller. Die dichten Versionen sind komplizierter zu programmieren, weshalb es auch die Reversed Versionen gibt, welche die Multiplikation mit einer gespiegelten Version von \(R\) berechnen, was die Schleifenlogik einfacher macht. Ein Ausreißer für DCsus scheint Runrolled\_ubo zu sein. Ich vermute, das liegt daran, dass \(R\) auf dem ubo 4-mal größer ist (da WebGL2 nur std140 unterstützt) und deshalb die Matrix in einen anderen Speicherbereich lädt. Allerdings bin ich mir nicht sicher. Weiterhin ist noch MDenseUnrolled2 interessant. Diese Methode macht erst die Matrix Multiplikation in einer separaten Funktion und dann die Akkumulation der Summe der Quadrate. Dies ist etwas langsamer aber der Code lässt sich besser wiederverwenden. Letztendlich habe ich mich für eine Kombination aus MDenseUnrolled2 und RDenseUnrolled entschieden. Das bedeutet ich benutze RDense und habe eine Funktion für eine Multiplikation mit einem Vektor. 
 Für RDense gibt es für alle Fälle schnellen Code zur Evaluierung der Funktion. Für row muss beachtet werden, dass der Code für \(M\) und \(R\) prinzipiell gleich ist, weshalb einfach die MDense Varianten genutzt werden können.
 
 \section{Optimizations}
@@ -1805,7 +1816,7 @@ Deshalb hatte ich anfangs die Auflösung verringert, solange der Nutzer die Kame
 \subsection{Tile based rendering}
 \label{sec:tilebased}
 Um trotzdem mit hoher Auflösung rendern zu können, habe ich dann einen Tile based rendering Ansatz implementiert. 
-Dazu wird der Bildschirm in rechteckige Tiles unterteilt, die dann nacheinander gerendert werden können. Der Vorteil dieses Ansatzes ist, dass so mit voller Auflösung gerendert werden kann, ohne den OpenGL Context zu crashen. Weiterhin kann das rendern zwischendrin abgebrochen und von neu begonnen werden, falls sich die Kamera bewegt oder sich Parameter ändern, was zu einer schnellen Reaktion führt. Wie auch bei dem vorherigen Ansatz wird auch bei diesem Ansatz vor dem Tile based rendering das Bild in niedriger Auflösung gerendert, damit der Nutzer schnell ein neues Bild erhält.
+Dazu wird der Bildschirm in rechteckige Tiles unterteilt, die dann nacheinander gerendert werden können. Der Vorteil dieses Ansatzes ist, dass so mit voller Auflösung gerendert werden kann, ohne den OpenGL Kontext zu crashen. Weiterhin kann das rendern zwischendrin abgebrochen und von neu begonnen werden, falls sich die Kamera bewegt oder sich Parameter ändern, was zu einer schnellen Reaktion führt. Wie auch bei dem vorherigen Ansatz wird auch bei diesem Ansatz vor dem Tile based rendering das Bild in niedriger Auflösung gerendert, damit der Nutzer schnell ein neues Bild erhält.
 
 Dabei muss beachtet werden, dass Tile based rendering (oder das Rendern mit kleiner Auflösung) nur hilft, wenn der Vertex-Shader nur wenig Arbeit verrichten muss, da für jedes gerenderte Tile der Vertex-Shader für alle Vertices neu durchlaufen werden muss. 
 Beim Rendern einer Punktwolke passiert im Vertex-Shader beispielsweise die Transformation der Punkte mit der Kameramatrix und Projektionsmatrix. Bei vielen Punkten ist das Tile based rendering deshalb wesentlich langsamer.
@@ -1826,7 +1837,7 @@ Die Implementierung lässt sich in der Datei MultiresBuffer3.js finden.
 
 \subsection{Polynom Auswertung über Koeffizienten}
 
-In den Raycasting Methoden wird \(f(\text{ray}(a))\) sehr häufig ausgewertet. Da \(f(\text{ray}(a))\) ein Polynom ist, kann man die Koeffizienten für dieses Polynom berechnen und dann in Zukunft die Funktion anhand dieser Koeffizienten auswerten. Die Auswertung anhand der Koeffizienten kann wesentlich schneller sein, da in der Regel wesentlich weniger Multiplikationen benötigt werden.
+In den Raycasting Methoden wird \(f(\mathbf{ray}(a))\) sehr häufig ausgewertet. Da \(f(\mathbf{ray}(a))\) ein Polynom ist, kann man die Koeffizienten für dieses Polynom berechnen und dann in Zukunft die Funktion anhand dieser Koeffizienten auswerten. Die Auswertung anhand der Koeffizienten kann wesentlich schneller sein, da in der Regel wesentlich weniger Multiplikationen benötigt werden.
 
 Die Koeffizienten berechne ich dabei mittels einer Vandermonde Matrix.  
 %TODO count multiplications and compare
@@ -1849,7 +1860,7 @@ Ich habe Anfangs auch mit closed form Lösungen experimentiert, allerdings funkt
 
 
 Eine Möglichkeit, die verrauschten Ergebnisse nutzbar zu machen, ist, erst eine verrauschte Näherung für die Nullstellen mit \(f_\text{aprox}\) zu berechnen, um dann \(f\) normal auszuwerten, um mit den angenäherten Nullstellen weiter zu rechnen. Dadurch bleibt die Qualität erhalten und es kann ein kleiner Performance Boost für das Aberth-Verfahren beobachtet werden. 
-Dabei passt dieses Verfahren besonders gut zu der im Abschnitt~\ref{sec:Schnelle_Nullstellensuche} beschriebenen Methode da diese mit Polynomen kleineren Gerades arbeitet. Dies macht die Vandermonde Matrix kleiner und das Verfahren stabieler.
+Dabei passt dieses Verfahren besonders gut zu der im Abschnitt~\ref{sec:Schnelle_Nullstellensuche} beschriebenen Methode da diese mit Polynomen kleineren Gerades arbeitet. Dies macht die Vandermonde Matrix kleiner und das Verfahren stabiler.
 
 
 
@@ -1862,6 +1873,74 @@ Dabei passt dieses Verfahren besonders gut zu der im Abschnitt~\ref{sec:Schnelle
 
 
 \chapter{Evaluierung}
+
+Laufzeitanalyse
+Gaalop Laufzeitanalyse:
+Ray Method mit default parametern
+samples 50
+357,775s
+Während die Ebene angezeigt wird lässt sich die kamera nicht bewegen.
+
+
+
+\section{Iterative Verfahren}
+Wie schon gesagt habe ich die GradientMethod aus Gaalop nachimplementiert.
+Gaalops default Parameter sind maximal 50 iterationen bei einer Gitter Kantenlänge von 10 und einer Gitter Dichte von 1. (Der Parameter cubeEdgeLength steht auf 5 was allerdings bedeutet, das das Gitter von -5 bis 5 auf allen Achsen ist.) Das sind also maximal \(10^3*50=50000\) Evaluationen des Nullraums pro Objekt.
+Dafür braucht Gaalop 57,926 Sekunden.
+Bei gleichen Parametern braucht meine Implementierung hingegen ca. 0,021-0,039 Sekunden (die Zeiten schwanken relativ Stark). Das bedeutet meine Implementation ist ca. 2000-mal schneller.
+Da meine Implementation so viel schneller ist, kann man einfach höhere Parameter wählen. Bei 50 Abtastpunkten Pro Achse (also \(50^3*50=6250000\) Evaluationen) braucht meine Implementation 0,189-0,202 Sekunden. Dies ist nicht wesentlich langsamer, obwohl 125mal so viel Nullraumauswertungen gemacht wurden. Das bedeutet, dass der Overhead von WebGL2 hier relativ groß ist.
+Gegenüber den anderen iterativen Verfahren ist die Konvergenz der GradientMethod schon relativ gut. Dabei konvergiert GradNewton ein bisschen schneller während Levenberg-Marquad und Newton-Like wesentlich langsamer Konvergieren.
+Bei der GradientMethod kann es passieren, dass die Punkte gegenüber den anderen Methoden ungleichmäßiger verteilt sind. Dies muss jedoch nicht unbedingt ein Nachteil sein.
+
+Die Iterativen verfahren sind gegenüber den anderen Verfahren relativ Stabiel und haben wenig Artefakte. Der Nachteil gegenüber der Raycasting Verfahren ist hauptsächlich, dass die Punktwolken nur in Bewegung einen guten 3D Eindruck vermitteln.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{pictures/GaalopGradientMethod.png}
+    \caption{GradientMethod in Gaalop}
+
+    \label{fig:GaalopGradientMethod}
+\end{figure}
+    
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{pictures/MyGradientMethod.png}
+    \caption{GradientMethod in Meiner Software mit 100 Abtastpunkten Pro Achse}
+
+    \label{fig:MyGradientMethod}
+\end{figure}
+    
+
+\section{Grid basierte Verfahren}
+Wie schon gesagt ist die TopGrid ist im Prinzip eine Reimplementierung der Discrete Cube Method aus Gaalop. 
+Gaalop hat standertmäßig 50 Abtastpunkten pro Achse und benötigt 57,926 Sekunden.
+TopGrid hingegen benötigt 0.260-0.420 Sekunden. Im Vergleich zu den iterativen Methoden ist das sehr Langsam. Das liegt daran, dass die CPU die meiste Zeit damit beschäftig ist die Punkte zu sortieren.
+Ich finde die Ergebnisse der Methode visuell weder in gaalop, noch in meiner Implementation besonders überzeugend.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{pictures/TopGrid.png}
+    \caption{TopGrid in Meiner Software}
+
+    \label{fig:MyGradientMethod}
+\end{figure}
+    
+
+Discrete Cube Methode
+samples 50
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Versuche, Ergebnisse, Beurteilung anderer
 

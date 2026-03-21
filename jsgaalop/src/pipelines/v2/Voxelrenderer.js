@@ -133,7 +133,7 @@ export class Voxelrenderer extends LazyRenderingPipeline{
       // Scale Slider (grid bounds: 1..20)
       element.appendChild(makeSlider(
         slidertemplate,
-        "scale",
+        "gridsize",
         (value) => {
           this.scale = value;
           this.paramsversion=null;

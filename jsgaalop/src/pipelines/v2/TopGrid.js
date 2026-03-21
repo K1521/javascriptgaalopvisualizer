@@ -39,9 +39,8 @@ export class TopGridRenderer extends LazyRenderingPipeline{
   constructor(context,gl,visgraph, vertexshader,color) {
     super(() => {
       this.ctx=context;
-      this.scale=4;
-      this.samples=50;
-      this.grid=new Grid3D([-this.scale,-this.scale,-this.scale],[this.scale,this.scale,this.scale],[this.samples,this.samples,this.samples])
+
+      
 
       //this.maxvoxel=375000;//max vertCount is 30000000 so definetly dont subdivide if there are more than 30000000/8=3750000
 
@@ -52,10 +51,15 @@ export class TopGridRenderer extends LazyRenderingPipeline{
 
       this.tf=new TransformFeedbackWrapper(gl, visgraph.gencodeR(vertexshader),["result"]);   
       
-      this.percentile=0.01;
-      this.percentilechanged=true;
-      this.pointrenderer.pointsize=-3;
+     this.pointrenderer.pointsize=-3;
     });
+
+    this.grid=new Grid3D([-this.scale,-this.scale,-this.scale],[this.scale,this.scale,this.scale],[this.samples,this.samples,this.samples]);
+    this.percentile=0.01;
+    this.percentilechanged=true;
+    
+    this.scale=4;
+    this.samples=50;
   }
 
   

@@ -54,28 +54,32 @@
 \contentsline {subsubsection}{\nonumberline Bound compare}{46}{subsubsection*.7}%
 \contentsline {subsection}{\numberline {7.2.2}Gauss-Newton Voxel}{46}{subsection.7.2.2}%
 \contentsline {section}{\numberline {7.3}Modifyed Marching Cubes}{46}{section.7.3}%
-\contentsline {chapter}{\numberline {8}Implementierung}{48}{chapter.8}%
-\contentsline {section}{\numberline {8.1}Systemarchitektur}{48}{section.8.1}%
-\contentsline {section}{\numberline {8.2}Matrixvariante}{49}{section.8.2}%
-\contentsline {subsubsection}{\nonumberline INPS/ONPS als Matrix Vektor Darstellung}{49}{subsubsection*.8}%
-\contentsline {subsubsection}{\nonumberline optimierung des gleichungssystems}{50}{subsubsection*.9}%
-\contentsline {subsubsection}{\nonumberline Schnelle Nullstellensuche}{51}{subsubsection*.10}%
-\contentsline {section}{\numberline {8.3}Codegenerierung}{52}{section.8.3}%
-\contentsline {subsection}{\numberline {8.3.1}\textsc {Gaalop} plugin}{52}{subsection.8.3.1}%
-\contentsline {subsubsection}{\nonumberline computational DAG}{53}{subsubsection*.11}%
-\contentsline {subsection}{\numberline {8.3.2}DAG in js}{53}{subsection.8.3.2}%
-\contentsline {subsection}{\numberline {8.3.3}Graph splitting}{54}{subsection.8.3.3}%
-\contentsline {subsection}{\numberline {8.3.4}Graph Manipulationen}{56}{subsection.8.3.4}%
-\contentsline {subsubsection}{\nonumberline Was generiert die Codegenerierung}{56}{subsubsection*.12}%
-\contentsline {subsection}{\numberline {8.3.5}Vereinfachung}{59}{subsection.8.3.5}%
-\contentsline {subsection}{\numberline {8.3.6}Matrix Extraktion}{59}{subsection.8.3.6}%
-\contentsline {section}{\numberline {8.4}Performance analyse}{60}{section.8.4}%
-\contentsline {subsection}{\numberline {8.4.1}Alte Codegenerierung vs neue Codegenerierung}{60}{subsection.8.4.1}%
-\contentsline {subsection}{\numberline {8.4.2}Matrixmul in Glsl}{61}{subsection.8.4.2}%
-\contentsline {section}{\numberline {8.5}Optimizations}{63}{section.8.5}%
-\contentsline {subsection}{\numberline {8.5.1}Adaptive resolution}{63}{subsection.8.5.1}%
+\contentsline {section}{\numberline {7.4}Iterative Verfahren}{47}{section.7.4}%
+\contentsline {section}{\numberline {7.5}Grid basierte Verfahren}{48}{section.7.5}%
+\contentsline {chapter}{\numberline {8}Implementierung}{49}{chapter.8}%
+\contentsline {section}{\numberline {8.1}Systemarchitektur}{49}{section.8.1}%
+\contentsline {section}{\numberline {8.2}Matrixvariante}{50}{section.8.2}%
+\contentsline {subsubsection}{\nonumberline INPS/ONPS als Matrix Vektor Darstellung}{50}{subsubsection*.8}%
+\contentsline {subsubsection}{\nonumberline optimierung des gleichungssystems}{51}{subsubsection*.9}%
+\contentsline {subsubsection}{\nonumberline Schnelle Nullstellensuche}{52}{subsubsection*.10}%
+\contentsline {section}{\numberline {8.3}Codegenerierung}{53}{section.8.3}%
+\contentsline {subsection}{\numberline {8.3.1}\textsc {Gaalop} plugin}{53}{subsection.8.3.1}%
+\contentsline {subsubsection}{\nonumberline computational DAG}{54}{subsubsection*.11}%
+\contentsline {subsection}{\numberline {8.3.2}DAG in js}{54}{subsection.8.3.2}%
+\contentsline {subsection}{\numberline {8.3.3}Graph splitting}{55}{subsection.8.3.3}%
+\contentsline {subsection}{\numberline {8.3.4}Graph Manipulationen}{57}{subsection.8.3.4}%
+\contentsline {subsubsection}{\nonumberline Was generiert die Codegenerierung}{57}{subsubsection*.12}%
+\contentsline {subsection}{\numberline {8.3.5}Vereinfachung}{60}{subsection.8.3.5}%
+\contentsline {subsection}{\numberline {8.3.6}Matrix Extraktion}{60}{subsection.8.3.6}%
+\contentsline {section}{\numberline {8.4}Performance analyse}{61}{section.8.4}%
+\contentsline {subsection}{\numberline {8.4.1}Alte Codegenerierung vs neue Codegenerierung}{61}{subsection.8.4.1}%
+\contentsline {subsection}{\numberline {8.4.2}Matrixmul in Glsl}{62}{subsection.8.4.2}%
+\contentsline {section}{\numberline {8.5}Optimizations}{64}{section.8.5}%
+\contentsline {subsection}{\numberline {8.5.1}Adaptive resolution}{64}{subsection.8.5.1}%
 \contentsline {subsection}{\numberline {8.5.2}Tile based rendering}{64}{subsection.8.5.2}%
 \contentsline {subsection}{\numberline {8.5.3}Polynom Auswertung über Koeffizienten}{65}{subsection.8.5.3}%
-\contentsline {chapter}{\numberline {9}Evaluierung}{67}{chapter.9}%
-\contentsline {chapter}{\numberline {10}Schlussfolgerungen und Ausblick}{68}{chapter.10}%
+\contentsline {chapter}{\numberline {9}Evaluierung}{68}{chapter.9}%
+\contentsline {section}{\numberline {9.1}Iterative Verfahren}{68}{section.9.1}%
+\contentsline {section}{\numberline {9.2}Grid basierte Verfahren}{71}{section.9.2}%
+\contentsline {chapter}{\numberline {10}Schlussfolgerungen und Ausblick}{73}{chapter.10}%
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

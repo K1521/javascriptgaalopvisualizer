@@ -7,7 +7,7 @@ import {TransformFeedbackWrapper} from "../glwrapper/TransformFeedbackWrapper.js
 import {GaalopGraph} from "./codegenv4/codegenBackpropergation2.js";
 import { RenderableObject } from "./RenderableObject.js";
 //import { pinv, multiply, transpose ,qr} from 'https://cdn.jsdelivr.net/npm/mathjs@14.5.2/+esm';
-import { RenderContext } from "./RenderContext2.js";
+import { RenderContext } from "./RenderContext.js";
 //import { matrixextractor } from "../objectcontext/matrixextractor.js";
 //import { BasisConvert } from "../objectcontext/BasisConvert.js";
 
@@ -20,6 +20,7 @@ import { udfrenderer } from "../pipelines/v2/udfrenderer.js";
 import { Voxelrenderer } from "../pipelines/v2/Voxelrenderer.js";
 import { VoxelDistRenderer } from "../pipelines/v2/VoxelDistRenderer.js";
 import { VoxelGNRenderer } from "../pipelines/v2/VoxelGNRenderer.js";
+import { VoxelIterRenderer } from '../pipelines/v2/VoxelIterRenderer.js';
 //import { matrixrenderer } from "../pipelines/matrixrenderer.js";
 //import { Voxelrenderer } from "../pipelines/Voxelrenderer.js";
 import { addPipelineSelectorForObject } from "../ui/PipelineSelector.js";
@@ -300,10 +301,16 @@ async function main(gajson){
 
     const aberthsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/aberth.glsl");
     obj.addPipeline("aberth",new aberthrenderer(context,gl,visgraph,aberthsource,color));
+
+    const newtonsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/newton.glsl");
+    obj.addPipeline("newton",new udfrenderer(context,gl,visgraph,newtonsource,color));
+
+    const udfaproxsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/udfaprox.glsl");
+    obj.addPipeline("udfaprox",new udfrenderer(context,gl,visgraph,udfaproxsource,color));
     
 
     const Rintervallsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/Rintervall.glsl");
-    obj.addPipeline("voxelpoint",new Voxelrenderer(context,gl,visgraph,Rintervallsource,color));
+    obj.addPipeline("voxelsubdivision",new Voxelrenderer(context,gl,visgraph,Rintervallsource,color));
 
     const gaussnewtondistsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGaussNewtonGrid.glsl");
     obj.addPipeline("RGaussNewtonGrid",new VoxelDistRenderer(context,gl,visgraph,gaussnewtondistsource,color));
@@ -312,14 +319,15 @@ async function main(gajson){
     obj.addPipeline("TopGrid",new TopGridRenderer(context,gl,visgraph,Rgridsource,color));
     
     
-    const gaussnewtonitersource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGaussNewtonIterGrid.glsl");
-    obj.addPipeline("RGaussNewtonGridIter",new VoxelGNRenderer(context,gl,visgraph,gaussnewtonitersource,color));
+    //const gaussnewtonitersource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGaussNewtonIterGrid.glsl");
+    //obj.addPipeline("RGaussNewtonGridIter",new VoxelGNRenderer(context,gl,visgraph,gaussnewtonitersource,color));
 
-    const newtonsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/newton.glsl");
-    obj.addPipeline("newton",new udfrenderer(context,gl,visgraph,newtonsource,color));
+   // const gaitersource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGradientIterGrid.glsl");
+    //obj.addPipeline("GradientMethod",new VoxelGNRenderer(context,gl,visgraph,gaitersource,color));
+    const itersource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RIterGrid.glsl");
+    obj.addPipeline("IterGrid",new VoxelIterRenderer(context,gl,visgraph,itersource,color));
 
-    const udfaproxsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/udfaprox.glsl");
-    obj.addPipeline("udfaprox",new udfrenderer(context,gl,visgraph,udfaproxsource,color));
+   
 
     const Rgn=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGaussNewton.glsl");
     obj.addPipeline("MC",new MarchingCubesRenderer(context,gl,visgraph,Rintervallsource,Rgn,color))

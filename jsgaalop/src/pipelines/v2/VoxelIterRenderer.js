@@ -48,7 +48,7 @@ function grideval(tf,low,high,dim,threshold=1e-1){
 
 }
 
-export class VoxelGNRenderer extends LazyRenderingPipeline{
+export class VoxelIterRenderer extends LazyRenderingPipeline{
 
   constructor(context,gl,visgraph, vertexshader,color) {
     super(() => {
@@ -70,7 +70,8 @@ export class VoxelGNRenderer extends LazyRenderingPipeline{
     this.scale=4;
     this.samples=50;
     this.eps=1e-5;
-    this.maxiter=10;
+    this.maxiter=50;
+    this.solverType=3;
   }
 
   
@@ -101,6 +102,7 @@ export class VoxelGNRenderer extends LazyRenderingPipeline{
     this.tfstepeval.shader.use();
     this.visgraph.setuniforms(this.tfstepeval.shader,ctx.evalContext);
     this.tfstepeval.shader.uniform1i("MAX_ITERS",this.maxiter);
+    this.tfstepeval.shader.uniform1i("solverType",this.solverType);
     const points=grideval(this.tfstepeval,[-this.scale,-this.scale,-this.scale],[this.scale,this.scale,this.scale],[this.samples,this.samples,this.samples],this.eps);
 
     this.pointrenderer.setpoints(points);
@@ -109,6 +111,33 @@ export class VoxelGNRenderer extends LazyRenderingPipeline{
 
  
 makeOptions(element){
+
+ const select = document.createElement("select");
+   [
+    {name: "Levenberg-Marquardt", value: 0},
+    {name: "Gradient", value: 1},
+    {name: "Newton-like", value: 2},
+    {name:"GradNewton",value: 3}
+  ].forEach(s => {
+    const option = document.createElement("option");
+    option.value = s.value;
+    option.textContent = s.name;
+    select.appendChild(option);
+  });
+  select.value=this.solverType;
+  
+  select.addEventListener("change", e => {
+    this.solverType=e.target.value;
+    this.paramsversion=null;
+    this.ctx?.requestRender();
+  });
+
+  element.appendChild(select);
+
+
+
+
+
   const slidertemplate=document.querySelector(`template[data-type=slider]`);
   element.appendChild(makeLogSlider(slidertemplate,"epsilon",
     (x)=>{
@@ -121,14 +150,15 @@ makeOptions(element){
       this.scale=x;
       this.ctx?.requestRender();
       this.paramsversion=null;
-    },{min:1,max:10,value:this.scale}));
+    },{min:1,max:10,value:this.scale,step:0.1}));
 
     element.appendChild(makeSlider(slidertemplate,"maxiter",
     (x)=>{
       this.maxiter=x;
       this.ctx?.requestRender();
       this.paramsversion=null;
-    },{min:1,max:100,value:this.maxiter}));
+      return x.toString();
+    },{min:1,max:100,value:this.maxiter,step:1}));
     element.appendChild(makeSlider(slidertemplate,"samples",
     (x)=>{
       this.samples=x;
@@ -145,6 +175,8 @@ makeOptions(element){
       this.paramsversion=null;
       return x.toString();
     },{min:-5,max:10,value:-3,step:1}));
+
+
   
 }
   
