@@ -1439,10 +1439,12 @@ const int numoutputs=?;
 
         replacements.set("numoutputs=?",`numoutputs=${this.parents.length}`);
         replacements.set("basislength=?",`basislength=${matrixsize}`);
+        replacements.set("#define basislength ?",`#define basislength ${matrixsize}`);
         //replacements.set("Rflat=?",`basislength=${matrixsize}`);
 
-        const degree=Math.max(...basispolys.map(poly=>poly.degree()));
+        const degree=Math.max(...basispolys.map(poly=>poly.degree()),1);
         replacements.set("basismaxdegree=?",`basismaxdegree=${degree}`);
+        replacements.set("basismaxdegree ?",`basismaxdegree ${degree}`);
         
         {
             const ki=[...Array(degree+1).keys()];
@@ -1568,7 +1570,7 @@ const int numoutputs=?;
         }
 
 
-        return {codereplacements:replacements,matrix,basispolys};
+        return {codereplacements:replacements,matrix,basispolys,basismaxdegree:degree};
     }
 
     generatecode2cached(){

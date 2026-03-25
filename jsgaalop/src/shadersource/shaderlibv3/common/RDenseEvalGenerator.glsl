@@ -13,7 +13,7 @@
 
 //all the ? get generated in codegenBackpropergation2 in class visualisationtargetnode in method gencodeR
 const int basislength=?;
-const int basismaxdegree=?;
+#define basismaxdegree ?
 const int numoutputs=?;
 const int basislength4=(basislength+3)/4;
 

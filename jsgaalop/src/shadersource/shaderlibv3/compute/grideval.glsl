@@ -12,3 +12,19 @@ vec3 calcpos(){
     int k = gl_VertexID % dim.z;
     return mix(low, high, vec3(i,j,k) / vec3(dim - 1));
 }
+
+vec3 calcpos(uint idx) {
+    uint i = idx / uint(dim.y * dim.z);
+    uint j = (idx / uint(dim.z)) % uint(dim.y);
+    uint k = idx % uint(dim.z);
+
+    return mix(low, high, vec3(i,j,k) / vec3(dim - 1));
+}
+
+vec3 calcpos(int idx) {
+    int i = idx / (dim.y * dim.z);
+    int j = (idx / dim.z) % dim.y;
+    int k = idx % dim.z;
+
+    return mix(low, high, vec3(i,j,k) / vec3(dim - 1));
+}

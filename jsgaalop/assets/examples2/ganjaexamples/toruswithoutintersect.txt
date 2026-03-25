@@ -1,0 +1,99 @@
+
+Algebra(8,2,()=>{
+  
+  
+
+      
+      
+
+  // --- DCGA basis ---
+  const ega = [1,1e01,1e02,1e03,1e04,1e09,1e05,1e06,1e07,1e08,1e10];
+  const [e1,e2,e3,eo1,ei1,e6,e7,e8,eo2,ei2] = 
+        [ega[1],ega[2],ega[3],0.5*ega[5]-0.5*ega[4],ega[4]+ega[5],
+         ega[6],ega[7],ega[8],0.5*ega[10]-0.5*ega[9],ega[9]+ega[10]];
+         
+      function CGA1_Point(x,y,z){ return x*e1 + y*e2 + z*e3 + 0.5*(x*x+y*y+z*z)*ei1 + eo1; }
+    function CGA2_Point(x,y,z){ return x*e6 + y*e7 + z*e8 + 0.5*(x*x+y*y+z*z)*ei2 + eo2; }
+    function createPoint(x,y,z){ return CGA1_Point(x,y,z)^(CGA2_Point(x,y,z)); }
+    function DCGA_Point(x,y,z){ return createPoint(x,y,z); }
+    
+    var pviz; 
+    {
+      const x=Element.Scalar("x");
+      const y=Element.Scalar("y");
+      const z=Element.Scalar("z");
+      const r2 = x*x + y*y + z*z;
+     pviz = 
+            (e1^e6)*(x*x) +
+            (e1^e7)*(x*y) +
+            (e1^e8)*(x*z) +
+            (e1^eo2)*(x) +
+            (e1^ei2)*(x*r2/2) +
+
+            (e2^e6)*(y*x) +
+            (e2^e7)*(y*y) +
+            (e2^e8)*(y*z) +
+            (e2^eo2)*(y) +
+            (e2^ei2)*(y*r2/2) +
+
+            (e3^e6)*(z*x) +
+            (e3^e7)*(z*y) +
+            (e3^e8)*(z*z) +
+            (e3^eo2)*(z) +
+            (e3^ei2)*(z*r2/2) +
+
+            (eo1^e6)*(x) +
+            (eo1^e7)*(y) +
+            (eo1^e8)*(z) +
+            (eo1^eo2)*(1) +
+            (eo1^ei2)*(r2/2) +
+
+            (ei1^e6)*(r2/2*x) +
+            (ei1^e7)*(r2/2*y) +
+            (ei1^e8)*(r2/2*z) +
+            (ei1^eo2)*(r2/2) +
+            (ei1^ei2)*(r2/2*r2/2);
+            pviz=pviz[2].map(v => v === 0 ? "0.0" : v);
+    }
+    
+    console.log(CGA1_Point(Element.Scalar("x"),Element.Scalar("y"),Element.Scalar("z")));
+ console.log(pviz);
+  // --- Define DCGA torus blades ---
+  const Txx = e6^e1;
+  const Tyy = e7^e2;
+  const Tzz = e8^e3;
+  const Tt2 = eo2^ei1+ei2^eo1; 
+  const Tt4 = -4*(eo1^eo2);   
+  const T1  = -ei1^ei2;             
+
+  // --- Toroid macro ---
+  function Toroid(R,r){
+      const dSq = R*R - r*r;
+      return Tt4 + 2*Tt2*dSq + T1*dSq*dSq - 4*R*R*(Txx + Tyy);
+  }
+  
+  function DCGA_Plane(nx, ny, nz, d) {
+    // Normalize the normal
+    const mag = Math.sqrt(nx*nx + ny*ny + nz*nz);
+    nx /= mag; ny /= mag; nz /= mag;
+
+    // Plane in DCGA: using CGA1 and CGA2
+    // Plane = CGA1_Plane ^ CGA2_Plane
+    const plane1 = nx*e1 + ny*e2 + nz*e3 + d*ei1;
+    const plane2 = nx*e6 + ny*e7 + nz*e8 + d*ei2;
+
+    return plane1 ^ plane2; // outer product gives DCGA plane
+}
+
+  // --- Create torus ---
+  const torus = Toroid(1,0.5);
+  const plane = DCGA_Plane(1, 1, 1, 0)*10; // plane z = 0
+
+  
+  
+   document.body.appendChild(this.graph(()=>{
+
+       return [0xff0000,torus.Dual,0x00FF88, plane.Dual]
+    },{up:pviz,thresh:0.1,stepSize:0.00001, animate:1}))
+
+});

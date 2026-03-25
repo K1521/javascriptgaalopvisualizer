@@ -127,7 +127,7 @@ makeOptions(element){
   select.value=this.solverType;
   
   select.addEventListener("change", e => {
-    this.solverType=e.target.value;
+    this.solverType=Number(e.target.value);
     this.paramsversion=null;
     this.ctx?.requestRender();
   });

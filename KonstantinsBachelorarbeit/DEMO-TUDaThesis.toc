@@ -47,7 +47,7 @@
 \contentsline {subsection}{\numberline {6.2.1}Oberflächennormale und Licht}{36}{subsection.6.2.1}%
 \contentsline {subsection}{\numberline {6.2.2}Texturierung}{37}{subsection.6.2.2}%
 \contentsline {chapter}{\numberline {7}Non Raycasting Based}{41}{chapter.7}%
-\contentsline {section}{\numberline {7.1}raybased pointcloudrenderer}{41}{section.7.1}%
+\contentsline {section}{\numberline {7.1}RayMethod}{41}{section.7.1}%
 \contentsline {section}{\numberline {7.2}Voxel-Subdivision}{42}{section.7.2}%
 \contentsline {subsection}{\numberline {7.2.1}Intervallarithmetik}{42}{subsection.7.2.1}%
 \contentsline {subsubsection}{\nonumberline Better Intervall arethmetic bounds}{44}{subsubsection*.6}%
@@ -81,5 +81,6 @@
 \contentsline {chapter}{\numberline {9}Evaluierung}{68}{chapter.9}%
 \contentsline {section}{\numberline {9.1}Iterative Verfahren}{68}{section.9.1}%
 \contentsline {section}{\numberline {9.2}Grid basierte Verfahren}{71}{section.9.2}%
+\contentsline {section}{\numberline {9.3}RayMethod}{71}{section.9.3}%
 \contentsline {chapter}{\numberline {10}Schlussfolgerungen und Ausblick}{73}{chapter.10}%
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

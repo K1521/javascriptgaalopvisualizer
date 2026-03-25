@@ -59,6 +59,7 @@ export class TransformFeedbackWrapper {
     this.shader = new Shader(gl, vertexshader, null, varyings,gl.SEPARATE_ATTRIBS);
     this.varyings = this.shader.getTransformFeedbackVaryings();
     this.buffers = [];
+    this.maxbatchsize=1000000;
     //output transform feedback and buffer
     this.tf = gl.createTransformFeedback();
 
@@ -120,7 +121,10 @@ export class TransformFeedbackWrapper {
 
 
     gl.beginTransformFeedback(gl.POINTS);
-    gl.drawArrays(gl.POINTS, 0, vertexcount);
+    for(let i=0;i<vertexcount;i+=this.maxbatchsize){
+      gl.drawArrays(gl.POINTS,i, Math.min(this.maxbatchsize,vertexcount-i));
+    }
+    //gl.drawArrays(gl.POINTS, 0, vertexcount);
     gl.endTransformFeedback();
 
 
@@ -177,6 +181,142 @@ export class TransformFeedbackWrapper {
         if (buffer) gl.deleteBuffer(buffer);
       }
       this.buffers = null;
+    }
+
+    // Delete shader
+    if (this.shader?.dispose) {
+      this.shader.dispose();
+    }
+
+    this.shader = null;
+    this.gl = null;
+  }
+}
+
+
+
+export class TransformFeedbackWrapperInterleaved {
+
+  /**
+   * Constructs a TransformFeedbackWrapper instance.
+   *
+   * @param {WebGL2RenderingContext} gl - The WebGL2 rendering context.
+   * @param {string} vertexshader - The GLSL source code for the vertex shader.
+   * @param {string[]} varyings - A list of output variable names (as strings) to be captured via transform feedback.
+   *
+   * The specified varyings must exactly match the names of `out` variables in the vertex shader.
+   * Each varying will be assigned a separate buffer, and the shader will be compiled with transform feedback enabled.
+   */
+  constructor(gl, vertexshader, varyings) {
+    this.gl = gl;
+    this.shader = new Shader(gl, vertexshader, null, varyings,gl.INTERLEAVED_ATTRIBS);
+    this.varyings = this.shader.getTransformFeedbackVaryings();
+    //this.buffer;
+    //output transform feedback and buffer
+    this.tf = gl.createTransformFeedback();
+
+    const typemap = makeGLTypeInfoMap(gl);
+    //console.log(typemap);
+
+
+
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.tf);
+
+    this.buffer = gl.createBuffer();
+    this.componentsPerVertex=0;
+    
+    const arrayConstructors=new Set();
+    this.offsets=[];
+    this.varyings.map((varying, i) => {
+      const { name:varyingTypeName, components:componentsPerElement } = typemap[varying.type];
+      //typenames.push(varyingTypeName);
+      this.offsets.push(this.componentsPerVertex);
+      this.componentsPerVertex+= varying.size*componentsPerElement;
+      let arrayConstructor;
+      if (varyingTypeName.startsWith("FLOAT")) {
+        arrayConstructor = Float32Array;
+      } else if (varyingTypeName.startsWith("INT")) {
+        arrayConstructor = Int32Array;
+      } else if (varyingTypeName.startsWith("UNSIGNED_INT")) {
+        arrayConstructor = Uint32Array;
+      } else {
+        throw new Error("Unsupported varying type: " + varyingTypeName);
+      }
+      arrayConstructors.add(arrayConstructor);
+
+    });
+    this.bytesPerVertex=this.componentsPerVertex*4;
+    if(arrayConstructors.size>1)this.arrayConstructor=Uint32Array;
+    else this.arrayConstructor=[...arrayConstructors][0];
+
+    
+
+    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, this.buffer);
+
+    
+
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+
+  }
+  useshader() {
+    this.shader.use();
+  }
+
+  /**
+   * 
+   * @param {Number} vertexcount 
+   * @returns {(Int32Array|Uint32Array|Float32Array)[]}
+   */
+  run(vertexcount) {
+    const gl = this.gl;
+    this.shader.use();
+
+    gl.enable(gl.RASTERIZER_DISCARD);
+
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, this.tf);
+    //gl.beginTransformFeedback(gl.POINTS);
+    
+    gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, this.buffer); //set buffer size
+    gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER, this.bytesPerVertex * vertexcount, gl.DYNAMIC_READ);
+    
+
+
+    gl.beginTransformFeedback(gl.POINTS);
+    gl.drawArrays(gl.POINTS, 0, vertexcount);
+    gl.endTransformFeedback();
+
+    gl.finish();
+    
+    const outArray = new this.arrayConstructor(this.componentsPerVertex * vertexcount);
+    gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, this.buffer);
+    gl.getBufferSubData(gl.TRANSFORM_FEEDBACK_BUFFER, 0, outArray);
+    gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, null);
+
+    gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null);
+    gl.disable(gl.RASTERIZER_DISCARD);
+
+    return outArray; // return single interleaved array
+  }
+  clearbuffer(){
+    const gl=this.gl;
+
+    gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, this.buffer); //set buffer size
+    gl.bufferData(gl.ARRAY_BUFFER, 0, gl.STATIC_DRAW);
+    
+  }
+  dispose() {
+    const gl = this.gl;
+
+    // Delete transform feedback object
+    if (this.tf) {
+      gl.deleteTransformFeedback(this.tf);
+      this.tf = null;
+    }
+
+    // Delete buffers
+    if (this.buffer) {
+      gl.deleteBuffer(this.buffer);
+      this.buffer = null;
     }
 
     // Delete shader

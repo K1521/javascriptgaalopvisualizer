@@ -32,6 +32,9 @@ import { MarchingCubesRenderer } from '../pipelines/v2/MarchingCubesRenderer2.js
 import { TopGridRenderer } from '../pipelines/v2/TopGrid.js';
 //import { throwonglerror } from "../glwrapper/glwrapper.js";
 
+import { RayMethod } from '../pipelines/v2/RayMethod.js';
+import { TopGridRendererVoxelized } from '../pipelines/v2/TopGridVoxelized.js';
+
 window.DEBUG_LOG = ["test"];
 
 class RenderLoop {
@@ -301,6 +304,8 @@ async function main(gajson){
 
     const aberthsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/aberth.glsl");
     obj.addPipeline("aberth",new aberthrenderer(context,gl,visgraph,aberthsource,color));
+    const aberthsourceGN=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/aberth.glsl");
+    obj.addPipeline("aberthGN",new aberthrenderer(context,gl,visgraph,aberthsourceGN,color));
 
     const newtonsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/newton.glsl");
     obj.addPipeline("newton",new udfrenderer(context,gl,visgraph,newtonsource,color));
@@ -312,11 +317,17 @@ async function main(gajson){
     const Rintervallsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/Rintervall.glsl");
     obj.addPipeline("voxelsubdivision",new Voxelrenderer(context,gl,visgraph,Rintervallsource,color));
 
-    const gaussnewtondistsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGaussNewtonGrid.glsl");
-    obj.addPipeline("RGaussNewtonGrid",new VoxelDistRenderer(context,gl,visgraph,gaussnewtondistsource,color));
+    //const gaussnewtondistsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGaussNewtonGrid.glsl");
+    //obj.addPipeline("RGaussNewtonGrid",new VoxelDistRenderer(context,gl,visgraph,gaussnewtondistsource,color));
 
-    const Rgridsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGrid.glsl");
+  
+    const Rgridsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RoptionsGrid.glsl");
     obj.addPipeline("TopGrid",new TopGridRenderer(context,gl,visgraph,Rgridsource,color));
+    obj.addPipeline("TopGridVoxel",new TopGridRendererVoxelized(context,gl,visgraph,Rgridsource,color));
+
+
+    const RRaysource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RRay.glsl");
+    obj.addPipeline("RayMethod",new RayMethod(context,gl,visgraph,RRaysource,color));
     
     
     //const gaussnewtonitersource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGaussNewtonIterGrid.glsl");
@@ -329,8 +340,8 @@ async function main(gajson){
 
    
 
-    const Rgn=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGaussNewton.glsl");
-    obj.addPipeline("MC",new MarchingCubesRenderer(context,gl,visgraph,Rintervallsource,Rgn,color))
+    const RMC=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RMC.glsl");
+    obj.addPipeline("MC",new MarchingCubesRenderer(context,gl,visgraph,Rintervallsource,RMC,color))
     
     //obj.setActivePipeline("voxelpoint2");
     //context.updateParams();

@@ -11,9 +11,9 @@ import { LazyRenderingPipeline } from "../LazyRenderingPipeline.js";
 import { Shader ,throwonglerror} from "../../glwrapper/glwrapper.js";
 import {  TransformFeedbackWrapper} from "../../glwrapper/TransformFeedbackWrapper.js";
 //import { loadWithIncludesRelativeToShadersource } from "../../glwrapper/shaderimporter.js";
-import {PointShader} from "./pointrenderutil.js"
 import { Grid3D } from "../../voxelutil/v3/grid.js";
 import { makeSlider ,makeLogSlider} from "../../ui/sliders.js";
+import { loadWithIncludesRelativeToShadersource } from "../../glwrapper/shaderimporter.js";
 
 
 /** //argsort by chatgpt
@@ -61,7 +61,72 @@ function Typemergeargsort(values) {//gemeni helped with this :)
   return result;
 }
 
-export class TopGridRenderer extends LazyRenderingPipeline{
+const vert=await loadWithIncludesRelativeToShadersource("shaderlibv3/other/gridvert.glsl");
+const frag=await loadWithIncludesRelativeToShadersource("shaderlibv3/other/trifrag.glsl");
+class GridTriRenderer{
+  constructor(gl,color){
+    this.gl=gl;
+    this.color=color;
+
+    this.shader=new Shader(gl,
+      vert,frag
+    );
+
+    this.vertexBuffer = gl.createBuffer();
+
+    // Create VAO
+    this.vao = gl.createVertexArray();
+    gl.bindVertexArray(this.vao);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+
+    // One uint per vertex
+    const loc = this.shader.getAttribLocation("gridindex"); // shader attribute location
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribIPointer(loc, 1, gl.UNSIGNED_INT, 0, 0);
+
+    gl.bindVertexArray(null);
+  }
+  render(ctx){
+    const gl=this.gl;
+    gl.depthFunc(gl.LESS);
+    gl.enable(gl.DEPTH_TEST);
+
+    this.shader.use();
+    this.shader.uniform4fv('incolor', [this.color.r,this.color.g,this.color.b,1.0]);
+    ctx.updateUniforms(this.shader); // sets cameraPos and cameraMatrix and focal
+    this.grid.setUniforms(this.shader);
+    gl.bindVertexArray(this.vao); // VAO with vertex positions bound
+    //gl.drawElements(gl.LINES, this.lineCount, gl.UNSIGNED_SHORT, 0);
+    gl.drawArrays(gl.TRIANGLES, 0, this.count);
+    //gl.drawArrays(gl.POINTS, 0, this.count);
+    gl.bindVertexArray(null);
+
+
+  }
+  setdata(grid, tri) {
+    this.grid=grid;
+    const gl = this.gl;
+
+    // Ensure tri is a Uint32Array (one uint per vertex)
+    let data;
+    if (tri instanceof Uint32Array) {
+      data = tri;
+    } else {
+      data = new Uint32Array(tri);
+    }
+
+    this.count = data.length;
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
+    gl.bindBuffer(gl.ARRAY_BUFFER, null);
+  }
+}
+
+
+
+export class TopGridRendererVoxelized extends LazyRenderingPipeline{
 
   constructor(context,gl,visgraph, vertexshader,color) {
     super(() => {
@@ -74,11 +139,15 @@ export class TopGridRenderer extends LazyRenderingPipeline{
       this.visgraph=visgraph;
       this.gl = gl;
 
-      this.pointrenderer=new PointShader(gl,color);
+      this.trigridrenderer=new GridTriRenderer(gl,color);
 
       this.tf=new TransformFeedbackWrapper(gl, visgraph.gencodeR(vertexshader),["result"]);   
       
-     this.pointrenderer.pointsize=-3;
+
+
+
+
+     
     });
 
     this.grid=new Grid3D([-this.scale,-this.scale,-this.scale],[this.scale,this.scale,this.scale],[this.samples,this.samples,this.samples]);
@@ -95,17 +164,8 @@ export class TopGridRenderer extends LazyRenderingPipeline{
     
   render(ctx) {
 
-    /*const gl = this.gl;
-    gl.depthFunc(gl.LESS);
-    gl.enable(gl.DEPTH_TEST);
-    this.pointshader.use();
-    gl.uniform4fv(this.pointshader.getUniformLocation('incolor'), [this.color.r,this.color.g,this.color.b,1.0]);
-    ctx.updateUniforms(this.pointshader); // sets cameraPos and cameraMatrix and windowsize
-    gl.bindVertexArray(this.pointvao);
-    gl.drawArrays(gl.POINTS, 0, this.pointbuffer_size);
-    gl.bindVertexArray(null);*/
-    //ctx.updateUniforms(this.pointrenderer.shader);// sets cameraPos and cameraMatrix and windowsize
-    this.pointrenderer.render(ctx);
+  
+    this.trigridrenderer.render(ctx);
   }
   
   
@@ -122,13 +182,47 @@ export class TopGridRenderer extends LazyRenderingPipeline{
 
     const filter=this.tf.run(this.grid.size())[0];
     for(let i=0;i<filter.length;i++){filter[i]=Math.abs(filter[i]);}
-    this.idx=Typemergeargsort(filter);
+    this.nullspacesorted=filter.slice().sort();
+    this.nullspace=filter;
     this.percentilechanged=true;
     }
     if(this.percentilechanged){
       this.percentilechanged=false;
-      const points=this.grid.getPointLinearBatch(this.idx.slice(0,Math.floor(this.idx.length*this.percentile)));
-      this.pointrenderer.setpoints(points);
+
+      const thresh=this.nullspacesorted[Math.min(Math.floor(this.nullspacesorted.length*this.percentile),this.nullspacesorted.length-1)];
+      const tri=[];
+      const voxelgrid=this.grid.makevoxelgrid();
+
+      let nullspaceidx=0;
+      const [vsx,vsy,vsz]=voxelgrid.stride;
+      const [gsx,gsy,gsz]=this.grid.stride;
+      const [nx,ny,nz]=this.grid.dim;
+      for(let ix=0;ix<nx;ix++)
+      for(let iy=0;iy<ny;iy++)
+      for(let iz=0;iz<nz;iz++,nullspaceidx++){
+        const p0=vsx*ix+vsy*iy+vsz*iz;
+        const px=p0+vsx;
+        const py=p0+vsy;
+        const pz=p0+vsz;
+        const pxy=p0+vsx+vsy;
+        const pxz=p0+vsx+vsz;
+        const pyz=p0+vsy+vsz;
+        
+        //const nullspaceidx=gsx*ix+gsy*iy+gsz*iz;
+        const nullspacehere=this.nullspace[nullspaceidx];
+
+        if(ix>0&&(this.nullspace[nullspaceidx-gsx]<thresh)!=(nullspacehere<thresh)){
+          tri.push(p0,py,pyz,p0,pyz,pz);
+        }
+        if(iy>0&&(this.nullspace[nullspaceidx-gsy]<thresh)!=(nullspacehere<thresh)){
+          tri.push(p0,px,pxz,p0,pxz,pz);
+        }
+        if(iz>0 && (this.nullspace[nullspaceidx-gsz]<thresh)!=(nullspacehere<thresh)){
+          tri.push(p0,px,pxy,p0,pxy,py);
+        }
+      }
+    
+      this.trigridrenderer.setdata(voxelgrid,tri);
     }
 
     //const [points,radius]=grideval(this.tf,[-this.scale,-this.scale,-this.scale],[this.scale,this.scale,this.scale],[this.samples,this.samples,this.samples]);
@@ -193,7 +287,7 @@ export class TopGridRenderer extends LazyRenderingPipeline{
         this.ctx?.requestRender();
          return value.toString();
       },
-      { min: 10, max: 100, value: this.samples ,step:1}
+      { min: 10, max: 200, value: this.samples ,step:1}
     ));
 
     // Scale Slider (grid bounds: 1..20)
@@ -211,15 +305,7 @@ export class TopGridRenderer extends LazyRenderingPipeline{
       { min: 1, max: 10, value: this.scale }
     ));
 
-    element.appendChild(makeSlider(slidertemplate,"pointsize",
-        (x)=>{
-          if (this.pointrenderer) {
-              this.pointrenderer.pointsize = x;
-          }
-          this.ctx?.requestRender();
-          //this.paramsversion=null;
-          return x.toString();
-        },{min:-5,max:10,value:-3,step:1}));
+
   }
 
   

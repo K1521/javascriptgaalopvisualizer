@@ -9,9 +9,9 @@ precision mediump float;
 uniform int singularoutput;
 in vec3 pos;
 out vec4 result;
-void main(){
+void main(){//used by the marching cubes
     if(numoutputs==1)result=xyzDualrowR(pos);
-    else result=GaussNewtonStepR(pos,0.01);
+    else result=xyzDualsusR(pos);
 
 }
 

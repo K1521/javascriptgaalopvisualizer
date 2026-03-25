@@ -1,6 +1,6 @@
 export class Grid3D {
   constructor(low = [0,0,0], high = [1,1,1], dim = [10,10,10]) {
-    this.dim = dim;
+    this.setDim(dim);
     this.setBounds(low, high);
   }
 
@@ -12,10 +12,12 @@ export class Grid3D {
 
   setDim(dim) {
     this.dim = dim;
+    this.stride=[dim[1]*dim[2],dim[2],1];
     this.computeSpacing();
   }
 
   computeSpacing() {
+    if (!this.low || !this.high || !this.dim) return;
     const [nx, ny, nz] = this.dim;
 
     this.dx = (this.high[0] - this.low[0]) / (nx - 1);
@@ -64,6 +66,16 @@ export class Grid3D {
     return points;
   }
 
+
+  makevoxelgrid(){
+    return new Grid3D(
+      [this.low[0]-this.dx,this.low[1]-this.dy,this.low[2]-this.dz],
+      [this.high[0]+this.dx,this.high[1]+this.dy,this.high[2]+this.dz],
+      this.dim.map(x=>x+1)
+    )
+  }
+
+
   size() {
     const [nx, ny, nz] = this.dim;
     return nx * ny * nz;
@@ -71,5 +83,24 @@ export class Grid3D {
 
   getCellRadius() {
     return Math.sqrt(this.dx*this.dx + this.dy*this.dy + this.dz*this.dz);
+  }
+  static indexunique(gridindicees){
+        const map = new Map(), indices = new Uint32Array(gridindicees.length);
+        let next = 0;
+        
+        for (let i = 0; i < gridindicees.length; i++) {
+            const k = gridindicees[i];
+            let idx = map.get(k);
+            if (idx === undefined) { idx = next++; map.set(k, idx); }
+            indices[i] = idx;
+        }
+        const gridindiceesunique = new Uint32Array(next);
+        for (let i = 0, w = 0; i < gridindicees.length; i++) {
+            if (indices[i] === w) {
+                gridindiceesunique[w] = gridindicees[i];
+                w++;
+            }
+        }
+        return {gridindiceesunique,indices};
   }
 }

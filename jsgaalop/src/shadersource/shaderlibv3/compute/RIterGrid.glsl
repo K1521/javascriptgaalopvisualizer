@@ -120,16 +120,20 @@ void main(){
     // uniform to select method: 0 = Levenberg-Marquardt, 1 = Gradient, 2 = Newton-like
     
 
-    vec4 resultValue;
-
-    if (solverType == 0) {
-        result = levenbergmarquad(startpos);
-    } else if (solverType == 1) {
-        result = GradientMethod(startpos);
-    } else if (solverType == 2){ // default = Newton-like
-        result = Newtonlike(startpos);
-    } else {
-        result= GradNewtonlike(startpos);
+    switch(solverType) {
+        case 0:
+            result = levenbergmarquad(startpos);
+            break;
+        case 1:
+            result = GradientMethod(startpos);
+            break;
+        case 2:
+            result = Newtonlike(startpos);
+            break;
+        case 3:
+        default:
+            result = GradNewtonlike(startpos);
+            break;
     }
 
 }

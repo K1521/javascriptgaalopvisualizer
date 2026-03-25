@@ -40,3 +40,22 @@ float solveLinearThreshold(//inverse of lerp
     float t = (threshold - y1) / dy;
     return x1 + t * (x2 - x1);
 }
+
+float hash(vec3 p) {
+    ivec3 f1 = ivec3(p * 65531.0);
+    ivec3 f2 = ivec3(sin(p) * 65531.0);
+    ivec3 f4 = ivec3(sin(p * 65531.0) * 65531.0);
+    ivec3 f5 = f1 * f2.zxy + ivec3(p).zxy * f4.yxz;
+    ivec3 m = f5 * 1664525 + 1013904223;
+    int h = m.x ^ m.y ^ m.z;
+    return float(h & 0x7fffffff) / 2147483647.0; // normalize to [0,1)
+}
+
+
+vec3 pseudoRandomColor(vec3 seed) {
+    return vec3(
+        hash(seed + vec3(1.0, 0.0, 0.0)),
+        hash(seed + vec3(0.0, 1.0, 0.0)),
+        hash(seed + vec3(0.0, 0.0, 1.0))
+    )*0.8+0.2;
+}

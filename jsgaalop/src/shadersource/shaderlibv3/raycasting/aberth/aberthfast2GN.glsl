@@ -237,7 +237,7 @@ void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_
 
         //float e=length(cross(p, rayDir)) / length(rayDir);
         //float e=abs(f.w)/sqrt(dot(f.xyz,f.xyz)+1e-10);
-        //#define UseGN
+        #define UseGN
         #ifdef UseGN
             vec4 gn=GaussNewtonStepR(rayDir*a+rayOrigin,beta);
             float e=length(gn.xyz);

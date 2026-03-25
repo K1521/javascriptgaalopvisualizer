@@ -164,9 +164,9 @@ in vec3 position;
 
 uniform mat3 cameraMatrix;
 uniform vec3 cameraPos;
-uniform vec2 windowsize;
+//uniform vec2 windowsize;
 
-const float FOV = 120.0;
+//const float FOV = 120.0;
 const float NEAR = 0.01;
 const float FAR = 100.0;
 
@@ -242,7 +242,7 @@ uniform vec4 incolor;
 
 out vec4 fragColor;
 
-const float zMax = 1000.0; // same as your normalization factor
+const float zMax = 1000.0;
 
 flat in vec3 v_color;//pseudo random color based on vertex pos of one of the triangles
 

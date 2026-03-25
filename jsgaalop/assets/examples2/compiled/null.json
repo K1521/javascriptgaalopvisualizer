@@ -1,0 +1,7 @@
+{"type": "StartNode","name": "null","inputScalars": [],"outputMultivectors": ["_V_PRODUCT0", "_V_PRODUCT1"],"localMultivectors": ["one"],"localScalars": [],"renderingExpressions": [{"name": "_V_PRODUCT0", "expression": "null"}, {"name": "_V_PRODUCT1", "expression": "one"}],"bladecount": 16384,"nodes": [{"type": "AssignmentNode","variable": {"type": "MultivectorVariable","name": "one","bladeString": "1.0","bladeIndex": 0},"expression": {"type": "Const","value": 1.0}},{"type": "ColorNode","r": 1.0,"g": 0.0,"b": 0.0,"alpha": 1.0},
+{"type": "ExpressionStatement","expression": {"type": "Variable","name": "null"}},
+{"type": "StoreResultNode"},
+{"type": "ColorNode","r": 1.0,"g": 0.0,"b": 0.0,"alpha": 1.0},
+{"type": "ExpressionStatement","expression": {"type": "Variable","name": "one"}},
+{"type": "StoreResultNode"}
+]}

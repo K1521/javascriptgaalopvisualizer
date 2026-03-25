@@ -1,0 +1,27 @@
+// -a cga
+
+createLine = {
+    _P(1)^_P(2)^einf
+}
+
+P1=createPoint(0,0,0);
+P2=createPoint(1,0,0);
+P3=createPoint(0,1,0);
+
+
+
+//?L=Normalize(createLine(P1,P2));
+?L=*(P1^P2^einf);
+?C=*(P1^P2^P3);
+?S=*(P1^P2^P3^P4);
+
+
+?Interpolated=(a*L+(1-a)*C);
+
+:Blue;
+:L;
+:Red;
+:C;
+:Green;
+:Interpolated;
+

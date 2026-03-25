@@ -1,0 +1,17 @@
+// -a dcga
+
+T = Toroid(5, 3);                
+PC= Sphere(2,0,0,3)*T*~Sphere(2,0,0,3);                   
+RPC=Rotor(0,0,1,60)*PC*~ Rotor(0,0,1,60);
+
+:Green;
+:T;
+
+:Blue;
+:PC;
+
+:Red;
+:RPC;
+
+
+ 

@@ -399,14 +399,14 @@ Da \( f(x,y,z) \) die quadrierte Euklidische Norm von \( \mathbf{F}(x,y,z) \) is
 \mathbf{F}(x,y,z) = 0 \quad \Leftrightarrow \quad f(x,y,z) = 0
 \]
 
-Die Arbeit mit \( f \) ist in vielen Fällen einfacher als mit \( F \), da das ursprüngliche vektorwertige Problem auf die Bestimmung der Nullstellen einer skalarwertigen Funktion reduziert wird. Auch Ganja und \textsc{Gaalop} nutzen die Summe der Quadrate zur Visualisierung.
+Die Arbeit mit \( f \) ist in vielen Fällen einfacher als mit \( \mathbf{F} \), da das ursprüngliche vektorwertige Problem auf die Bestimmung der Nullstellen einer skalarwertigen Funktion reduziert wird. Auch Ganja und \textsc{Gaalop} nutzen die Summe der Quadrate zur Visualisierung.
 
 
-Da $f$ die Summe der Quadrate von $F$ ist, ist $f \geq 0$ für alle $x,y,z$. Es handelt sich also nicht um eine Distanzfunktion im klassischen Sinne. $f$ ist weder eine SDF noch eine UDF. 
+Da $f$ die Summe der Quadrate von \( \mathbf{F} \) ist, ist $f \geq 0$ für alle $x,y,z$. Es handelt sich also nicht um eine Distanzfunktion im klassischen Sinne. $f$ ist weder eine SDF noch eine UDF. 
 
-Ein Nachteil der skalarisierten Darstellung ist, dass \( f \) ein Polynom ist, dessen Grad durch das Quadrieren der Terme in \( F \) verdoppelt wird. 
+Ein Nachteil der skalarisierten Darstellung ist, dass \( f \) ein Polynom ist, dessen Grad durch das Quadrieren der Terme in \( \mathbf{F} \) verdoppelt wird. 
 
-Zum Beispiel enthält \( F \) in der DCGA (Double Conformal Geometric Algebra) Polynome vierten Grades, sodass \( f \) in diesem Fall ein Polynom bis zum achten Grad sein kann.
+Zum Beispiel enthält \( \mathbf{F} \) in der DCGA (Double Conformal Geometric Algebra) Polynome vierten Grades, sodass \( f \) in diesem Fall ein Polynom bis zum achten Grad sein kann.
 
 \section{Raycasting}
 \subsection{OpenGL-Pipeline}
@@ -496,7 +496,7 @@ Ist die Multiplizität \(m\) der gesuchten Nullstelle bekannt, kann die Konverge
 Das Aberth-Verfahren ist ein Verfahren zur Suche der komplexen Nullstellen von Polynomen. 
 Im Gegensatz zum Newtonverfahren findet es alle Nullstellen gleichzeitig.
 
-Sie basiert auf folgender Formel:
+Es basiert auf folgender Formel:
 \[
 G_k(x) = \frac{p(x)}{\prod_{j=1;\,j\neq k}^n (x - z_j)}
 \]
@@ -505,7 +505,7 @@ Dabei ist \( p \) das gegebene Polynom, und \( z_k \) sind die Näherungen an di
 
 Die Update-Formel für den Newton-Schritt lautet:
 \[
-z_k^{\text{neu}} = z_k-\frac{G_k(z_k)}{G_k'(z_k)}= z_k - \frac{\frac{p(z_k)}{p'(z_k)}}{  1 - \frac{p(z_k)}{p'(z_k)} \sum_{j \neq k} \frac{1}{z_k - z_j} }
+z_k^{\text{neu}} = z_k-\frac{G_k(z_k)}{G_k'(z_k)}= z_k - \frac{\frac{p(z_k)}{p'(z_k)}}{  1 - \frac{p(z_k)}{p'(z_k)} \sum_{j=1;\,j \neq k}^n \frac{1}{z_k - z_j} }
 \]
 
 Da die Nullstellen von \( f_{\text{ray}}(t) \) gesucht werden, ist \( p(t) = f_{\text{ray}}(t) \). Mit diesem Verfahren werden die Nullstellen iterativ angepasst, bis alle \( z_k \) konvergiert sind.
@@ -520,7 +520,7 @@ Intervallarithmetik ist eine Methode zur sicheren Berechnung von Fehlergrenzen i
 Statt mit exakten Werten zu rechnen, wird, wie der Name schon sagt, mit Intervallen gerechnet. 
 Das Hauptaugenmerk bei der Intervallarithmetik liegt darin, obere und untere Schranken für den Wertebereich einer Funktion in einer oder mehreren Variablen zu bestimmen.
 
-Z.B. haben wir zwei Variablen $x \in [x_1,x_2]$ und $y \in [y_1,y_2]$. $x+y$ muss also im Intervall $[x_1+y_1,x_2+y_2]$ sein.
+Beispielsweise haben wir zwei Variablen $x \in [x_1,x_2]$ und $y \in [y_1,y_2]$. $x+y$ muss also im Intervall $[x_1+y_1,x_2+y_2]$ sein.
 Das Ganze kann so geschrieben werden:
 \[
 [x_1,x_2]+[y_1,y_2]=[x_1+y_1,x_2+y_2]
@@ -553,7 +553,7 @@ Man kann diese Operationen nun verketten, um komplexere Funktionen darzustellen.
 Dabei gilt in der Regel, je größer die Eingabeintervalle sind, desto ungenauer wird das Ergebnis.
 
 
-Um zu bestimmen, ob eine Funktion $f(x,y,z)$ in einem 3 dimensionalen Intervall eine Nullstelle hat, kann die Funktion über den Intervallen ausgewertet werden und es kann geprüft werden ob $0$ in dem Ergebnis liegt.
+Um zu bestimmen, ob eine Funktion $f(x,y,z)$ in einem 3-dimensionalen Intervall eine Nullstelle hat, kann die Funktion über den Intervallen ausgewertet werden, und es kann geprüft werden, ob $0$ in dem Ergebnis liegt.
 
 Sei:
 \[
@@ -586,7 +586,7 @@ Das Gauß-Newton Verfahren ist ein iteratives Optimierungsverfahren für die Suc
 \min _{x\in \mathbb {R} ^{n}}\left\{{\frac {1}{2}}\sum _{i=1}^{m}\left(f_{i}(\mathbf{x})\right)^{2}\right\}
 \]
 
-Der update Schritt für dieses Verfahren ist:
+Der Update-Schritt für dieses Verfahren ist:
 \[
 \mathbf{x}^{\text{neu}} = \mathbf{x} - \alpha \left( J(\mathbf{x})^\top J(\mathbf{x}) \right)^{-1} J(\mathbf{x})^\top \mathbf{F}(\mathbf{x}),
 \]
@@ -603,7 +603,7 @@ Dies ist eine Variante des Levenberg-Marquardt-Iterationsschritts.
 
 
 \section{Vandermonde-Matrix}
-Eine einfache Möglichkeit zur Bestimmung der Koeffizienten eines Polynoms \(f\) besteht in der Verwendung einer Vandermonde-Matrix~$V$. Gegeben seien $n$ Stützstellen $x_1, x_2, \dotsc, x_n$ sowie die zugehörigen Funktionswerte $y_i=f(ray(x_i))$. Dann ergibt sich das Gleichungssystem
+Eine einfache Möglichkeit zur Bestimmung der Koeffizienten eines Polynoms \(f\) besteht in der Verwendung einer Vandermonde-Matrix~$V$. Gegeben seien $n$ Stützstellen $x_1, x_2, \dotsc, x_n$ sowie die zugehörigen Funktionswerte $y_i=f_\text{ray}(\mathbf{ray}(x_i))$. Dann ergibt sich das Gleichungssystem
 \[
 V \cdot \mathbf{c} = \mathbf{y},
 \]
@@ -629,7 +629,7 @@ y_1 \\ y_2 \\ \vdots \\ y_n
 \]
 Löst man dieses Gleichungssystem durch Invertieren der Matrix $V$, so ergeben sich die Koeffizienten $\mathbf{c}$ und die dazugehörige Approximation.
 \[
-\mathbf{c} = V^{-1} \cdot \mathbf{y},\quad f_\text{aprox}(x)=\sum_{i=0}^{n-1}{c_ix^i}
+\mathbf{c} = V^{-1} \cdot \mathbf{y},\quad f_\text{ray}(x)=\sum_{i=0}^{n-1}{c_ix^i}
 \]
 
 Die Inverse $V^{-1}$ kann dabei vorab berechnet werden, solange sich die Stützstellen $x_i$ nicht ändern.
@@ -637,7 +637,7 @@ Das bedeutet, es wird nur noch das Auswerten von \(f\) an \(\deg(f) + 1\) Stütz
 
 \section{Duale Zahlen}
 Duale Zahlen (nicht zu verwechseln zu Zahlen im Dualsystem) sind ein einfacher Weg um Ableitungen zu berechnen.
-Sie definieren ähnlich zu den Komplexen zahlen eine nicht reelle Einheit \(\varepsilon\) mit der Eigenschaft \(\varepsilon^2=0\).
+Sie definieren ähnlich zu den komplexen Zahlen eine nicht reelle Einheit \(\varepsilon\) mit der Eigenschaft \(\varepsilon^2=0\).
 Daraus ergeben sich wie auch bei den komplexen Zahlen die entsprechenden Rechenregeln.
 Beispielsweise erhält man durch einfaches Ausmultiplizieren die Regeln für Multiplikation:
 \[(a + b \varepsilon)\cdot( c+ d \varepsilon)=a c + (a d + b c)\varepsilon + b d \varepsilon^2 =a c + (a d + b c)\varepsilon\]
@@ -667,7 +667,7 @@ Ganja ist eine Library für geometrische Algebra die von vielen anderen Librarie
 Dabei benutzt Ganja zwei Ansätze zur Visualisierung. Erstens versucht Ganja die Objekte der Algebra zu interpretieren und so darzustellen. Beispielsweise wird erkannt, dass ein bestimmter Multivektor eine Kugel darstellt und diese wird dann visualisiert.
 Da dieser Ansatz nur für niedrigdimensionale Algebren gut funktioniert konzentriere ich mich auf den zweiten Ansatz.
 
-Ganja benutzt unter anderem Raycasting, um Objekte zu visualisieren.
+Ganja benutzt unter anderem Raycasting um Objekte zu visualisieren.
 Hier ist der Code den Ganja benutzt, um iterativ die erste Nullstelle zu finden:
 \begin{minted}{glsl}
 vec3 find_root (in vec3 start, vec3 dir, in float thresh) {
@@ -685,7 +685,7 @@ vec3 find_root (in vec3 start, vec3 dir, in float thresh) {
 \end{minted}
          	
 
-Vereinfacht würde der code so aussehen:
+Vereinfacht würde der Code so aussehen:
 \begin{minted}{python}
 t=0
 def findroot(ray,thresh):
@@ -766,7 +766,7 @@ def refinement(t):
             t = RealInterval(center,t.hi())
 \end{minted}
 
-\textsc{Gaalop} nutzt also Intervall Arithmetik um zu prüfen, ob auf einem Intervall eine Nullstelle ist und unterteilt die Intervalle rekursiv um sich der Nullstelle anzunähern.
+\textsc{Gaalop} nutzt also Intervall Arithmetik um zu prüfen, ob auf einem Intervall eine Nullstelle ist, und unterteilt die Intervalle rekursiv um sich der Nullstelle anzunähern.
 Die \enquote{refinement} Methode ist eine Variante des Intervallhalbierungsverfahren  (auch Bisection-Methode genannt) zur Nullstellensuche.
 Das Verfahren beginnt mit einem Intervall \([a,b]\), in dem ein Vorzeichenwechsel von \( f_{\text{ray}}(t) \) stattfindet:
 \[
@@ -782,7 +782,7 @@ Da \textsc{Gaalop} auch die Summe der Quadrate für \( f_{\text{ray}} \) nutzt (
 Der Code sollte trotzdem funktionieren, mit der Einschränkung, dass \enquote{refinement} nie Nullstellen finden sollte.
 
 \subsection{GradientMethod}
-Die GradientMethod erzeugt wie die DiscreteCubeMethod ein dichtes 3D-Gitter. Diese Punkte werden dann iterativ mittels eines Gradienten Abstiegsverfahren verfeinert.
+Die GradientMethod erzeugt wie die DiscreteCubeMethod ein dichtes 3D-Gitter. Diese Punkte werden dann iterativ mittels eines Gradienten-Abstiegsverfahren verfeinert.
 
 \begin{verbatim}
 def searchInNeighborhood(p):
@@ -1161,17 +1161,17 @@ Gegenüber des Beleuchtungsmodells erzeugen diese Texturen einen starken 3D-Eind
 \chapter{Non Raycasting Based}
 Die Nicht auf Raycasting basierenden Methoden Konzentrieren sich darauf grafische Primitive (Punkte, Dreiecke und Linien) zu generieren und diese dann zu visualisieren. Anders als bei \textsc{Gaalop} passiert die Auswertung des Nullraums dabei auf der GPU. Dabei ist das Anzeigen von Primitiven oft Schneller als die Raycasting Methoden. 
 
-\section{raybased pointcloudrenderer}
-Diese Methode
-Die Punktwolken-Methode besteht aus zwei Shadern: einem Shader, der die Punktwolke generiert, und einem weiteren, der sie anzeigt.
+\section{RayMethod}
+Dieses Verfahren ist prinzipiell eine Erweiterung der Ray Method aus \textsc{Gaalop}. Der Unterschied ist hauptsächlich, dass statt eines Intervallhalbierungsverfahren und Intervallarethmetik das Aberth-Verfahren zur Nullstellensuche benutzt wird.
 
-Der Punktwolken-Erzeuger generiert achsenparallele Strahlen und verwendet das Aberth-Verfahren, um die Nullstellen entlang dieser Strahlen zu finden. Er funktioniert im Prinzip genauso wie die Raycasting-Aberth-Verfahren, allerdings mit einer orthografischen Projektion. Da WebGL2 keine Compute-Shader unterstützt, können die Punkte nicht direkt als Array ausgegeben werden (Man kann stattdessen transform feedback nutzen, allerdings hatte ich das zu diesem Zeitpunkt noch nicht implementiert). Stattdessen werden mehrere Output-Texturen verwendet, in denen die Nullstellen als komplexe Zahlen gespeichert werden. Eine Textur kann maximal vier Kanäle enthalten, und es können bis zu vier Output-Texturen verwendet werden. Das bedeutet, dass pro Fragment maximal 16 Floats ausgegeben werden können. Also bis zu 8 komplexe Nullstellen.
+Das Verfahren besteht aus zwei Shadern: einem Shader, der die Punktwolke generiert, und einem weiteren, der sie anzeigt.
+
+Der Punktwolken-Erzeuger generiert achsenparallele Strahlen und verwendet das Aberth-Verfahren, um die Nullstellen entlang dieser Strahlen zu finden.
 
 Die komplexen Nullstellen werden anschließend auf der CPU gefiltert, wieder in Punkte umgewandelt und in einen Buffer geschrieben. Da die so generierten Punktwolken Löcher haben können, wird dieser Vorgang für alle 3 Achsen ausgeführt. 
 
 
-Der Vorteil dieser Methode liegt darin, dass das Rendern deutlich schneller ist als bei den auf Raycasting basierenden Verfahren. Ein Nachteil ist, dass Punktwolken nur wirklich erkennbar sind, solange sie sich bewegen.
-
+Der Vorteil dieser Methode liegt darin, dass das Rendern relativ schnell ist.
 
 
 \section{Voxel-Subdivision}
@@ -1668,7 +1668,7 @@ Die neue Codegenerierung kann alles generieren, was die alte Codegenerierung gen
 %alte ansätze
 Anfangs habe ich zur Ableitungsberechnung dualen Zahlen verwendet. Dies ließ sich relativ einfach implementieren, hat aber den Nachteil, dass der Graph typisiert werden muss. Anstatt nur mit Skalaren zu arbeiten, gibt es für die komplexen Zahlen, Duale komplexe Zahlen, Skalare, Duale mit mehreren Inputs und Intervalle. Weiterhin müssen auch Interaktionen zwischen verschiedenen Typen (beispielsweise die Multiplikation von einem Skalar mit einer Dual Zahl) Ausprogrammiert werden, was zu einer kombinatorischen Explosion führt. Und dann muss später für jede der Kombinationen eine Methode zu Codegenerierung zu schreiben. 
 
-Mein erster Ansatz bestand darin für jeden Typ neue Codegenerierung zu schreiben. Dabei gab es in der Regel zwei Typen pro Codegenerierung. Skalare und den Typ über dem die Codegenerierung stattfindet. Wenn beispielsweise über den Komplexen zahlen ausgewertet wurde, waren die gesplitteten Inputs von der CPU Skalare und die sich ändernden Variablen Komplexe Zahlen. Alle Operationen zwischen Skalaren und anderen Typen haben dann den anderen Typen als Output. Also Beispielsweise:
+Mein erster Ansatz bestand darin für jeden Typ neue Codegenerierung zu schreiben. Dabei gab es in der Regel zwei Typen pro Codegenerierung. Skalare und den Typ über dem die Codegenerierung stattfindet. Wenn beispielsweise über den komplexen Zahlen ausgewertet wurde, waren die gesplitteten Inputs von der CPU Skalare und die sich ändernden Variablen Komplexe Zahlen. Alle Operationen zwischen Skalaren und anderen Typen haben dann den anderen Typen als Output. Also Beispielsweise:
 Mul(skalar a,Complex b)-> Complex
 
 Dabei habe ich oft den skalar einfach hochkonvertiert. Also statt Mul(skalar a,Complex b) zu implementieren kann Mul(Complex a,Complex b) benutzt werden wobei a zu einer komplexen Zahl gecastet wird. Das macht das Ganze einfacher aber auch langsamer. 
@@ -1683,7 +1683,7 @@ Als Nächstes habe ich mich entschieden die Ableitungsberechnung auf Backproperg
 Erstens gibt es nur noch 3 typen: Skalare, komplexe Zahlen und Intervalle was die Codegenerierung wesentlich einfacher macht. Und zweitens müsste Backpropergation theoretisch bei manchen Ansätzen schneller sein da weniger Multiplikationen benötigt werden.
 
 Im aktuellen Ansatz habe ich versucht die anderen Ansätze zu vereinigen.
-Ich habe mich entschieden die Typ Propergation während der Codegenerierung zu machen wobei ich den code dafür in die Nodes gepackt habe. Das macht den code kleiner, allerdings ist das typisierte auswerten in JavaScript nicht möglich.
+Ich habe mich entschieden die Typ Propergation während der Codegenerierung zu machen wobei ich den Code dafür in die Nodes gepackt habe. Das macht den Code kleiner, allerdings ist das typisierte auswerten in JavaScript nicht möglich.
 Die neue Codegenerierung ist flexibler und hat weniger Bugs. Da es in der alten Codegenerierung für jede Funktion eine eigene Klasse zur Codegenerierung gab, war es wesentlich schwerer Bugs zu fixen da sie teilweise in jeder der Codegenerierungen gefixt werden müssten. Deshalb habe ich die neue Codegenerierung geschrieben.
 
 Ein Problem, das in beiden Codegenerierungen besteht, ist der zu große Code nicht kompilierbar ist.
@@ -1726,7 +1726,7 @@ Durch das ausmultiplizieren und Multiplikation mit der Basiswechselmatrix kann d
 
 
 
-Zwischendurch habe ich einfach eine Monombasis genutzt. Dies funktioniert auch, ist aber langsamer.
+Zwischendurch habe ich einfach eine Monombasis genutzt. Dies funktioniert auch, ist aber langsamer auf der GPU.
 
 
 
@@ -1778,7 +1778,7 @@ Ich habe hauptsächlich 4 verschiedene Methoden ausgewertet.
 \enquote{sus} steht für sum of squares und ist die normale Auswertung von \(f\).
 Außerdem gibt es noch \enquote{row} was dafür steht das nur die erste Zeile der Matrix zur Auswertung genutzt wird (also \((\mathbf{F}_R)_1\)). Diese Methode wertet das Skalarprodukt von der ersten Zeile der Matrix mit \(\mathbf{P}\) aus.
 Weiterhin wird für die Aberth-Verfahren auch die Auswertung im Komplexen mit Ableitung benötigt. Deshalb gibt es beide Methoden nochmal mit DC was für Dual Complex steht.
-Dann gibt es noch horner was eine Auswertung über die mittels der Vandermonde Matrix approximierten Koeffizienten des Polynoms ist. Weiterhin gibt es bei row noch Methoden mit \enquote{copy} im Namen. Diese kopieren die erste Zeile der Matrix in ein Array und benutzen dann dieses Array zur Auswertung.
+Dann gibt es noch horner was eine Auswertung über die mittels der Vandermonde Matrix approximierten Koeffizienten des Polynoms ist (mehr dazu in Abschnitt \ref{sec:Auswertung_über_Koeffizienten}). Weiterhin gibt es bei row noch Methoden mit \enquote{copy} im Namen. Diese kopieren die erste Zeile der Matrix in ein Array und benutzen dann dieses Array zur Auswertung.
 
 Getestet habe ich auf einem Laptop mit einer Geforce gt 730M was eine Grafikkarte von 2013 ist.
 Alle Tests wurden in einem Vertex-Shader mit 100000 Vertices ausgeführt. Um Overhead zu vermeiden, werden im Shader zusätzlich mehrere Iterationen ausgeführt. Erst eine, dann 10, dann 100 usw. bis der Test länger als 100 ms dauert.
@@ -1836,7 +1836,7 @@ Die Implementierung lässt sich in der Datei MultiresBuffer3.js finden.
 
 
 \subsection{Polynom Auswertung über Koeffizienten}
-
+\label{sec:Auswertung_über_Koeffizienten}
 In den Raycasting Methoden wird \(f(\mathbf{ray}(a))\) sehr häufig ausgewertet. Da \(f(\mathbf{ray}(a))\) ein Polynom ist, kann man die Koeffizienten für dieses Polynom berechnen und dann in Zukunft die Funktion anhand dieser Koeffizienten auswerten. Die Auswertung anhand der Koeffizienten kann wesentlich schneller sein, da in der Regel wesentlich weniger Multiplikationen benötigt werden.
 
 Die Koeffizienten berechne ich dabei mittels einer Vandermonde Matrix.  
@@ -1853,7 +1853,7 @@ Sei
 k = \frac{1}{\max\left\{ |\frac{a_{n-1}}{a_n}|,\; |\frac{a_{n-2}}{a_n}|^{1/2},\; \dots,\; |\frac{a_{1}}{a_n}|^{1/(n-1)},\; |\frac{a_{0}}{a_n}|^{1/n} \right\}}
 \]
 
-Dann sind die Nullstellen von \(f_\text{aprox}(\frac{x}{k})\) im Intervall \([-2,2]\). Allerdings ist diese Version nur ein bisschen stabieler weshalb ich sie nicht benutzt habe.
+Dann sind die Nullstellen von \(f_\text{aprox}(\frac{x}{k})\) im Intervall \([-2,2]\). Allerdings ist diese Version nur ein bisschen stabiler weshalb ich sie nicht benutzt habe.
 
 
 Ich habe Anfangs auch mit closed form Lösungen experimentiert, allerdings funktionieren diese nur bis zum 4ten Grad und weiterhin haben sie das gleiche Problem wie das auf die Koeffizienten basierte Aberth-Verfahren. Die Ergebnisse sind verrauscht.
@@ -1880,6 +1880,7 @@ Ray Method mit default parametern
 samples 50
 357,775s
 Während die Ebene angezeigt wird lässt sich die kamera nicht bewegen.
+
 
 
 
@@ -1924,6 +1925,9 @@ Ich finde die Ergebnisse der Methode visuell weder in gaalop, noch in meiner Imp
 
     \label{fig:MyGradientMethod}
 \end{figure}
+
+\section{RayMethod}
+
     
 
 Discrete Cube Methode

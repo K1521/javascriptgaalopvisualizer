@@ -1,0 +1,9 @@
+// -a qcga
+
+null=0;
+one=1;
+:Red;
+:null;
+
+:Red;
+:one;

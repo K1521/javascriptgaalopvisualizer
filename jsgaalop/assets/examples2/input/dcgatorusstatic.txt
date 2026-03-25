@@ -1,0 +1,15 @@
+// -a dcga
+
+?T1 = Toroid(1, 1);                
+?Pl = Plane(1,1,1,0);    
+?CurveTP = T1 ^ Pl;                 
+
+:Blue;
+:T1;
+
+:Red;
+:CurveTP;
+
+:Green;
+:Pl;
+ 
