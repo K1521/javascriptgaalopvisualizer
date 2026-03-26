@@ -40,13 +40,15 @@ export class MultiResBuffer3 extends MultiresBase {
   }
 
   *tileScheduler(tileSize = 256) {
+    
     this.renderNormal(); // Optional low-res fallback render
     yield;
-
+    const t0=performance.now();
     for (const { tileX, tileY, w, h } of this.generateTilesCircular2(tileSize)) {
       this.renderTile(tileX, tileY, w, h);
       yield;
     }
+    console.log("tiles rendered in:",t0-performance.now());
   }
  /*render() {
   if (this.scheduler == null) return;

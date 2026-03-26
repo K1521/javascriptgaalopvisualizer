@@ -61,72 +61,11 @@ function Typemergeargsort(values) {//gemeni helped with this :)
   return result;
 }
 
-const vert=await loadWithIncludesRelativeToShadersource("shaderlibv3/other/gridvert.glsl");
-const frag=await loadWithIncludesRelativeToShadersource("shaderlibv3/other/trifrag.glsl");
-export class GridTriRenderer{
-  constructor(gl,color){
-    this.gl=gl;
-    this.color=color;
-
-    this.shader=new Shader(gl,
-      vert,frag
-    );
-
-    this.vertexBuffer = gl.createBuffer();
-
-    // Create VAO
-    this.vao = gl.createVertexArray();
-    gl.bindVertexArray(this.vao);
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-
-    // One uint per vertex
-    const loc = this.shader.getAttribLocation("gridindex"); // shader attribute location
-    gl.enableVertexAttribArray(loc);
-    gl.vertexAttribIPointer(loc, 1, gl.UNSIGNED_INT, 0, 0);
-
-    gl.bindVertexArray(null);
-  }
-  render(ctx){
-    const gl=this.gl;
-    gl.depthFunc(gl.LESS);
-    gl.enable(gl.DEPTH_TEST);
-
-    this.shader.use();
-    this.shader.uniform4fv('incolor', [this.color.r,this.color.g,this.color.b,1.0]);
-    ctx.updateUniforms(this.shader); // sets cameraPos and cameraMatrix and focal
-    this.grid.setUniforms(this.shader);
-    gl.bindVertexArray(this.vao); // VAO with vertex positions bound
-    //gl.drawElements(gl.LINES, this.lineCount, gl.UNSIGNED_SHORT, 0);
-    gl.drawArrays(gl.TRIANGLES, 0, this.count);
-    //gl.drawArrays(gl.POINTS, 0, this.count);
-    gl.bindVertexArray(null);
-
-
-  }
-  setdata(grid, tri) {
-    this.grid=grid;
-    const gl = this.gl;
-
-    // Ensure tri is a Uint32Array (one uint per vertex)
-    let data;
-    if (tri instanceof Uint32Array) {
-      data = tri;
-    } else {
-      data = new Uint32Array(tri);
-    }
-
-    this.count = data.length;
-
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, data, gl.DYNAMIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, null);
-  }
-}
+import { GridTriRenderer } from "./TopGridVoxelized.js";
 
 
 
-export class TopGridRendererVoxelized extends LazyRenderingPipeline{
+export class GridRendererVoxelized extends LazyRenderingPipeline{
 
   constructor(context,gl,visgraph, vertexshader,color) {
     super(() => {
@@ -151,8 +90,8 @@ export class TopGridRendererVoxelized extends LazyRenderingPipeline{
     });
 
     this.grid=new Grid3D([-this.scale,-this.scale,-this.scale],[this.scale,this.scale,this.scale],[this.samples,this.samples,this.samples]);
-    this.percentile=0.01;
-    this.percentilechanged=true;
+    this.threshold=0.5;
+    this.threshchanged=true;
     
     this.scale=4;
     this.samples=50;
@@ -182,15 +121,15 @@ export class TopGridRendererVoxelized extends LazyRenderingPipeline{
 
     const filter=this.tf.run(this.grid.size())[0];
     for(let i=0;i<filter.length;i++){filter[i]=Math.abs(filter[i]);}
-    this.nullspacesorted=filter.slice().sort();
+    //this.nullspacesorted=filter.slice().sort();
     this.nullspace=filter;
-    this.percentilechanged=true;
+    this.threshchanged=true;
     }
-    if(this.percentilechanged){
-      this.percentilechanged=false;
+    if(this.threshchanged){
+      this.threshchanged=false;
 
-      const thresh=this.nullspacesorted[Math.min(Math.floor(this.nullspacesorted.length*this.percentile),this.nullspacesorted.length-1)];
-      
+      //const thresh=//this.nullspacesorted[Math.min(Math.floor(this.nullspacesorted.length*this.threshold),this.nullspacesorted.length-1)];
+      const thresh=Math.sqrt(this.grid.dx**2+this.grid.dy**2+this.grid.dz**2)/2*this.threshold;
 
       const voxelgrid=this.grid.makevoxelgrid();
       let triidx=0;
@@ -253,7 +192,7 @@ export class TopGridRendererVoxelized extends LazyRenderingPipeline{
 
   [
     { name: "GaussNewton", value: 0 },
-    { name: "f", value: 1 },
+    //{ name: "f", value: 1 },
     { name: "udfaprox", value: 2 }
   ].forEach(s => {
     const option = document.createElement("option");
@@ -279,13 +218,13 @@ export class TopGridRendererVoxelized extends LazyRenderingPipeline{
     // Percentile Slider (0.001..0.1)
     element.appendChild(makeLogSlider(
       slidertemplate,
-      "percentile",
+      "threshold",
       (value) => {
-        this.percentile = value;
-        this.percentilechanged = true;
+        this.threshold = value;
+        this.threshchanged = true;
         this.ctx?.requestRender();
       },
-      { min: 1e-5, max: 1, value: this.percentile }
+      { min: 1e-1, max: 1, value: this.threshold }
     ));
 
     // Grid Size Slider (samples: 16..512)

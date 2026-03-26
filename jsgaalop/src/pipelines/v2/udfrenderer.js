@@ -8,13 +8,13 @@ export class udfrenderer extends simplerenderer{
     const slidertemplate=document.querySelector(`template[data-type=slider]`);
     element.appendChild(makeLogSlider(slidertemplate,"maxstep",
       (x)=>{this.maxstep=x;this.ctx?.requestRender();},
-    {min:1e-3,max:1e1,value:1}));
+    {min:1e-2,max:1e1,value:1}));
     element.appendChild(makeLogSlider(slidertemplate,"threshold",
       (x)=>{this.threshold=x;this.ctx?.requestRender();
     }));
     element.appendChild(makeLogSlider(slidertemplate,"m",
       (x)=>{this.m=x;this.ctx?.requestRender();},
-    {min:0.1,max:10,value:1}));
+    {min:0.01,max:10,value:1}));
 
   }
 

@@ -34,7 +34,7 @@ import { TopGridRenderer } from '../pipelines/v2/TopGrid.js';
 
 import { RayMethod } from '../pipelines/v2/RayMethod.js';
 import { TopGridRendererVoxelized } from '../pipelines/v2/TopGridVoxelized.js';
-
+import { GridRendererVoxelized } from '../pipelines/v2/GridVoxelized.js';
 window.DEBUG_LOG = ["test"];
 
 class RenderLoop {
@@ -313,6 +313,9 @@ async function main(gajson){
     const udfaproxsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/udfaprox.glsl");
     obj.addPipeline("udfaprox",new udfrenderer(context,gl,visgraph,udfaproxsource,color));
     
+    const ganjasource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/ganja.glsl");
+    obj.addPipeline("ganja",new udfrenderer(context,gl,visgraph,ganjasource,color));
+    
 
     const Rintervallsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/Rintervall.glsl");
     obj.addPipeline("voxelsubdivision",new Voxelrenderer(context,gl,visgraph,Rintervallsource,color));
@@ -324,6 +327,7 @@ async function main(gajson){
     const Rgridsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RoptionsGrid.glsl");
     obj.addPipeline("TopGrid",new TopGridRenderer(context,gl,visgraph,Rgridsource,color));
     obj.addPipeline("TopGridVoxel",new TopGridRendererVoxelized(context,gl,visgraph,Rgridsource,color));
+    obj.addPipeline("GridVoxel",new GridRendererVoxelized(context,gl,visgraph,Rgridsource,color));
 
 
     const RRaysource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RRay.glsl");
@@ -370,22 +374,42 @@ async function main(gajson){
       x: [],y: [],
       mode: "lines",
       name: visgraph.name+"Row",
-      marker: {color,size: 4,opacity: 0.6}
+     line: {
+      color: color,
+      width: 2,
+    }
     }
     const trace2={
       x: [],y: [],
       mode: "lines",
       name: visgraph.name+"Sus",
-      marker: {color,size: 4,opacity: 0.6}
+      line: {
+      color: color,
+      width: 2,
+    }
     }
     const trace3={
       x: [],y: [],
       mode: "lines",
       name: visgraph.name+"udfaprox",
-      marker: {color,size: 4,opacity: 0.6}
+      line: {
+      color: color,
+      width: 2,
+      dash: "dash" 
     }
-    traces.push(trace,trace2,trace3);
-    traceinfos.push({tf,visgraph,row:trace,sus:trace2,udfaprox:trace3});
+    }
+     const trace4={
+      x: [],y: [],
+      mode: "lines",
+      name: visgraph.name+"udfaproxderiv",
+      line: {
+      color: color,
+      width: 2,
+      dash: "dot" 
+    }
+    }
+    traces.push(trace,trace2,trace3,trace4);
+    traceinfos.push({tf,visgraph,row:trace,sus:trace2,udfaprox:trace3,udfaproxderiv:trace4});
   }
   Plotly.newPlot('plotlyDiagram',traces , { title: 'ROW AND SUS' ,margin:{l:40,r:20,b:40,t:40}},{responsive:true});
 
@@ -406,6 +430,20 @@ async function main(gajson){
     0        // offset
   );
   gl.bindVertexArray(null);
+
+  function derivative(x, y){
+  const dydx = new Float32Array(y.length);
+
+  for(let i = 1; i < y.length - 1; i++){
+    dydx[i] = (y[i+1] - y[i-1]) / (x[i+1] - x[i-1]);
+  }
+
+  // Randwerte (einseitige Differenz)
+  dydx[0] = (y[1] - y[0]) / (x[1] - x[0]);
+  dydx[y.length-1] = (y[y.length-1] - y[y.length-2]) / (x[x.length-1] - x[x.length-2]);
+
+  return dydx;
+}
 
   function drawplot(camera){
     const raydir=camera.c2w.mul(new Vector([0,0,1]));
@@ -428,6 +466,9 @@ async function main(gajson){
       t.row.y=row;//.map(x=>Math.log(x));
       t.sus.y=sus;//.map(x=>Math.log(x));//maybe wee need a cast because run returns float32array
       t.udfaprox.y=udfaprox;//.map(x=>Math.log(x));
+      t.udfaproxderiv.x=xValues;
+      t.udfaproxderiv.y=derivative(xValues,udfaprox);
+
     }
     gl.bindVertexArray(null);
 

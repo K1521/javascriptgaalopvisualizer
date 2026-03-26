@@ -11,8 +11,8 @@ precision mediump float;
 
 
 //const int ABERTH_MAXITER = 40;
-const float ABERTH_THRESHOLD = 1e-6;//this sthreshold is nessesary so the shader compiles faster because it prevents loop unrolling i think
-const float ROOT_ZERRO_THRESHOLD = 1e-4;
+const float ABERTH_THRESHOLD = 1e-10;//this sthreshold is nessesary so the shader compiles faster because it prevents loop unrolling i think
+
 
 uniform float eps;
 uniform float beta;

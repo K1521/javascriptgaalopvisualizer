@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.22.0 (TeX Live 2025)  (format=lualatex 2026.3.1)  22 MAR 2026 16:59
+This is LuaHBTeX, Version 1.22.0 (TeX Live 2025)  (format=lualatex 2026.3.1)  26 MAR 2026 04:10
  restricted system commands enabled.
  file:line:error style messages enabled.
 **c:/Users/konst/data/repos/jsgaalop/javascriptgaalopvisualizer/KonstantinsBachelorarbeit/DEMO-TUDaThesis
@@ -2263,7 +2263,13 @@ Package babel Info: 'ngerman' activates 'german' shorthands.
 LaTeX Warning: Label `fig:texturundphong' multiply defined.
 
 
-LaTeX Warning: Label `fig:MyGradientMethod' multiply defined.
+LaTeX Warning: Label `fig:GaalopRayMethod' multiply defined.
+
+
+LaTeX Warning: Label `fig:GaalopRayMethod' multiply defined.
+
+
+LaTeX Warning: Label `fig:torusvoninnen' multiply defined.
 
 )
 \openout1 = DEMO-TUDaThesis.aux
@@ -2543,14 +2549,14 @@ Package microtype Info: Loading generic protrusion settings for font family
 \pydata@fh@0=\write6
 
 \openout6 = _5D68B36B1EF0A475C6F07718AA364FAF.data.minted
-runsystem(latexminted config  --timestamp 20260322165937 5D68B36B1EF0A475C6F07718AA364FAF)...executed.
+runsystem(latexminted config  --timestamp 20260326041038 5D68B36B1EF0A475C6F07718AA364FAF)...executed.
  (./_5D68B36B1EF0A475C6F07718AA364FAF.config.minted)
-runsystem(latexminted cleanconfig  --timestamp 20260322165937 5D68B36B1EF0A475C6F07718AA364FAF)...executed.
+runsystem(latexminted cleanconfig  --timestamp 20260326041038 5D68B36B1EF0A475C6F07718AA364FAF)...executed.
  (./_minted/default.style.minted) (./_minted/D8A1A4FD856D2941F5C8F25553C3A080.highlight.minted
 LaTeX Font Info:    Font shape `TU/RobotoMono(0)/b/n' will be
 (Font)              scaled to size 10.95pt on input line 2.
 ) (./_minted/82DEF94E52CB087EEEFE35F04DD9663B.highlight.minted) [10] [11] [12] [13] [14]
-<pictures/Visualization_of_SDF_ray_marching_algorithm.png, id=237, 361.35pt x 196.10765pt>
+<pictures/Visualization_of_SDF_ray_marching_algorithm.png, id=249, 361.35pt x 196.10765pt>
 File: pictures/Visualization_of_SDF_ray_marching_algorithm.png Graphic file (type png)
 <use pictures/Visualization_of_SDF_ray_marching_algorithm.png>
 Package luatex.def Info: pictures/Visualization_of_SDF_ray_marching_algorithm.png  used on input line 479.
@@ -2563,14 +2569,14 @@ LaTeX Warning: Citation 'teadrinker2022sdf' on page 15 undefined on input line 4
 warning  (pdf backend): ignoring duplicate destination with the name 'figure.3.1'
 <./pictures/Visualization_of_SDF_ray_marching_algorithm.png>] [17] [18] [19] [20] [21]
 chapter 4.
-(./_minted/495B9046BB72EB7070EE6FB1315848EE.highlight.minted) (./_minted/7D6B422202CD3F7CE2F25839498CDAFE.highlight.minted [22
+(./_minted/495B9046BB72EB7070EE6FB1315848EE.highlight.minted) (./_minted/FED3F8D8B4D943F4F768B1406B6D2F3B.highlight.minted [22
 
 ]
 LaTeX Font Info:    Font shape `TU/RobotoMono(0)/m/it' will be
 (Font)              scaled to size 10.95pt on input line 8.
 )
 LaTeX Font Info:    Font shape `TU/Roboto(0)/b/sc' will be
-(Font)              scaled to size 14.4pt on input line 707.
+(Font)              scaled to size 14.4pt on input line 708.
  [23] (./_minted/3F5D5FA73F130507B9E0B95932352159.highlight.minted [24]) [25] [26] [27]
 chapter 5.
 [28
@@ -2580,20 +2586,20 @@ chapter 6.
 [30
 
 ] [31]
-Overfull \hbox (4.85548pt too wide) in paragraph at lines 952--953
+Overfull \hbox (4.85548pt too wide) in paragraph at lines 953--954
 \TU/XCharter(0)/m/n/10.95 Im Ge-gen-satz zum New-ton-ver-fah-ren und der UDF-Aproximation fin-det das Aberth-Verfahren
  []
 
 [32] [33] [34] [35] [36] [37]
-<pictures/texturundphong.png, id=345, 327.47343pt x 326.72063pt>
+<pictures/texturundphong.png, id=357, 327.47343pt x 326.72063pt>
 File: pictures/texturundphong.png Graphic file (type png)
 <use pictures/texturundphong.png>
-Package luatex.def Info: pictures/texturundphong.png  used on input line 1141.
+Package luatex.def Info: pictures/texturundphong.png  used on input line 1142.
 (luatex.def)             Requested size: 418.25555pt x 417.29861pt.
-<pictures/checkerandiso.png, id=346, 441.90094pt x 420.82219pt>
+<pictures/checkerandiso.png, id=358, 441.90094pt x 420.82219pt>
 File: pictures/checkerandiso.png Graphic file (type png)
 <use pictures/checkerandiso.png>
-Package luatex.def Info: pictures/checkerandiso.png  used on input line 1149.
+Package luatex.def Info: pictures/checkerandiso.png  used on input line 1150.
 (luatex.def)             Requested size: 418.25555pt x 398.32118pt.
  [38] [39
 warning  (pdf backend): ignoring duplicate destination with the name 'figure.6.1'
@@ -2604,18 +2610,18 @@ chapter 7.
 [41
 
 ]
-<pictures/voxeldist2.png, id=368, 392.96812pt x 381.67593pt>
+<pictures/voxeldist2.png, id=380, 392.96812pt x 381.67593pt>
 File: pictures/voxeldist2.png Graphic file (type png)
 <use pictures/voxeldist2.png>
-Package luatex.def Info: pictures/voxeldist2.png  used on input line 1209.
+Package luatex.def Info: pictures/voxeldist2.png  used on input line 1211.
 (luatex.def)             Requested size: 418.25555pt x 406.26349pt.
  [42] [43
 warning  (pdf backend): ignoring duplicate destination with the name 'figure.7.1'
 <./pictures/voxeldist2.png>]
-<pictures/FigureVoxelIntervallCompare.png, id=379, 867.24pt x 578.16pt>
+<pictures/FigureVoxelIntervallCompare.png, id=391, 867.24pt x 578.16pt>
 File: pictures/FigureVoxelIntervallCompare.png Graphic file (type png)
 <use pictures/FigureVoxelIntervallCompare.png>
-Package luatex.def Info: pictures/FigureVoxelIntervallCompare.png  used on input line 1257.
+Package luatex.def Info: pictures/FigureVoxelIntervallCompare.png  used on input line 1259.
 (luatex.def)             Requested size: 418.25555pt x 278.83694pt.
  [44] [45
 warning  (pdf backend): ignoring duplicate destination with the name 'figure.7.2'
@@ -2624,78 +2630,180 @@ chapter 8.
 [49
 
 ]
-Overfull \hbox (2.84438pt too wide) detected at line 1365
+Overfull \hbox (2.84438pt too wide) detected at line 1372
 []\OT1/cmr/m/n/10.95 (\OML/cmm/m/it/10.95 x; y; z\OT1/cmr/m/n/10.95 ) = \OML/cmm/m/it/10.95 x[]e[] \OT1/cmr/m/n/10.95 + \OML/cmm/m/it/10.95 xy e[] \OT1/cmr/m/n/10.95 + \OML/cmm/m/it/10.95 xz e[] \OT1/cmr/m/n/10.95 + \OML/cmm/m/it/10.95 x e[] \OT1/cmr/m/n/10.95 + [](\OML/cmm/m/it/10.95 x[] \OT1/cmr/m/n/10.95 + \OML/cmm/m/it/10.95 y[] \OT1/cmr/m/n/10.95 + \OML/cmm/m/it/10.95 z[]\OT1/cmr/m/n/10.95 ) \OML/cmm/m/it/10.95 x e[] \OT1/cmr/m/n/10.95 + [] + [](\OML/cmm/m/it/10.95 x[] \OT1/cmr/m/n/10.95 + \OML/cmm/m/it/10.95 y[] \OT1/cmr/m/n/10.95 + \OML/cmm/m/it/10.95 z[]\OT1/cmr/m/n/10.95 )[]\OML/cmm/m/it/10.95 e[]
  []
 
 [50] [51] [52]
 LaTeX Font Info:    Font shape `TU/Roboto(0)/b/sc' will be
-(Font)              scaled to size 12.0pt on input line 1470.
+(Font)              scaled to size 12.0pt on input line 1477.
  [53]
-<pictures/daginjs.png, id=431, 836.12375pt x 276.03125pt>
+<pictures/daginjs.png, id=443, 836.12375pt x 276.03125pt>
 File: pictures/daginjs.png Graphic file (type png)
 <use pictures/daginjs.png>
-Package luatex.def Info: pictures/daginjs.png  used on input line 1499.
+Package luatex.def Info: pictures/daginjs.png  used on input line 1506.
 (luatex.def)             Requested size: 209.12778pt x 69.03711pt.
  [54
 warning  (pdf backend): ignoring duplicate destination with the name 'figure.8.1'
 <./pictures/daginjs.png>] [55] [56] (./_minted/8F1F3BF07345EDACECE1FB2924450166.highlight.minted) (./_minted/87B71DB6EAA82E9D89F878B6103F50E4.highlight.minted) (./_minted/66A997C62E331B243ABAB6FEAE0D2023.highlight.minted) (./_minted/3CA17F0F164BD403410BB0048BCDFA0D.highlight.minted) (./_minted/4DFD284363153450FE84F5DA77A3270D.highlight.minted) (./_minted/2CE90DABA09778D57432829F500C21F6.highlight.minted) [57] (./_minted/B83F8C31F2157A4D11928EEC7C3D88FB.highlight.minted) (./_minted/887FA75C3F7225A9D14C87D4CFCB3C1D.highlight.minted) (./_minted/DE859224E582404DC76FEF0F12A6FD76.highlight.minted) (./_minted/65D0CA119A9D9CA1EA733C554B7B837C.highlight.minted) [58] [59] [60]
-<pictures/CodegenAltVSNewTimings.png, id=464, 592.46344pt x 275.52937pt>
+<pictures/CodegenAltVSNewTimings.png, id=476, 592.46344pt x 275.52937pt>
 File: pictures/CodegenAltVSNewTimings.png Graphic file (type png)
 <use pictures/CodegenAltVSNewTimings.png>
-Package luatex.def Info: pictures/CodegenAltVSNewTimings.png  used on input line 1742.
+Package luatex.def Info: pictures/CodegenAltVSNewTimings.png  used on input line 1749.
 (luatex.def)             Requested size: 209.12778pt x 97.25655pt.
  (./_minted/E3FEAA0993770C2954179EF107FCE3DC.highlight.minted) [61<./pictures/CodegenAltVSNewTimings.png>] [62]
-<pictures/row_times_cleaned.png, id=477, 964.60374pt x 323.2075pt>
+<pictures/row_times_cleaned.png, id=489, 964.60374pt x 323.2075pt>
 File: pictures/row_times_cleaned.png Graphic file (type png)
 <use pictures/row_times_cleaned.png>
-Package luatex.def Info: pictures/row_times_cleaned.png  used on input line 1792.
+Package luatex.def Info: pictures/row_times_cleaned.png  used on input line 1799.
 (luatex.def)             Requested size: 209.12778pt x 70.07019pt.
-<pictures/sustimes_cleaned.png, id=478, 964.60374pt x 805.0075pt>
+<pictures/sustimes_cleaned.png, id=490, 964.60374pt x 805.0075pt>
 File: pictures/sustimes_cleaned.png Graphic file (type png)
 <use pictures/sustimes_cleaned.png>
-Package luatex.def Info: pictures/sustimes_cleaned.png  used on input line 1802.
+Package luatex.def Info: pictures/sustimes_cleaned.png  used on input line 1809.
 (luatex.def)             Requested size: 209.12778pt x 174.52267pt.
  [63
 warning  (pdf backend): ignoring duplicate destination with the name 'figure.8.2'
 <./pictures/row_times_cleaned.png><./pictures/sustimes_cleaned.png>] [64] [65]
-<pictures/aberth_rescaled_test.png, id=495, 171.64125pt x 165.61874pt>
+<pictures/aberth_rescaled_test.png, id=507, 171.64125pt x 165.61874pt>
 File: pictures/aberth_rescaled_test.png Graphic file (type png)
 <use pictures/aberth_rescaled_test.png>
-Package luatex.def Info: pictures/aberth_rescaled_test.png  used on input line 1869.
+Package luatex.def Info: pictures/aberth_rescaled_test.png  used on input line 1876.
 (luatex.def)             Requested size: 209.12778pt x 201.78922pt.
  [66] [67
 warning  (pdf backend): ignoring duplicate destination with the name 'figure.8.3'
 <./pictures/aberth_rescaled_test.png>]
 chapter 9.
-<pictures/GaalopGradientMethod.png, id=507, 413.29407pt x 309.40594pt>
-File: pictures/GaalopGradientMethod.png Graphic file (type png)
-<use pictures/GaalopGradientMethod.png>
-Package luatex.def Info: pictures/GaalopGradientMethod.png  used on input line 1900.
-(luatex.def)             Requested size: 418.25555pt x 313.12544pt.
-<pictures/MyGradientMethod.png, id=508, 386.19281pt x 345.54094pt>
-File: pictures/MyGradientMethod.png Graphic file (type png)
-<use pictures/MyGradientMethod.png>
-Package luatex.def Info: pictures/MyGradientMethod.png  used on input line 1908.
-(luatex.def)             Requested size: 418.25555pt x 374.22787pt.
 [68
 
-] [69
+] [69]
+<pictures/GaalopGradientMethod.png, id=527, 413.29407pt x 309.40594pt>
+File: pictures/GaalopGradientMethod.png Graphic file (type png)
+<use pictures/GaalopGradientMethod.png>
+Package luatex.def Info: pictures/GaalopGradientMethod.png  used on input line 1934.
+(luatex.def)             Requested size: 418.25555pt x 313.12544pt.
+<pictures/MyGradientMethod.png, id=528, 386.19281pt x 345.54094pt>
+File: pictures/MyGradientMethod.png Graphic file (type png)
+<use pictures/MyGradientMethod.png>
+Package luatex.def Info: pictures/MyGradientMethod.png  used on input line 1942.
+(luatex.def)             Requested size: 418.25555pt x 374.22787pt.
+ [70
 warning  (pdf backend): ignoring duplicate destination with the name 'figure.9.1'
-<./pictures/GaalopGradientMethod.png>] [70
+<./pictures/GaalopGradientMethod.png>] [71
 warning  (pdf backend): ignoring duplicate destination with the name 'figure.9.2'
 <./pictures/MyGradientMethod.png>]
-<pictures/TopGrid.png, id=525, 271.76532pt x 213.04594pt>
+<pictures/TopGrid.png, id=543, 271.76532pt x 213.04594pt>
 File: pictures/TopGrid.png Graphic file (type png)
 <use pictures/TopGrid.png>
-Package luatex.def Info: pictures/TopGrid.png  used on input line 1923.
+Package luatex.def Info: pictures/TopGrid.png  used on input line 1959.
 (luatex.def)             Requested size: 418.25555pt x 327.89995pt.
- [71] [72
+<pictures/udfgrid.png, id=544, 418.56375pt x 363.60844pt>
+File: pictures/udfgrid.png Graphic file (type png)
+<use pictures/udfgrid.png>
+Package luatex.def Info: pictures/udfgrid.png  used on input line 1967.
+(luatex.def)             Requested size: 418.25555pt x 363.33568pt.
+<pictures/gngrid.png, id=545, 301.8778pt x 286.06876pt>
+File: pictures/gngrid.png Graphic file (type png)
+<use pictures/gngrid.png>
+Package luatex.def Info: pictures/gngrid.png  used on input line 1975.
+(luatex.def)             Requested size: 418.25555pt x 396.35109pt.
+
+Overfull \hbox (0.5438pt too wide) in paragraph at lines 1982--1983
+\TU/XCharter(0)/m/n/10.95 Verfahren nutzt. Ich ha-be auch ein Ver-fah-ren, das In-ter-vall-arith-me-tik und Voxel-Subdivision
+ []
+
+[72] [73
 warning  (pdf backend): ignoring duplicate destination with the name 'figure.9.3'
-<./pictures/TopGrid.png>]
+<./pictures/TopGrid.png>] [74
+warning  (pdf backend): ignoring duplicate destination with the name 'figure.9.4'
+<./pictures/udfgrid.png>] [75
+warning  (pdf backend): ignoring duplicate destination with the name 'figure.9.5'
+<./pictures/gngrid.png>]
+<pictures/GaalopRayMethod.png, id=568, 410.2828pt x 253.69781pt>
+File: pictures/GaalopRayMethod.png Graphic file (type png)
+<use pictures/GaalopRayMethod.png>
+Package luatex.def Info: pictures/GaalopRayMethod.png  used on input line 1997.
+(luatex.def)             Requested size: 418.25555pt x 258.6251pt.
+<pictures/voxelsubdivision.png, id=569, 365.86688pt x 231.86626pt>
+File: pictures/voxelsubdivision.png Graphic file (type png)
+<use pictures/voxelsubdivision.png>
+Package luatex.def Info: pictures/voxelsubdivision.png  used on input line 2005.
+(luatex.def)             Requested size: 418.25555pt x 265.0803pt.
+<pictures/rayundsubdivision2.png, id=570, 523.20468pt x 561.59813pt>
+File: pictures/rayundsubdivision2.png Graphic file (type png)
+<use pictures/rayundsubdivision2.png>
+Package luatex.def Info: pictures/rayundsubdivision2.png  used on input line 2013.
+(luatex.def)             Requested size: 418.25555pt x 448.95348pt.
+ [76
+warning  (pdf backend): ignoring duplicate destination with the name 'figure.9.6'
+<./pictures/GaalopRayMethod.png>] [77
+warning  (pdf backend): ignoring duplicate destination with the name 'figure.9.7'
+<./pictures/voxelsubdivision.png>] [78
+warning  (pdf backend): ignoring duplicate destination with the name 'figure.9.8'
+<./pictures/rayundsubdivision2.png>]
+Overfull \hbox (4.4458pt too wide) in paragraph at lines 2040--2042
+\TU/XCharter(0)/m/n/10.95 ein biss-chen lang-sa-mer mit ca. 20 fps. Das Tile-Rendering braucht für die udf-Approximation
+ []
+
+<pictures/udfaprox.png, id=589, 279.29344pt x 326.72063pt>
+File: pictures/udfaprox.png Graphic file (type png)
+<use pictures/udfaprox.png>
+Package luatex.def Info: pictures/udfaprox.png  used on input line 2049.
+(luatex.def)             Requested size: 418.25555pt x 489.29701pt.
+
+LaTeX Warning: Float too large for page by 26.89679pt on input line 2053.
+
+<pictures/newton.png, id=590, 478.03593pt x 525.46312pt>
+File: pictures/newton.png Graphic file (type png)
+<use pictures/newton.png>
+Package luatex.def Info: pictures/newton.png  used on input line 2057.
+(luatex.def)             Requested size: 418.25555pt x 459.75505pt.
+<pictures/torusudfaprox.png, id=591, 283.81032pt x 237.88875pt>
+File: pictures/torusudfaprox.png Graphic file (type png)
+<use pictures/torusudfaprox.png>
+Package luatex.def Info: pictures/torusudfaprox.png  used on input line 2065.
+(luatex.def)             Requested size: 418.25555pt x 350.61423pt.
+LaTeX Font Info:    Font shape `TU/Roboto(0)/m/n' will be
+(Font)              scaled to size 8.0pt on input line 2066.
+LaTeX Font Info:    Font shape `TU/Roboto(0)/m/n' will be
+(Font)              scaled to size 6.0pt on input line 2066.
+<pictures/torusvoninnen.png, id=592, 676.02562pt x 690.32906pt>
+File: pictures/torusvoninnen.png Graphic file (type png)
+<use pictures/torusvoninnen.png>
+Package luatex.def Info: pictures/torusvoninnen.png  used on input line 2073.
+(luatex.def)             Requested size: 418.25555pt x 427.11478pt.
+[79] [80
+warning  (pdf backend): ignoring duplicate destination with the name 'figure.9.9'
+<./pictures/udfaprox.png>] [81
+warning  (pdf backend): ignoring duplicate destination with the name 'figure.9.10'
+<./pictures/newton.png>] [82
+warning  (pdf backend): ignoring duplicate destination with the name 'figure.9.11'
+<./pictures/torusudfaprox.png>] [83
+warning  (pdf backend): ignoring duplicate destination with the name 'figure.9.12'
+<./pictures/torusvoninnen.png>]
+<pictures/aberthbad.png, id=622, 378.66469pt x 501.37312pt>
+File: pictures/aberthbad.png Graphic file (type png)
+<use pictures/aberthbad.png>
+Package luatex.def Info: pictures/aberthbad.png  used on input line 2089.
+(luatex.def)             Requested size: 418.25555pt x 553.79958pt.
+
+
+LaTeX Warning: Float too large for page by 104.99936pt on input line 2093.
+
+[84] [85
+warning  (pdf backend): ignoring duplicate destination with the name 'figure.9.13'
+<./pictures/aberthbad.png>]
+<pictures/ganjadcga.png, id=633, 698.61pt x 635.37375pt>
+File: pictures/ganjadcga.png Graphic file (type png)
+<use pictures/ganjadcga.png>
+Package luatex.def Info: pictures/ganjadcga.png  used on input line 2110.
+(luatex.def)             Requested size: 418.25555pt x 380.4031pt.
+ [86] [87
+warning  (pdf backend): ignoring duplicate destination with the name 'figure.9.14'
+<./pictures/ganjadcga.png>]
 chapter 10.
 
-LaTeX Warning: Empty bibliography on input line 1953.
+LaTeX Warning: Empty bibliography on input line 2120.
 
 
 Package tudapub Warning: You did not provide a Label for key methods.
@@ -2712,14 +2820,9 @@ Package tudapub Warning: You did not provide a Label for key discussion.
 (tudapub)                Either you need to recompile your document or add a
 (tudapub)                label using \IMRADlabel.
 
-[73
+[88
 
-]
-
-LaTeX Warning: Hook 'shipout/lastpage' executed on wrong page (71 not 73).
-               Rerun to correct this.
-
-(./DEMO-TUDaThesis.aux)
+] (./DEMO-TUDaThesis.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -2742,19 +2845,19 @@ Package logreq Info: Writing requests to 'DEMO-TUDaThesis.run.xml'.
 )
 
 Here is how much of LuaTeX's memory you used:
- 40555 strings out of 476076
+ 40716 strings out of 476076
  100000,2373549 words of node,token memory allocated
  6962 words of node memory still in use:
    81 hlist, 9 vlist, 14 rule, 42 disc, 20 local_par, 6 math, 145 glue, 28 kern, 32 penalty, 7 margin_kern, 320 glyph, 433 attribute, 76 glue_spec, 222 attribute_list, 2 write, 28 pdf_colorstack, 1 pdf_setmatrix, 1 pdf_save, 1 pdf_restore nodes
-   avail lists: 1:5,2:2149,3:533,4:480,5:891,6:159,7:6733,8:92,9:843,10:26,11:753,12:1
- 61997 multiletter control sequences out of 65536+600000
- 150 fonts using 21391799 bytes
+   avail lists: 1:5,2:2149,3:533,4:480,5:891,6:159,7:6733,8:92,9:843,10:27,11:753,12:1
+ 62093 multiletter control sequences out of 65536+600000
+ 152 fonts using 21793159 bytes
  122i,21n,135p,11328b,2593s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/public/xcharter/XCharter-Italic.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/google/roboto/RobotoMono-Italic.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/google/roboto/RobotoMono-Bold.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/google/roboto/RobotoMono-Regular.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/public/xcharter/XCharter-Bold.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/public/xcharter/XCharter-Roman.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/google/roboto/Roboto-Bold.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/google/roboto/Roboto-Regular.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on DEMO-TUDaThesis.pdf (73 pages, 1336119 bytes).
+Output written on DEMO-TUDaThesis.pdf (88 pages, 2187066 bytes).
 
-PDF statistics: 849 PDF objects out of 1000 (max. 8388607)
- 552 compressed objects within 6 object streams
- 170 named destinations out of 1000 (max. 131072)
- 610 words of extra memory for PDF output out of 10000 (max. 100000000)
+PDF statistics: 975 PDF objects out of 1000 (max. 8388607)
+ 632 compressed objects within 7 object streams
+ 202 named destinations out of 1000 (max. 131072)
+ 658 words of extra memory for PDF output out of 10000 (max. 100000000)
 

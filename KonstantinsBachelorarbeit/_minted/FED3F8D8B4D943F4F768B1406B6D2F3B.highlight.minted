@@ -8,6 +8,7 @@
             \PYG{c+c1}{\PYGZsh{}es gilt f(ray(tlast))=dlast und f(ray(tlast+diff))=d da t=tlast+diff}
             \PYG{c+c1}{\PYGZsh{}gesucht ist taprox mit f(ray(taprox))=thresh}
             \PYG{c+c1}{\PYGZsh{}taprox wird linear approximiert}
+            \PYG{n}{taprox}\PYG{o}{=}\PYG{n}{solvelinear}\PYG{p}{(}\PYG{n}{tlast}\PYG{p}{,}\PYG{n}{dlast}\PYG{p}{,}\PYG{n}{tlast}\PYG{o}{+}\PYG{n}{diff}\PYG{p}{,}\PYG{n}{d}\PYG{p}{,}\PYG{n}{thresh}\PYG{p}{)}
             \PYG{k}{return} \PYG{n}{ray}\PYG{p}{(}\PYG{n}{taprox}\PYG{p}{)}
         \PYG{n}{t}\PYG{o}{+=}\PYG{n}{diff}
     \PYG{k}{return} \PYG{n}{ray}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{)}

@@ -79,8 +79,14 @@
 \contentsline {subsection}{\numberline {8.5.2}Tile based rendering}{64}{subsection.8.5.2}%
 \contentsline {subsection}{\numberline {8.5.3}Polynom Auswertung über Koeffizienten}{65}{subsection.8.5.3}%
 \contentsline {chapter}{\numberline {9}Evaluierung}{68}{chapter.9}%
-\contentsline {section}{\numberline {9.1}Iterative Verfahren}{68}{section.9.1}%
-\contentsline {section}{\numberline {9.2}Grid basierte Verfahren}{71}{section.9.2}%
-\contentsline {section}{\numberline {9.3}RayMethod}{71}{section.9.3}%
-\contentsline {chapter}{\numberline {10}Schlussfolgerungen und Ausblick}{73}{chapter.10}%
+\contentsline {section}{\numberline {9.1}Volumenbasierte Verfahren}{68}{section.9.1}%
+\contentsline {subsection}{\numberline {9.1.1}Iterative Verfahren}{69}{subsection.9.1.1}%
+\contentsline {subsection}{\numberline {9.1.2}Grid basierte Verfahren}{72}{subsection.9.1.2}%
+\contentsline {subsection}{\numberline {9.1.3}RayMethod Und Intervall Subdivision}{72}{subsection.9.1.3}%
+\contentsline {subsection}{\numberline {9.1.4}Marching Cubes}{76}{subsection.9.1.4}%
+\contentsline {section}{\numberline {9.2}Raycasting}{79}{section.9.2}%
+\contentsline {section}{\numberline {9.3}udfaprox und newton}{79}{section.9.3}%
+\contentsline {section}{\numberline {9.4}Aberth}{84}{section.9.4}%
+\contentsline {section}{\numberline {9.5}ganja}{84}{section.9.5}%
+\contentsline {chapter}{\numberline {10}Schlussfolgerungen und Ausblick}{88}{chapter.10}%
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 
