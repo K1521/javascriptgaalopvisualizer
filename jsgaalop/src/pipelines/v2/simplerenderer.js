@@ -36,3 +36,21 @@ export class simplerenderer extends LazyRenderingPipeline{
   }
   isTilable(){return true;}
 }
+
+
+export class raycastrenderer{
+  constructor(gl,frag,color){
+      this.shader=new Shader(gl, vertRaycastFullscreen,frag );
+      this.shader.use();
+      gl.uniform4fv(this.shader.getUniformLocation('incolor'), [color.r,color.g,color.b,1.0]);
+  }
+  render(ctx){
+    const gl=ctx.gl;
+
+    gl.depthFunc(gl.LESS);
+    gl.enable(gl.DEPTH_TEST);
+    this.shader.use();
+    ctx.updateUniforms(this.shader);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+}

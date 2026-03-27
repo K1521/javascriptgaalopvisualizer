@@ -38,11 +38,9 @@ vec3 getNormal(vec3 p,vec3 rayDir){
     res*=sign(dot(res,rayDir));
     return -normalize(res);
 }
-#endif
-
-#if NORMALS_MODE==NORMALS_MODE_FIRST_DERIV_R
+#elif NORMALS_MODE==NORMALS_MODE_FIRST_DERIV_R
 vec3 getNormal(vec3 p,vec3 rayDir){
-    vec3 res=xyzDualsusR(p-0.01*rayDir).xyz;
+    vec3 res=xyzDualsusR(p-0.001*rayDir).xyz;
     res*=sign(dot(res,rayDir));
     return -normalize(res);
 }
@@ -131,7 +129,7 @@ void main() {
         //in tis case we dont need normals
     #elif NORMALS_MODE==NORMALS_MODE_PIXEL_GRADIENTS
         vec3 normal=getNormalPixelGradients(p);
-    #elif NORMALS_MODE==NORMALS_MODE_FIRST_DERIV
+    #elif NORMALS_MODE==NORMALS_MODE_FIRST_DERIV || NORMALS_MODE==NORMALS_MODE_FIRST_DERIV_R
         vec3 normal=getNormal(p,rayDir);
     #else
       #error "Unknown NORMALS_MODE"

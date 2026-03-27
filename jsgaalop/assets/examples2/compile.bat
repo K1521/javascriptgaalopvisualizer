@@ -1,9 +1,13 @@
 @echo off
 setlocal enabledelayedexpansion
 
+:: I used chatgpt to create this
 :: Pfade definieren
-set "BASE_DIR=C:\Users\konst\data\repos\jsgaalop\javascriptgaalopvisualizer\jsgaalop\assets\examples2"
-set "GAALOP_JAR=C:\Users\konst\Downloads\distribution-2.2.6.2-bin-20260311T133101Z-1-001\distribution-2.2.6.2-bin\starter-1.0.0.jar"
+:: set "BASE_DIR=C:\Users\konst\data\repos\jsgaalop\javascriptgaalopvisualizer\jsgaalop\assets\examples2"
+set "BASE_DIR=.\"
+:: set "GAALOP_JAR=C:\Users\konst\Downloads\distribution-2.2.6.2-bin-20260311T133101Z-1-001\distribution-2.2.6.2-bin\starter-1.0.0.jar"
+set "GAALOP_JAR=..\distribution-2.2.6.2-bin\starter-1.0.0.jar"
+
 
 set "INPUT_DIR=%BASE_DIR%\input"
 set "OUTPUT_DIR=%BASE_DIR%\compiled"

@@ -104,12 +104,12 @@
 \title{Visualisierung des Innenprodukt-Nullraums (IPNS) von geometrischer Algebra als Iso-Oberflächen}
 %\subtitle{3D-Visualisierung von Oberflächenhüllkurven an polynomialen Nullstellen mittels geometrischer Algebra}
 \author{Konstantin Bachem}
-\reviewer{Dietmar Hildenbrand \and Andr\'e Stork}
+\reviewer{Dr.-Ing. Dietmar Hildenbrand \and Hon.-Prof. Dr.-Ing. Andr\'e Stork}
 
 % The following elements will be placed on the title page
 \department{inf}% If defined the shorthand will be replaced by the full name otherwhise it's used directly.
-\institute{Institute}
-\group{Group}
+%\institute{}
+\group{Graphisch-Interaktive Systeme}
 
 \submissiondate{\today}
 \examdate{\today}
@@ -829,10 +829,10 @@ Der zweite Ansatz funktioniert über die Nullstellensuche des Inner/Outer-Produc
 Der Visualisierer soll später mit \textsc{Gaalop}Web zusammen genutzt werden können. Deshalb habe ich mich entschieden, das Ganze hauptsächlich als Webseite zu schreiben (also HTML und JavaScript). Davor hatte ich schon Experimente zur Visualisierung von geometrischer Algebra in Python gemacht wobei ich OpenGL, Numpy, CuPy, Sympy und Pyvista genutzt hatte. Dabei habe ich OpenGL Computeshader, CuPy und Numpy zum Numbercrunching genutzt, während zur Visualisierung von Primitiven Pyvista genutzt wurden, und zur Visualisierung von Raycasting OpenGL. 
 Da OpenGL sowohl zum Numbercrunching als auch zur Visualisierung genutzt werden kann, habe ich mich entschieden WebGL2 zu nutzen was im Prinzip die OpenGL Variante in JavaScript ist. Zudem benötige ich noch eine Library für lineare Algebra wie Matrix Inverse und QR-Zerlegung, wobei ich mich für mathjs entscheiden habe da diese Library weit verbreitet ist. Außerdem benötige ich eine Library zum plotten. Dabei habe ich mich für Plotty entschieden da es ähnlich zu Pyplot ist, was ich schon kannte.
 Der zweite Teil der Software ist ein Plugin für \textsc{Gaalop}, das wie der Rest von \textsc{Gaalop} in Java geschrieben ist.
-Zudem habe ich noch ein paar kleine Python Scripts mit Pandas benutzt, um Daten auszuwerten.
+Zudem habe ich noch ein paar kleine Python Scripts benutzt, um Daten auszuwerten.
 
 
-\chapter{Auf Raycasting basierende Methoden}
+\chapter{Raycasting Verfahren}
 In diesem Kapitel werden Methoden vorgestellt, die wie Ganja auf Raycasting aufbauen, um implizite Flächen effizient zu visualisieren. Dabei konzentriert sich das Kapitel auf Methoden zur Findung der ersten Nullstelle entlang eines Strahls. 
 Zum Schluss kommt noch ein Unterkapitel zur Tiefendarstellung, in dem es unter anderem um Normalgenberechnung geht. 
 
@@ -903,6 +903,8 @@ Dies entspricht genau dem Ausdruck für die UDF-Approximation mit Multiplizität
 Da das Verfahren eine lineare Näherung nutzt, ist es nur lokal konvergent. Deshalb lohnt es sich eine maximale Schrittweite einzuführen. Diese kann die Stabilität des Verfahrens stark verbessern. Außerdem ist das Verfahren bei einer zu großen Multiplizität auch instabil.  Die reellen Nullstellen von \(f\) haben alle mindestens eine Multiplizität von 2. 
 Ich habe trotzdem eine Default Multiplizität 1 gewählt da so Artefakte reduziert werden.
 
+In der Gui heißt das Verfahren \enquote{UdfAprox}.
+
 
 %TODOvorteile nschteile
 
@@ -947,12 +949,14 @@ Daraus folgt:
 Das bedeutet, dass das UDF-Approximation-Verfahren stabiler ist, allerdings gibt es Situationen in denen es nicht konvergiert. In diesen Fällen ist das Newtonverfahren die bessere Alternative.
 Auch hier macht eine maximale Schrittweite das Verfahren stabiler.
 %TODO multiplicität + bilder
-
+In der Gui heißt das Verfahren \enquote{Newton}.
 
 \subsection{Aberth-Verfahren}
 Im Gegensatz zum Newtonverfahren und der UDF-Aproximation findet das Aberth-Verfahren alle Nullstellen. Das Verfahren ist deshalb stabiler, allerdings auch wesentlich langsamer.
 
-Ich habe Zwei Varianten des Verfahrens entwickelt, wobei die Zweite Variante einfacher und schneller ist. Dabei basiert die Zweite Variante auf der Matrix Variante die im Kapitel Implementierung eingeführt wird und wird im Abschnitt~\ref{sec:Schnelle_Nullstellensuche} beschrieben.
+Ich habe Zwei Varianten des Verfahrens entwickelt, wobei die Zweite Variante einfacher und schneller ist. Dabei basiert die Zweite Variante auf der Matrixvariante die im Kapitel Implementierung eingeführt wird und wird im Abschnitt~\ref{sec:Schnelle_Nullstellensuche} beschrieben.
+
+Das hier beschriebene Verfahren ist aktuell nicht für die neue Codegenerierung implementiert, da die andere Variante besser ist. Deswegen ist das Verfahren nicht in der GUI.
 %TODO Symbolic link
 
 Eine interessante Eigenschaft dieses Polynoms, die ich später ausnutzen werde, ist, dass alle seine komplexen Nullstellen als konjugierte Paare auftreten.
@@ -1074,8 +1078,8 @@ Die maximale Anzahl der Nullstellen ist durch den Grad von \( f \) gegeben.
   
 \section{Tiefenhinweise zur visuellen Unterstützung}
 Es gibt verschiedene Möglichkeiten, um Tiefe zu veranschaulichen.  
-Ich habe zwei Methoden ausprobiert: Beleuchtung und ein „Schachbrett“-Muster.
-\subsection{Oberflächennormale und Licht}
+Ich habe zwei Methoden ausprobiert: Beleuchtung und ein \enquote{Schachbrett}-Muster.
+\subsection{Oberflächennormale und Beleuchtungsmodell}
 
 
 Für ein einfaches Beleuchtungsmodell werden Oberflächennormalen benötigt.  
@@ -1117,7 +1121,9 @@ Auch hier zeigen die Normalen wieder in Richtung Kamera.
 
 Der Vorteil von dieser Methode ist, dass kein weiterer Berechnungsaufwand benötigt wird und sie sehr einfach zu implementieren ist. 
 Ein Nachteil besteht jedoch darin, dass benachbarte Pixel in 2x2-Blöcken identische Normalen erhalten (zumindest bei mir, das Verhalten ist implementationsabhängig). Das bedeutet, dass die Beleuchtung bei dieser Methode effektiv nur mit halber Auflösung berechnet wird.  
-Ein weiterer Nachteil ist, das dieses Verfahren viel stärker vom Rauschen von \(\mathbf{p}\) beeinflusst wird. Ich habe mich trotzdem für diese Methode entschieden.
+Ein weiterer Nachteil ist, das dieses Verfahren viel stärker vom Rauschen von \(\mathbf{p}\) beeinflusst wird. Ich habe mich trotzdem meistens für diese Methode entschieden.
+
+Aktuell wird ein einfaches Phong Beleuchtungsmodell benutzt wobei die Lichtquelle in der Kamera sitzt. Dies hat den Vorteil, dass es keine wirklich dunklen Bereiche gibt. 
 
 %Bilder
 
@@ -1127,11 +1133,11 @@ Um zusätzliche Tiefenhinweise zu erzeugen, können einfache Muster auf das Obje
 
 Im Folgenden stelle ich zwei solcher Muster vor: ein Schachbrett-Muster in 3D und ein Gitter aus Isolinien entlang der Koordinatenachsen.
 
-Für das Schachbrett Muster wird der Raum in helle und dunkle Würfel eingeteilt (also wie bei einem Schachbrett aber in 3D). Für den Punkt \( \mathbf{p} \) wird geguckt, ob er in einem hellen oder dunklen Würfel landet und er wird dementsprechend heller oder dunkler eingefärbt.
+Für das Schachbrett-Muster wird der Raum in helle und dunkle Würfel eingeteilt (also wie bei einem Schachbrett aber in 3D). Für den Punkt \( \mathbf{p} \) wird geguckt, ob er in einem hellen oder dunklen Würfel landet und er wird dementsprechend heller oder dunkler eingefärbt.
 
-Das Isolinien Muster erzeugt ein einfaches Gittermuster entlang der drei Achsen. Ähnlich wie bei dem Schachbrett muster wird für den Punkt \( \mathbf{p} \) geprüft, ob er auf dem Gitter landet und dementsprechend eingefärbt. 
+Das Isolinien-Muster erzeugt ein einfaches Gittermuster entlang der drei Achsen. Ähnlich wie bei dem Schachbrett-Muster wird für den Punkt \( \mathbf{p} \) geprüft, ob er auf dem Gitter landet und dementsprechend eingefärbt. 
 
-Ich finde das Isolinien muster normalerweise schöner, allerdings hat es ein paar Artefakte was es hässlich macht.
+Ich finde das Isolinien-Muster normalerweise schöner, allerdings hat es ein paar Artefakte weshalb ich mich für das checker Muster entschieden habe.
 
 Gegenüber des Beleuchtungsmodells erzeugen diese Texturen einen starken 3D-Eindruck und sind einfacher zu implementieren. Natürlich kann man auch Texturierung und Beleuchtungsmodell gleichzeitig verwenden. Wie auch bei dem Beleuchtungsmodell wird durch das Rauschen von \(\mathbf{p}\) Rauschen in der Textur erzeugt. 
 
@@ -1148,7 +1154,7 @@ Gegenüber des Beleuchtungsmodells erzeugen diese Texturen einen starken 3D-Eind
 \begin{figure}
     \centering
     \includegraphics[width=1\linewidth]{pictures/checkerandiso.png}
-    \caption{Hier sieht man \enquote{iso} Textur (links) und \enquote{checker} Textur (rechts).}
+    \caption{Hier sieht man die \enquote{Iso}-Textur (links) und \enquote{Schachbrett}-Textur (rechts).}
 
     \label{fig:checkerandiso}
 \end{figure}
@@ -1159,8 +1165,8 @@ Gegenüber des Beleuchtungsmodells erzeugen diese Texturen einen starken 3D-Eind
 
 
 
-\chapter{Non Raycasting Based}
-Die Nicht auf Raycasting basierenden Methoden Konzentrieren sich darauf grafische Primitive (Punkte, Dreiecke und Linien) zu generieren und diese dann zu visualisieren. Anders als bei \textsc{Gaalop} passiert die Auswertung des Nullraums dabei auf der GPU. Dabei ist das Anzeigen von Primitiven oft Schneller als die Raycasting Methoden. 
+\chapter{Volumenbasierte Verfahren}
+Die Nicht auf Raycasting basierenden Methoden konzentrieren sich darauf, grafische Primitive (Punkte, Dreiecke und Linien) zu generieren und diese dann zu visualisieren. Anders als bei \textsc{Gaalop} passiert die Auswertung des Nullraums dabei auf der GPU. Dabei ist das Anzeigen von Primitiven oft Schneller als die Raycasting Methoden. 
 
 \section{RayMethod}
 Dieses Verfahren ist prinzipiell eine Erweiterung der Ray Method aus \textsc{Gaalop}. Der Unterschied ist hauptsächlich, dass statt eines Intervallhalbierungsverfahren und Intervallarethmetik das Aberth-Verfahren zur Nullstellensuche benutzt wird.
@@ -1201,23 +1207,27 @@ Um zu bestimmen, ob Teile von $f$ in einem Voxel liegen, wird der Voxel mittels 
 0 \notin f([x_{\text{low}},x_{\text{high}}],[y_{\text{low}},y_{\text{high}}],[z_{\text{low}},z_{\text{high}}]) \implies \text{Voxel leer} 
 \]
 
-Diese Methode kann Mathematisch garantieren kann das ein Voxel leer ist. Wenn 0 im Ergebnis liegt, bedeutet dies jedoch nicht das teile des Objektes im Voxel liegen.
+Diese Methode kann Mathematisch garantieren, dass ein Voxel leer ist. Wenn 0 im Ergebnis liegt, bedeutet dies jedoch nicht das Teile des Objektes im Voxel liegen.
 Durch die Voxel-Subdivision werden die Intervalle in der nächsten Iteration kleiner. Das bedeutet das auch die Ergebnisse besser werden und mehr Voxel können entfernt werden.
 Leider können die Bounds sehr groß sein was zu vielen unnötig berechneten Voxeln führt.
 Das Verfahren unterteilt die Voxel bis eine maximale Unterteilungstiefe oder eine maximale Anzahl von Voxeln erreicht ist.
+
+
+In der GUI heißt das Verfahren \enquote{VoxelSubdivision}.
 
 \begin{figure}
     \centering
     \includegraphics[width=1\linewidth]{pictures/voxeldist2.png}
     \caption{Hier sieht man einen Torusausschnitt (Blau), ein Ebenenausschnitt (Grün) und den Schnitt von Ebene und Torus (Rot).
-    Dabei sieht man, dass der Ebenenauschnitt wegen der großen Bounds sehr dick ist, obwohl dieser in Realität eine ebene sein müsste. Außerdem kann man sehen, dass die Punkte sehr klein sind.}
+    Dabei sieht man, dass der Ebenenauschnitt wegen der großen Bounds sehr dick ist, obwohl dieser in Theorie eine Ebene sein müsste. Außerdem kann man sehen, dass die Punkte sehr klein sind.}
 
-    \label{fig:texturundphong}
+    \label{fig:voxeldist2}
 \end{figure}
+
 
 \subsubsection{Better Intervall arethmetic bounds}
 Um die Bounds der Intervallarithmetik zu verbessern kann \(f\) symbolisch umgeformt werden. 
-Beim Testen habe ich festgestellt das die Bounds um 0 herum kleiner sind. Deshalb habe ich ein Verfahren entwickelt, dass die Funktion "verschiebt" um sie dann um 0 herum auszuwerten. Aktuell habe ich diese Methode jedoch nicht für die aktuellste Codegenerierung reimplementiert.
+Beim Testen habe ich festgestellt das die Bounds um 0 herum kleiner sind. Deshalb habe ich ein Verfahren entwickelt, dass die Funktion \enquote{verschiebt} um sie dann um 0 herum auszuwerten. Aktuell habe ich diese Methode aus Komplexitätsgründen jedoch nicht für die aktuellste Codegenerierung reimplementiert.
 
 
 
@@ -1237,7 +1247,7 @@ y = y_0 + I_y \cdot \delta_y, \quad
 z = z_0 + I_z \cdot \delta_z
 \]
 \( I_x, I_y, I_z \in [-1, 1] \) sind symbolische Variablen, die die Unsicherheit repräsentieren und \( x_0,y_0,z_0 \) sind Skalare.
-Dabei wird mit den variablen \( I_x, I_y, I_z\) gearbeitet, da diese mit normalen regeln vereinfacht werden können.
+Dabei wird mit den Variablen \( I_x, I_y, I_z\) gearbeitet, da diese mit normalen Regeln vereinfacht werden können.
 Beispielsweise ist \([-1,1]-[-1,1]=[-2,2]\) aber \(I_x-I_x=0\).
 
 
@@ -1251,6 +1261,8 @@ f(x_0 + I_x \delta_x,\, y_0 + I_y \delta_y,\, z_0 + I_z \delta_z) = \sum_{a,b,c}
 Die Koeffizienten \( c_{a,b,c} \) hängen von den ursprünglichen Koeffizienten des Polynoms sowie von \( x_0, y_0, z_0 \) und den Skalierungen \( \delta_x, \delta_y, \delta_z \) ab. Dabei ist \(c_{0,0,0}=f(x_0,y_0,z_0)\).
 Zur Auswertung wird einfach  \( I_x=[-1,1], I_y=[-1,1], I_z=[-1,1]\) eingesetzt und die Funktion kann mit den normalen Intervallarithmetikregeln ausgewertet werden.
 Da diese Transformation nur aus Einsetzen und Vereinfachen besteht, bleibt die mathematische Bedeutung der Funktion exakt erhalten. Allerdings sind die Bounds des Ergebnisses oft besser. 
+Im Prinzip wird eine Tailoraproximation berechnet, welche dann mittels Intervallarethmetik ausgewerted wird.
+Der Nachteil der Methode ist, dass das Ausmultiplizieren relativ langsam ist.
 % die bounds sind meiner meinung deshalb besser, da subtraktionen simbolisch gecancelt werden können. x*x-x*x mit x=x0+[-1,1]->[-4*x,4*x] if  not in x, aber mit ausmultiplizieren haben wir nur c_{a,b,c}=0
 
 \subsubsection{Bound compare}
@@ -1280,7 +1292,7 @@ Um dem entgegenzuwirken, kann ein Sicherheisfaktor eingeführt werden:
 \]
 
 Dabei muss beachtet werden, dass die meisten Verfahren nur lokal konvergieren. Deshalb funktioniert diese Methode am besten, um das Ergebnis der Intervallarithmetik Voxel zu filtern. Dieses Verfahren ist aktuell nicht implementiert.
-Ich hatte eine vereinfachte Version des Verfahrens zur Demonstration implementiert. Dies war ohne Subdivision implementiert, und machte nur eine Iteration. Allerdings war es zu ähnlich zu einer der Gridbasierten Verfahren, weshalb ich es wieder rausgenommen habe (der Code ist noch da aber nicht in der Gui).
+Ich habe statdessen eine vereinfachte Version des Verfahrens implementiert. Dies ist ohne Subdivision implementiert, und macht nur eine Iteration. In der Gui heißt das Verfahren \enquote{GridVoxel}.
 
 
 
@@ -1308,7 +1320,7 @@ Eine besondere Betrachtung ist für die Ecken mit 0 als Ableitung erforderlich. 
 Dabei baut die Marching Cubes Variante auf den Intervallarithmetik-Voxeln auf. Das bedeutet, die Voxel werden erst unterteilt und gefiltert und dann wird auf den restlichen Voxeln das Verfahren berechnet. 
 
 Im Fall in dem \(\mathbf{F}\) nur einen Output hat, muss das Ergebnis nicht quadriert werden. In diesem Fall wird, falls es einen Vorzeichenwechsel gibt das normale Marching Cubes Verfahren benutzt.
-
+In der Gui heißt das Verfahren Marching Cubes.
 \section{Iterative Verfahren}
 Ich habe mich entschieden die GradientMethod aus \textsc{Gaalop} nachzuimplementieren. Zusätzlich habe ich noch drei weitere iterative Verfahren hinzugefügt.
 Die Verfahren starten alle auf einem voll besetzten äquidistanten 3D-Gitter an Punkten. Dann werden mehrere Iterationen berechnet, und zum Schluss werden die Punkte über einen Schwellwert gefiltert und dann als Punkte visualisiert.
@@ -1320,10 +1332,12 @@ GradNewton:
 \(\mathbf{x}_{k+1} = \mathbf{x}_k - \alpha_k \frac{f(\mathbf{x}_k)}{\|\nabla f(\mathbf{x}_k)\|^2} \nabla f(\mathbf{x}_k)\)
 Dies ist ein hybrid aus Newton-like und GradientMethod. Die Schrittweite wird immer verringert, wenn das Skalarprodukt der Ableitung und der vorherigen Ableitung kleiner null ist, und sonst erhöht.
 Außerdem habe ich noch ein auf dem Levenberg Marquad Schritt basierendes verfahren implementiert.
-\section{Grid basierte Verfahren}
-TopGrid ist im Prinzip eine Reimplementierung der Discrete Cube Method aus Gaalop. Dabei wird nicht wiein Gaalop der Schwellwert für \(f\) eingestellt. Stattdessen werden die Punkte anhand der Größe des Nullraums an der jeweiligen Position sortiert, und es werden die Punkte mit den kleinsten Werten entsprechend eines einstellbaren Perzentils dargestellt.
+In der GUI heißt das Verfahren \enquote{IiterGrid}.
+\section{Gitter basierte Verfahren}
+TopGrid ist im Prinzip eine Reimplementierung der Discrete Cube Method aus Gaalop. Dabei wird nicht wie in Gaalop der Schwellwert für \(f\) eingestellt. Stattdessen werden die Punkte anhand der Größe des Nullraums an der jeweiligen Position sortiert, und es werden die Punkte mit den kleinsten Werten entsprechend eines einstellbaren Perzentils dargestellt.
 Dabei habe ich zusätzlich zur Auswertung des Nullraums weitere Bewertungsfunktionen implementiert. Zum einen die Länge der Udf-Aproximation und zum anderen die Länge eines Gauss Newton Schtrittes an dem entsprechenden Punkt.
-
+In der GUI heißen die Verfahren \enquote{TopGrid} und \enquote{TopGridVoxel}. 
+Dabei nutzt das Voxel Verfahren eine einfache auf Geschwindigkeit optimierte Version von Dual Contouring um das Grid als Voxel statt als Punktwolke darzustellen. 
 
 
 
@@ -1342,9 +1356,9 @@ Alle Shader welche den Nullraum auswerten sind nur Templates. Deshalb wird mitte
 Als Nächstes wird die Gameloop gestartet.
 In jedem Gameloop Durchlauf wird zuerst die Methode updateParams des RenderContextes aufgerufen. Diese Methode ruft die update Methoden der aktiven Pipelines auf. Immer wenn sich Parameter ändern, müssen die primitive für die Volumenbasierten Pipelines neu generiert werden und auch für die Raycasting Methoden müssen teile des Graphs neu ausgewertet werden und die Shader uniforms entsprechend aktualisiert werden. 
 
-Dann kommt die Methode Render welche die entsprechenden render Methoden der Pipelines aufruft. Es wird nur neu gerendert, wenn sich die Parameter oder die Kamera geändert haben.
+Dann kommt die Methode \enquote{render} welche die entsprechenden render Methoden der Pipelines aufruft. Es wird nur neu gerendert, wenn sich die Parameter oder die Kamera geändert haben.
 Beim Rendern wird erst ein Bild mit niedriger Auflösung gerendert und dann über mehrere Frames ein hochauflösendes Bild. Dies wird im Abschnitt \ref{sec:tilebased} näher beschrieben.
-Nachdem das Bild vollständig gerendert ist, werden die Diagramme eventuell upgedated.
+Nachdem das Bild vollständig gerendert ist, werden die Diagramme eventuell aktualisiert.
 
 \section{Matrixvariante}
 
@@ -1445,7 +1459,8 @@ Sei nun \(\mathbf{F}_R=R \cdot  \mathbf{P}(x,y,z)\).
 Um die Nullstellensuche entlang eines Strahls zu beschleunigen, kann sie erst auf nur einer Zeile von \(R\) beschränkt werden, anstatt das ganze Gleichungssystem zu betrachten. Die reellen Nullstellen von \(f\) sind der Schnitt der Nullstellen der Komponentenpolynome von 
 \(\mathbf{F}_R\). Es gilt \(f = 0 \iff \forall i\, (\mathbf{F}_R)_i = 0\). Bestimmt man also zunächst die Nullstellen einer einzelnen Komponente \((\mathbf{F}_R)_i\)(mit \((\mathbf{F}_R)_i \not\equiv 0\)), so kann man anschließend prüfen, ob dies auch Nullstellen von \(f\) sind. Die Nullstellensuche von \((\mathbf{F}_R)_i\) ist dabei wesentlich einfacher, da \((\mathbf{F}_R)_i\) einen kleineren Grad hat und schneller auszuwerten ist. Außerdem sind Nullstellen nicht unbedingt konjugate pairs was zu einer besseren Konvergenz des Aberth-Verfahrens führt.
 
-Die Prüfung, ob die Nullstellen von \((\mathbf{F}_R)_i\) auch Nullstellen von \(\mathbf{F}_R\) sind ist allerdings komplizierter. Ich habe mich entschieden an den potenziellen Nullstellen einen Levenberg Marquad Schritt auszuwerten, um dann zu prüfen, ob die Länge dieses Schritts unter einem Schwellwert liegt. Alternativ könnte man auch die UDFAprox oder \(\mathbf{F}_R\) an den Nullstellen auswerten und testen, ob dies unter einem Schwellwert liegt.
+Die Prüfung, ob die Nullstellen von \((\mathbf{F}_R)_i\) auch Nullstellen von \(\mathbf{F}_R\) sind ist allerdings komplizierter. Ich habe mich entschieden an den potenziellen Nullstellen einen Levenberg Marquad Schritt auszuwerten, um dann zu prüfen, ob die Länge dieses Schritts unter einem Schwellwert liegt. Alternativ habe ich auch eine Version implementiert welche die UDFAprox an den Nullstellen auswerte und teste, ob diese unter einem Schwellwert liegt.
+In der Gui heißen die Verfahren \enquote{AberthGN} (Levenberg Marquad) und \enquote{Aberth} (Udf Approximation).
 
 Weiterhin kann \(R\) und \( \mathbf{P}\) so konstruiert werden, dass \((\mathbf{F}_R)_i\) einen von i abhängen Grad hat.
 Vor der Konstruktion von \(R\) können die Polynome in \( \mathbf{P}\) so sortiert werden, sodass Polynome mit niedrigerem Grad weiter unten sind. Entsprechend müssen auch die Spalten von M permutiert werden.
@@ -1468,7 +1483,7 @@ Dies passiert in mehreren Schritten.
 Als Erstes wird der Graph in \textsc{Gaalop} erzeugt und durch ein Plugin als json exportiert.
 Dann wird das json in JavaScript eingelesen und wieder zu einem Graph deserialisiert.
 Als Nächstes wird der Graph manipuliert. Dazu gehören Vereinfachung, Ableitungsberechnungen und Splitting.
-Zum Schluss wird dann aus daraus Code in glsl generiert.
+Zum Schluss wird dann aus daraus Code in glsl generiert welche die Auswertung in Shadern ermöglicht.
 %json zu graph
 
 %graph split
@@ -1551,7 +1566,7 @@ f &= \sqrt{(m_x - x)^2 + (m_y - y)^2 + (m_z - z)^2} - r
 \end{align*}
 
 Bei der Visualisierung wird der erste Teilgraph einmal auf der CPU ausgewertet.  
-Der zweite Teilgraph wird anschließend vielfach auf der GPU ausgewertet mit verschiedenen werten für \(x,y,z\), wobei die 
+Der zweite Teilgraph wird anschließend vielfach auf der GPU ausgewertet mit verschiedenen Werten für \(x,y,z\), wobei die 
 Ergebnisse des ersten Teilgraphs als konstante Eingaben dienen.
 
 Das Auseinanderschneiden des Graphen verkleinert also den GPU Graph maßgeblich (und führt zu besserer Performance).
@@ -1652,7 +1667,9 @@ verwendet wurde.
 \end{itemize}
 
 
-Die neue Codegenerierung kann alles generieren, was die alte Codegenerierung generieren konnte. Zusätzlich wird der Code für die Matrix Variante generiert. Dabei hat die Matrixvariante ähnliche Methoden mit leicht anderen Namen die praktisch das Gleiche berechnen.
+Die neue Codegenerierung kann alles generieren, was die alte Codegenerierung generieren konnte. Zusätzlich wird der Code für die Matrixvariante generiert. Dabei hat die Matrixvariante ähnliche Methoden mit leicht anderen Namen die praktisch das Gleiche berechnen.
+
+Aktuell wird nur noch die Matrixvariante benutzt.
 
 %void MatmulRDense(vec4[basislength] P,out vec4[basislength] b){?}
 %void MatmulRDense(vec2[basislength] P,out vec2[basislength] b){?}
@@ -1678,7 +1695,7 @@ Anfangs habe ich zur Ableitungsberechnung dualen Zahlen verwendet. Dies ließ si
 Mein erster Ansatz bestand darin für jeden Typ neue Codegenerierung zu schreiben. Dabei gab es in der Regel zwei Typen pro Codegenerierung. Skalare und den Typ über dem die Codegenerierung stattfindet. Wenn beispielsweise über den komplexen Zahlen ausgewertet wurde, waren die gesplitteten Inputs von der CPU Skalare und die sich ändernden Variablen Komplexe Zahlen. Alle Operationen zwischen Skalaren und anderen Typen haben dann den anderen Typen als Output. Also Beispielsweise:
 Mul(skalar a,Complex b)-> Complex
 
-Dabei habe ich oft den skalar einfach hochkonvertiert. Also statt Mul(skalar a,Complex b) zu implementieren kann Mul(Complex a,Complex b) benutzt werden wobei a zu einer komplexen Zahl gecastet wird. Das macht das Ganze einfacher aber auch langsamer. 
+Dabei habe ich oft den Skalar einfach hochkonvertiert. Also statt Mul(skalar a,Complex b) zu implementieren kann Mul(Complex a,Complex b) benutzt werden wobei a zu einer komplexen Zahl gecastet wird. Das macht das Ganze einfacher aber auch langsamer. 
 Die typen waren unter anderem: Skalare, Complexe Zahlen, Duale Zahlen, Complexe Duale, Intervalle,3d Duale.
 Dieser Ansatz war relativ unflexibel und unübersichtlich. Anfangs ging es noch, allerdings hatte ich weitere Ideen und habe dann immer mehr Typen hinzugefügt. 
 
@@ -1690,11 +1707,11 @@ Als Nächstes habe ich mich entschieden die Ableitungsberechnung auf Backproperg
 Erstens gibt es nur noch 3 typen: Skalare, komplexe Zahlen und Intervalle was die Codegenerierung wesentlich einfacher macht. Und zweitens müsste Backpropergation theoretisch bei manchen Ansätzen schneller sein da weniger Multiplikationen benötigt werden.
 
 Im aktuellen Ansatz habe ich versucht die anderen Ansätze zu vereinigen.
-Ich habe mich entschieden die Typ Propergation während der Codegenerierung zu machen wobei ich den Code dafür in die Nodes gepackt habe. Das macht den Code kleiner, allerdings ist das typisierte auswerten in JavaScript nicht möglich.
-Die neue Codegenerierung ist flexibler und hat weniger Bugs. Da es in der alten Codegenerierung für jede Funktion eine eigene Klasse zur Codegenerierung gab, war es wesentlich schwerer Bugs zu fixen da sie teilweise in jeder der Codegenerierungen gefixt werden müssten. Deshalb habe ich die neue Codegenerierung geschrieben.
+Ich habe mich entschieden die Typ Propergation während der Codegenerierung zu machen, wobei ich den Code dafür in die Nodes gepackt habe. Das macht den Code kleiner, allerdings ist das typisierte auswerten in JavaScript nicht möglich.
+Die neue Codegenerierung ist flexibler und hat weniger Bugs. Da es in der alten Codegenerierung für jede Funktion eine eigene Klasse zur Codegenerierung gab, war es wesentlich schwerer Bugs zu fixen da sie teilweise in jeder der Klassen gefixt werden müssten. Dies war der hauptgrund weshalb ich die neue Codegenerierung geschrieben.
 
 Ein Problem, das in beiden Codegenerierungen besteht, ist der zu große Code nicht kompilierbar ist.
-Teilweise haben Multivektorprodukte Hunderte an Outputs was bedeutet, dass der WebGL2 Compiler ohne Fehlermeldung aufgibt wobei zusätzlich teilweise der WebGL2 Kontext abstürzt. Die Matrix Version der neuen Codegenerierung Fixt dieses Problem.
+Teilweise haben Multivektorprodukte Hunderte an Outputs was bedeutet, dass der WebGL2 Compiler ohne Fehlermeldung aufgibt wobei zusätzlich teilweise der WebGL2 Kontext abstürzt. Die Matrixvariante der neuen Codegenerierung Fixt dieses Problem.
 
 \subsection{Vereinfachung}
 Durch die Manipulation des Graphen entstehen Artefakte wie beispielsweise Multiplikation mit 1. Deshalb wird der Graph vereinfacht. Zu den Vereinfachungen gehören unter anderem:
@@ -1724,13 +1741,13 @@ Dazu werden alle Nodes aus dem Graph extrahiert die nur von den Variablen x,y od
 
 %mobile
 Der nächste Schritt ist die Auswahl einer maximal linear unabhängigen Untermenge dieser Nodes. Dafür wird für jede Node ein Koeffizientenvektor in einer Monombasis und die Anzahl der vorfahren berechnet.
-Die Nodes werden sortiert nach Anzahl der vorfahren und dann der Reihe nach zu P hinzugefügt, falls sie linear unabhängig von den schon hinzugefügten Polynomen sind. Ich nutze dazu eine modifizierte Version des Modifizierten Gram-Schmidtschen Orthogonalisierungsverfahren.
+Die Nodes werden sortiert nach Anzahl der Vorfahren und dann der Reihe nach zu P hinzugefügt, falls sie linear unabhängig von den schon hinzugefügten Polynomen sind. Ich nutze dazu eine modifizierte Version des Modifizierten Gram-Schmidtschen Orthogonalisierungsverfahren.
 %https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
 
 Nachdem P vollständig ist, wird im Prinzip der alte Ansatz genutzt, um M zu erhalten.
 
 Durch das ausmultiplizieren und Multiplikation mit der Basiswechselmatrix kann der CPU Teilgraph wesentlich größer werden. Deshalb ist dieser Ansatz schnell auf der GPU aber langsam auf der CPU.
-
+Da die CPU jedoch wesentlich weniger auswertungen macht, ist dies jedoch nicht wirklich ein Problem.
 
 
 Zwischendurch habe ich einfach eine Monombasis genutzt. Dies funktioniert auch, ist aber langsamer auf der GPU.
@@ -1954,6 +1971,14 @@ Ich finde die Ergebnisse der Methode visuell weder in gaalop, noch in meiner Imp
 
 Die Udf-Aproxomation Variante von TopGrid hingegen liefert wesentlich bessere Ergebnisse . Auch der Gauss-Newton  Ansatz funktioniert relativ gut auch wenn es bei Flächen ein paar Ausreißer gibt.
 Dabei ist die Auswertung der Udf-Aproximation mit 459-504 Sekunden und des Gauss-Newton Ansatzes mit 482-508 Sekunden ungefähr genauso schnell.
+
+Neben TopGrid habe ich außerdem TopGridVoxel implementiert. Dies funktioniert genauso wie TopGrid. Mit dem Unterschied, dass die Visualisierung als Voxel anstatt als Punktwolke stattfindet.
+Die Auswerungsgeschwindigkeit is mit 0,332-0,406 Sekunden interessanterweise schneller.
+Dabei wird etwa jeweils ein viertel der Zeit für array soertieren und auswertung des nullraums verbraucht, während die restliche Zeit für die meshgenerierung gebraucht wird. Das Sortieren ist hierbei scheller, da ich anstatt die punkte zu sortieren nur den nullraum sortiere.
+
+Außerdem giebt es noch GridVoxel. Dieser ansatz implementiert die 
+
+
 \begin{figure}
     \centering
     \includegraphics[width=1\linewidth]{pictures/TopGrid.png}
@@ -2005,7 +2030,7 @@ Zusammenfassend lässt sich sagen, dass Gaalops Version schlechte Ergebnisse fü
     \includegraphics[width=1\linewidth]{pictures/voxelsubdivision.png}
     \caption{voxelsubdivision in meiner software}
 
-    \label{fig:GaalopRayMethod}
+    \label{fig:voxelsubdivision}
 \end{figure}
 
 \begin{figure}
@@ -2013,11 +2038,11 @@ Zusammenfassend lässt sich sagen, dass Gaalops Version schlechte Ergebnisse fü
     \includegraphics[width=1\linewidth]{pictures/rayundsubdivision2.png}
     \caption{raymethod für ebene und torus und voxelsubdivision für die intersection in meiner software}
 
-    \label{fig:GaalopRayMethod}
+    \label{fig:rayundsubdivision2}
 \end{figure}
 
 \subsection{Marching Cubes}
-Die Marching Cubes variante Funktioniert relativ gut. Die Darstellung als Dreiecke statt Punkten ist wesentlich besser. Allerdings gibt es Grenzfälle in denen die Meshgenerierung fehlerhaft ist. Weiterhinn Funktioniert das Verfahren nur für Oberflächen und nicht für Kurven.
+Die Marching Cubes variante Funktioniert relativ gut. Die Darstellung als Dreiecke statt Punkten ist wesentlich besser. Allerdings gibt es Grenzfälle in denen die Meshgenerierung fehlerhaft ist. Das verfahren hat also gute ergebnisse allerdings ist es manichmal etwas instabiel. Weiterhinn Funktioniert das Verfahren nur für Oberflächen und nicht für Kurven.
 
 
 
@@ -2028,7 +2053,7 @@ Anforderungen
 Visuelle Artefakte
 Stabilität (wie wichtig ist hyperparameter tuning)
 Performance
-\section{udfaprox und newton}
+\subsection{udfaprox und newton}
 Bei diesen Verfahren gibt es drei Möglichkeiten für fehlerhafte Darstellung. Entweder wird ein zu großer Schritt gemacht und die Nullstelle wird übersprungen, oder es werden zu kleine Schritte gemacht und die Nullstelle wird nie erreicht, oder das Verfahren denkt, es habe eine Nullstelle gefunden, obwohl dies nicht der Fall ist.
 
 Dabei hat das udfaprox-Verfahren in der Regel das Problem, dass es nicht konvergiert, wobei das Newtonverfahren Nullstellen überspringt.
@@ -2063,7 +2088,7 @@ Versuche, Ergebnisse, Beurteilung anderer
 \begin{figure}
     \centering
     \includegraphics[width=1\linewidth]{pictures/torusudfaprox.png}
-    \caption{\(f_\text{ray}\) des Torusses und die udf-Approximation entlang eines strahls durch ein lokales maximum. (das maximum in diesem fall liegt in der mitte des rings des torusses.)  }
+    \caption{\(f_\text{ray}\) des Torusses und die udf-Approximation (gestrichelt) entlang eines strahls durch ein lokales maximum. (das maximum in diesem fall liegt in der mitte des rings des torusses.)  }
 
     \label{fig:torusudfaprox}
 \end{figure}
@@ -2076,23 +2101,27 @@ Versuche, Ergebnisse, Beurteilung anderer
     \label{fig:torusvoninnen}
 \end{figure}
 
-\section{Aberth}
+\subsection{Aberth}
 Das Aberth-Verfahren findet die imaginären Nullstellen eines Teilpolynoms und versucht dann herauszufinden, ob die imaginären Nullstellen echte Nullstellen sind. Dazu wird die udf-Approximation benutzt.
 
 Im Vergleich zu den anderen Verfahren hat dieses Verfahren wenige Artefakte und ist relativ stabil. Artefakte entstehen hauptsächlich dadurch, dass die imaginären Nullstellen fehlerhafterweise visualisiert werden.
 
-Im Gegensatz zur udf-Approximation ist das Verfahren nur schlecht geeignet, um Kurven darzustellen. Das liegt daran, dass ein größerer Threshold bedeutet, dass die imaginären Nullstellen verstärkt dargestellt werden, was mehr Artefakte verursacht. (Ein kleiner Schwellwert funktioniert, allerdings sind die Kurven sehr dünn.)
+Im Gegensatz zur udf-Approximation ist das Verfahren nur schlecht geeignet, um Kurven darzustellen. Das liegt daran, dass ein größerer Threshold bedeutet, dass die imaginären Nullstellen verstärkt dargestellt werden, was mehr Artefakte verursacht. (Ein kleiner Schwellwert funktioniert, allerdings sind die Kurven dann sehr dünn.)
+
+Das Aberth-Verfahren hat relativ hochfrequentes Rauschen auf den gefundenen Nullstellen. Deshalb habe ich mich entschieden, die aufwendigere Methode zur Normalenberechnung anhand der Ableitung des Nullraums zu implementieren.
+
+Das Aberth-Verfahren ist mit 15 fps etwas langsamer als die anderen Methoden und braucht ca. 1,6 Sekunden für das Tile-Rendering.
 
 
 \begin{figure}
     \centering
     \includegraphics[width=1\linewidth]{pictures/aberthbad.png}
-    \caption{Aberth verfahren mit zu groß gewähltem threshold. Man kann sehen wie die Imaginären nulstellen in der nähe des torusses fehlerhaft dargestellt werden.}
+    \caption{Aberth-Verfahren mit zu groß gewähltem Threshold. Man kann sehen, wie die imaginären Nullstellen in der Nähe des Torus fehlerhaft dargestellt werden.}
 
-    \label{fig:torusvoninnen}
+    \label{fig:aberthbad}
 \end{figure}
 
-\section{ganja}
+\subsection{ganja}
 Wie schon beschrieben nutzt ganja Sphere Tracing mit \(\sqrt{f_\text{ray}(t)}\)
 als Distanzfunktion. Das Hauptproblem ist, dass dieses Verfahren sehr instabil für hochdimensionale Algebren ist. Ich musste viel mit Parametern herumprobieren, bis überhaupt ein sichtbares Bild entsteht, und bei falschen Parametern verschwindet das Objekt einfach. Und auch dann sind Objekte nur in der Nähe der Kamera sichtbar.
 
@@ -2113,10 +2142,17 @@ Ganjas Visualisierung braucht ca. 8 ms bis 400 ms pro Animation-Loop-Durchlauf m
     \label{fig:ganjadcga}
 \end{figure}
 
+\chapter{Ausblick}
+Der wichtigste nächste Schritt wäre die Integration der Software in Gaalop Web. Die Software ist dafür vorbereitet, und die Integration müsste relativ einfach sein.
+
+Als Nächstes sollte die GUI überarbeitet werden.
+Aktuell hat die Software viele Parameter und Visualisierungsansätze mit vielen Hyperparametern. In der Praxis werden wahrscheinlich nur wenige dieser Methoden sinnvoll sein. Deshalb wäre einer der nächsten Schritte, viele Methoden zu entfernen oder zu verstecken. Das Gleiche gilt für die Parameter in der GUI. Außerdem kann das Diagramm, welches ich zum Debugging eingefügt hatte, entfernt werden.
+
+Eine weitere Verbesserung wäre eine bessere Codegenerierung. Dazu gehört eine Untersuchung der alten und neuen Codegenerierung für schnelle Ableitungsberechnung. Als Nächstes könnte man die Multiplikation mit der Matrix R in GLSL verbessern, falls R keinen vollen Rang hat. Im Moment wird mit der gesamten Matrix R multipliziert, obwohl R Zeilen mit Nullen hat. Alternativ könnte man statt für jedes Objekt einen einzelnen Shader zu kompilieren, einen Shader pro Algebra kompilieren. Dies könnte die Visualisierung einfacher machen, da die Shader nicht für jedes Objekt kompiliert werden müssen.
 
 
-\chapter{Schlussfolgerungen und Ausblick}
-
+\chapter{Schlussfolgerungen}
+In dieser Arbeit wurden Methoden zur Schnellen Auswertung und Visualisierung des Nullraums von geometrischer algebra entwickelt. Dabei sind meine Ansätze Stabieler und Schneller als die bisherigen Ansätze. 
 \printbibliography
 
 

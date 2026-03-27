@@ -11,11 +11,17 @@ precision mediump float;
 
 
 //const int ABERTH_MAXITER = 40;
-const float ABERTH_THRESHOLD = 1e-10;//this sthreshold is nessesary so the shader compiles faster because it prevents loop unrolling i think
-
+const float ABERTH_THRESHOLD = 1e-12;//this sthreshold is nessesary so the shader compiles faster because it prevents loop unrolling i think
+//uniform float ABERTH_THRESHOLD;
+#define NORMALS_MODE NORMALS_MODE_FIRST_DERIV_R
 
 uniform float eps;
 uniform float beta;
+
+//uniform int iter1;
+//uniform int iter2;
+const int iter1=20;
+const int iter2=20;
 
 #define NUM_ROOTS basismaxdegree
 //#define polylen basismaxdegree+1
@@ -218,8 +224,8 @@ void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_
     makeCoeffs(yi,coeffs);
     Complex[NUM_ROOTS] roots;
     initial_roots(roots);
-    aberth_method_horner(roots,coeffs,20);
-    aberth_method_poly(roots,rayDir,rayOrigin,20);
+    aberth_method_horner(roots,coeffs,iter1);
+    aberth_method_poly(roots,rayDir,rayOrigin,iter2);
     //aberth_method_sus(roots,rayDir,rayOrigin,5);
     //
     
@@ -227,6 +233,7 @@ void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_
     
     error=inf;
     xmin=inf;
+
     for(int i = 0; i < NUM_ROOTS; ++i){
         float a=roots[i].x;
         //xyzDual f=xyzDualsusR(rayDir*a+rayOrigin);
@@ -238,6 +245,17 @@ void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_
         //float e=length(cross(p, rayDir)) / length(rayDir);
         //float e=abs(f.w)/sqrt(dot(f.xyz,f.xyz)+1e-10);
         //#define UseGN
+        /*float e2=susR(rayDir*a+rayOrigin);
+        if(e2<error && a>0.){
+            xmin=a;
+            error=e2;
+        }
+        if(isnan(a)||isinf(a)||isnan(roots[i].y)||isinf(roots[i].y)){
+            debugcolor(vec3(1,1,0));
+        }
+        continue;*/
+
+
         #ifdef UseGN
             vec4 gn=GaussNewtonStepR(rayDir*a+rayOrigin,beta);
             float e=length(gn.xyz);
@@ -271,6 +289,7 @@ void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_
             }
         }*/
     }
+     //debugcolor(vec3(xmin,xmin/10.,xmin/100.));
 
     /*for(int i = 0; i < NUM_ROOTS; ++i){
         //float a=roots[i].x;

@@ -303,22 +303,22 @@ async function main(gajson){
     //i found a firefox bug :(
 
     const aberthsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/aberth.glsl");
-    obj.addPipeline("aberth",new aberthrenderer(context,gl,visgraph,aberthsource,color));
+    obj.addPipeline("Aberth",new aberthrenderer(context,gl,visgraph,aberthsource,color));
     const aberthsourceGN=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/aberth.glsl");
-    obj.addPipeline("aberthGN",new aberthrenderer(context,gl,visgraph,aberthsourceGN,color));
+    obj.addPipeline("AberthGN",new aberthrenderer(context,gl,visgraph,aberthsourceGN,color));
 
     const newtonsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/newton.glsl");
-    obj.addPipeline("newton",new udfrenderer(context,gl,visgraph,newtonsource,color));
+    obj.addPipeline("Newton",new udfrenderer(context,gl,visgraph,newtonsource,color));
 
     const udfaproxsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/udfaprox.glsl");
-    obj.addPipeline("udfaprox",new udfrenderer(context,gl,visgraph,udfaproxsource,color));
+    obj.addPipeline("UdfAprox",new udfrenderer(context,gl,visgraph,udfaproxsource,color));
     
     const ganjasource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/ganja.glsl");
-    obj.addPipeline("ganja",new udfrenderer(context,gl,visgraph,ganjasource,color));
+    obj.addPipeline("Ganja",new udfrenderer(context,gl,visgraph,ganjasource,color));
     
 
     const Rintervallsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/Rintervall.glsl");
-    obj.addPipeline("voxelsubdivision",new Voxelrenderer(context,gl,visgraph,Rintervallsource,color));
+    obj.addPipeline("VoxelSubdivision",new Voxelrenderer(context,gl,visgraph,Rintervallsource,color));
 
     //const gaussnewtondistsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RGaussNewtonGrid.glsl");
     //obj.addPipeline("RGaussNewtonGrid",new VoxelDistRenderer(context,gl,visgraph,gaussnewtondistsource,color));
@@ -345,7 +345,7 @@ async function main(gajson){
    
 
     const RMC=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RMC.glsl");
-    obj.addPipeline("MC",new MarchingCubesRenderer(context,gl,visgraph,Rintervallsource,RMC,color))
+    obj.addPipeline("MarchingCubes",new MarchingCubesRenderer(context,gl,visgraph,Rintervallsource,RMC,color))
     
     //obj.setActivePipeline("voxelpoint2");
     //context.updateParams();
