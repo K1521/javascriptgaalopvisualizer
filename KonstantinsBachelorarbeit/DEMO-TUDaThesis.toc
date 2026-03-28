@@ -1,93 +1,95 @@
 \babel@toc {ngerman}{}\relax 
 \contentsline {chapter}{\numberline {1}Motivation}{5}{chapter.1}%
 \contentsline {chapter}{\numberline {2}Einleitung}{6}{chapter.2}%
-\contentsline {chapter}{\numberline {3}Grundlagen}{7}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Was ist geometrische Algebra?}{7}{section.3.1}%
-\contentsline {subsection}{\numberline {3.1.1}Geometrisches Produkt}{7}{subsection.3.1.1}%
-\contentsline {subsection}{\numberline {3.1.2}Inneres und äußeres Produkt}{8}{subsection.3.1.2}%
-\contentsline {subsection}{\numberline {3.1.3}Produkt zweier Multivektoren}{9}{subsection.3.1.3}%
-\contentsline {subsection}{\numberline {3.1.4}Produkt als Matrix}{10}{subsection.3.1.4}%
-\contentsline {section}{\numberline {3.2}Implizite Darstellung}{11}{section.3.2}%
-\contentsline {subsection}{\numberline {3.2.1}Implizite Funktionen}{11}{subsection.3.2.1}%
-\contentsline {subsection}{\numberline {3.2.2}Signed Distance Functions (SDF)}{11}{subsection.3.2.2}%
-\contentsline {subsection}{\numberline {3.2.3}Unsigned Distance Functions (UDF)}{12}{subsection.3.2.3}%
-\contentsline {subsection}{\numberline {3.2.4}IPNS/OPNS}{12}{subsection.3.2.4}%
-\contentsline {subsubsection}{\nonumberline F als Skalar}{13}{subsubsection*.2}%
-\contentsline {section}{\numberline {3.3}Raycasting}{13}{section.3.3}%
-\contentsline {subsection}{\numberline {3.3.1}OpenGL-Pipeline}{13}{subsection.3.3.1}%
-\contentsline {subsection}{\numberline {3.3.2}Was ist Raycasting?}{14}{subsection.3.3.2}%
-\contentsline {subsection}{\numberline {3.3.3}Spheretracing}{15}{subsection.3.3.3}%
-\contentsline {section}{\numberline {3.4}Verfahren zur Nullstellensuche}{15}{section.3.4}%
-\contentsline {subsection}{\numberline {3.4.1}Newtonverfahren}{15}{subsection.3.4.1}%
-\contentsline {subsection}{\numberline {3.4.2}Aberth-Verfahren}{17}{subsection.3.4.2}%
-\contentsline {subsection}{\numberline {3.4.3}Intervall Arithmetik}{17}{subsection.3.4.3}%
-\contentsline {subsection}{\numberline {3.4.4}Gauß-Newton Verfahren}{19}{subsection.3.4.4}%
-\contentsline {section}{\numberline {3.5}Vandermonde-Matrix}{20}{section.3.5}%
-\contentsline {section}{\numberline {3.6}Duale Zahlen}{20}{section.3.6}%
-\contentsline {chapter}{\numberline {4}Stand der Technik}{22}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Ganja}{22}{section.4.1}%
-\contentsline {section}{\numberline {4.2}\textsc {Gaalop}}{23}{section.4.2}%
-\contentsline {subsection}{\numberline {4.2.1}DiscreteCubeMethod}{24}{subsection.4.2.1}%
-\contentsline {subsection}{\numberline {4.2.2}RayMethod}{24}{subsection.4.2.2}%
-\contentsline {subsection}{\numberline {4.2.3}GradientMethod}{26}{subsection.4.2.3}%
-\contentsline {subsection}{\numberline {4.2.4}Stärken und Schwächen}{27}{subsection.4.2.4}%
-\contentsline {chapter}{\numberline {5}Konzeption}{28}{chapter.5}%
-\contentsline {section}{\numberline {5.1}Anforderungen}{28}{section.5.1}%
-\contentsline {section}{\numberline {5.2}Überblick über die Lösungsansätze}{28}{section.5.2}%
-\contentsline {section}{\numberline {5.3}Libraries und Frameworks}{28}{section.5.3}%
-\contentsline {chapter}{\numberline {6}Raycasting Verfahren}{30}{chapter.6}%
-\contentsline {subsubsection}{\nonumberline \(f\) entlang eines Strahls}{30}{subsubsection*.3}%
-\contentsline {section}{\numberline {6.1}Methoden zur Nullstellensuche}{30}{section.6.1}%
-\contentsline {subsection}{\numberline {6.1.1}Spheretracing Approximation}{30}{subsection.6.1.1}%
-\contentsline {subsection}{\numberline {6.1.2}Newtonverfahren}{32}{subsection.6.1.2}%
-\contentsline {paragraph}{\nonumberline Beweis:}{32}{paragraph*.4}%
-\contentsline {subsection}{\numberline {6.1.3}Aberth-Verfahren}{33}{subsection.6.1.3}%
-\contentsline {paragraph}{\nonumberline Beweis:}{33}{paragraph*.5}%
-\contentsline {section}{\numberline {6.2}Tiefenhinweise zur visuellen Unterstützung}{36}{section.6.2}%
-\contentsline {subsection}{\numberline {6.2.1}Oberflächennormale und Beleuchtungsmodell}{36}{subsection.6.2.1}%
-\contentsline {subsection}{\numberline {6.2.2}Texturierung}{37}{subsection.6.2.2}%
-\contentsline {chapter}{\numberline {7}Volumenbasierte Verfahren}{41}{chapter.7}%
-\contentsline {section}{\numberline {7.1}RayMethod}{41}{section.7.1}%
-\contentsline {section}{\numberline {7.2}Voxel-Subdivision}{42}{section.7.2}%
-\contentsline {subsection}{\numberline {7.2.1}Intervallarithmetik}{42}{subsection.7.2.1}%
-\contentsline {subsubsection}{\nonumberline Better Intervall arethmetic bounds}{43}{subsubsection*.6}%
-\contentsline {subsubsection}{\nonumberline Bound compare}{45}{subsubsection*.7}%
-\contentsline {subsection}{\numberline {7.2.2}Gauss-Newton Voxel}{45}{subsection.7.2.2}%
-\contentsline {section}{\numberline {7.3}Modifyed Marching Cubes}{46}{section.7.3}%
-\contentsline {section}{\numberline {7.4}Iterative Verfahren}{47}{section.7.4}%
-\contentsline {section}{\numberline {7.5}Gitter basierte Verfahren}{47}{section.7.5}%
-\contentsline {chapter}{\numberline {8}Implementierung}{49}{chapter.8}%
-\contentsline {section}{\numberline {8.1}Systemarchitektur}{49}{section.8.1}%
-\contentsline {section}{\numberline {8.2}Matrixvariante}{50}{section.8.2}%
-\contentsline {subsubsection}{\nonumberline INPS/ONPS als Matrix Vektor Darstellung}{50}{subsubsection*.8}%
-\contentsline {subsubsection}{\nonumberline optimierung des gleichungssystems}{51}{subsubsection*.9}%
-\contentsline {subsubsection}{\nonumberline Schnelle Nullstellensuche}{52}{subsubsection*.10}%
-\contentsline {section}{\numberline {8.3}Codegenerierung}{53}{section.8.3}%
-\contentsline {subsection}{\numberline {8.3.1}\textsc {Gaalop} plugin}{53}{subsection.8.3.1}%
-\contentsline {subsubsection}{\nonumberline computational DAG}{54}{subsubsection*.11}%
-\contentsline {subsection}{\numberline {8.3.2}DAG in js}{54}{subsection.8.3.2}%
-\contentsline {subsection}{\numberline {8.3.3}Graph splitting}{55}{subsection.8.3.3}%
-\contentsline {subsection}{\numberline {8.3.4}Graph Manipulationen}{57}{subsection.8.3.4}%
-\contentsline {subsubsection}{\nonumberline Was generiert die Codegenerierung}{57}{subsubsection*.12}%
-\contentsline {subsection}{\numberline {8.3.5}Vereinfachung}{60}{subsection.8.3.5}%
-\contentsline {subsection}{\numberline {8.3.6}Matrix Extraktion}{60}{subsection.8.3.6}%
-\contentsline {section}{\numberline {8.4}Performance analyse}{61}{section.8.4}%
-\contentsline {subsection}{\numberline {8.4.1}Alte Codegenerierung vs neue Codegenerierung}{61}{subsection.8.4.1}%
-\contentsline {subsection}{\numberline {8.4.2}Matrixmul in Glsl}{62}{subsection.8.4.2}%
-\contentsline {section}{\numberline {8.5}Optimizations}{64}{section.8.5}%
-\contentsline {subsection}{\numberline {8.5.1}Adaptive resolution}{64}{subsection.8.5.1}%
-\contentsline {subsection}{\numberline {8.5.2}Tile based rendering}{64}{subsection.8.5.2}%
-\contentsline {subsection}{\numberline {8.5.3}Polynom Auswertung über Koeffizienten}{65}{subsection.8.5.3}%
-\contentsline {chapter}{\numberline {9}Evaluierung}{68}{chapter.9}%
-\contentsline {section}{\numberline {9.1}Volumenbasierte Verfahren}{68}{section.9.1}%
-\contentsline {subsection}{\numberline {9.1.1}Iterative Verfahren}{69}{subsection.9.1.1}%
-\contentsline {subsection}{\numberline {9.1.2}Grid basierte Verfahren}{72}{subsection.9.1.2}%
-\contentsline {subsection}{\numberline {9.1.3}RayMethod Und Intervall Subdivision}{72}{subsection.9.1.3}%
-\contentsline {subsection}{\numberline {9.1.4}Marching Cubes}{76}{subsection.9.1.4}%
-\contentsline {section}{\numberline {9.2}Raycasting}{76}{section.9.2}%
-\contentsline {subsection}{\numberline {9.2.1}udfaprox und newton}{80}{subsection.9.2.1}%
-\contentsline {subsection}{\numberline {9.2.2}Aberth}{80}{subsection.9.2.2}%
-\contentsline {subsection}{\numberline {9.2.3}ganja}{85}{subsection.9.2.3}%
-\contentsline {chapter}{\numberline {10}Ausblick}{89}{chapter.10}%
-\contentsline {chapter}{\numberline {11}Schlussfolgerungen}{90}{chapter.11}%
+\contentsline {section}{\numberline {2.1}Gliederung}{6}{section.2.1}%
+\contentsline {section}{\numberline {2.2}Worum geht es?}{7}{section.2.2}%
+\contentsline {chapter}{\numberline {3}Grundlagen}{9}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Was ist geometrische Algebra?}{9}{section.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}Geometrisches Produkt}{9}{subsection.3.1.1}%
+\contentsline {subsection}{\numberline {3.1.2}Inneres und äußeres Produkt}{10}{subsection.3.1.2}%
+\contentsline {subsection}{\numberline {3.1.3}Produkt zweier Multivektoren}{11}{subsection.3.1.3}%
+\contentsline {subsection}{\numberline {3.1.4}Produkt als Matrix}{12}{subsection.3.1.4}%
+\contentsline {section}{\numberline {3.2}Implizite Darstellung}{13}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Implizite Funktionen}{13}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Signed Distance Functions (SDF)}{13}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}Unsigned Distance Functions (UDF)}{14}{subsection.3.2.3}%
+\contentsline {subsection}{\numberline {3.2.4}IPNS/OPNS}{14}{subsection.3.2.4}%
+\contentsline {subsubsection}{\nonumberline F als Skalar}{15}{subsubsection*.2}%
+\contentsline {section}{\numberline {3.3}Raycasting}{15}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}OpenGL-Pipeline}{15}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Was ist Raycasting?}{16}{subsection.3.3.2}%
+\contentsline {subsection}{\numberline {3.3.3}Spheretracing}{17}{subsection.3.3.3}%
+\contentsline {section}{\numberline {3.4}Verfahren zur Nullstellensuche}{17}{section.3.4}%
+\contentsline {subsection}{\numberline {3.4.1}Newtonverfahren}{17}{subsection.3.4.1}%
+\contentsline {subsection}{\numberline {3.4.2}Aberth-Verfahren}{19}{subsection.3.4.2}%
+\contentsline {subsection}{\numberline {3.4.3}Intervall Arithmetik}{19}{subsection.3.4.3}%
+\contentsline {subsection}{\numberline {3.4.4}Gauß-Newton Verfahren}{21}{subsection.3.4.4}%
+\contentsline {section}{\numberline {3.5}Vandermonde-Matrix}{22}{section.3.5}%
+\contentsline {section}{\numberline {3.6}Duale Zahlen}{22}{section.3.6}%
+\contentsline {chapter}{\numberline {4}Stand der Technik}{24}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Ganja}{24}{section.4.1}%
+\contentsline {section}{\numberline {4.2}\textsc {Gaalop}}{25}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}DiscreteCubeMethod}{26}{subsection.4.2.1}%
+\contentsline {subsection}{\numberline {4.2.2}RayMethod}{26}{subsection.4.2.2}%
+\contentsline {subsection}{\numberline {4.2.3}GradientMethod}{28}{subsection.4.2.3}%
+\contentsline {subsection}{\numberline {4.2.4}Stärken und Schwächen}{29}{subsection.4.2.4}%
+\contentsline {chapter}{\numberline {5}Konzeption}{30}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Anforderungen}{30}{section.5.1}%
+\contentsline {section}{\numberline {5.2}Überblick über die Lösungsansätze}{30}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Libraries und Frameworks}{30}{section.5.3}%
+\contentsline {chapter}{\numberline {6}Raycasting Verfahren}{32}{chapter.6}%
+\contentsline {subsubsection}{\nonumberline \(f\) entlang eines Strahls}{32}{subsubsection*.3}%
+\contentsline {section}{\numberline {6.1}Methoden zur Nullstellensuche}{32}{section.6.1}%
+\contentsline {subsection}{\numberline {6.1.1}Spheretracing Approximation}{32}{subsection.6.1.1}%
+\contentsline {subsection}{\numberline {6.1.2}Newtonverfahren}{34}{subsection.6.1.2}%
+\contentsline {paragraph}{\nonumberline Beweis:}{34}{paragraph*.4}%
+\contentsline {subsection}{\numberline {6.1.3}Aberth-Verfahren}{35}{subsection.6.1.3}%
+\contentsline {paragraph}{\nonumberline Beweis:}{35}{paragraph*.5}%
+\contentsline {section}{\numberline {6.2}Tiefenhinweise zur visuellen Unterstützung}{38}{section.6.2}%
+\contentsline {subsection}{\numberline {6.2.1}Oberflächennormale und Beleuchtungsmodell}{38}{subsection.6.2.1}%
+\contentsline {subsection}{\numberline {6.2.2}Texturierung}{39}{subsection.6.2.2}%
+\contentsline {chapter}{\numberline {7}Volumenbasierte Verfahren}{43}{chapter.7}%
+\contentsline {section}{\numberline {7.1}RayMethod}{43}{section.7.1}%
+\contentsline {section}{\numberline {7.2}Voxel-Subdivision}{44}{section.7.2}%
+\contentsline {subsection}{\numberline {7.2.1}Intervallarithmetik}{44}{subsection.7.2.1}%
+\contentsline {subsubsection}{\nonumberline Better Intervall arethmetic bounds}{45}{subsubsection*.6}%
+\contentsline {subsubsection}{\nonumberline Bound compare}{47}{subsubsection*.7}%
+\contentsline {subsection}{\numberline {7.2.2}Gauss-Newton Voxel}{47}{subsection.7.2.2}%
+\contentsline {section}{\numberline {7.3}Modifyed Marching Cubes}{48}{section.7.3}%
+\contentsline {section}{\numberline {7.4}Iterative Verfahren}{49}{section.7.4}%
+\contentsline {section}{\numberline {7.5}Gitter basierte Verfahren}{49}{section.7.5}%
+\contentsline {chapter}{\numberline {8}Implementierung}{51}{chapter.8}%
+\contentsline {section}{\numberline {8.1}Systemarchitektur}{51}{section.8.1}%
+\contentsline {section}{\numberline {8.2}Matrixvariante}{52}{section.8.2}%
+\contentsline {subsubsection}{\nonumberline INPS/ONPS als Matrix Vektor Darstellung}{52}{subsubsection*.8}%
+\contentsline {subsubsection}{\nonumberline optimierung des gleichungssystems}{53}{subsubsection*.9}%
+\contentsline {subsubsection}{\nonumberline Schnelle Nullstellensuche}{54}{subsubsection*.10}%
+\contentsline {section}{\numberline {8.3}Codegenerierung}{55}{section.8.3}%
+\contentsline {subsection}{\numberline {8.3.1}\textsc {Gaalop} plugin}{55}{subsection.8.3.1}%
+\contentsline {subsubsection}{\nonumberline computational DAG}{56}{subsubsection*.11}%
+\contentsline {subsection}{\numberline {8.3.2}DAG in js}{56}{subsection.8.3.2}%
+\contentsline {subsection}{\numberline {8.3.3}Graph splitting}{57}{subsection.8.3.3}%
+\contentsline {subsection}{\numberline {8.3.4}Graph Manipulationen}{59}{subsection.8.3.4}%
+\contentsline {subsubsection}{\nonumberline Was generiert die Codegenerierung}{59}{subsubsection*.12}%
+\contentsline {subsection}{\numberline {8.3.5}Vereinfachung}{62}{subsection.8.3.5}%
+\contentsline {subsection}{\numberline {8.3.6}Matrix Extraktion}{62}{subsection.8.3.6}%
+\contentsline {section}{\numberline {8.4}Performance analyse}{63}{section.8.4}%
+\contentsline {subsection}{\numberline {8.4.1}Alte Codegenerierung vs neue Codegenerierung}{63}{subsection.8.4.1}%
+\contentsline {subsection}{\numberline {8.4.2}Matrixmul in Glsl}{64}{subsection.8.4.2}%
+\contentsline {section}{\numberline {8.5}Optimizations}{66}{section.8.5}%
+\contentsline {subsection}{\numberline {8.5.1}Adaptive resolution}{66}{subsection.8.5.1}%
+\contentsline {subsection}{\numberline {8.5.2}Tile based rendering}{66}{subsection.8.5.2}%
+\contentsline {subsection}{\numberline {8.5.3}Polynom Auswertung über Koeffizienten}{67}{subsection.8.5.3}%
+\contentsline {chapter}{\numberline {9}Evaluierung}{70}{chapter.9}%
+\contentsline {section}{\numberline {9.1}Volumenbasierte Verfahren}{70}{section.9.1}%
+\contentsline {subsection}{\numberline {9.1.1}Iterative Verfahren}{71}{subsection.9.1.1}%
+\contentsline {subsection}{\numberline {9.1.2}Grid basierte Verfahren}{74}{subsection.9.1.2}%
+\contentsline {subsection}{\numberline {9.1.3}RayMethod Und Intervall Subdivision}{74}{subsection.9.1.3}%
+\contentsline {subsection}{\numberline {9.1.4}Marching Cubes}{78}{subsection.9.1.4}%
+\contentsline {section}{\numberline {9.2}Raycasting}{82}{section.9.2}%
+\contentsline {subsection}{\numberline {9.2.1}UdfAprox und Newton}{82}{subsection.9.2.1}%
+\contentsline {subsection}{\numberline {9.2.2}Aberth}{87}{subsection.9.2.2}%
+\contentsline {subsection}{\numberline {9.2.3}ganja}{87}{subsection.9.2.3}%
+\contentsline {chapter}{\numberline {10}Ausblick}{92}{chapter.10}%
+\contentsline {chapter}{\numberline {11}Schlussfolgerungen}{93}{chapter.11}%
 \providecommand \tocbasic@end@toc@file {}\tocbasic@end@toc@file 

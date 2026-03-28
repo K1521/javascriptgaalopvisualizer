@@ -40,7 +40,7 @@ export function addPipelineSelectorForObject(renderableObject) {
   //}
 
   // Set initial selection
-  select.value ="udfaprox";// renderableObject.activePipelineName ?? [...renderableObject.pipelines.keys()][0];
+  select.value =renderableObject.activePipelineName??"UdfAprox";// ?? [...renderableObject.pipelines.keys()][0];
 
   // On change: update active pipeline + call ctx
 

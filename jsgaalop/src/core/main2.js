@@ -129,7 +129,7 @@ class RenderLoop {
     while(this.syncs.length>0 && gl.clientWaitSync(this.syncs[0], 0, 0)==gl.ALREADY_SIGNALED){
       gl.deleteSync(this.syncs[0]);this.syncs.shift();
     }
-    if(this.syncs.length<2){
+    if(this.syncs.length<3){
       //throwonglerror(gl);
       this.animate(timestamp);
       //throwonglerror(gl);

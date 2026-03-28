@@ -90,7 +90,7 @@ export class GridRendererVoxelized extends LazyRenderingPipeline{
     });
 
     this.grid=new Grid3D([-this.scale,-this.scale,-this.scale],[this.scale,this.scale,this.scale],[this.samples,this.samples,this.samples]);
-    this.threshold=0.5;
+    this.threshold=visgraph.parents.length==1?0.5:2;
     this.threshchanged=true;
     
     this.scale=4;
@@ -224,7 +224,7 @@ export class GridRendererVoxelized extends LazyRenderingPipeline{
         this.threshchanged = true;
         this.ctx?.requestRender();
       },
-      { min: 1e-1, max: 1, value: this.threshold }
+      { min: 1e-2, max: 100, value: this.threshold }
     ));
 
     // Grid Size Slider (samples: 16..512)

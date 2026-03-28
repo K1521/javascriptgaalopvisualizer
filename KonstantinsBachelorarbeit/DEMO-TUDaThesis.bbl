@@ -1,0 +1,157 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nty/global//global/global/global}
+    \entry{ganja}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=41014418e78a7e9cb39b18fb59828c77}{%
+           family={De\bibnamedelima Keninck},
+           familyi={D\bibinitperiod\bibinitdelim K\bibinitperiod},
+           given={Steven},
+           giveni={S\bibinitperiod}}}%
+      }
+      \strng{namehash}{41014418e78a7e9cb39b18fb59828c77}
+      \strng{fullhash}{41014418e78a7e9cb39b18fb59828c77}
+      \strng{fullhashraw}{41014418e78a7e9cb39b18fb59828c77}
+      \strng{bibnamehash}{41014418e78a7e9cb39b18fb59828c77}
+      \strng{authorbibnamehash}{41014418e78a7e9cb39b18fb59828c77}
+      \strng{authornamehash}{41014418e78a7e9cb39b18fb59828c77}
+      \strng{authorfullhash}{41014418e78a7e9cb39b18fb59828c77}
+      \strng{authorfullhashraw}{41014418e78a7e9cb39b18fb59828c77}
+      \field{sortinit}{D}
+      \field{sortinithash}{6f385f66841fb5e82009dc833c761848}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{subtitle}{A JavaScript library for Geometric Algebra}
+      \field{title}{ganja.js}
+      \field{urlday}{28}
+      \field{urlmonth}{3}
+      \field{urlyear}{2026}
+      \field{year}{2022}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://github.com/enkimute/ganja.js
+      \endverb
+      \verb{url}
+      \verb https://github.com/enkimute/ganja.js
+      \endverb
+    \endentry
+    \entry{flocke2015algorithm954}{article}{}{}
+      \name{author}{1}{}{%
+        {{hash=4f084c9beb75255406ffd3e254cc7be3}{%
+           family={Flocke},
+           familyi={F\bibinitperiod},
+           given={Norbert},
+           giveni={N\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {ACM}%
+      }
+      \strng{namehash}{4f084c9beb75255406ffd3e254cc7be3}
+      \strng{fullhash}{4f084c9beb75255406ffd3e254cc7be3}
+      \strng{fullhashraw}{4f084c9beb75255406ffd3e254cc7be3}
+      \strng{bibnamehash}{4f084c9beb75255406ffd3e254cc7be3}
+      \strng{authorbibnamehash}{4f084c9beb75255406ffd3e254cc7be3}
+      \strng{authornamehash}{4f084c9beb75255406ffd3e254cc7be3}
+      \strng{authorfullhash}{4f084c9beb75255406ffd3e254cc7be3}
+      \strng{authorfullhashraw}{4f084c9beb75255406ffd3e254cc7be3}
+      \field{sortinit}{F}
+      \field{sortinithash}{2638baaa20439f1b5a8f80c6c08a13b4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{ACM Transactions on Mathematical Software}
+      \field{number}{4}
+      \field{title}{Algorithm 954: An Accurate and Efficient Cubic and Quartic Equation Solver for Physical Applications}
+      \field{volume}{41}
+      \field{year}{2015}
+      \field{pages}{30:1\bibrangedash 30:24}
+      \range{pages}{-1}
+      \verb{doi}
+      \verb 10.1145/2699468
+      \endverb
+    \endentry
+    \entry{peters2023gpuPolynomialRoots}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=e0e5bd2f32e773d0d8e32736d368c08f}{%
+           family={Peters},
+           familyi={P\bibinitperiod},
+           given={Christoph},
+           giveni={C\bibinitperiod}}}%
+      }
+      \strng{namehash}{e0e5bd2f32e773d0d8e32736d368c08f}
+      \strng{fullhash}{e0e5bd2f32e773d0d8e32736d368c08f}
+      \strng{fullhashraw}{e0e5bd2f32e773d0d8e32736d368c08f}
+      \strng{bibnamehash}{e0e5bd2f32e773d0d8e32736d368c08f}
+      \strng{authorbibnamehash}{e0e5bd2f32e773d0d8e32736d368c08f}
+      \strng{authornamehash}{e0e5bd2f32e773d0d8e32736d368c08f}
+      \strng{authorfullhash}{e0e5bd2f32e773d0d8e32736d368c08f}
+      \strng{authorfullhashraw}{e0e5bd2f32e773d0d8e32736d368c08f}
+      \field{sortinit}{P}
+      \field{sortinithash}{ff3bcf24f47321b42cb156c2cc8a8422}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{day}{31}
+      \field{month}{10}
+      \field{title}{Finding Real Polynomial Roots on GPUs}
+      \field{urlday}{28}
+      \field{urlmonth}{3}
+      \field{urlyear}{2026}
+      \field{year}{2023}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://momentsingraphics.de/GPUPolynomialRoots.html
+      \endverb
+      \verb{url}
+      \verb https://momentsingraphics.de/GPUPolynomialRoots.html
+      \endverb
+    \endentry
+    \entry{teadrinker2022sdf}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=d63d0de4c5227130832f517dc535d6a6}{%
+           family={Teadrinker},
+           familyi={T\bibinitperiod}}}%
+      }
+      \strng{namehash}{d63d0de4c5227130832f517dc535d6a6}
+      \strng{fullhash}{d63d0de4c5227130832f517dc535d6a6}
+      \strng{fullhashraw}{d63d0de4c5227130832f517dc535d6a6}
+      \strng{bibnamehash}{d63d0de4c5227130832f517dc535d6a6}
+      \strng{authorbibnamehash}{d63d0de4c5227130832f517dc535d6a6}
+      \strng{authornamehash}{d63d0de4c5227130832f517dc535d6a6}
+      \strng{authorfullhash}{d63d0de4c5227130832f517dc535d6a6}
+      \strng{authorfullhashraw}{d63d0de4c5227130832f517dc535d6a6}
+      \field{sortinit}{T}
+      \field{sortinithash}{9af77f0292593c26bde9a56e688eaee9}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{note}{Image licensed under CC BY-SA 4.0 via Wikimedia Commons}
+      \field{title}{Visualization of SDF Ray Marching Algorithm}
+      \field{year}{2022}
+      \verb{urlraw}
+      \verb https://commons.wikimedia.org/wiki/File:Visualization_of_SDF_ray_marching_algorithm.png
+      \endverb
+      \verb{url}
+      \verb https://commons.wikimedia.org/wiki/File:Visualization_of_SDF_ray_marching_algorithm.png
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+
