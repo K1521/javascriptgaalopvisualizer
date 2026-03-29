@@ -3,7 +3,7 @@
 import { Vector} from './../util/linalg1.js';
 //import {Cameracontroll,renderingpipeline,renderingpipeline_coeffxyz,Shader} from "../glwrapper/glwrapper.js";
 import { loadWithIncludesRelativeToShadersource} from "../glwrapper/shaderimporter.js";
-import {TransformFeedbackWrapper} from "../glwrapper/TransformFeedbackWrapper.js";
+import {TransformFeedbackWrapper, TransformFeedbackWrapperInterleaved} from "../glwrapper/TransformFeedbackWrapper.js";
 import {GaalopGraph} from "./codegenv4/codegenBackpropergation2.js";
 import { RenderableObject } from "./RenderableObject.js";
 //import { pinv, multiply, transpose ,qr} from 'https://cdn.jsdelivr.net/npm/mathjs@14.5.2/+esm';
@@ -35,6 +35,7 @@ import { TopGridRenderer } from '../pipelines/v2/TopGrid.js';
 import { RayMethod } from '../pipelines/v2/RayMethod.js';
 import { TopGridRendererVoxelized } from '../pipelines/v2/TopGridVoxelized.js';
 import { GridRendererVoxelized } from '../pipelines/v2/GridVoxelized.js';
+import { aberthrendererf } from '../pipelines/v2/aberthrendererf.js';
 window.DEBUG_LOG = ["test"];
 
 class RenderLoop {
@@ -283,7 +284,21 @@ async function main(gajson){
     //console.log(frag);
 
     //visgraph.setuniforms(values,shader);
-    const color=graph.objectcolormap.get(visgraph.name); 
+    const color=graph.objectcolormap.get(visgraph.name);
+    
+    /*if(visgraph.name=="Pl"){
+      const rootsshader=await loadWithIncludesRelativeToShadersource("shaderlibv3/compute/RAberthInvestigation.glsl");
+      const tf=new TransformFeedbackWrapperInterleaved(gl,visgraph.gencodeR(rootsshader),[0,1].map(x=>"result"+x));
+      window.test=(i)=>{
+        tf.shader.use();
+        tf.shader.uniform1i("iter",i);
+        visgraph.setuniformsR(tf.shader,context.evalContext);
+        context.updateUniforms(tf.shader);
+        return tf.run(1);
+
+      }
+    
+    }*/
     
     //gl.uniform4fv(shader.getUniformLocation('incolor'), [color.r,color.g,color.b,1.0]);
 
@@ -306,6 +321,8 @@ async function main(gajson){
     obj.addPipeline("Aberth",new aberthrenderer(context,gl,visgraph,aberthsource,color));
     const aberthsourceGN=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/aberth.glsl");
     obj.addPipeline("AberthGN",new aberthrenderer(context,gl,visgraph,aberthsourceGN,color));
+    //const aberthfsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/aberthf.glsl");
+    //obj.addPipeline("Aberthf",new aberthrendererf(context,gl,visgraph,aberthfsource,color));
 
     const newtonsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/newton.glsl");
     obj.addPipeline("Newton",new udfrenderer(context,gl,visgraph,newtonsource,color));

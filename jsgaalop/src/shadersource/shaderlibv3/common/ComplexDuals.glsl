@@ -41,6 +41,10 @@ Complex ComplexInv(Complex a) {
     // Complex division: 1 / (a.x + i*a.y)
     return a*Complex(1,-1) / dot(a,a);
 }
+Complex ComplexInv(Complex a,float eps) {
+    // Complex division: 1 / (a.x + i*a.y)
+    return a*Complex(1,-1) / (dot(a,a)+eps);
+}
 Complex ComplexConjugate(Complex a) {
     return a*Complex(1,-1);
 }

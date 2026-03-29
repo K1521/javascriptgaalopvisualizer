@@ -11,12 +11,11 @@ precision mediump float;
 
 
 //const int ABERTH_MAXITER = 40;
-const float ABERTH_THRESHOLD = 1e-12;//this sthreshold is nessesary so the shader compiles faster because it prevents loop unrolling i think
+const float ABERTH_THRESHOLD = 1e-30;//this sthreshold is nessesary so the shader compiles faster because it prevents loop unrolling i think
 //uniform float ABERTH_THRESHOLD;
 #define NORMALS_MODE NORMALS_MODE_FIRST_DERIV_R
 
-uniform float eps;
-uniform float beta;
+uniform float thresh;
 
 //uniform int iter1;
 //uniform int iter2;
@@ -246,80 +245,14 @@ void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_
 
     for(int i = 0; i < NUM_ROOTS; ++i){
         float a=roots[i].x;
-        //xyzDual f=xyzDualsusR(rayDir*a+rayOrigin);
-
-        //vec3 p=abs(f.w)/(dot(f.xyz,f.xyz)+1e-10)*f.xyz;
-        //pd=p-dot(p,rayDir)/dot(rayDir,rayDir)*rayDir
-        //dist=sqrt(dot(pd,pd))
-
-        //float e=length(cross(p, rayDir)) / length(rayDir);
-        //float e=abs(f.w)/sqrt(dot(f.xyz,f.xyz)+1e-10);
-        //#define UseGN
-        /*float e2=susR(rayDir*a+rayOrigin);
-        if(e2<error && a>0.){
-            xmin=a;
-            error=e2;
-        }
-        if(isnan(a)||isinf(a)||isnan(roots[i].y)||isinf(roots[i].y)){
-            debugcolor(vec3(1,1,0));
-        }
-        continue;*/
-
-
-        #ifdef UseGN
-            vec4 gn=GaussNewtonStepR(rayDir*a+rayOrigin,beta);
-            float e=length(gn.xyz);
-            float f=gn.w;
-            //e*=1./(a*a);
-            if(a<xmin && e<eps && a>=0. && abs(f)<1e10){
-                    error=e;
-                    xmin=a;
-            }
-        #else
-            vec4 xyzf=xyzDualsusR(rayDir*a+rayOrigin);
-            float e=xyzf.w/(1e-3+length(xyzf.xyz));
-            float f=xyzf.w;
-            //e*=1./(a*a);
-            if(a<xmin && e<eps && a>=0. && abs(f)<1e10){
-                    error=e;
-                    xmin=a;
-                }
-        #endif
-
-        /*if(v_rayDirXY.x>0.){
-            a=raySphereIntersect(rayOrigin,rayDir,rayDir*a+rayOrigin+gn.xyz,eps);
-            if(a<xmin && a>=0. && abs(f)<1.){
-                error=e;
-                xmin=a;
-            }
-        }else{
-            if(a<xmin && e<eps && a>=0. && abs(f)<1.){
-                error=e;
-                xmin=a;
-            }
-        }*/
-    }
-     //debugcolor(vec3(xmin,xmin/10.,xmin/100.));
-
-    /*for(int i = 0; i < NUM_ROOTS; ++i){
-        //float a=roots[i].x;
-        //xyzDual f=xyzDualsusR(rayDir*a+rayOrigin);
-        //a=gaussnewton(rayDir,rayOrigin,a,5);
-        vec2 r=newtonsus(rayDir,rayOrigin,roots[i],2);
-        float a=r.x;
-        //vec3 p=abs(f.w)/(dot(f.xyz,f.xyz)+1e-10)*f.xyz;
-        //pd=p-dot(p,rayDir)/dot(rayDir,rayDir)*rayDir
-        //dist=sqrt(dot(pd,pd))
-
-        //float e=length(cross(p, rayDir)) / length(rayDir);
-        //float e=DCsusR(rayDir*a+rayOrigin);
-        //e*=1./(a*a);
-        float e=susR(rayDir*a+rayOrigin);
-        if(a<xmin && a>=0. && e<1e-10){
+        float e=susR(rayOrigin+rayDir*a);
+        if(a<xmin && e<thresh && a>=0.){
             error=e;
             xmin=a;
         }
-    }*/
+        
+    }
+
 }
 
 
