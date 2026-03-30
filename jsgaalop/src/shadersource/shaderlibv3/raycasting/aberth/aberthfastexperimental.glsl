@@ -79,6 +79,7 @@ void aberth_method_sus(inout Complex[NUM_ROOTS] roots, vec3 rayDir, vec3 rayOrig
         for (int k = 0; k < NUM_ROOTS; k++) {
             // Evaluate the polynomial and its derivative at the current root
             DualComplex res=DCsusR(rayDir,rayOrigin,roots[k]);
+            res.x+=beta;
             Complex a = ComplexDiv(
                 res.xy,
                 res.zw
@@ -235,8 +236,8 @@ void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_
     #endif
     
     
-    aberth_method_poly(roots,rayDir,rayOrigin,ITERPOLY);
-    //aberth_method_sus(roots,rayDir,rayOrigin,5);
+    //aberth_method_poly(roots,rayDir,rayOrigin,ITERPOLY);
+    aberth_method_sus(roots,rayDir,rayOrigin,ITERPOLY);
     //
     
 
@@ -266,25 +267,16 @@ void Raymarch(vec3 rayDir, vec3 rayOrigin,out float error,out float xmin,vec2 v_
         continue;*/
 
 
-        #ifdef UseGN
-            vec4 gn=GaussNewtonStepR(rayDir*a+rayOrigin,beta);
-            float e=length(gn.xyz);
-            float f=gn.w;
-            //e*=1./(a*a);
-            if(a<xmin && e<eps && a>=0. && abs(f)<1e10){
-                    error=e;
-                    xmin=a;
-            }
-        #else
+        
             vec4 xyzf=xyzDualsusR(rayDir*a+rayOrigin);
-            float e=xyzf.w/(beta+length(xyzf.xyz));
+            float e=(xyzf.w)/(length(xyzf.xyz));
             float f=xyzf.w;
             //e*=1./(a*a);
             if(a<xmin && e<eps && a>=0. && abs(f)<1e10){
                     error=e;
                     xmin=a;
                 }
-        #endif
+        
 
         /*if(v_rayDirXY.x>0.){
             a=raySphereIntersect(rayOrigin,rayDir,rayDir*a+rayOrigin+gn.xyz,eps);

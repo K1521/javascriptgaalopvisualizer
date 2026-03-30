@@ -104,7 +104,7 @@
 \title{Visualisierung des Innenprodukt-Nullraums (IPNS) von geometrischer Algebra als Iso-Oberflächen}
 %\subtitle{3D-Visualisierung von Oberflächenhüllkurven an polynomialen Nullstellen mittels geometrischer Algebra}
 \author{Konstantin Bachem}
-\reviewer{Dr.-Ing. Dietmar Hildenbrand \and Hon.-Prof. Dr.-Ing. Andr\'e Stork}
+\reviewer{Dr.-Ing. Dietmar Hildenbrand \and Hon.Prof. Dr.-Ing. Andr\'e Stork}
 
 % The following elements will be placed on the title page
 \department{inf}% If defined the shorthand will be replaced by the full name otherwhise it's used directly.
@@ -141,7 +141,7 @@
 \includepdf{pictures/Avidavid.pdf}
 
 \chapter{Motivation}
-Geometrische Algebra hat den großen Vorteil, dass die algebraischen Ausdrücke in vielen Fällen geometrische Objekten und Operationen entsprechen. Deshalb können Algorithmen gut visualisiert werden. Auch \textsc{Gaalop} und das web-basierte \textsc{Gaalop}Web bietet diese Möglichkeit. Insbesondere im Kontext von Algebren höherer Dimensionen, die in letzter Zeit immer wichtiger wird, weisen diese Visualisierungen allerdings eine Reihe von Nachteilen auf.
+Geometrische Algebra hat den großen Vorteil, dass die algebraischen Ausdrücke in vielen Fällen geometrischen Objekten und Operationen entsprechen. Deshalb können Algorithmen gut visualisiert werden. Auch \textsc{Gaalop} und das web-basierte \textsc{Gaalop}Web bietet diese Möglichkeit. Insbesondere im Kontext von Algebren höherer Dimensionen, die in letzter Zeit immer wichtiger wird, weisen diese Visualisierungen allerdings eine Reihe von Nachteilen auf.
 Das Ziel dieser Bachelorarbeit ist deshalb, eine neue Art der Visualisierung von geometrischen Objekten zu entwickeln und in \textsc{Gaalop}/\textsc{Gaalop}Web zu integrieren, bei der auch problemlos mit höheren Dimensionen gearbeitet werden kann. Neben der korrekten Visualisierung ist eine niedrige Laufzeit wichtig, da die Tools üblicherweise interaktiv bei der Entwicklung von Algorithmen genutzt werden.
 
 \IMRADlabel{introduction}
@@ -159,12 +159,12 @@ Die Arbeit beginnt mit einem Grundlagenkapitel, in dem relevante bekannte Algori
 
 Als Nächstes folgt ein Kapitel zur Konzeption und Anforderungen dieser Arbeit.
 
-Dann folgen zwei Kapitel die meine Visualisierungsansätze vorstellen. Diese sind unterteilt in auf Raycasting aufbauende Methoden und volumenbasierte Methoden, die versuchen Primitive zu erzeugen. Dann folgt ein Kapitel zur Implementierung und eingesetzten Optimierungen. Dabei wird im ersten Unterkapitel ein Verfahren vorgestellt, das ermöglicht den IPNS/OPNS von höher dimensionalen Algebren auf der GPU auszuwerten.
+Dann folgen zwei Kapitel, die meine Visualisierungsansätze vorstellen. Diese sind unterteilt in auf Raycasting aufbauende Methoden und volumenbasierte Methoden, die versuchen Primitive zu erzeugen. Dann folgt ein Kapitel zur Implementierung und eingesetzten Optimierungen. Dabei wird im unter anderem ein Verfahren vorgestellt, das ermöglicht den IPNS/OPNS von höherdimensionalen Algebren auf der GPU auszuwerten.
 Als Nächstes folgt ein Kapitel zur Evaluation der vorgestellten Ansätze.
 Zum Schluss Kommt ein Ausblick Kapitel, in dem ich Verbesserungsideen aufzähle, die ich nicht mehr Implementieren konnte.
 %Schreibe rest wenn etwas in dem entsprechenden kapitel steht.
 \section{Worum geht es?}
-Um ein bisschen klarer zu machen, worum es geht, werde ich hier ein kurzes Beispiel geben.
+Um ein bisschen klarer zu machen, worum es geht, gebe ich hier ein kurzes Beispiel.
 Der Input von \textsc{Gaalop} sind Ausdrücke in CLUCalc. Dies ist die Sprache die \textsc{Gaalop} nutzt, um geometrische Algebra zu beschreiben. 
 Dies sieht beispielsweise so aus:
 \begin{verbatim}
@@ -188,7 +188,7 @@ In meiner Software wird dann der Nullraum der Objekte visualisiert.
 \begin{figure}
     \centering
     \includegraphics[width=1\linewidth]{pictures/gui.png}
-    \caption{Oben links kann man mittels Schiebereglern Parameter einstellen. Oben rechts ist ein Diagramm was ich zur debug Zwecken benutzt habe. Unten rechts kann man für jedes Objekt die Visualisierungsmethode und Parameter der gewählten Methode einstellen.}
+    \caption{Oben links kann man mittels Schiebereglern Parameter einstellen. Oben rechts ist ein Diagramm was ich zur Debugzwecken benutzt habe. Unten rechts kann man für jedes Objekt die Visualisierungsmethode und Parameter der gewählten Methode einstellen.}
 
     \label{fig:gui}
 \end{figure}
@@ -613,8 +613,8 @@ dass \( f \) eine Nullstelle auf dem Intervall hat, besteht darin,
 die Intervalle \( I_x, I_y, I_z \) schrittweise zu unterteilen, 
 bis sie klein genug sind.
 
-\subsection{Gauß-Newton Verfahren}
-Das Gauß-Newton Verfahren ist ein iteratives Optimierungsverfahren für die Suche des Minimums der Summe der Quadrate einer mehrwertigen Funktion.
+\subsection{Gauß-Newton-Verfahren}
+Das Gauß-Newton-Verfahren ist ein iteratives Optimierungsverfahren für die Suche des Minimums der Summe der Quadrate einer mehrwertigen Funktion.
 \[
 \min _{x\in \mathbb {R} ^{n}}\left\{{\frac {1}{2}}\sum _{i=1}^{m}\left(f_{i}(\mathbf{x})\right)^{2}\right\}
 \]
@@ -699,7 +699,7 @@ f(x,y,z)
 \section{Ganja}
 Ganja \cite{ganja} ist eine Library für geometrische Algebra die von vielen anderen Libraries zur Visualisierung benutzt wird. Auch \textsc{Gaalop}Web nutz Ganja zur Visualisierung.
 Dabei benutzt Ganja zwei Ansätze zur Visualisierung. Erstens versucht Ganja die Objekte der Algebra zu interpretieren und so darzustellen. Beispielsweise wird erkannt, dass ein bestimmter Multivektor eine Kugel darstellt und diese wird dann visualisiert.
-Da dieser Ansatz nur für niedrigdimensionale Algebren gut funktioniert konzentriere ich mich auf den zweiten Ansatz.
+Da dieser Ansatz nur für niedrigdimensionale Algebren gut funktioniert, konzentriere ich mich auf den zweiten Ansatz.
 
 Ganja benutzt unter anderem Raycasting um Objekte zu visualisieren.
 Hier ist der Code den Ganja benutzt, um iterativ die erste Nullstelle zu finden:
@@ -853,20 +853,21 @@ Punktwolken lassen sich nur schlecht als statische Bilder darstellen da Bewegung
 
 \section{Anforderungen}
 Die Arbeit soll eine neue Visualisierungsmethode für kontinuierliche Flächen liefern, die in \textsc{Gaalop} und \textsc{Gaalop}Web eingebunden werden kann. Zudem sollte die Software mit hochdimensionaler geometrischer Algebra umgehen können und sollte eine interaktive Darstellung mit geringen Laufzeiten bieten.
-Dabei übernimmt \textsc{Gaalop} die Umwandlung von Ausdrücken in geometrischer Algebra zu Rechengraphen die dann von meiner Software weiterverarbeitet werden.
+Dabei übernimmt \textsc{Gaalop} die Umwandlung von Ausdrücken in geometrischer Algebra zu Rechengraphen, die dann von meiner Software weiterverarbeitet werden.
 
 
 \section{Überblick über die Lösungsansätze}
 Zur Visualisierung von Objekten in geometrischer Algebra gibt es hauptsächlich zwei Ansätze.
-Im ersten Ansatz wird versucht zu interpretieren, ob das Objekt ein Punkt, Linie, Ebene, Kugel etc. darstellt und dann entsprechend visualisiert. Dieser Ansatz funktioniert vor allem in niedrigdimensionalen Algebren da in höherdimensionalen die Anzahl der möglichen geometrischen Objekte wächst. Deshalb benutze ich den zweiten Ansatz.
+Im ersten Ansatz wird versucht zu interpretieren, ob das Objekt ein Punkt, Linie, Ebene, Kugel etc. darstellt und dann entsprechend visualisiert. Dieser Ansatz funktioniert vor allem in niedrigdimensionalen Algebren, da in höherdimensionalen die Anzahl der möglichen geometrischen Objekte wächst. Deshalb benutze ich den zweiten Ansatz.
 Der zweite Ansatz funktioniert über die Nullstellensuche des Inner/Outer-Product-Nullraums des Objektes. Dabei kann versucht werden die Nullstellen als Primitive zu extrahieren oder Raycasting zu nutzen. Ich habe beide Ansätze getestet. 
 
 \section{Libraries und Frameworks}
 Der Visualisierer soll später mit \textsc{Gaalop}Web zusammen genutzt werden können. Deshalb habe ich mich entschieden, das Ganze hauptsächlich als Webseite zu schreiben (also HTML und JavaScript). Davor hatte ich schon Experimente zur Visualisierung von geometrischer Algebra in Python gemacht wobei ich OpenGL, Numpy, CuPy, Sympy und Pyvista genutzt hatte. Dabei habe ich OpenGL Computeshader, CuPy und Numpy zum Numbercrunching genutzt, während zur Visualisierung von Primitiven Pyvista genutzt wurden, und zur Visualisierung von Raycasting OpenGL. 
-Da OpenGL sowohl zum Numbercrunching als auch zur Visualisierung genutzt werden kann, habe ich mich entschieden WebGL2 zu nutzen was im Prinzip die OpenGL Variante in JavaScript ist. Zudem benötige ich noch eine Library für lineare Algebra wie Matrix Inverse und QR-Zerlegung, wobei ich mich für mathjs entscheiden habe da diese Library weit verbreitet ist. Außerdem benötige ich eine Library zum plotten. Dabei habe ich mich für Plotty entschieden da es ähnlich zu Pyplot ist, was ich schon kannte.
+Da OpenGL sowohl zum Numbercrunching als auch zur Visualisierung genutzt werden kann, habe ich mich entschieden WebGL2 zu nutzen was im Prinzip die OpenGL Variante in JavaScript ist. Zudem benötige ich noch eine Library für lineare Algebra wie Matrix Inverse und QR-Zerlegung, wobei ich mich für mathjs entscheiden habe da diese Library weit verbreitet ist. Außerdem benötige ich eine Library zum Plotten. Dabei habe ich mich für Plotty entschieden, da es ähnlich zu Pyplot ist, was ich schon kannte.
 Der zweite Teil der Software ist ein Plugin für \textsc{Gaalop}, das wie der Rest von \textsc{Gaalop} in Java geschrieben ist.
 Zudem habe ich noch ein paar kleine Python Scripts benutzt, um Daten auszuwerten.
-
+\section{Hilfsmittel}
+Diese Arbeit ist mein erstes Javaskript Projekt. Deshalb habe ich anfangs viel Code mittels ChatGPT von Python übersetzten, um zu sehen, wie der Code in Javaskript aussieht. Später habe ich Chatgpt außerdem zum Code review benutzt, und um Rechtschreibfehler zu finden. Weitere Hilfsmittel sind VSCode als IDE, und Excel für Diagramme.
 
 \chapter{Raycasting-Verfahren}
 \IMRADlabel{methods}
@@ -1402,13 +1403,13 @@ Das Kapitel beginnt mit einem Überblick über die Systemarchitektur. Dann folgt
 Zum Schluss folgen noch ein paar einfachere Optimierungen.
 \section{Systemarchitektur}
 %mobile
-In einem Progrogrammdurchlauf wird immer als Erstes das von \textsc{Gaalop} generierte JSON eingelesen und als Graph deserialisiert. Dieser Graph enthält Definitionen der Nullräume der zu visualisierenden Objekte. Der Code dafür ist in der Klasse GaalopGraph.
+In einem Programmdurchlauf wird immer als Erstes das von \textsc{Gaalop} generierte JSON eingelesen und als Graph deserialisiert. Dieser Graph enthält Definitionen der Nullräume der zu visualisierenden Objekte. Der Code dafür ist in der Klasse GaalopGraph.
 Anschließend werden in main2.js für jedes zu visualisierende Objekt sogenannte Pipelines erstellt und gruppiert nach Objekt im RenderContext gespeichert. Dabei implementiert jede Pipeline eine Visualisierungsmethode. Die Pipelines besitzen jeweils ein oder mehrere Shader. Dabei haben die Raycasting Methoden jeweils einen Shader während die Volumenbasierten Methoden teilweise mehrere Shader zur Generierung und zum Anzeigen der Primitive haben.  
-Der Shadercode wird mittels Shaderimporter eingelesen. Dieser erweitert glsl und fügt Imports hinzu. Die meisten aktuell genutzten Shader sind im Ordner shaderlibv3.
-Alle Shader welche den Nullraum auswerten sind nur Templates. Deshalb wird mittels der Codegenerierung Shadercode zur Auswertung des Nullraums aus dem eingelesenen Graph erzeugt und in den Shader eingefügt. Dies passiert in den Methoden gencode und gencodeR (Mateixvariante). Die gesamte Codegenerierung ist in der Datei codegenBackpropergation2.js.
+Der Shadercode wird mittels Shaderimporter eingelesen. Dieser erweitert GLSL und fügt Imports hinzu. Die meisten aktuell genutzten Shader sind im Ordner shaderlibv3.
+Alle Shader welche den Nullraum auswerten sind nur Templates. Deshalb wird mittels der Codegenerierung Shadercode zur Auswertung des Nullraums aus dem eingelesenen Graph erzeugt und in den Shader eingefügt. Dies passiert in den Methoden gencode und gencodeR (Mateixvariante). Die gesamte Codegenerierung ist in der Datei codegenBackpropergation2.js zu finden.
 
 Als Nächstes wird die Gameloop gestartet.
-In jedem Gameloop Durchlauf wird zuerst die Methode updateParams des RenderContextes aufgerufen. Diese Methode ruft die update Methoden der aktiven Pipelines auf. Immer wenn sich Parameter ändern, müssen die Primitive für die Volumenbasierten Pipelines neu generiert werden und auch für die Raycasting Methoden müssen teile des Graphs neu ausgewertet werden und die Shader uniforms entsprechend aktualisiert werden. 
+In jedem Gameloop-Durchlauf wird zuerst die Methode updateParams des RenderContextes aufgerufen. Diese Methode ruft die Update-Methoden der aktiven Pipelines auf. Immer wenn sich Parameter ändern, müssen die Primitive für die Volumenbasierten Pipelines neu generiert werden und auch für die Raycasting Methoden müssen teile des Graphs neu ausgewertet werden und die Shader uniforms entsprechend aktualisiert werden. 
 
 Dann kommt die Methode \enquote{render} welche die entsprechenden render Methoden der Pipelines aufruft. Es wird nur neu gerendert, wenn sich die Parameter oder die Kamera geändert haben.
 Beim Rendern wird erst ein Bild mit niedriger Auflösung gerendert und dann über mehrere Frames ein hochauflösendes Bild. Dies wird im Abschnitt \ref{sec:tilebased} näher beschrieben.
@@ -1429,7 +1430,7 @@ Zusammen lässt sich der Nullraum also als ein Gleichungssystem darstellen.
 M \cdot \mathbf{P}(x,y,z) = 0
 \]  
 
-Dabei kann M direkt aus dem zu visualisierenden Multivektor berechnet werden, während \( \mathbf{P}\) die Polynome aus \(\texttt{point}(x,y,z)\) darstellt. 
+Dabei kann \(M\) direkt aus dem zu visualisierenden Multivektor berechnet werden, während \( \mathbf{P}\) die Polynome aus \(\texttt{point}(x,y,z)\) darstellt. 
 
 
 %!P ist glaube ich technisch gesehen keine basis
@@ -1495,7 +1496,7 @@ f = \left\|\begin{bmatrix} R' \\ 0 \end{bmatrix} \cdot  \mathbf{P}(x, y, z)\righ
 
 Das bedeutet, es kann \( M' = R' \) gewählt werden.
 
-Beachtet werden muss hierbei, dass wegen Gleitkommaarithmetik die Zeilen von \( R \) die 0 sein sollten nur fast null sind (im Bereich von  \( 10^{-14} \)). Allerdings funktioniert das Ganze trotzdem, wenn auch die Zeilen welche fast 0 sind, entfernt werden, um \( R' \) zu erhalten.
+Beachtet werden muss hierbei, dass wegen numerischer Effekte der Gleitkommaarithmetik die Zeilen von \( R \), die 0 sein sollten, nur fast null sind (im Bereich von  \( 10^{-14} \)). Allerdings funktioniert das Ganze trotzdem, wenn auch die Zeilen welche fast 0 sind, entfernt werden, um \( R' \) zu erhalten.
 
 Eine einfache Alternative, die allerdings schwächer ist, ist durch die Ausnutzung von 
 \(\ker(A) = \ker(A^TA)\).
@@ -1520,7 +1521,7 @@ In der GUI heißen die Verfahren \enquote{AberthGN} (Levenberg Marquad) und \enq
 Weiterhin kann \(R\) und \( \mathbf{P}\) so konstruiert werden, dass \((\mathbf{F}_R)_i\) einen von i abhängen Grad hat.
 Vor der Konstruktion von \(R\) können die Polynome in \( \mathbf{P}\) so sortiert werden, sodass Polynome mit niedrigerem Grad weiter unten sind. Entsprechend müssen auch die Spalten von M permutiert werden.
 Das bedeutet, dass \(\deg((\mathbf{F}_R)_i)=\deg(P_i)\). Bei der Wahl von \((\mathbf{F}_R)_i\) zur Nullstellensuche kann dann das \((\mathbf{F}_R)_i\) mit dem niedrigsten Grad gewählt werden, was die Nullstellensuche theoretisch beschleunigt.
-Ich habe die Sortierung implementiert, aber diesen Fakt nicht ausgenutzt da dies die Nullstellensuche im Shader wesentlich komplexer machen würde. In der Praxis benutze ich daher immer \((\mathbf{F}_R)_1\) und lade immer das ganze \(R\) (mit Zeilen die vollkommen aus Nullen bestehen) in den Shader.
+Ich habe die Sortierung implementiert, aber diesen Fakt nicht ausgenutzt, da dies die Nullstellensuche im Shader wesentlich komplexer machen würde. In der Praxis benutze ich daher immer \((\mathbf{F}_R)_1\) und lade immer das ganze \(R\) (mit Zeilen die vollkommen aus Nullen bestehen) in den Shader.
 
 
 
@@ -1531,24 +1532,24 @@ Ich habe die Sortierung implementiert, aber diesen Fakt nicht ausgenutzt da dies
 %expression inlining
 %graph cuttinDAG g in gpu and cpugraph
 
-Um den von \textsc{Gaalop} generierten Rechengraph (eng computational Graph) auf der GPU auszuwerten, muss dieser zu glsl (OpenGL Code) konvertiert werden.
+Um den von \textsc{Gaalop} generierten Rechengraph (eng computational Graph) auf der GPU auszuwerten, muss dieser zu GLSL (OpenGL Shading Language) konvertiert werden.
 %i chose a dag because of memory leaks
 
 Dies passiert in mehreren Schritten.
 Als Erstes wird der Graph in \textsc{Gaalop} erzeugt und durch ein Plugin als JSON exportiert.
 Dann wird das JSON in JavaScript eingelesen und wieder zu einem Graph deserialisiert.
 Als Nächstes wird der Graph manipuliert. Dazu gehören Vereinfachung, Ableitungsberechnungen und Splitting.
-Zum Schluss wird dann aus daraus Code in glsl generiert welche die Auswertung in Shadern ermöglicht.
+Zum Schluss wird dann daraus Code in GLSL generiert, welcher die Auswertung in Shadern ermöglicht.
 %JSON zu graph
 
 %graph split
 %graph 
 
-\subsection{\textsc{Gaalop} plugin}
-Der erste Schritt der Code Generierung ist das \textsc{Gaalop} Plugin.
+\subsection{\textsc{Gaalop} Plugin}
+Der erste Schritt der Codegenerierung ist das \textsc{Gaalop} Plugin.
 Der Input für \textsc{Gaalop} ist ein Ausdruck in geometrischer Algebra.
 \textsc{Gaalop} transformiert den geometrischen Ausdruck in eine äquivalente arithmetische Form, die aus Skalaren und klassischen Operationen besteht.
-Intern wird der Ausdruck in der geometrischen Form als eine liste von assignement Nodes repräsentiert.
+Intern wird der Ausdruck in der geometrischen Form als eine Liste von Assignment-Nodes repräsentiert.
 Also etwa:
 %TODO BETTER EXAMPLE
 \begin{verbatim}
@@ -1563,7 +1564,7 @@ S1[4] = (-((a * v[0]) / 2.0)) # ep
 S1[5] = (-((a * v[0]) / 2.0)) # em
 \end{verbatim}
 
-Dieser Graph wird von meinem plugin als JSON serialisiert.
+Dieser Graph wird von meinem Plugin als JSON serialisiert.
 \subsubsection{computational DAG}
 
 \subsection{DAG in js}
@@ -1841,7 +1842,7 @@ Ein Vorteil des neuen Codes könnten bessere Vereinfachungen des Graphen sein.
 
 
 \subsection{Schnelle Matrix-Vektor-Multiplikation in Glsl}
-Um \(\mathbf{F}_R=R\cdot\mathbf{P}(x,y,z)\) für den Matrixansatz auszuwerten wird Matrixmultiplikation in glsl benötigt, die möglichst performant sein muss. Kleine Änderungen im Shadercode machen große Performance Unterschiede.
+Um \(\mathbf{F}_R=R\cdot\mathbf{P}(x,y,z)\) für den Matrixansatz auszuwerten wird Matrixmultiplikation in GLSL benötigt, die möglichst performant sein muss. Kleine Änderungen im Shadercode machen große Performance Unterschiede.
 Dabei gibt es mehrere Parameter die geändert werden können. 
 
 Die Matrix als uniform oder als uniform Buffer (ubo) hochgeladen werden. 
@@ -2249,19 +2250,59 @@ Ganjas Visualisierung braucht ca. 8 ms bis 400 ms pro Animation-Loop-Durchlauf m
     \label{fig:myganja}
 \end{figure}
 
+\section{Weitere Beispiele}
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{pictures/P123.png}
+    \caption{Visualisierung der Torus Inversion von Seite 123 aus \cite{hildenbrand2021power}}
+
+    \label{fig:P123}
+\end{figure}
+
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{pictures/threesperes.png}
+    \caption{Visualisierung des Three-Spheres-Beispiels von Seite 66 aus \cite{hildenbrand2021power}. Dieses Beispiel kann auch mittels Ganja unter folgendem Link visualisiert werden: \href{https://gaalopweb.esa.informatik.tu-darmstadt.de/gaalopweb/res/cpp/input?sample=threespheres}{Online-Visualisierung}}
+
+    \label{fig:threesperes}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{pictures/P93.png}
+    \caption{Dieses Beispiel ist eigentlich 2d, wird in meiner Software aber als 3d dargestellt. (aus Seite 93 aus \cite{hildenbrand2021power})}
+
+    \label{fig:threesperes}
+\end{figure}
+
 \chapter{Ausblick}
-Der wichtigste nächste Schritt wäre die Integration der Software in \textsc{Gaalop}Web. Die Software ist dafür vorbereitet, und die Integration müsste relativ einfach sein.
+Der wichtigste nächste Schritt wäre die Integration der Software in \textsc{Gaalop}Web. Die Software ist dafür vorbereitet, und die Integration müsste relativ einfach sein. Da ich keinen Zugriff auf den source Code von \textsc{Gaalop}Web habe, konnte ich dies nicht selbst machen.
 
 Als Nächstes sollte die GUI überarbeitet werden.
 Aktuell hat die Software viele Parameter und Visualisierungsansätze mit vielen Hyperparametern. In der Praxis werden wahrscheinlich nur wenige dieser Methoden sinnvoll sein. Deshalb wäre einer der nächsten Schritte, viele Methoden zu entfernen oder zu verstecken. Das Gleiche gilt für die Parameter in der GUI. Außerdem kann das Diagramm, welches ich zum Debugging eingefügt hatte, entfernt werden.
 
 Eine weitere Verbesserung wäre eine bessere Codegenerierung. Dazu gehört eine Untersuchung der alten und neuen Codegenerierung für schnelle Ableitungsberechnung. Als Nächstes könnte man die Multiplikation mit der Matrix \(R\) in GLSL verbessern, falls \(R\) keinen vollen Rang hat. Im Moment wird mit der gesamten Matrix \(R\) multipliziert, obwohl \(R\) Zeilen mit Nullen hat. Alternativ könnte man statt für jedes Objekt einen einzelnen Shader zu kompilieren, einen Shader pro Algebra kompilieren. Dies könnte die Visualisierung einfacher machen, da die Shader nicht für jedes Objekt neu kompiliert werden müssen.
 
-Eine weitere möglichkeit ist die erweiterung der Software durch neue Methoden. Allerdings müsste dafür erst festgestellt werden welche Methoden in der Praxis gut sind.
+Eine weitere möglichkeit ist die erweiterung der Software durch neue Methoden. Allerdings müsste dafür erst festgestellt werden welche Methoden in der Praxis gut funktionieren.
 
 \chapter{Zusammenfassung}
-In dieser Arbeit wurden Methoden zur Schnellen Auswertung und Visualisierung des Nullraums von geometrischer Algebra entwickelt. Dabei sind meine Ansätze stabieler und Schneller als die bisherigen Ansätze. 
+Das Ziel der Arbeit war es eine performante Visualisierung für \textsc{Gaalop}Web zu entwickeln, die mit hochdimensionaler Algebra umgehen kann.
 
+Dazu wurde ein Verfahren entwickelt, welches Shadercode zur Evaluierung des Nullraums von geometrischen Objekten erzeugt. Anders als Ganjas Ansatz funktioniert mein Ansatz auch in hochdimensionalen Algebren. Dabei wird mittels QR-Zerlegung die Größe des generierten Shadercodes reduziert, was die Auswertung in hochdimensionalen Algebren erst ermöglicht.
+
+Darauf aufbauend wurden neue Visualisierungsmethoden entwickelt, die auf den Ansätzen von Gaalop und Ganja aufbauen.
+
+Der Vorteil meiner Ansätze gegenüber Gaalop ist, dass die Evaluierung wesentlich schneller ist. Je nach Anwendungsfall zwischen 20-mal und 2000-mal. Dies bedeutet unter anderem, dass Objekte in wesentlich höherer Auflösung visualisiert werden können. Außerdem erzeugen meine Ansätze im Gegensatz zu Gaalop unter anderem einfache Meshes anstatt nur Punktwolken.
+Von den volumenbasierten Ansätzen empfehle ich GridVoxel als stabiles Verfahren zur Meshgenerierung (Dieser Ansatz ist hauptsächlich bei hohen Auflösungen interessant), RayMethod als schnelles Verfahren zur Punktwolkengenerierung von Flächen, IterGrid zur Punktwolkengenerierung von Kurven und Marching Cubes als ein etwas instabileres Verfahren, welches komplexere Meshes erzeugen kann.
+
+
+Die auf Ganja aufbauenden Raycasting-Verfahren sind hingegen wesentlich stabiler als Ganjas eigenes Verfahren und haben weniger Artefakte.
+Von den Raycasting-Verfahren empfehle ich UdfApprox für Kurven und Aberth für Flächen. 
+Ein bekanntes Problem meiner Raycasting-Verfahren ist die Instabilität bei doppelten Nullstellen im Nullraum, was zu Artefakten bei der Darstellung von Ebenen in der DCGA führt.
+
+Insgesamt zeigen die Ergebnisse, dass die entwickelten Methoden die Anforderungen an Geschwindigkeit und Qualität erfüllen.
 \printbibliography
 
 

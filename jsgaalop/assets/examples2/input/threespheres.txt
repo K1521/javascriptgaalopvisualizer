@@ -1,0 +1,19 @@
+// -a cga
+
+//creating the CGA points;
+?x1=createPoint(a1,a2,a3); 
+x2=createPoint(b1,b2,b3);
+x3=createPoint(c1,c2,c3);
+
+// creating the spheres;
+
+?S1=x1-0.5*(d14*d14)*einf;
+?S2=x2-0.5*(d24*d24)*einf;
+?S3=x3-0.5*(d34*d34)*einf;
+
+:Blue;
+:S1;
+:Red;
+:S2;
+:Green;
+:S3;

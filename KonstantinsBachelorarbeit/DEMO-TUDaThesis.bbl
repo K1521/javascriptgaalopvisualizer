@@ -87,6 +87,40 @@
       \verb 10.1145/2699468
       \endverb
     \endentry
+    \entry{hildenbrand2021power}{book}{}{}
+      \name{author}{1}{}{%
+        {{hash=317274929fddab0cd0c60ff1ad760c5f}{%
+           family={Hildenbrand},
+           familyi={H\bibinitperiod},
+           given={Dietmar},
+           giveni={D\bibinitperiod}}}%
+      }
+      \list{location}{1}{%
+        {New York}%
+      }
+      \list{publisher}{2}{%
+        {Chapman}%
+        {Hall/CRC}%
+      }
+      \strng{namehash}{317274929fddab0cd0c60ff1ad760c5f}
+      \strng{fullhash}{317274929fddab0cd0c60ff1ad760c5f}
+      \strng{fullhashraw}{317274929fddab0cd0c60ff1ad760c5f}
+      \strng{bibnamehash}{317274929fddab0cd0c60ff1ad760c5f}
+      \strng{authorbibnamehash}{317274929fddab0cd0c60ff1ad760c5f}
+      \strng{authornamehash}{317274929fddab0cd0c60ff1ad760c5f}
+      \strng{authorfullhash}{317274929fddab0cd0c60ff1ad760c5f}
+      \strng{authorfullhashraw}{317274929fddab0cd0c60ff1ad760c5f}
+      \field{sortinit}{H}
+      \field{sortinithash}{23a3aa7c24e56cfa16945d55545109b5}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{isbn}{9781003139003}
+      \field{title}{The Power of Geometric Algebra Computing: For Engineering and Quantum Computing}
+      \field{year}{2021}
+      \verb{doi}
+      \verb 10.1201/9781003139003
+      \endverb
+    \endentry
     \entry{peters2023gpuPolynomialRoots}{online}{}{}
       \name{author}{1}{}{%
         {{hash=e0e5bd2f32e773d0d8e32736d368c08f}{%
