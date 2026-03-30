@@ -2375,11 +2375,15 @@
   <bcf:section number="0">
     <bcf:citekey order="1" intorder="1">teadrinker2022sdf</bcf:citekey>
     <bcf:citekey order="2" intorder="1">ganja</bcf:citekey>
-    <bcf:citekey order="3" intorder="1">flocke2015algorithm954</bcf:citekey>
-    <bcf:citekey order="4" intorder="1">peters2023gpuPolynomialRoots</bcf:citekey>
-    <bcf:citekey order="5" intorder="1">hildenbrand2021power</bcf:citekey>
-    <bcf:citekey order="6" intorder="1">hildenbrand2021power</bcf:citekey>
-    <bcf:citekey order="7" intorder="1">hildenbrand2021power</bcf:citekey>
+    <bcf:citekey order="3" intorder="1">breuils2018quadric</bcf:citekey>
+    <bcf:citekey order="4" intorder="1">shadertoy_barth_sextic_UDF</bcf:citekey>
+    <bcf:citekey order="5" intorder="1">shadertoy_barth_sextic</bcf:citekey>
+    <bcf:citekey order="6" intorder="1">wikipedia_gram_schmidt</bcf:citekey>
+    <bcf:citekey order="7" intorder="1">flocke2015algorithm954</bcf:citekey>
+    <bcf:citekey order="8" intorder="1">peters2023gpuPolynomialRoots</bcf:citekey>
+    <bcf:citekey order="9" intorder="1">hildenbrand2021power</bcf:citekey>
+    <bcf:citekey order="10" intorder="1">hildenbrand2021power</bcf:citekey>
+    <bcf:citekey order="11" intorder="1">hildenbrand2021power</bcf:citekey>
   </bcf:section>
   <!-- SORTING TEMPLATES -->
   <bcf:sortingtemplate name="nty">

@@ -19,6 +19,54 @@
 
 \refsection{0}
   \datalist[entry]{nty/global//global/global/global}
+    \entry{breuils2018quadric}{article}{}{}
+      \name{author}{4}{}{%
+        {{hash=9431630651ad3bf97f5e7bada985e3af}{%
+           family={Breuils},
+           familyi={B\bibinitperiod},
+           given={Stéphane},
+           giveni={S\bibinitperiod}}}%
+        {{hash=33d28e7b1bf6cdd1e14647ccc1ef78ad}{%
+           family={Nozick},
+           familyi={N\bibinitperiod},
+           given={Vincent},
+           giveni={V\bibinitperiod}}}%
+        {{hash=3258d697bd2df478e4033115b20572ae}{%
+           family={Sugimoto},
+           familyi={S\bibinitperiod},
+           given={Akihiro},
+           giveni={A\bibinitperiod}}}%
+        {{hash=19994c067eb1bb865cb628ad429af325}{%
+           family={Hitzer},
+           familyi={H\bibinitperiod},
+           given={Eckhard},
+           giveni={E\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Springer}%
+      }
+      \strng{namehash}{be1464c6d7e95e57eeb270216df8100b}
+      \strng{fullhash}{38c9d938fa8345dc3e8c8c26424b6dc7}
+      \strng{fullhashraw}{38c9d938fa8345dc3e8c8c26424b6dc7}
+      \strng{bibnamehash}{be1464c6d7e95e57eeb270216df8100b}
+      \strng{authorbibnamehash}{be1464c6d7e95e57eeb270216df8100b}
+      \strng{authornamehash}{be1464c6d7e95e57eeb270216df8100b}
+      \strng{authorfullhash}{38c9d938fa8345dc3e8c8c26424b6dc7}
+      \strng{authorfullhashraw}{38c9d938fa8345dc3e8c8c26424b6dc7}
+      \field{sortinit}{B}
+      \field{sortinithash}{d7095fff47cda75ca2589920aae98399}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Advances in Applied Clifford Algebras}
+      \field{title}{Quadric Conformal Geometric Algebra of R9,6}
+      \field{volume}{28}
+      \field{year}{2018}
+      \field{pages}{35}
+      \range{pages}{1}
+      \verb{doi}
+      \verb 10.1007/s00006-018-0851-1
+      \endverb
+    \endentry
     \entry{ganja}{online}{}{}
       \name{author}{1}{}{%
         {{hash=41014418e78a7e9cb39b18fb59828c77}{%
@@ -51,6 +99,42 @@
       \endverb
       \verb{url}
       \verb https://github.com/enkimute/ganja.js
+      \endverb
+    \endentry
+    \entry{shadertoy_barth_sextic}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=edd88a4afdd53f21f79570141b820c45}{%
+           family={fizzer},
+           familyi={f\bibinitperiod}}}%
+      }
+      \list{organization}{1}{%
+        {Shadertoy.com}%
+      }
+      \strng{namehash}{edd88a4afdd53f21f79570141b820c45}
+      \strng{fullhash}{edd88a4afdd53f21f79570141b820c45}
+      \strng{fullhashraw}{edd88a4afdd53f21f79570141b820c45}
+      \strng{bibnamehash}{edd88a4afdd53f21f79570141b820c45}
+      \strng{authorbibnamehash}{edd88a4afdd53f21f79570141b820c45}
+      \strng{authornamehash}{edd88a4afdd53f21f79570141b820c45}
+      \strng{authorfullhash}{edd88a4afdd53f21f79570141b820c45}
+      \strng{authorfullhashraw}{edd88a4afdd53f21f79570141b820c45}
+      \field{sortinit}{f}
+      \field{sortinithash}{2638baaa20439f1b5a8f80c6c08a13b4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{month}{01}
+      \field{note}{The Barth Sextic, raytraced with 2nd-order root-finding algorithm Halley's method. Shadertoy shader, Views: 293, Tags: geometry, surface, dual, real, algebraic, sextic}
+      \field{title}{Barth Sextic (+ Halley's Method)}
+      \field{urlday}{30}
+      \field{urlmonth}{3}
+      \field{urlyear}{2026}
+      \field{year}{2023}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://www.shadertoy.com/view/DlfXzB
+      \endverb
+      \verb{url}
+      \verb https://www.shadertoy.com/view/DlfXzB
       \endverb
     \endentry
     \entry{flocke2015algorithm954}{article}{}{}
@@ -157,6 +241,42 @@
       \verb https://momentsingraphics.de/GPUPolynomialRoots.html
       \endverb
     \endentry
+    \entry{shadertoy_barth_sextic_UDF}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=cf1185d1f2a1503453ac66bc99b6f9bf}{%
+           family={skye\_adaire},
+           familyi={s\bibinitperiod}}}%
+      }
+      \list{organization}{1}{%
+        {Shadertoy.com}%
+      }
+      \strng{namehash}{cf1185d1f2a1503453ac66bc99b6f9bf}
+      \strng{fullhash}{cf1185d1f2a1503453ac66bc99b6f9bf}
+      \strng{fullhashraw}{cf1185d1f2a1503453ac66bc99b6f9bf}
+      \strng{bibnamehash}{cf1185d1f2a1503453ac66bc99b6f9bf}
+      \strng{authorbibnamehash}{cf1185d1f2a1503453ac66bc99b6f9bf}
+      \strng{authornamehash}{cf1185d1f2a1503453ac66bc99b6f9bf}
+      \strng{authorfullhash}{cf1185d1f2a1503453ac66bc99b6f9bf}
+      \strng{authorfullhashraw}{cf1185d1f2a1503453ac66bc99b6f9bf}
+      \field{sortinit}{s}
+      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{month}{09}
+      \field{note}{Implicit equation taken from: https://imaginary.org/gallery/oliver-labs. Shadertoy shader, Views: 313, Tags: geometry, surface, dual, quintic, real, algebraic}
+      \field{title}{Barth Sextic mit Spheretracing}
+      \field{urlday}{30}
+      \field{urlmonth}{3}
+      \field{urlyear}{2026}
+      \field{year}{2019}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://www.shadertoy.com/view/wdd3zB
+      \endverb
+      \verb{url}
+      \verb https://www.shadertoy.com/view/wdd3zB
+      \endverb
+    \endentry
     \entry{teadrinker2022sdf}{online}{}{}
       \name{author}{1}{}{%
         {{hash=d63d0de4c5227130832f517dc535d6a6}{%
@@ -183,6 +303,37 @@
       \endverb
       \verb{url}
       \verb https://commons.wikimedia.org/wiki/File:Visualization_of_SDF_ray_marching_algorithm.png
+      \endverb
+    \endentry
+    \entry{wikipedia_gram_schmidt}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=b6aea1a416c89509a7df1cbb69249cb6}{%
+           family={{Wikipedia contributors}},
+           familyi={W\bibinitperiod}}}%
+      }
+      \strng{namehash}{b6aea1a416c89509a7df1cbb69249cb6}
+      \strng{fullhash}{b6aea1a416c89509a7df1cbb69249cb6}
+      \strng{fullhashraw}{b6aea1a416c89509a7df1cbb69249cb6}
+      \strng{bibnamehash}{b6aea1a416c89509a7df1cbb69249cb6}
+      \strng{authorbibnamehash}{b6aea1a416c89509a7df1cbb69249cb6}
+      \strng{authornamehash}{b6aea1a416c89509a7df1cbb69249cb6}
+      \strng{authorfullhash}{b6aea1a416c89509a7df1cbb69249cb6}
+      \strng{authorfullhashraw}{b6aea1a416c89509a7df1cbb69249cb6}
+      \field{sortinit}{W}
+      \field{sortinithash}{4315d78024d0cea9b57a0c6f0e35ed0d}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{title}{Gram-Schmidt process --- {Wikipedia}{,} The Free Encyclopedia}
+      \field{urlday}{30}
+      \field{urlmonth}{3}
+      \field{urlyear}{2026}
+      \field{year}{2026}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
+      \endverb
+      \verb{url}
+      \verb https://en.wikipedia.org/wiki/Gram%E2%80%93Schmidt_process
       \endverb
     \endentry
   \enddatalist

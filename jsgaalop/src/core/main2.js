@@ -330,7 +330,7 @@ async function main(gajson){
     obj.addPipeline("Newton",new udfrenderer(context,gl,visgraph,newtonsource,color));
 
     const udfaproxsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/udfaprox.glsl");
-    obj.addPipeline("UdfAprox",new udfrenderer(context,gl,visgraph,udfaproxsource,color));
+    obj.addPipeline("UdfApprox",new udfrenderer(context,gl,visgraph,udfaproxsource,color));
     
     const ganjasource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/ganja.glsl");
     obj.addPipeline("Ganja",new udfrenderer(context,gl,visgraph,ganjasource,color));

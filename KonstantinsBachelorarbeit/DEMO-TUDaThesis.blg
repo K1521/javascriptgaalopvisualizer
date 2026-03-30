@@ -1,15 +1,15 @@
-[8] Config.pm:328> INFO - This is Biber 2.21
-[13] Config.pm:331> INFO - Logfile is 'DEMO-TUDaThesis.blg'
-[1652] biber-MSWIN64:342> INFO - === 
-[2111] Biber.pm:421> INFO - Reading 'DEMO-TUDaThesis.bcf'
-[3275] Biber.pm:1002> INFO - Found 5 citekeys in bib section 0
-[3436] Biber.pm:4487> INFO - Processing section 0
-[3647] Biber.pm:4678> INFO - Looking for bibtex file 'DEMO-TUDaBibliography.bib' for section 0
-[4031] bibtex.pm:1713> INFO - LaTeX decoding ...
-[4465] bibtex.pm:1519> INFO - Found BibTeX data source 'DEMO-TUDaBibliography.bib'
-[5746] UCollate.pm:68> INFO - Overriding locale 'de-DE' defaults 'variable = shifted' with 'variable = non-ignorable'
-[5747] UCollate.pm:68> INFO - Overriding locale 'de-DE' defaults 'normalization = NFD' with 'normalization = prenormalized'
-[5747] Biber.pm:4307> INFO - Sorting list 'nty/global//global/global/global' of type 'entry' with template 'nty' and locale 'de-DE'
-[5748] Biber.pm:4313> INFO - No sort tailoring available for locale 'de-DE'
-[5914] bbl.pm:676> INFO - Writing 'DEMO-TUDaThesis.bbl' with encoding 'UTF-8'
-[5931] bbl.pm:779> INFO - Output to DEMO-TUDaThesis.bbl
+[0] Config.pm:328> INFO - This is Biber 2.21
+[1] Config.pm:331> INFO - Logfile is 'DEMO-TUDaThesis.blg'
+[313] biber-MSWIN64:342> INFO - === 
+[393] Biber.pm:421> INFO - Reading 'DEMO-TUDaThesis.bcf'
+[777] Biber.pm:1002> INFO - Found 9 citekeys in bib section 0
+[835] Biber.pm:4487> INFO - Processing section 0
+[891] Biber.pm:4678> INFO - Looking for bibtex file 'DEMO-TUDaBibliography.bib' for section 0
+[1024] bibtex.pm:1713> INFO - LaTeX decoding ...
+[1148] bibtex.pm:1519> INFO - Found BibTeX data source 'DEMO-TUDaBibliography.bib'
+[1575] UCollate.pm:68> INFO - Overriding locale 'de-DE' defaults 'variable = shifted' with 'variable = non-ignorable'
+[1576] UCollate.pm:68> INFO - Overriding locale 'de-DE' defaults 'normalization = NFD' with 'normalization = prenormalized'
+[1576] Biber.pm:4307> INFO - Sorting list 'nty/global//global/global/global' of type 'entry' with template 'nty' and locale 'de-DE'
+[1577] Biber.pm:4313> INFO - No sort tailoring available for locale 'de-DE'
+[1709] bbl.pm:676> INFO - Writing 'DEMO-TUDaThesis.bbl' with encoding 'UTF-8'
+[1720] bbl.pm:779> INFO - Output to DEMO-TUDaThesis.bbl

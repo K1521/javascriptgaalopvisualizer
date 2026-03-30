@@ -1,5 +1,0 @@
-{"type": "StartNode","name": "test1_qcga","inputScalars": [],"outputMultivectors": ["_V_PRODUCT0", "Sphere"],"localMultivectors": [],"localScalars": [],"renderingExpressions": [{"name": "_V_PRODUCT0", "expression": "Sphere"}],"bladecount": 16384,"nodes": [{"type": "StoreResultNode"},
-{"type": "ColorNode","r": 1.0,"g": 0.0,"b": 0.0,"alpha": 1.0},
-{"type": "ExpressionStatement","expression": {"type": "Variable","name": "Sphere"}},
-{"type": "StoreResultNode"}
-]}
