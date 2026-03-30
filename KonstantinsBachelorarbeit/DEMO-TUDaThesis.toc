@@ -22,7 +22,7 @@
 \contentsline {section}{\numberline {3.4}Verfahren zur Nullstellensuche}{18}{section.3.4}%
 \contentsline {subsection}{\numberline {3.4.1}Newtonverfahren}{18}{subsection.3.4.1}%
 \contentsline {subsection}{\numberline {3.4.2}Aberth-Verfahren}{20}{subsection.3.4.2}%
-\contentsline {subsection}{\numberline {3.4.3}Intervall Arithmetik}{21}{subsection.3.4.3}%
+\contentsline {subsection}{\numberline {3.4.3}Intervallarithmetik}{21}{subsection.3.4.3}%
 \contentsline {subsection}{\numberline {3.4.4}Gauß-Newton-Verfahren}{22}{subsection.3.4.4}%
 \contentsline {section}{\numberline {3.5}Vandermonde-Matrix}{23}{section.3.5}%
 \contentsline {section}{\numberline {3.6}Duale Zahlen}{23}{section.3.6}%
@@ -33,7 +33,7 @@
 \contentsline {subsection}{\numberline {4.2.2}RayMethod}{27}{subsection.4.2.2}%
 \contentsline {subsection}{\numberline {4.2.3}GradientMethod}{29}{subsection.4.2.3}%
 \contentsline {subsection}{\numberline {4.2.4}Stärken und Schwächen}{30}{subsection.4.2.4}%
-\contentsline {section}{\numberline {4.3}Ansatz aus dem Paper: Quadric Conformal Geometric Algebra of R9,6}{30}{section.4.3}%
+\contentsline {section}{\numberline {4.3}Breuils et al.}{30}{section.4.3}%
 \contentsline {chapter}{\numberline {5}Konzeption}{31}{chapter.5}%
 \contentsline {section}{\numberline {5.1}Anforderungen}{31}{section.5.1}%
 \contentsline {section}{\numberline {5.2}Überblick über die Lösungsansätze}{31}{section.5.2}%
@@ -69,20 +69,19 @@
 \contentsline {subsection}{\numberline {8.2.3}Schnelle Nullstellensuche}{55}{subsection.8.2.3}%
 \contentsline {section}{\numberline {8.3}Codegenerierung}{56}{section.8.3}%
 \contentsline {subsection}{\numberline {8.3.1}\textsc {Gaalop} Plugin}{57}{subsection.8.3.1}%
-\contentsline {subsubsection}{\nonumberline computational DAG}{57}{subsubsection*.9}%
-\contentsline {subsection}{\numberline {8.3.2}DAG in js}{57}{subsection.8.3.2}%
-\contentsline {subsection}{\numberline {8.3.3}Graph splitting}{58}{subsection.8.3.3}%
-\contentsline {subsection}{\numberline {8.3.4}Graph Manipulationen}{60}{subsection.8.3.4}%
-\contentsline {subsubsection}{\nonumberline Was generiert die Codegenerierung}{60}{subsubsection*.10}%
+\contentsline {subsection}{\numberline {8.3.2}DAG in JavaScript}{57}{subsection.8.3.2}%
+\contentsline {subsection}{\numberline {8.3.3}Graph-Splitting}{57}{subsection.8.3.3}%
+\contentsline {subsection}{\numberline {8.3.4}Graph-Manipulationen}{60}{subsection.8.3.4}%
+\contentsline {subsubsection}{\nonumberline Was generiert die Codegenerierung?}{60}{subsubsection*.9}%
 \contentsline {subsection}{\numberline {8.3.5}Vereinfachung}{63}{subsection.8.3.5}%
-\contentsline {subsection}{\numberline {8.3.6}Matrix Extraktion}{63}{subsection.8.3.6}%
+\contentsline {subsection}{\numberline {8.3.6}Matrixextraktion}{63}{subsection.8.3.6}%
 \contentsline {section}{\numberline {8.4}Performance-Analyse}{64}{section.8.4}%
 \contentsline {subsection}{\numberline {8.4.1}Alte Codegenerierung vs neue Codegenerierung}{64}{subsection.8.4.1}%
 \contentsline {subsection}{\numberline {8.4.2}Schnelle Matrix-Vektor-Multiplikation in Glsl}{65}{subsection.8.4.2}%
 \contentsline {section}{\numberline {8.5}Optimizations}{68}{section.8.5}%
 \contentsline {subsection}{\numberline {8.5.1}Adaptive Auflösung}{68}{subsection.8.5.1}%
-\contentsline {subsection}{\numberline {8.5.2}Tile-based Rendering}{68}{subsection.8.5.2}%
-\contentsline {subsection}{\numberline {8.5.3}Polynom-Auswertung über Koeffizienten}{69}{subsection.8.5.3}%
+\contentsline {subsection}{\numberline {8.5.2}Tile-based Rendering}{69}{subsection.8.5.2}%
+\contentsline {subsection}{\numberline {8.5.3}Polynom-Auswertung über Koeffizienten}{70}{subsection.8.5.3}%
 \contentsline {chapter}{\numberline {9}Evaluierung}{72}{chapter.9}%
 \contentsline {section}{\numberline {9.1}Volumenbasierte Verfahren}{72}{section.9.1}%
 \contentsline {subsection}{\numberline {9.1.1}Iterative Verfahren}{73}{subsection.9.1.1}%

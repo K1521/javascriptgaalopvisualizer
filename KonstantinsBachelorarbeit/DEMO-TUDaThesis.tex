@@ -150,7 +150,7 @@ Das Ziel dieser Bachelorarbeit ist deshalb, eine neue Art der Visualisierung von
 Geometrische Algebra ist ein mathematischer Rahmen, der viele klassische algebraische Strukturen vereinigt. Dabei entsprechen algebraische Ausdrücke geometrischen Objekten.
 
 Aktuelle Methoden zur Visualisierung von geometrischer Algebra können nur niedrigdimensionale Algebren visualisieren oder sind langsam in höher dimensionalen Algebren.
-In dieser Arbeit wird eine Methode zur schnellen Auswertung des IPNS/OPNS mittels GPU-Shadern entwickelt und darauf aufbauend Visualisierungsmethoden.
+In dieser Arbeit wird eine Methode zur schnellen Auswertung des Nullraums mittels GPU-Shadern entwickelt und darauf aufbauend Visualisierungsmethoden.
 
 
 
@@ -161,8 +161,8 @@ Als Nächstes folgt ein Kapitel zur Konzeption und Anforderungen dieser Arbeit.
 
 Dann folgen zwei Kapitel, die meine Visualisierungsansätze vorstellen. Diese sind unterteilt in auf Raycasting aufbauende Methoden und volumenbasierte Methoden, die versuchen Primitive zu erzeugen. Dann folgt ein Kapitel zur Implementierung und eingesetzten Optimierungen. Dabei wird im unter anderem ein Verfahren vorgestellt, das ermöglicht den IPNS/OPNS von höherdimensionalen Algebren auf der GPU auszuwerten.
 Als Nächstes folgt ein Kapitel zur Evaluation der vorgestellten Ansätze.
-Danach kommt die Zusammenfassung welche kurz die Ergebnisse der Arbeit Zusammenfasst.
-Zum Schluss Kommt ein Ausblick Kapitel, in dem ich Verbesserungsideen aufzähle, die ich nicht mehr Implementieren konnte.
+Danach kommt die Zusammenfassung, welche kurz die Ergebnisse der Arbeit zusammenfasst.
+Zum Schluss kommt ein Ausblick-Kapitel, in dem ich Verbesserungsideen aufzähle, die ich nicht mehr implementieren konnte.
 %Schreibe rest wenn etwas in dem entsprechenden kapitel steht.
 \section{Worum geht es?}
 Um ein bisschen klarer zu machen, worum es geht, gebe ich hier ein kurzes Beispiel.
@@ -549,7 +549,7 @@ Als Konvergenzkriterium wird üblicherweise die maximale Änderung der Nullstell
 \max_k \left| z_k^{\text{neu}} - z_k^{\text{alt}} \right| < \varepsilon
 \]
 
-\subsection{Intervall Arithmetik}
+\subsection{Intervallarithmetik}
 Intervallarithmetik ist eine Methode zur sicheren Berechnung von Fehlergrenzen in numerischen Algorithmen. 
 Statt mit exakten Werten zu rechnen, wird, wie der Name schon sagt, mit Intervallen gerechnet. 
 Das Hauptaugenmerk bei der Intervallarithmetik liegt darin, obere und untere Schranken für den Wertebereich einer Funktion in einer oder mehreren Variablen zu bestimmen.
@@ -752,13 +752,13 @@ Anders als Ganja visualisiert \textsc{Gaalop} die Objekte als Punktwolken die au
 
 \subsection{DiscreteCubeMethod}
 
-Diese Methode wird in \textsc{Gaalop} in der Klasse \texttt{DiscreteCubeMethod} implementiert. Dabei wird der Nullraum \( f(\mathbf{x}) \) innerhalb eines Würfels \( [-a, a]^3 \) auf einem äquidistanten 3D Gitter ausgewertet. 
+Diese Methode wird in \textsc{Gaalop} in der Klasse \texttt{DiscreteCubeMethod} implementiert. Dabei wird der Nullraum \( f(\mathbf{x}) \) innerhalb eines Würfels \( [-a, a]^3 \) auf einem äquidistanten 3D-Gitter ausgewertet. 
 
 Alle Punkte, für die der Funktionswert unterhalb eines gewählten Schwellwerts liegt, werden direkt visualisiert. Auf diese Weise ergibt sich eine Punktwolke, die die Nullstellenmenge \( f(\mathbf{x}) = 0 \) näherungsweise beschreibt.
 
 %\textsc{Gaalop}s Klasse DiscreteCubeMethod evaluiert f im Raum in einem Dichten Gitter. Dann werden alle Punkte viesualisiert deren wert unter einem threshold liegt.
 \subsection{RayMethod}
-Diese Methode wird in \textsc{Gaalop} in der Klasse \texttt{RayMethod} implementiert. Sie erzeugt ein 2d Gitter mit \(y,z \in [-a,a]\) und \(x=-a\). Für jeden Punkt des Gitters wird eine Strecke in x Richtung erzeugt auf der mittels Intervallarithmetik Nullstellen gesucht werden. Wie beim Raycasting wird also das Problem der Nullstellensuche in 3d also auf eine Nullstellensuche in 1d reduziert.
+Diese Methode wird in \textsc{Gaalop} in der Klasse \texttt{RayMethod} implementiert. Sie erzeugt ein 2d Gitter mit \(y,z \in [-a,a]\) und \(x=-a\). Für jeden Punkt des Gitters wird eine Strecke in x Richtung erzeugt auf der mittels Intervallarithmetik Nullstellen gesucht werden. Wie beim Raycasting wird also das Problem der Nullstellensuche in 3D also auf eine Nullstellensuche in 1d reduziert.
 %(Also f(x,y,-a+t) t=[0,2*a])
 Hier ist eine vereinfachte Version des \textsc{Gaalop} Quellcodes der benutzt wird um entlang einer Strecke eine die Punkte zu generieren:
 \begin{minted}{python}
@@ -804,7 +804,7 @@ def refinement(t):
             t = RealInterval(center,t.hi())
 \end{minted}
 
-\textsc{Gaalop} nutzt also Intervall Arithmetik um zu prüfen, ob auf einem Intervall eine Nullstelle ist, und unterteilt die Intervalle rekursiv um sich der Nullstelle anzunähern. Falls die Funktion auf einem Intervall monoton ist (\(0 \notin f_{\text{ray}}'([a,b]) \)) wird die \enquote{refinement} Methode aufgerufen. Sonst wird das Intervall halbiert und die Methode ruft sich rekursiv selbst mit beiden Teilintervallen auf. Wenn die Teilintervalle klein genug sind, wird ein Punkt hinzugefügt und die Intervalle werden nicht weiter unterteilt. 
+\textsc{Gaalop} nutzt also Intervallarithmetik um zu prüfen, ob auf einem Intervall eine Nullstelle ist, und unterteilt die Intervalle rekursiv um sich der Nullstelle anzunähern. Falls die Funktion auf einem Intervall monoton ist (\(0 \notin f_{\text{ray}}'([a,b]) \)) wird die \enquote{refinement} Methode aufgerufen. Sonst wird das Intervall halbiert und die Methode ruft sich rekursiv selbst mit beiden Teilintervallen auf. Wenn die Teilintervalle klein genug sind, wird ein Punkt hinzugefügt und die Intervalle werden nicht weiter unterteilt. 
 
 Die \enquote{refinement} Methode ist dabei eine Variante des Intervallhalbierungsverfahren  (auch Bisection-Methode genannt) zur Nullstellensuche.
 Das Verfahren beginnt mit einem Intervall \([a,b]\), in dem ein Vorzeichenwechsel von \( f_{\text{ray}}(t) \) stattfindet:
@@ -849,10 +849,10 @@ Auch dieses Verfahren weist eine kleine Inkonsistenz auf. Durch die Normalisieru
 %TODO time mesurements
 \subsection{Stärken und Schwächen}
 \textsc{Gaalop} hat einen Ansatz gewählt, der auch gut in höheren Dimensionen funktioniert. Der Nachteil von \textsc{Gaalop}s Visualisierung ist, das die Methoden nicht gut optimiert sind und unnötige Berechnungen durchführen. Ein weiterer Nachteil ist die Darstellung als Punktwolken.
-Punktwolken lassen sich nur schlecht als statische Bilder darstellen da Bewegung für einen guten 3d Eindruck nötig ist. Dies ist für Paper und Bücher in denen \textsc{Gaalop} zur Visualisierung genutzt wird ein Problem.
+Punktwolken lassen sich nur schlecht als statische Bilder darstellen da Bewegung für einen guten 3D-Eindruck nötig ist. Dies ist für Paper und Bücher in denen \textsc{Gaalop} zur Visualisierung genutzt wird ein Problem.
 
-\section{Ansatz aus dem Paper: Quadric Conformal Geometric Algebra of R9,6}
-Ich habe einen weiteren Ansatz zur Visualisierung von geometrischer Algebra in diesem Paper gefunden \cite{breuils2018quadric}. Leider wurde der Ansatz nur nebenbei erwähnt, und ich habe keine technischen Details zu diesem Ansatz gefunden. Dieser Ansatz benutzt geometrische Algebra, um das Objekt und eine Gerade, welche den Raycasting-Ray repräsentiert, zu definieren. Dann werden mittels geometrischer Algebra die Schnittpunkte der Gerade und des Objektes berechnet. Dieser Ansatz ist anders als die anderen beiden Ansätze kein allgemeiner Ansatz, da die Konstruktion der Schnittpunkte algebra-spezifisch ist.
+\section{Breuils et al.}
+Eine weitere Methode zur Visualisierung von geometrischer Algebra wurde in dem Paper Quadric Conformal Geometric Algebra of \(\mathbb{R}^{9,6}\) \cite{breuils2018quadric} vorgestellt. Technischen Details finden sich in dieser Veröffentlichung nicht. Der Ansatz benutzt geometrische Algebra, um das Objekt und eine Gerade, welche den Raycasting-Ray repräsentiert, zu definieren. Dann werden mittels geometrischer Algebra die Schnittpunkte der Gerade und des Objektes berechnet. Anders als die anderen beiden Ansätze ist dieser nicht allgemein, da die Konstruktion der Schnittpunkte algebra-spezifisch ist.
 
 \chapter{Konzeption}
 
@@ -863,10 +863,9 @@ Dabei übernimmt \textsc{Gaalop} die Umwandlung von Ausdrücken in geometrischer
 
 \section{Überblick über die Lösungsansätze}
 Zur Visualisierung von Objekten in geometrischer Algebra gibt es hauptsächlich zwei Ansätze.
-Im ersten Ansatz wird versucht zu interpretieren, ob das Objekt ein Punkt, Linie, Ebene, Kugel etc. darstellt und dann entsprechend visualisiert. Dieser Ansatz funktioniert vor allem in niedrigdimensionalen Algebren, da in höherdimensionalen die Anzahl der möglichen geometrischen Objekte wächst. Deshalb benutze ich den zweiten Ansatz.
-Der zweite Ansatz funktioniert über die Nullstellensuche des Inner/Outer-Product-Nullraums des Objektes. Dabei kann versucht werden die Nullstellen als Primitive zu extrahieren oder Raycasting zu nutzen. Ich habe beide Möglichkeiten untersucht. 
+Im ersten Ansatz wird versucht zu interpretieren, ob das Objekt ein Punkt, Linie, Ebene, Kugel etc. darstellt und dann entsprechend visualisiert. Dieser Ansatz funktioniert vor allem in niedrigdimensionalen Algebren, da in höherdimensionalen die Anzahl der möglichen geometrischen Objekte wächst. Deshalb benutze ich den zweiten Ansatz, der über die Nullstellensuche des Inner/Outer-Product-Nullraums des Objektes funktioniert. Dabei kann versucht werden die Nullstellen als Primitive zu extrahieren oder Raycasting zu nutzen. Ich habe beide Möglichkeiten untersucht. 
 
-Ansätze die auf einer spezifischen Algebra aufbauen habe ich nicht weiter untersucht, da es mein Ziel ist einen Allgemeinen ansatz zu entwickeln.
+Ansätze, die auf einer spezifischen Algebra aufbauen, habe ich nicht weiter untersucht, da es mein Ziel ist einen allgemeinen Ansatz zu entwickeln.
 
 
 
@@ -876,7 +875,7 @@ Da OpenGL sowohl zum Numbercrunching als auch zur Visualisierung genutzt werden 
 Der zweite Teil der Software ist ein Plugin für \textsc{Gaalop}, das wie der Rest von \textsc{Gaalop} in Java geschrieben ist.
 Zudem habe ich noch ein paar kleine Python Scripts benutzt, um Daten auszuwerten.
 \section{Hilfsmittel}
-Diese Arbeit ist mein erstes JavaScript Projekt. Deshalb habe ich anfangs viel Code mittels ChatGPT von Python übersetzten, um zu sehen, wie der Code in JavaScript aussieht. Später habe ich Chatgpt außerdem zum Code review benutzt, und um Rechtschreibfehler zu finden. Weitere Hilfsmittel sind VSCode als IDE, und Excel für Diagramme.
+Diese Arbeit ist mein erstes JavaScript Projekt. Deshalb habe ich anfangs viel Code mittels ChatGPT von Python übersetzt, um zu sehen, wie der Code in JavaScript aussieht. Später habe ich ChatGPT außerdem zum Codereview benutzt, und um Rechtschreibfehler zu finden. Weitere Hilfsmittel sind VSCode als IDE, und Excel für Diagramme.
 
 \chapter{Raycasting-Verfahren}
 \IMRADlabel{methods}
@@ -1189,7 +1188,7 @@ Aktuell wird ein einfaches Phong Beleuchtungsmodell benutzt wobei die Lichtquell
 
 \subsection{Texturierung}
 
-Um zusätzliche Tiefenhinweise zu erzeugen, können einfache Muster auf das Objekt projiziert werden. Diese Muster sind keine echten Texturen im klassischen Sinn, sondern entstehen direkt aus der Position des Punktes \( \mathbf{p} \) im Raum. Sie sind also einfache 3D Texturen.  
+Um zusätzliche Tiefenhinweise zu erzeugen, können einfache Muster auf das Objekt projiziert werden. Diese Muster sind keine echten Texturen im klassischen Sinn, sondern entstehen direkt aus der Position des Punktes \( \mathbf{p} \) im Raum. Sie sind also einfache 3D-Texturen.  
 
 Im Folgenden stelle ich zwei solcher Muster vor: ein Schachbrett-Muster in 3D und ein Gitter aus Isolinien entlang der Koordinatenachsen.
 
@@ -1366,7 +1365,7 @@ Marching Cubes ist ein häufig genutzter Algorithmus zur Mesh Erzeugung von Isof
 
 Deswegen habe ich eine modifizierte Variante des Algorithmus ausgedacht.
 
-Der normale Marching Cubes Algorithmus wertet die Funktion \( f(\mathbf{x}) \) wie die DiscreteCubeMethod auf einem äquidistanten 3D Gitter aus. Dann wird das Gitter in Würfel zerteilt, sodass die Funktionsauswertungen auf den Eckpunkten der Würfel liegen.
+Der normale Marching Cubes Algorithmus wertet die Funktion \( f(\mathbf{x}) \) wie die DiscreteCubeMethod auf einem äquidistanten 3D-Gitter aus. Dann wird das Gitter in Würfel zerteilt, sodass die Funktionsauswertungen auf den Eckpunkten der Würfel liegen.
 
 %mobile
 Für die Meshgenerierung wird jeder Würfel einzeln betrachtet.
@@ -1574,9 +1573,9 @@ S1[5] = (-((a * v[0]) / 2.0)) # em
 \end{verbatim}
 
 Dieser Graph wird von meinem Plugin als JSON serialisiert.
-\subsubsection{computational DAG}
 
-\subsection{DAG in js}
+
+\subsection{DAG in JavaScript}
 Das JSON wird dann von meinem Programm in einen Rechengraph umgewandelt.
 Die Repräsentation als liste von Assignements eignet sich gut zur Codegenerierung und zur Serialisierung. Allerdings ist die Manipulation des Graphen in dieser Form schwierig, weshalb ich den Graphen direkt als ein DAG (directed acyclic graph) repräsentiere.
 Jede Node im Graph steht dabei für eine Operation (wie Addition, Multiplikation, Division usw.) und kennt andere Operationen als Eltern.
@@ -1588,7 +1587,7 @@ Jede Node im Graph steht dabei für eine Operation (wie Addition, Multiplikation
     \label{fig:daginjs}
 \end{figure}
 
-\subsection{Graph splitting}
+\subsection{Graph-Splitting}
 
 Um die Auswertung auf der GPU zu beschleunigen, wird der Graph in mehrere Teile geschnitten.
 Auf der GPU wird der Graph zur Visualisierung später vielfach ausgewertet, wobei sich aber nur manche Variablen während der Visualisierung ändern.
@@ -1637,13 +1636,13 @@ Ergebnisse des ersten Teilgraphs als konstante Eingaben dienen.
 Das Auseinanderschneiden des Graphen verkleinert also den GPU Graph maßgeblich (und führt zu besserer Performance).
 Weiterhin macht das Auseinanderschneiden die Codegenerierung einfacher, da der Subgraph nur noch einen reduzierten Funktionsumfang hat:
 Multiplikation, Division (ich glaube nur mit Konstanten), Subtraktion, Addition und Negation.
-\subsection{Graph Manipulationen}
+\subsection{Graph-Manipulationen}
 Bevor der Subgraph auf der GPU ausgewertet werden kann, muss er manipuliert werden. Das liegt daran, dass manche der Methoden Ableitungen erfordern oder Auswertung über den komplexen Zahlen.
 
 Der Shadercode enthält Funktionsheader, welche dann durch den in JavaScript
 generierten Shadercode ersetzt werden.
 
-\subsubsection{Was generiert die Codegenerierung}
+\subsubsection{Was generiert die Codegenerierung?}
 Die alte Codegenerierung generierte Code für die folgenden Methoden:
 
 \begin{itemize}
@@ -1750,15 +1749,15 @@ Aktuell wird nur noch die Matrixvariante benutzt.
 %void makeDualP(vec3 rayDir, vec3 rayOrigin,float a,out Dual[basislength] P) {?}
 %berechnet P,dPda 
 %void makeIntervallP(Intervall X,Intervall Y,Intervall Z,out Intervall[basislength] P) {?}
-%berechnet P über intervall arithmetik
+%berechnet P über Intervallarithmetik
 %float susRDenseUnrolled(vec3 pos){?}
 %wertet f aus
 
 %alte ansätze
-Anfangs habe ich zur Ableitungsberechnung duale Zahlen verwendet. Dies ließ sich relativ einfach implementieren, hat aber den Nachteil, dass der Graph typisiert werden muss. Anstatt nur mit Skalaren zu arbeiten, gibt es für die komplexen Zahlen, Duale komplexe Zahlen, Skalare, Duale mit mehreren Inputs und Intervalle. Weiterhin müssen auch Interaktionen zwischen verschiedenen Typen (beispielsweise die Multiplikation von einem Skalar mit einer Dual Zahl) ausprogrammiert werden, was zu einer kombinatorischen Explosion führt. Und dann muss später für jede der Kombinationen eine Methode zu Codegenerierung geschrieben werden. 
+Anfangs habe ich zur Ableitungsberechnung duale Zahlen verwendet. Dies ließ sich relativ einfach implementieren, hat aber den Nachteil, dass der Graph typisiert werden muss. Anstatt nur mit Skalaren zu arbeiten, gibt es für die komplexen Zahlen, duale komplexe Zahlen, Skalare, Duale mit mehreren Inputs und Intervalle. Weiterhin müssen auch Interaktionen zwischen verschiedenen Typen (beispielsweise die Multiplikation von einem Skalar mit einer dualen Zahl) ausprogrammiert werden, was zu einer kombinatorischen Explosion führt. Und dann muss später für jede der Kombinationen eine Methode zur Codegenerierung geschrieben werden. 
 
 Mein erster Ansatz bestand darin für jeden Typ neue Codegenerierung zu schreiben. Dabei gab es in der Regel zwei Typen pro Codegenerierung. Skalare und den Typ, über dem die Codegenerierung stattfindet. Wenn beispielsweise über den komplexen Zahlen ausgewertet wurde, waren die gesplitteten Inputs von der CPU Skalare und die sich ändernden Variablen komplexe Zahlen. Alle Operationen zwischen Skalaren und anderen Typen haben dann den anderen Typen als Output. Also beispielsweise:
-Mul(skalar a,Complex b)-> Complex
+Mul(Skalar a, Complex b)-> Complex
 
 Dabei habe ich oft den Skalar einfach hochkonvertiert. Also statt Mul(Skalar a, Complex b) zu implementieren, kann Mul(Complex a, Complex b) benutzt werden, wobei a zu einer komplexen Zahl gecastet wird. Das macht das Ganze einfacher, aber auch langsamer.
 Die Typen waren unter anderem: Skalare, komplexe Zahlen, duale Zahlen, komplexe Duale, Intervalle, 3D-Duale.
@@ -1766,15 +1765,15 @@ Dieser Ansatz war relativ unflexibel und unübersichtlich. Anfangs ging es noch,
 
 %explain type propergation
 
-Mein nächster Ansatz war es, typisierte Nodes zu machen. Dabei habe ich den Code für Codegenerierung und Typ-Propagation in die Nodes gepackt, statt eigene Klassen zur Codegenerierung zu schreiben.
-Typ-Propagation bedeutet dabei, dass jeder Node ein Typ zugeordnet werden muss welcher sich auch auf die Codegenerierung auswirkt. Beispielsweise muss eine MulNode die zwei Skalare als input hat anderen Code generieren als eine MulNode welche ein Dual und ein Skalar als input hat. 
-Der Vorteil von diesem Ansatz war, dass er wesentlich flexibler ist und einfacher zu erweitern. Weiterhin ermöglicht dieser Ansatz die Auswertung des Ganzen auf der CPU. Der Nachteil von diesem Ansatz war, dass er wesentlich größer ist, weshalb ich irgendwann abgebrochen habe. Dies liegt daran, dass für alle Typ-Kombinationen für jeden Node-Typ (MulNode,AddNode,AbsNode usw.) Code zur Codegenerierung und Auswertung geschrieben werden musste.
+Mein nächster Ansatz war typisierte Nodes zu erstellen. Dabei habe ich den Code für Codegenerierung und Typ-Propagation in die Nodes gepackt, statt eigene Klassen zur Codegenerierung zu schreiben.
+Typ-Propagation bedeutet dabei, dass jedem Node ein Typ zugeordnet werden muss, welcher sich auch auf die Codegenerierung auswirkt. Beispielsweise muss ein MulNode, der zwei Skalare als Input hat, anderen Code generieren als ein MulNode, welche ein Dual und ein Skalar als Input hat. 
+Der Vorteil von diesem Ansatz war, dass er wesentlich flexibler und einfacher zu erweitern ist. Weiterhin ermöglicht dieser Ansatz die Auswertung des Ganzen auf der CPU. Der Nachteil von diesem Ansatz ist, dass er wesentlich größer ist, weshalb ich irgendwann abgebrochen habe. Dies liegt daran, dass für alle Typ-Kombinationen für jeden Node-Typ (MulNode, AddNode, AbsNode usw.) Code zur Codegenerierung und Auswertung geschrieben werden musste.
 
 Als Nächstes habe ich mich entschieden, die Ableitungsberechnung auf Backpropagation und Forward-Mode-Autodiff umzustellen. Dies hat zwei große Vorteile.
-Erstens gibt es nur noch drei Typen: Skalare, komplexe Zahlen und Intervalle, was die Codegenerierung wesentlich einfacher macht. Und zweitens müsste Backpropagation theoretisch bei manchen Ansätzen schneller sein, da weniger Multiplikationen benötigt werden.
+Erstens gibt es nur noch drei Typen: Skalare, komplexe Zahlen und Intervalle, was die Codegenerierung wesentlich einfacher macht. Und Zweitens müsste Backpropagation theoretisch bei manchen Ansätzen schneller sein, da weniger Multiplikationen benötigt werden.
 
 Im aktuellen Ansatz habe ich versucht, die anderen Ansätze zu vereinigen.
-Ich habe mich entschieden, die Typ-Propagation während der Codegenerierung zu machen, wobei ich den Code dafür in die Nodes gepackt habe. Das macht den Code kleiner, allerdings ist das typisierte Auswerten in JavaScript nicht möglich.
+Ich habe mich entschieden, die Typ-Propagation während der Codegenerierung durchzuführen, wobei ich den Code dafür in die Nodes gepackt habe. Das macht den Code kleiner, allerdings ist das typisierte Auswerten in JavaScript nicht möglich.
 Die neue Codegenerierung ist flexibler, weniger komplex und hat weniger Bugs. Da es in der alten Codegenerierung für jede Funktion eine eigene Klasse zur Codegenerierung gab, war es wesentlich schwerer, Bugs zu fixen, da sie teilweise in jeder der Klassen gefixt werden mussten. Dies war der Hauptgrund, weshalb ich die neue Codegenerierung geschrieben habe.
 
 Ein Problem, das in beiden Codegenerierungen besteht, ist, dass der generierte Code teilweise nicht kompilierbar ist, da er zu groß ist.
@@ -1788,7 +1787,7 @@ Entfernen von Addition mit 0 und Multiplikation mit 1.
 
 
 
-\subsection{Matrix Extraktion}
+\subsection{Matrixextraktion}
 Für die Matrixvariante muss die $M$ und $\mathbf{P}(x,y,z)$ aus dem Graphen extrahiert werden.
 
 Ich habe zwei Versionen der Matrixextraktion aus dem Graph geschrieben.  
@@ -1823,7 +1822,7 @@ Nachdem $\mathbf{P}$ vollständig ist, wird im Prinzip der alte Ansatz genutzt, 
 Durch das Ausmultiplizieren und die Multiplikation mit der Basiswechselmatrix kann der CPU-Teilgraph wesentlich größer werden. Deshalb ist dieser Ansatz schnell auf der GPU, aber langsam auf der CPU. 
 Da die CPU jedoch wesentlich weniger Auswertungen macht, ist dies jedoch nicht wirklich ein Problem.  
 
-Zwischendurch habe ich einfach eine Monombasis für $\mathbf{P}$ verwendet, da diese im Ausmultiplizierungsschritt entsteht. Dies funktioniert auch, ist aber langsamer und instabieler auf der GPU.
+Zwischendurch habe ich einfach eine Monombasis für $\mathbf{P}$ verwendet, da diese im Ausmultiplizierungsschritt entsteht. Dies funktioniert auch, ist aber langsamer und instabiler auf der GPU.
 
 \section{Performance-Analyse}
 
@@ -1835,7 +1834,7 @@ Dieser Findet sich in testcodegenbackproptestall.html.
 \begin{figure}
     \centering
     \includegraphics[width=0.5\linewidth]{pictures/CodegenAltVSNewTimings.png}
-    %\caption{}
+    \caption{Evaluationszeit der alten und neuen Codegenerierung. Links stehen die Methoden und rechts die Objekte.}
     \label{fig:CodegenAltVSNewTimings}
 \end{figure}
 
@@ -1902,7 +1901,7 @@ Weiterhin sind die ausgerollten Methoden genauso schnell wie die anderen, weshal
     \label{fig:sustimes_cleaned}
 \end{figure}
 Ich habe die Timings für \enquote{DCsus} und \enquote{sus} sind im Diagramm \ref{fig:sustimes_cleaned} sichtbar. Die ausgerollten Versionen sind wesentlich schneller als die nicht ausgerollten Versionen und für \enquote{sus} sind die Dichten Versionen wie auch bei \enquote{row} schneller. Die dichten Versionen sind komplizierter zu programmieren, weshalb es auch die \enquote{Reversed} Versionen gibt, welche die Multiplikation mit einer gespiegelten Version von \(R\) berechnen, was die Schleifenlogik einfacher macht. Ein Ausreißer für DCsus scheint Runrolled\_ubo zu sein. Ich vermute, dass liegt daran, dass \(R\) auf dem ubo 4-mal größer ist (da WebGL2 nur std140 unterstützt) und deshalb die Matrix in einen anderen Speicherbereich lädt. Allerdings bin ich mir nicht sicher. Weiterhin ist noch MDenseUnrolled2 interessant. Diese Methode macht erst die Matrix Multiplikation in einer separaten Funktion und dann die Akkumulation der Summe der Quadrate. Dies ist etwas langsamer aber der Code lässt sich besser wiederverwenden. Letztendlich habe ich mich für eine Kombination aus MDenseUnrolled2 und RDenseUnrolled entschieden. Das bedeutet ich benutze RDense und habe eine Funktion für eine Multiplikation mit einem Vektor. 
-Für RDense gibt es für alle Fälle schnellen Code zur Evaluierung der Funktion. Für row muss beachtet werden, dass der Code für \(M\) und \(R\) prinzipiell gleich ist, weshalb einfach die MDense Varianten genutzt werden können.
+Für RDense gibt es für alle Fälle schnellen Code zur Berechnung der Funktion. Für row muss beachtet werden, dass der Code für \(M\) und \(R\) prinzipiell gleich ist, weshalb einfach die MDense Varianten genutzt werden können.
 
 \section{Optimizations}
 \subsection{Adaptive Auflösung}
@@ -2019,7 +2018,7 @@ Da meine Implementation so viel schneller ist, kann man einfach höhere Paramete
 Gegenüber den anderen iterativen Verfahren ist die Konvergenz der GradientMethod schon relativ gut. Dabei konvergiert für Flächen GradNewton ein bisschen schneller, während Levenberg-Marquad und Newton-Like wesentlich langsamer konvergieren. Für Kurven hingegen konvergiert Levenberg-Marquad sehr gut.
 Bei der GradientMethod aus \textsc{Gaalop} kann es passieren, dass die Punkte gegenüber den anderen Methoden ungleichmäßiger verteilt sind. Dies muss jedoch nicht unbedingt ein Nachteil sein (siehe \ref{fig:GaalopGradientMethod}).
 
-Die iterativen Verfahren sind gegenüber den anderen Verfahren relativ stabiel und haben wenig Artefakte. Der Nachteil gegenüber den Raycasting-Verfahren ist hauptsächlich, dass die Punktwolken nur in Bewegung einen guten 3D Eindruck vermitteln. Vor allem für Kurven kann das Verfahren gut verwendet werden. Aber auch bei Flächen erzeugen diese Verfahren gute Ergebnisse.
+Die iterativen Verfahren sind gegenüber den anderen Verfahren relativ stabil und haben wenig Artefakte. Der Nachteil gegenüber den Raycasting-Verfahren ist hauptsächlich, dass die Punktwolken nur in Bewegung einen guten 3D-Eindruck vermitteln. Vor allem für Kurven kann das Verfahren gut verwendet werden. Aber auch bei Flächen erzeugen diese Verfahren gute Ergebnisse.
 
 \begin{figure}
     \centering
@@ -2125,7 +2124,7 @@ Zusammenfassend lässt sich sagen, dass \textsc{Gaalop}s Version schlechte Ergeb
 \end{figure}
 
 \subsection{Marching Cubes}
-Das Marching-Cubes-Verfahren funktioniert relativ gut. Die Darstellung als Dreiecke statt Punkten ist wesentlich besser. Allerdings gibt es Grenzfälle in denen die Meshgenerierung fehlerhaft ist (Hauptsächlich sieht man Löcher). Das Verfahren hat also gute Ergebnisse allerdings ist es manichmal etwas instabil. Weiterhinn funktioniert das Verfahren nur für Oberflächen und nicht für Kurven (siehe \ref{fig:MC}). Außerdem visualisiert das Verfahren eher lokale Minima statt Nullstellen. Ich habe in meinen Beispielen keine Unterschiede festgestellt, allerdings könnte dies Probleme verursachen. 
+Das Marching-Cubes-Verfahren funktioniert relativ gut. Die Darstellung als Dreiecke statt Punkten ist wesentlich besser. Allerdings gibt es Grenzfälle in denen die Meshgenerierung fehlerhaft ist (Hauptsächlich sieht man Löcher). Das Verfahren hat also gute Ergebnisse allerdings ist es manchmal etwas instabil. Weiterhin funktioniert das Verfahren nur für Oberflächen und nicht für Kurven (siehe \ref{fig:MC}). Außerdem visualisiert das Verfahren eher lokale Minima statt Nullstellen. Ich habe in meinen Beispielen keine Unterschiede festgestellt, allerdings könnte dies Probleme verursachen. 
 
 
 \begin{figure}
@@ -2138,8 +2137,8 @@ Das Marching-Cubes-Verfahren funktioniert relativ gut. Die Darstellung als Dreie
 
 
 \section{Raycasting}
-In diese Sektion werde ich die Raycasting-Ansätze untersuchen. Dabei habe ich mich teilweise für eine ein bischen andere Szene entschieden um Artefakte besser darstellen zu können.
-Der Fokus liegt dabei auf den visuallen Artefakten der Verfahren.
+In diese Sektion werde ich die Raycasting-Ansätze untersuchen. Dabei habe ich mich teilweise für eine ein bisschen andere Szene entschieden um Artefakte besser darstellen zu können.
+Der Fokus liegt dabei auf den visuellen Artefakten der Verfahren.
 %Stabilität (wie wichtig ist hyperparameter tuning)
 %Performance
 %TODO
@@ -2243,7 +2242,7 @@ Alle meine Raycasting-Verfahren haben ein Problem, die grüne Ebene darzustellen
 \begin{figure}
     \centering
     \includegraphics[width=1\linewidth]{pictures/doubleroot_rootconvergence.png}
-    \caption{Darstellung der komplexen Nullstellen des Aberth-Verfahrens über mehrere Iterationen. Hier sieht man wie die komplexen Nullstellen plötzlich explodieren können. }
+    \caption{Darstellung der komplexen Nullstellen des Aberth-Verfahrens über mehrere Iterationen. Hier sieht man wie die komplexen Nullstellen plötzlich explodieren können. Beide Nullstellen (dargestellt mit hellblau und orange) müssten theoretisch zum Imaginäranteil 0 konvergieren.}
 
     \label{fig:doubleroot_complexplane}
 \end{figure}
@@ -2288,10 +2287,13 @@ Um die Software auszuführen, muss ein Webserver bereitgestellt werden. Falls Py
 
 Ein paar Beispiele befinden sich im Ordner \texttt{jsgaalop\textbackslash assets\textbackslash examples2}. Die kompilierten JSON-Dateien liegen im Unterordner \texttt{compiled}.
 
-Die \texttt{compile.bat} kompiliert alle Beispiele im Unterordner \texttt{input}. Dabei wird der Kommentar in der ersten Zeile als Command-Line-Argument an GAALOP übergeben. Mit der Option \texttt{-a} kann die Algebra angegeben werden.
+Die \texttt{compile.bat} kompiliert alle Beispiele im Unterordner \texttt{input}. Dabei wird der Kommentar in der ersten Zeile als Command-Line-Argument an \textsc{Gaalop} übergeben. Mit der Option \texttt{-a} kann die Algebra angegeben werden.
 
-Damit \texttt{compile.bat} GAALOP ausführen kann, muss Java installiert sein. Eine kompilierte GAALOP-Version mit dem Plugin befindet sich unter \texttt{jsgaalop\textbackslash assets\textbackslash distribution-2.2.6.2-bin}.
+Damit \texttt{compile.bat} \textsc{Gaalop} ausführen kann, muss Java installiert sein. Eine kompilierte \textsc{Gaalop}-Version mit dem Plugin befindet sich unter \texttt{jsgaalop\textbackslash assets\textbackslash distribution-2.2.6.2-bin}.
 
+Der Source-Code für die Software befindet sich unter: \url{https://github.com/K1521/javascriptgaalopvisualizer} im Ordner jsgaalop.
+
+Der Source-Code für \textsc{Gaalop} mit Plugin zum Generieren der JSON-Dateien ist unter: \url{https://github.com/orat/Gaalop} verfügbar.
 \begin{figure}
     \centering
     \includegraphics[width=1\linewidth]{pictures/P123.png}
@@ -2313,20 +2315,20 @@ Damit \texttt{compile.bat} GAALOP ausführen kann, muss Java installiert sein. E
 \begin{figure}
     \centering
     \includegraphics[width=1\linewidth]{pictures/P93.png}
-    \caption{Dieses Beispiel ist eigentlich 2d, wird in meiner Software aber als 3d dargestellt. (aus Seite 93 aus \cite{hildenbrand2021power})}
+    \caption{Dieses Beispiel ist eigentlich 2D, wird in meiner Software aber als 3D dargestellt. (aus Seite 93 aus \cite{hildenbrand2021power})}
 
-    \label{fig:threesperes}
+    \label{fig:P93}
 \end{figure}
 
 \chapter{Zusammenfassung}
-Das Ziel der Arbeit war es eine performante Visualisierung für \textsc{Gaalop}Web zu entwickeln, die mit hochdimensionaler Algebra umgehen kann.
+Das Ziel der Arbeit war es, eine performante Visualisierung für \textsc{Gaalop}Web zu entwickeln, die mit hochdimensionaler Algebra umgehen kann.
 
-Dazu wurde ein Verfahren entwickelt, welches Shadercode zur Evaluierung des Nullraums von geometrischen Objekten erzeugt. Anders als Ganjas Ansatz funktioniert mein Ansatz auch in hochdimensionalen Algebren. Dabei wird mittels QR-Zerlegung die Größe des generierten Shadercodes reduziert, was die Auswertung in hochdimensionalen Algebren erst ermöglicht.
+Dazu wurde ein Verfahren entwickelt, welches Shadercode zur Berechnung des Nullraums von geometrischen Objekten erzeugt. Anders als Ganjas Ansatz funktioniert mein Ansatz auch in hochdimensionalen Algebren. Dabei wird mittels QR-Zerlegung die Größe des generierten Shadercodes reduziert, was die Auswertung in hochdimensionalen Algebren erst ermöglicht.
 
-Darauf aufbauend wurden neue Visualisierungsmethoden entwickelt, die auf den Ansätzen von Gaalop und Ganja aufbauen.
+Darauf aufbauend wurden neue Visualisierungsmethoden entwickelt, die auf den Ansätzen von \textsc{Gaalop} und Ganja aufbauen.
 
-Der Vorteil meiner Ansätze gegenüber Gaalop ist, dass die Evaluierung wesentlich schneller ist. Je nach Anwendungsfall zwischen 20-mal und 2000-mal. Dies bedeutet unter anderem, dass Objekte in wesentlich höherer Auflösung visualisiert werden können. Außerdem erzeugen meine Ansätze im Gegensatz zu Gaalop unter anderem einfache Meshes anstatt nur Punktwolken.
-Von den volumenbasierten Ansätzen empfehle ich GridVoxel als stabiles Verfahren zur Meshgenerierung (Dieser Ansatz ist hauptsächlich bei hohen Auflösungen interessant), RayMethod als schnelles Verfahren zur Punktwolkengenerierung von Flächen, IterGrid zur Punktwolkengenerierung von Kurven und Marching Cubes als ein etwas instabileres Verfahren, welches komplexere Meshes erzeugen kann.
+Der Vorteil meiner Ansätze gegenüber \textsc{Gaalop} ist, dass die Berechnung wesentlich schneller ist, je nach Anwendungsfall zwischen 20-mal und 2000-mal. Dies bedeutet unter anderem, dass Objekte in wesentlich höherer Auflösung visualisiert werden können. Außerdem erzeugen meine Ansätze im Gegensatz zu \textsc{Gaalop} unter anderem einfache Meshes anstatt nur Punktwolken.
+Von den volumenbasierten Ansätzen empfehle ich GridVoxel als stabiles Verfahren zur Meshgenerierung (dieser Ansatz ist hauptsächlich bei hohen Auflösungen interessant), RayMethod als schnelles Verfahren zur Punktwolkengenerierung von Flächen, IterGrid zur Punktwolkengenerierung von Kurven und Marching Cubes als ein etwas instabileres Verfahren, welches komplexere Meshes erzeugen kann.
 
 
 Die auf Ganja aufbauenden Raycasting-Verfahren sind hingegen wesentlich stabiler als Ganjas eigenes Verfahren und haben weniger Artefakte.
@@ -2336,12 +2338,12 @@ Ein bekanntes Problem meiner Raycasting-Verfahren ist die Instabilität bei dopp
 Insgesamt zeigen die Ergebnisse, dass die entwickelten Methoden die Anforderungen an Geschwindigkeit und Qualität erfüllen.
 
 \chapter{Ausblick}
-Der wichtigste nächste Schritt wäre die Integration der Software in \textsc{Gaalop}Web. Die Software ist dafür vorbereitet, und die Integration müsste relativ einfach sein. Da ich keinen Zugriff auf den source Code von \textsc{Gaalop}Web habe, konnte ich dies nicht selbst machen.
+Der wichtigste nächste Schritt wäre die Integration der Software in \textsc{Gaalop}Web. Die Software ist dafür vorbereitet, und die Integration müsste relativ einfach sein. Da ich keinen Zugriff auf den Source-Code von \textsc{Gaalop}Web habe, konnte ich dies nicht selbst durchführen.
 
-Außerdem könnte man versuchen, das Problem zu lösen, auf welches ich bei meinen Raycasting-Ansätzen gestoßen bin. Im Prinzip bedeutet das, einen stabilen Algorithmus zu finden, der auf der GPU reelle Nullstellen von Polynomen mit doppelten Nullstellen finden kann. Außerdem wird ein Algorithmus benötigt, der feststellen kann ob sich an einem Punkt (oder in der Nähe) eine Reelle nullstelle befindet.
+Man könnte versuchen, das Problem zu lösen, auf welches ich bei meinen Raycasting-Ansätzen gestoßen bin. Im Prinzip bedeutet das, einen stabilen Algorithmus zu finden, der auf der GPU reelle Nullstellen von Polynomen mit doppelten Nullstellen finden kann. Außerdem wird ein Algorithmus benötigt, der feststellen kann, ob sich an einem Punkt (oder in der Nähe) eine reelle Nullstelle befindet.
 
-Ein weiterer wichtiger Punkt währe die überargeitung der GUI.
-Aktuell hat die Software viele Parameter und Visualisierungsansätze mit vielen Hyperparametern. In der Praxis werden wahrscheinlich nur wenige dieser Methoden sinnvoll sein. Deshalb wäre einer der nächsten Schritte, viele Methoden zu entfernen oder zu verstecken. Das Gleiche gilt für die Parameter in der GUI. Außerdem kann das Diagramm, welches ich zum Debugging eingefügt hatte, entfernt werden.
+Ein weiterer wichtiger Punkt wäre die Überarbeitung der GUI.
+Aktuell hat die Software viele Parameter und Visualisierungsansätze mit vielen Hyperparametern. In der Praxis werden wahrscheinlich nur wenige dieser Methoden sinnvoll sein. Deshalb wäre einer der nächsten Schritte, viele Methoden zu entfernen oder zu verstecken. Das Gleiche gilt für die Parameter in der GUI. Das Diagramm, welches ich zum Debugging eingefügt hatte, kann entfernt werden.
 
 Eine weitere Verbesserung wäre eine bessere Codegenerierung. Dazu gehört eine Untersuchung der alten und neuen Codegenerierung für schnelle Ableitungsberechnung. Als Nächstes könnte man die Multiplikation mit der Matrix \(R\) in GLSL verbessern, falls \(R\) keinen vollen Rang hat. Im Moment wird mit der gesamten Matrix \(R\) multipliziert, obwohl \(R\) Zeilen mit Nullen hat. Alternativ könnte man statt für jedes Objekt einen einzelnen Shader zu kompilieren, einen Shader pro Algebra kompilieren. Dies könnte die Visualisierung einfacher machen, da die Shader nicht für jedes Objekt neu kompiliert werden müssen.
 

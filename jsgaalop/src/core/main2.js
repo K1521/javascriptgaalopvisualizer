@@ -319,8 +319,8 @@ async function main(gajson){
 
     const aberthsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/aberth.glsl");
     obj.addPipeline("Aberth",new aberthrenderer(context,gl,visgraph,aberthsource,color));
-    const aberthsourceGN=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/aberthGN.glsl");
-    obj.addPipeline("AberthGN",new aberthrenderer(context,gl,visgraph,aberthsourceGN,color));
+    //const aberthsourceGN=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/aberthGN.glsl");
+    //obj.addPipeline("AberthGN",new aberthrenderer(context,gl,visgraph,aberthsourceGN,color));
     //const aberthsourceEX=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/aberthexperimental.glsl");
     //obj.addPipeline("AberthExperimental",new aberthrenderer(context,gl,visgraph,aberthsourceEX,color));
     //const aberthfsource=await loadWithIncludesRelativeToShadersource("shaderlibv3/raycasting/aberthf.glsl");

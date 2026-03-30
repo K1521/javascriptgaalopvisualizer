@@ -19,6 +19,81 @@
 
 \refsection{0}
   \datalist[entry]{nty/global//global/global/global}
+    \entry{shadertoy_barth_sextic}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=89a8f46c68cb6a952061ddfd3b85194a}{%
+           family={(fizzer)},
+           familyi={(\bibinitperiod},
+           given={Edd\bibnamedelima Biddulph},
+           giveni={E\bibinitperiod\bibinitdelim B\bibinitperiod}}}%
+      }
+      \list{organization}{1}{%
+        {Shadertoy.com}%
+      }
+      \strng{namehash}{89a8f46c68cb6a952061ddfd3b85194a}
+      \strng{fullhash}{89a8f46c68cb6a952061ddfd3b85194a}
+      \strng{fullhashraw}{89a8f46c68cb6a952061ddfd3b85194a}
+      \strng{bibnamehash}{89a8f46c68cb6a952061ddfd3b85194a}
+      \strng{authorbibnamehash}{89a8f46c68cb6a952061ddfd3b85194a}
+      \strng{authornamehash}{89a8f46c68cb6a952061ddfd3b85194a}
+      \strng{authorfullhash}{89a8f46c68cb6a952061ddfd3b85194a}
+      \strng{authorfullhashraw}{89a8f46c68cb6a952061ddfd3b85194a}
+      \field{sortinit}{f}
+      \field{sortinithash}{2638baaa20439f1b5a8f80c6c08a13b4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{month}{01}
+      \field{note}{The Barth Sextic, raytraced with 2nd-order root-finding algorithm Halley's method.}
+      \field{title}{Barth Sextic (+ Halley's Method)}
+      \field{urlday}{30}
+      \field{urlmonth}{3}
+      \field{urlyear}{2026}
+      \field{year}{2023}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://www.shadertoy.com/view/DlfXzB
+      \endverb
+      \verb{url}
+      \verb https://www.shadertoy.com/view/DlfXzB
+      \endverb
+    \endentry
+    \entry{shadertoy_barth_sextic_UDF}{online}{}{}
+      \name{author}{1}{}{%
+        {{hash=2dba2693b2192523a4d6d28899e77f9b}{%
+           family={Adaire},
+           familyi={A\bibinitperiod},
+           given={Skye},
+           giveni={S\bibinitperiod}}}%
+      }
+      \list{organization}{1}{%
+        {Shadertoy.com}%
+      }
+      \strng{namehash}{2dba2693b2192523a4d6d28899e77f9b}
+      \strng{fullhash}{2dba2693b2192523a4d6d28899e77f9b}
+      \strng{fullhashraw}{2dba2693b2192523a4d6d28899e77f9b}
+      \strng{bibnamehash}{2dba2693b2192523a4d6d28899e77f9b}
+      \strng{authorbibnamehash}{2dba2693b2192523a4d6d28899e77f9b}
+      \strng{authornamehash}{2dba2693b2192523a4d6d28899e77f9b}
+      \strng{authorfullhash}{2dba2693b2192523a4d6d28899e77f9b}
+      \strng{authorfullhashraw}{2dba2693b2192523a4d6d28899e77f9b}
+      \field{sortinit}{A}
+      \field{sortinithash}{2f401846e2029bad6b3ecc16d50031e2}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{month}{09}
+      \field{title}{Barth Sextic mit Spheretracing}
+      \field{urlday}{30}
+      \field{urlmonth}{3}
+      \field{urlyear}{2026}
+      \field{year}{2019}
+      \field{urldateera}{ce}
+      \verb{urlraw}
+      \verb https://www.shadertoy.com/view/wdd3zB
+      \endverb
+      \verb{url}
+      \verb https://www.shadertoy.com/view/wdd3zB
+      \endverb
+    \endentry
     \entry{breuils2018quadric}{article}{}{}
       \name{author}{4}{}{%
         {{hash=9431630651ad3bf97f5e7bada985e3af}{%
@@ -99,42 +174,6 @@
       \endverb
       \verb{url}
       \verb https://github.com/enkimute/ganja.js
-      \endverb
-    \endentry
-    \entry{shadertoy_barth_sextic}{online}{}{}
-      \name{author}{1}{}{%
-        {{hash=edd88a4afdd53f21f79570141b820c45}{%
-           family={fizzer},
-           familyi={f\bibinitperiod}}}%
-      }
-      \list{organization}{1}{%
-        {Shadertoy.com}%
-      }
-      \strng{namehash}{edd88a4afdd53f21f79570141b820c45}
-      \strng{fullhash}{edd88a4afdd53f21f79570141b820c45}
-      \strng{fullhashraw}{edd88a4afdd53f21f79570141b820c45}
-      \strng{bibnamehash}{edd88a4afdd53f21f79570141b820c45}
-      \strng{authorbibnamehash}{edd88a4afdd53f21f79570141b820c45}
-      \strng{authornamehash}{edd88a4afdd53f21f79570141b820c45}
-      \strng{authorfullhash}{edd88a4afdd53f21f79570141b820c45}
-      \strng{authorfullhashraw}{edd88a4afdd53f21f79570141b820c45}
-      \field{sortinit}{f}
-      \field{sortinithash}{2638baaa20439f1b5a8f80c6c08a13b4}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{month}{01}
-      \field{note}{The Barth Sextic, raytraced with 2nd-order root-finding algorithm Halley's method. Shadertoy shader, Views: 293, Tags: geometry, surface, dual, real, algebraic, sextic}
-      \field{title}{Barth Sextic (+ Halley's Method)}
-      \field{urlday}{30}
-      \field{urlmonth}{3}
-      \field{urlyear}{2026}
-      \field{year}{2023}
-      \field{urldateera}{ce}
-      \verb{urlraw}
-      \verb https://www.shadertoy.com/view/DlfXzB
-      \endverb
-      \verb{url}
-      \verb https://www.shadertoy.com/view/DlfXzB
       \endverb
     \endentry
     \entry{flocke2015algorithm954}{article}{}{}
@@ -239,42 +278,6 @@
       \endverb
       \verb{url}
       \verb https://momentsingraphics.de/GPUPolynomialRoots.html
-      \endverb
-    \endentry
-    \entry{shadertoy_barth_sextic_UDF}{online}{}{}
-      \name{author}{1}{}{%
-        {{hash=cf1185d1f2a1503453ac66bc99b6f9bf}{%
-           family={skye\_adaire},
-           familyi={s\bibinitperiod}}}%
-      }
-      \list{organization}{1}{%
-        {Shadertoy.com}%
-      }
-      \strng{namehash}{cf1185d1f2a1503453ac66bc99b6f9bf}
-      \strng{fullhash}{cf1185d1f2a1503453ac66bc99b6f9bf}
-      \strng{fullhashraw}{cf1185d1f2a1503453ac66bc99b6f9bf}
-      \strng{bibnamehash}{cf1185d1f2a1503453ac66bc99b6f9bf}
-      \strng{authorbibnamehash}{cf1185d1f2a1503453ac66bc99b6f9bf}
-      \strng{authornamehash}{cf1185d1f2a1503453ac66bc99b6f9bf}
-      \strng{authorfullhash}{cf1185d1f2a1503453ac66bc99b6f9bf}
-      \strng{authorfullhashraw}{cf1185d1f2a1503453ac66bc99b6f9bf}
-      \field{sortinit}{s}
-      \field{sortinithash}{b164b07b29984b41daf1e85279fbc5ab}
-      \field{labelnamesource}{author}
-      \field{labeltitlesource}{title}
-      \field{month}{09}
-      \field{note}{Implicit equation taken from: https://imaginary.org/gallery/oliver-labs. Shadertoy shader, Views: 313, Tags: geometry, surface, dual, quintic, real, algebraic}
-      \field{title}{Barth Sextic mit Spheretracing}
-      \field{urlday}{30}
-      \field{urlmonth}{3}
-      \field{urlyear}{2026}
-      \field{year}{2019}
-      \field{urldateera}{ce}
-      \verb{urlraw}
-      \verb https://www.shadertoy.com/view/wdd3zB
-      \endverb
-      \verb{url}
-      \verb https://www.shadertoy.com/view/wdd3zB
       \endverb
     \endentry
     \entry{teadrinker2022sdf}{online}{}{}
