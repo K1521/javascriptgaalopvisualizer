@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.22.0 (TeX Live 2025)  (format=lualatex 2026.3.1)  1 APR 2026 02:48
+This is LuaHBTeX, Version 1.22.0 (TeX Live 2025)  (format=lualatex 2026.3.1)  1 APR 2026 03:34
  restricted system commands enabled.
  file:line:error style messages enabled.
 **c:/Users/konst/data/repos/jsgaalop/javascriptgaalopvisualizer/KonstantinsBachelorarbeit/DEMO-TUDaThesis
@@ -2531,8 +2531,13 @@ Package tocbasic Info: character protrusion at toc deactivated on input line 131
 
 
 ] [3]
+Overfull \hbox (1.02928pt too wide) detected at line 97
+ \TU/Roboto(0)/b/n/10.95 󰁺󰃸󰃴
+ []
+
+
 Overfull \hbox (1.02928pt too wide) detected at line 98
- \TU/Roboto(0)/b/n/10.95 󰁺󰃸󰃳
+ \TU/Roboto(0)/b/n/10.95 󰁺󰃸󰃵
  []
 
 )
@@ -2578,9 +2583,9 @@ LaTeX Font Info:    Font shape `TU/Roboto(0)/b/n' will be
 \pydata@fh@0=\write6
 
 \openout6 = _5D68B36B1EF0A475C6F07718AA364FAF.data.minted
-runsystem(latexminted config  --timestamp 20260401024838 5D68B36B1EF0A475C6F07718AA364FAF)...executed.
+runsystem(latexminted config  --timestamp 20260401033421 5D68B36B1EF0A475C6F07718AA364FAF)...executed.
  (./_5D68B36B1EF0A475C6F07718AA364FAF.config.minted)
-runsystem(latexminted cleanconfig  --timestamp 20260401024838 5D68B36B1EF0A475C6F07718AA364FAF)...executed.
+runsystem(latexminted cleanconfig  --timestamp 20260401033421 5D68B36B1EF0A475C6F07718AA364FAF)...executed.
  (./_minted/default.style.minted) (./_minted/799139173C25BB01A34537C7E1FA2B4F.highlight.minted
 LaTeX Font Info:    Font shape `TU/RobotoMono(0)/b/n' will be
 (Font)              scaled to size 10.95pt on input line 2.
@@ -2920,20 +2925,11 @@ Package tudapub Warning: You did not provide a Label for key discussion.
 
 [105
 
-]
-
-LaTeX Warning: Hook 'shipout/lastpage' executed on wrong page (103 not 105).
-               Rerun to correct this.
-
-(./DEMO-TUDaThesis.aux)
+] (./DEMO-TUDaThesis.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
 Package logreq Info: Writing requests to 'DEMO-TUDaThesis.run.xml'.
 
 \openout1 = DEMO-TUDaThesis.run.xml
@@ -2949,7 +2945,7 @@ Here is how much of LuaTeX's memory you used:
  152 fonts using 21793159 bytes
  122i,21n,135p,11328b,2593s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/public/xcharter/XCharter-Italic.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/google/roboto/RobotoMono-Italic.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/google/roboto/RobotoMono-Bold.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/public/xcharter/XCharter-Bold.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/google/roboto/RobotoMono-Regular.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/public/xcharter/XCharter-Roman.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/google/roboto/Roboto-Bold.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/opentype/google/roboto/Roboto-Regular.otf><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy6.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb><c:/othersoftware/texlive/2025/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on DEMO-TUDaThesis.pdf (105 pages, 3471914 bytes).
+Output written on DEMO-TUDaThesis.pdf (105 pages, 3471901 bytes).
 
 PDF statistics: 1216 PDF objects out of 1440 (max. 8388607)
  817 compressed objects within 9 object streams
